@@ -16,7 +16,6 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  // Veritabanı ve Prisma durum kontrolü
   @Get('health')
   async getHealth() {
     const userCount = await this.prisma.user.count();
@@ -28,7 +27,6 @@ export class AppController {
     };
   }
 
-  // Better Auth ile korunan test endpoint'i
   @Get('me')
   @UseGuards(AuthGuard)
   async getMe(@CurrentUser() user: any) {
