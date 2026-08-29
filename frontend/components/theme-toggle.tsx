@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Sun01Icon, Moon02Icon } from "@hugeicons/core-free-icons"
 
+const subscribeToHydration = () => () => undefined
+
 export function ThemeToggle({ className }: { className?: string }) {
   const { setTheme, resolvedTheme } = useTheme()
-  const [mounted, setMounted] = React.useState(false)
-
-  React.useEffect(() => {
-    setMounted(true)
-  }, [])
+  const mounted = React.useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false
+  )
 
   if (!mounted) {
     return (

@@ -9,7 +9,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
 import { APP_ROUTES } from "@/constants/site"
-import { authClient } from "@/lib/auth/auth-client"
+import { authClient } from "@/lib/auth-client"
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -64,7 +64,7 @@ type LoginFormProps = {
 
 function getSafeReturnTo(returnTo?: string) {
   if (!returnTo?.startsWith("/") || returnTo.startsWith("//")) {
-    return APP_ROUTES.dashboard
+    return APP_ROUTES.dashboard.root
   }
 
   return returnTo
@@ -126,7 +126,7 @@ export function LoginForm({ reason, returnTo }: LoginFormProps) {
     <div className="w-full">
       <div className="mb-9">
         <p className="mb-3 text-xs font-semibold tracking-[0.12em] text-primary uppercase">
-          Çalışma alanı girişi
+          Yönetim paneli girişi
         </p>
         <h1 className="text-[2rem] leading-tight font-semibold tracking-[-0.04em] text-foreground sm:text-[2.25rem]">
           Tekrar hoş geldiniz
@@ -216,8 +216,9 @@ export function LoginForm({ reason, returnTo }: LoginFormProps) {
           className="mt-0.5 size-4 shrink-0 text-primary"
         />
         <p className="text-[11px] leading-5 text-muted-foreground">
-          Giriş bilgileriniz CoreAssist tarafından saklanmaz. Kimlik doğrulama,
-          seçtiğiniz hesap sağlayıcısı üzerinden güvenle tamamlanır.
+          Parolanız CoreAssist ile paylaşılmaz. Kimlik doğrulama Google üzerinden
+          tamamlanır; hesap kimliğiniz ve güvenli oturum verileriniz hizmetin
+          çalışması için korunarak saklanır.
         </p>
       </div>
 

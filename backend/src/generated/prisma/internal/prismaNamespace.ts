@@ -1320,6 +1320,34 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
+ * Reference to a field of type 'WorkspaceRole'
+ */
+export type EnumWorkspaceRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WorkspaceRole'>
+    
+
+
+/**
+ * Reference to a field of type 'WorkspaceRole[]'
+ */
+export type ListEnumWorkspaceRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WorkspaceRole[]'>
+    
+
+
+/**
+ * Reference to a field of type 'StoreStatus'
+ */
+export type EnumStoreStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'StoreStatus[]'
+ */
+export type ListEnumStoreStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'ChannelProvider'
  */
 export type EnumChannelProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ChannelProvider'>
@@ -1358,6 +1386,20 @@ export type EnumChannelConnectionStatusFieldRefInput<$PrismaModel> = FieldRefInp
  * Reference to a field of type 'ChannelConnectionStatus[]'
  */
 export type ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ChannelConnectionStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'StoreRole'
+ */
+export type EnumStoreRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreRole'>
+    
+
+
+/**
+ * Reference to a field of type 'StoreRole[]'
+ */
+export type ListEnumStoreRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreRole[]'>
     
 
 

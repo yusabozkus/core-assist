@@ -6,7 +6,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { LoginProductTour } from "@/components/auth/login-product-tour"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { APP_ROUTES } from "@/constants/site"
-import { getCurrentUser } from "@/lib/auth/server-auth"
+import { getCurrentUser } from "@/lib/server-auth"
 
 export const dynamic = "force-dynamic"
 
@@ -18,7 +18,7 @@ export default async function AuthLayout({
   const currentUser = await getCurrentUser()
 
   if (currentUser) {
-    redirect(APP_ROUTES.dashboard)
+    redirect(APP_ROUTES.dashboard.root)
   }
 
   return (
@@ -34,7 +34,7 @@ export default async function AuthLayout({
               <HugeiconsIcon icon={Layers01Icon} className="size-5" />
             </span>
             <span>
-              <span className="block text-[15px] leading-none font-bold tracking-[-0.025em] text-foreground">
+              <span className="block text-[15px] leading-none font-bold tracking-tight text-foreground">
                 CoreAssist
               </span>
               <span className="mt-1 block text-[10px] leading-none font-medium tracking-[0.13em] text-muted-foreground uppercase">
@@ -47,7 +47,7 @@ export default async function AuthLayout({
         </header>
 
         <main className="flex flex-1 items-center py-12 sm:py-16">
-          <div className="mx-auto w-full max-w-[410px]">{children}</div>
+          <div className="mx-auto w-full max-w-102.5">{children}</div>
         </main>
 
         <footer className="flex items-center justify-between border-t border-border/80 pt-5 text-[11px] text-muted-foreground">
@@ -63,7 +63,7 @@ export default async function AuthLayout({
       </section>
 
       <aside className="commerce-panel-grid relative hidden min-h-dvh overflow-hidden bg-[#10251e] text-white lg:flex">
-        <div className="relative mx-auto flex w-full max-w-[900px] flex-col justify-center px-10 py-12 xl:px-16 2xl:px-20">
+        <div className="relative mx-auto flex w-full max-w-225 flex-col justify-center px-10 py-12 xl:px-16 2xl:px-20">
           <div className="mb-8 max-w-2xl">
             <p className="mb-4 text-[11px] font-semibold tracking-[0.18em] text-[#9bc5b0] uppercase">
               Tek panel. Net operasyon.

@@ -28,7 +28,7 @@ export type StoreMemberMinAggregateOutputType = {
   id: string | null
   storeId: string | null
   userId: string | null
-  role: string | null
+  role: $Enums.StoreRole | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -37,7 +37,7 @@ export type StoreMemberMaxAggregateOutputType = {
   id: string | null
   storeId: string | null
   userId: string | null
-  role: string | null
+  role: $Enums.StoreRole | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -157,7 +157,7 @@ export type StoreMemberGroupByOutputType = {
   id: string
   storeId: string
   userId: string
-  role: string
+  role: $Enums.StoreRole
   createdAt: Date
   updatedAt: Date
   _count: StoreMemberCountAggregateOutputType | null
@@ -187,7 +187,7 @@ export type StoreMemberWhereInput = {
   id?: Prisma.StringFilter<"StoreMember"> | string
   storeId?: Prisma.StringFilter<"StoreMember"> | string
   userId?: Prisma.StringFilter<"StoreMember"> | string
-  role?: Prisma.StringFilter<"StoreMember"> | string
+  role?: Prisma.EnumStoreRoleFilter<"StoreMember"> | $Enums.StoreRole
   createdAt?: Prisma.DateTimeFilter<"StoreMember"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StoreMember"> | Date | string
   store?: Prisma.XOR<Prisma.StoreScalarRelationFilter, Prisma.StoreWhereInput>
@@ -213,7 +213,7 @@ export type StoreMemberWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.StoreMemberWhereInput | Prisma.StoreMemberWhereInput[]
   storeId?: Prisma.StringFilter<"StoreMember"> | string
   userId?: Prisma.StringFilter<"StoreMember"> | string
-  role?: Prisma.StringFilter<"StoreMember"> | string
+  role?: Prisma.EnumStoreRoleFilter<"StoreMember"> | $Enums.StoreRole
   createdAt?: Prisma.DateTimeFilter<"StoreMember"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StoreMember"> | Date | string
   store?: Prisma.XOR<Prisma.StoreScalarRelationFilter, Prisma.StoreWhereInput>
@@ -239,14 +239,14 @@ export type StoreMemberScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"StoreMember"> | string
   storeId?: Prisma.StringWithAggregatesFilter<"StoreMember"> | string
   userId?: Prisma.StringWithAggregatesFilter<"StoreMember"> | string
-  role?: Prisma.StringWithAggregatesFilter<"StoreMember"> | string
+  role?: Prisma.EnumStoreRoleWithAggregatesFilter<"StoreMember"> | $Enums.StoreRole
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"StoreMember"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"StoreMember"> | Date | string
 }
 
 export type StoreMemberCreateInput = {
   id?: string
-  role?: string
+  role?: $Enums.StoreRole
   createdAt?: Date | string
   updatedAt?: Date | string
   store: Prisma.StoreCreateNestedOneWithoutMembersInput
@@ -257,14 +257,14 @@ export type StoreMemberUncheckedCreateInput = {
   id?: string
   storeId: string
   userId: string
-  role?: string
+  role?: $Enums.StoreRole
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type StoreMemberUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  role?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumStoreRoleFieldUpdateOperationsInput | $Enums.StoreRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   store?: Prisma.StoreUpdateOneRequiredWithoutMembersNestedInput
@@ -275,7 +275,7 @@ export type StoreMemberUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   storeId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  role?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumStoreRoleFieldUpdateOperationsInput | $Enums.StoreRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -284,14 +284,14 @@ export type StoreMemberCreateManyInput = {
   id?: string
   storeId: string
   userId: string
-  role?: string
+  role?: $Enums.StoreRole
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type StoreMemberUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  role?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumStoreRoleFieldUpdateOperationsInput | $Enums.StoreRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -300,7 +300,7 @@ export type StoreMemberUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   storeId?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  role?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumStoreRoleFieldUpdateOperationsInput | $Enums.StoreRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -431,9 +431,13 @@ export type StoreMemberUncheckedUpdateManyWithoutStoreNestedInput = {
   deleteMany?: Prisma.StoreMemberScalarWhereInput | Prisma.StoreMemberScalarWhereInput[]
 }
 
+export type EnumStoreRoleFieldUpdateOperationsInput = {
+  set?: $Enums.StoreRole
+}
+
 export type StoreMemberCreateWithoutUserInput = {
   id?: string
-  role?: string
+  role?: $Enums.StoreRole
   createdAt?: Date | string
   updatedAt?: Date | string
   store: Prisma.StoreCreateNestedOneWithoutMembersInput
@@ -442,7 +446,7 @@ export type StoreMemberCreateWithoutUserInput = {
 export type StoreMemberUncheckedCreateWithoutUserInput = {
   id?: string
   storeId: string
-  role?: string
+  role?: $Enums.StoreRole
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -480,14 +484,14 @@ export type StoreMemberScalarWhereInput = {
   id?: Prisma.StringFilter<"StoreMember"> | string
   storeId?: Prisma.StringFilter<"StoreMember"> | string
   userId?: Prisma.StringFilter<"StoreMember"> | string
-  role?: Prisma.StringFilter<"StoreMember"> | string
+  role?: Prisma.EnumStoreRoleFilter<"StoreMember"> | $Enums.StoreRole
   createdAt?: Prisma.DateTimeFilter<"StoreMember"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StoreMember"> | Date | string
 }
 
 export type StoreMemberCreateWithoutStoreInput = {
   id?: string
-  role?: string
+  role?: $Enums.StoreRole
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutStoreMembersInput
@@ -496,7 +500,7 @@ export type StoreMemberCreateWithoutStoreInput = {
 export type StoreMemberUncheckedCreateWithoutStoreInput = {
   id?: string
   userId: string
-  role?: string
+  role?: $Enums.StoreRole
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -530,14 +534,14 @@ export type StoreMemberUpdateManyWithWhereWithoutStoreInput = {
 export type StoreMemberCreateManyUserInput = {
   id?: string
   storeId: string
-  role?: string
+  role?: $Enums.StoreRole
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type StoreMemberUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  role?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumStoreRoleFieldUpdateOperationsInput | $Enums.StoreRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   store?: Prisma.StoreUpdateOneRequiredWithoutMembersNestedInput
@@ -546,7 +550,7 @@ export type StoreMemberUpdateWithoutUserInput = {
 export type StoreMemberUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   storeId?: Prisma.StringFieldUpdateOperationsInput | string
-  role?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumStoreRoleFieldUpdateOperationsInput | $Enums.StoreRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -554,7 +558,7 @@ export type StoreMemberUncheckedUpdateWithoutUserInput = {
 export type StoreMemberUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   storeId?: Prisma.StringFieldUpdateOperationsInput | string
-  role?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumStoreRoleFieldUpdateOperationsInput | $Enums.StoreRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -562,14 +566,14 @@ export type StoreMemberUncheckedUpdateManyWithoutUserInput = {
 export type StoreMemberCreateManyStoreInput = {
   id?: string
   userId: string
-  role?: string
+  role?: $Enums.StoreRole
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type StoreMemberUpdateWithoutStoreInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  role?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumStoreRoleFieldUpdateOperationsInput | $Enums.StoreRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutStoreMembersNestedInput
@@ -578,7 +582,7 @@ export type StoreMemberUpdateWithoutStoreInput = {
 export type StoreMemberUncheckedUpdateWithoutStoreInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  role?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumStoreRoleFieldUpdateOperationsInput | $Enums.StoreRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -586,7 +590,7 @@ export type StoreMemberUncheckedUpdateWithoutStoreInput = {
 export type StoreMemberUncheckedUpdateManyWithoutStoreInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
-  role?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumStoreRoleFieldUpdateOperationsInput | $Enums.StoreRole
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -659,7 +663,7 @@ export type $StoreMemberPayload<ExtArgs extends runtime.Types.Extensions.Interna
     id: string
     storeId: string
     userId: string
-    role: string
+    role: $Enums.StoreRole
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["storeMember"]>
@@ -1090,7 +1094,7 @@ export interface StoreMemberFieldRefs {
   readonly id: Prisma.FieldRef<"StoreMember", 'String'>
   readonly storeId: Prisma.FieldRef<"StoreMember", 'String'>
   readonly userId: Prisma.FieldRef<"StoreMember", 'String'>
-  readonly role: Prisma.FieldRef<"StoreMember", 'String'>
+  readonly role: Prisma.FieldRef<"StoreMember", 'StoreRole'>
   readonly createdAt: Prisma.FieldRef<"StoreMember", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"StoreMember", 'DateTime'>
 }

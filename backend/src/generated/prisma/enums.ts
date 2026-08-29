@@ -9,6 +9,23 @@
 * 🟢 You can import this file directly.
 */
 
+export const WorkspaceRole = {
+  OWNER: 'OWNER',
+  ADMIN: 'ADMIN',
+  MEMBER: 'MEMBER'
+} as const
+
+export type WorkspaceRole = (typeof WorkspaceRole)[keyof typeof WorkspaceRole]
+
+
+export const StoreStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE'
+} as const
+
+export type StoreStatus = (typeof StoreStatus)[keyof typeof StoreStatus]
+
+
 export const ChannelProvider = {
   TRENDYOL: 'TRENDYOL',
   HEPSIBURADA: 'HEPSIBURADA',
@@ -37,3 +54,13 @@ export const ChannelConnectionStatus = {
 } as const
 
 export type ChannelConnectionStatus = (typeof ChannelConnectionStatus)[keyof typeof ChannelConnectionStatus]
+
+
+export const StoreRole = {
+  OWNER: 'OWNER',
+  ADMIN: 'ADMIN',
+  AGENT: 'AGENT',
+  VIEWER: 'VIEWER'
+} as const
+
+export type StoreRole = (typeof StoreRole)[keyof typeof StoreRole]

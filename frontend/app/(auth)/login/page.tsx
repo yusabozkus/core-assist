@@ -3,7 +3,7 @@ import { LoginForm } from "@/components/auth/login-form"
 
 export const metadata: Metadata = {
   title: "Giriş Yap | CoreAssist",
-  description: "CoreAssist çalışma alanınıza güvenli şekilde giriş yapın.",
+  description: "CoreAssist yönetim panelinize güvenli şekilde giriş yapın.",
 }
 
 type LoginPageProps = {

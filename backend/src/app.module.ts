@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaModule } from './prisma/prisma.module';
-import { AuthModule } from './auth/auth.module';
-import { WorkspacesModule } from './workspaces/workspaces.module';
-import { StoresModule } from './stores/stores.module';
-import { OnboardingModule } from './onboarding/onboarding.module';
+import { PrismaModule } from './database/prisma.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { OnboardingModule } from './modules/onboarding/onboarding.module';
+import { StoresModule } from './modules/stores/stores.module';
+import { WorkspacesModule } from './modules/workspaces/workspaces.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { OnboardingModule } from './onboarding/onboarding.module';
     WorkspacesModule,
     StoresModule,
     OnboardingModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

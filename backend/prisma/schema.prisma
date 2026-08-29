@@ -85,12 +85,12 @@ model Workspace {
 }
 
 model WorkspaceMember {
-  id          String   @id @default(uuid())
+  id          String        @id @default(uuid())
   workspaceId String
   userId      String
-  role        String   @default("MEMBER") // OWNER, ADMIN, MEMBER
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  role        WorkspaceRole @default(MEMBER)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -99,20 +99,31 @@ model WorkspaceMember {
   @@map("workspace_member")
 }
 
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
 model Store {
-  id          String   @id @default(uuid())
+  id          String      @id @default(uuid())
   workspaceId String
   name        String
-  timezone    String   @default("Europe/Istanbul")
-  status      String   @default("ACTIVE") // ACTIVE, INACTIVE
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  timezone    String      @default("Europe/Istanbul")
+  status      StoreStatus @default(ACTIVE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   workspace          Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   members            StoreMember[]
   channelConnections ChannelConnection[]
 
   @@map("store")
+}
+
+enum StoreStatus {
+  ACTIVE
+  INACTIVE
 }
 
 enum ChannelProvider {
@@ -157,16 +168,23 @@ model ChannelConnection {
 }
 
 model StoreMember {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   storeId   String
   userId    String
-  role      String   @default("AGENT") // OWNER, ADMIN, AGENT, VIEWER
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      StoreRole @default(AGENT)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([storeId, userId])
   @@map("store_member")
+}
+
+enum StoreRole {
+  OWNER
+  ADMIN
+  AGENT
+  VIEWER
 }

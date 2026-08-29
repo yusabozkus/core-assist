@@ -61,7 +61,7 @@ const products = [
 
 function InboxView() {
   return (
-    <div className="grid min-h-[238px] grid-cols-[minmax(0,1fr)_170px] gap-4">
+    <div className="grid min-h-59.5 grid-cols-[minmax(0,1fr)_170px] gap-4">
       <div className="overflow-hidden rounded-xl border border-[#dfe6e2] bg-white">
         <div className="flex items-center justify-between border-b border-[#e7ece9] px-4 py-3">
           <div>
@@ -136,7 +136,7 @@ function InboxView() {
 
 function ProductsView() {
   return (
-    <div className="min-h-[238px] overflow-hidden rounded-xl border border-[#dfe6e2] bg-white">
+    <div className="min-h-59.5 overflow-hidden rounded-xl border border-[#dfe6e2] bg-white">
       <div className="grid grid-cols-[minmax(0,1fr)_80px_72px] gap-3 border-b border-[#e7ece9] bg-[#fafbfa] px-4 py-2.5 text-[9px] font-semibold tracking-[0.08em] text-[#8a958f] uppercase">
         <span>Ürün</span>
         <span>Stok</span>
@@ -196,7 +196,7 @@ function PerformanceView() {
   ]
 
   return (
-    <div className="grid min-h-[238px] grid-cols-[minmax(0,1fr)_190px] gap-4">
+    <div className="grid min-h-59.5 grid-cols-[minmax(0,1fr)_190px] gap-4">
       <div className="rounded-xl border border-[#dfe6e2] bg-white p-4">
         <div className="mb-5 flex items-center justify-between">
           <div>
