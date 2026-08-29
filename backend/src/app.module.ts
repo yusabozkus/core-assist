@@ -7,6 +7,7 @@ import { OnboardingModule } from './modules/onboarding/onboarding.module';
 import { StoresModule } from './modules/stores/stores.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { UsersModule } from './modules/users/users.module';
+import { ChannelsModule } from './modules/channels/channels.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UsersModule } from './modules/users/users.module';
     StoresModule,
     OnboardingModule,
     UsersModule,
+    ChannelsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
