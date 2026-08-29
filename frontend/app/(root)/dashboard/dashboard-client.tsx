@@ -15,10 +15,13 @@ import {
 import { useSession, signOut } from "@/lib/auth/auth-client"
 import { APP_ROUTES } from "@/constants/site"
 
-export function DashboardClient() {
+export function DashboardClient({ workspaces = [] }: { workspaces?: any[] }) {
   const router = useRouter()
   const { data: session, isPending } = useSession()
   const [isLoggingOut, setIsLoggingOut] = React.useState(false)
+
+  const activeWorkspace = workspaces[0]
+  const activeStore = activeWorkspace?.stores?.[0]
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -45,12 +48,24 @@ export function DashboardClient() {
       <header className="flex items-center justify-between border-b border-border pb-6 max-w-5xl mx-auto w-full">
         <div className="flex items-center gap-3">
           <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-mono text-xs font-bold shadow-md shadow-primary/25">
-            CA
+            {activeStore ? activeStore.name.substring(0,2).toUpperCase() : 'CA'}
           </div>
           <div>
-            <h1 className="text-base font-bold tracking-tight">CoreAssist</h1>
-            <p className="text-xs text-muted-foreground">Dashboard</p>
+            <h1 className="text-base font-bold tracking-tight">{activeStore ? activeStore.name : 'CoreAssist'}</h1>
+            <p className="text-xs text-muted-foreground">{activeWorkspace ? activeWorkspace.name : 'Dashboard'}</p>
           </div>
+          
+          {workspaces.length > 0 && (
+            <select className="ml-4 h-8 text-xs border border-border rounded-lg bg-background text-foreground px-2 focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
+              {workspaces.map((w: any) => (
+                <optgroup key={w.id} label={w.name}>
+                  {w.stores.map((s: any) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className="flex items-center gap-3">

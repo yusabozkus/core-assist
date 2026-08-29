@@ -54,7 +54,12 @@ export const ModelName = {
   User: 'User',
   Session: 'Session',
   Account: 'Account',
-  Verification: 'Verification'
+  Verification: 'Verification',
+  Workspace: 'Workspace',
+  WorkspaceMember: 'WorkspaceMember',
+  Store: 'Store',
+  ChannelConnection: 'ChannelConnection',
+  StoreMember: 'StoreMember'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -130,6 +135,71 @@ export const VerificationScalarFieldEnum = {
 } as const
 
 export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[keyof typeof VerificationScalarFieldEnum]
+
+
+export const WorkspaceScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  ownerId: 'ownerId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WorkspaceScalarFieldEnum = (typeof WorkspaceScalarFieldEnum)[keyof typeof WorkspaceScalarFieldEnum]
+
+
+export const WorkspaceMemberScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  userId: 'userId',
+  role: 'role',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WorkspaceMemberScalarFieldEnum = (typeof WorkspaceMemberScalarFieldEnum)[keyof typeof WorkspaceMemberScalarFieldEnum]
+
+
+export const StoreScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  name: 'name',
+  timezone: 'timezone',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StoreScalarFieldEnum = (typeof StoreScalarFieldEnum)[keyof typeof StoreScalarFieldEnum]
+
+
+export const ChannelConnectionScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  provider: 'provider',
+  type: 'type',
+  status: 'status',
+  credentialsEncrypted: 'credentialsEncrypted',
+  connectedAt: 'connectedAt',
+  processingStartedAt: 'processingStartedAt',
+  lastSyncAt: 'lastSyncAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ChannelConnectionScalarFieldEnum = (typeof ChannelConnectionScalarFieldEnum)[keyof typeof ChannelConnectionScalarFieldEnum]
+
+
+export const StoreMemberScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  userId: 'userId',
+  role: 'role',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StoreMemberScalarFieldEnum = (typeof StoreMemberScalarFieldEnum)[keyof typeof StoreMemberScalarFieldEnum]
 
 
 export const SortOrder = {

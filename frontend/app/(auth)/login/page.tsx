@@ -3,9 +3,21 @@ import { LoginForm } from "@/components/auth/login-form"
 
 export const metadata: Metadata = {
   title: "Giriş Yap | CoreAssist",
-  description: "CoreAssist hesabınıza giriş yapın.",
+  description: "CoreAssist çalışma alanınıza güvenli şekilde giriş yapın.",
 }
 
-export default function LoginPage() {
-  return <LoginForm />
+type LoginPageProps = {
+  searchParams: Promise<{
+    reason?: string | string[]
+    returnTo?: string | string[]
+  }>
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams
+  const reason = typeof params.reason === "string" ? params.reason : undefined
+  const returnTo =
+    typeof params.returnTo === "string" ? params.returnTo : undefined
+
+  return <LoginForm reason={reason} returnTo={returnTo} />
 }

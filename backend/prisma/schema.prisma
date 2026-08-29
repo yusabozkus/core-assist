@@ -9,15 +9,18 @@ generator client {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  id               String            @id @default(uuid())
+  name             String
+  email            String            @unique
+  emailVerified    Boolean           @default(false)
+  image            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  sessions         Session[]
+  accounts         Account[]
+  ownedWorkspaces  Workspace[]       @relation("WorkspaceOwner")
+  workspaceMembers WorkspaceMember[]
+  storeMembers     StoreMember[]
 
   @@map("user")
 }
@@ -65,4 +68,105 @@ model Verification {
   updatedAt  DateTime? @updatedAt
 
   @@map("verification")
+}
+
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner   User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members WorkspaceMember[]
+  stores  Store[]
+
+  @@map("workspace")
+}
+
+model WorkspaceMember {
+  id          String   @id @default(uuid())
+  workspaceId String
+  userId      String
+  role        String   @default("MEMBER") // OWNER, ADMIN, MEMBER
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@map("workspace_member")
+}
+
+model Store {
+  id          String   @id @default(uuid())
+  workspaceId String
+  name        String
+  timezone    String   @default("Europe/Istanbul")
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace          Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members            StoreMember[]
+  channelConnections ChannelConnection[]
+
+  @@map("store")
+}
+
+enum ChannelProvider {
+  TRENDYOL
+  HEPSIBURADA
+  INSTAGRAM
+  WHATSAPP
+  WOOCOMMERCE
+}
+
+enum ChannelType {
+  COMMERCE
+  MESSAGING
+  SOCIAL
+}
+
+enum ChannelConnectionStatus {
+  PENDING
+  CONNECTED
+  DISCONNECTED
+  ERROR
+}
+
+model ChannelConnection {
+  id                   String                  @id @default(uuid())
+  storeId              String
+  provider             ChannelProvider
+  type                 ChannelType
+  status               ChannelConnectionStatus @default(PENDING)
+  credentialsEncrypted String?
+  connectedAt          DateTime?
+  processingStartedAt  DateTime?
+  lastSyncAt           DateTime?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, provider])
+  @@index([storeId, status])
+  @@map("channel_connection")
+}
+
+model StoreMember {
+  id        String   @id @default(uuid())
+  storeId   String
+  userId    String
+  role      String   @default("AGENT") // OWNER, ADMIN, AGENT, VIEWER
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, userId])
+  @@map("store_member")
 }

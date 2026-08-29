@@ -200,6 +200,9 @@ export type UserWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   sessions?: Prisma.SessionListRelationFilter
   accounts?: Prisma.AccountListRelationFilter
+  ownedWorkspaces?: Prisma.WorkspaceListRelationFilter
+  workspaceMembers?: Prisma.WorkspaceMemberListRelationFilter
+  storeMembers?: Prisma.StoreMemberListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -212,6 +215,9 @@ export type UserOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   sessions?: Prisma.SessionOrderByRelationAggregateInput
   accounts?: Prisma.AccountOrderByRelationAggregateInput
+  ownedWorkspaces?: Prisma.WorkspaceOrderByRelationAggregateInput
+  workspaceMembers?: Prisma.WorkspaceMemberOrderByRelationAggregateInput
+  storeMembers?: Prisma.StoreMemberOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -227,6 +233,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   sessions?: Prisma.SessionListRelationFilter
   accounts?: Prisma.AccountListRelationFilter
+  ownedWorkspaces?: Prisma.WorkspaceListRelationFilter
+  workspaceMembers?: Prisma.WorkspaceMemberListRelationFilter
+  storeMembers?: Prisma.StoreMemberListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -265,6 +274,9 @@ export type UserCreateInput = {
   updatedAt?: Date | string
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  ownedWorkspaces?: Prisma.WorkspaceCreateNestedManyWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -277,6 +289,9 @@ export type UserUncheckedCreateInput = {
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  ownedWorkspaces?: Prisma.WorkspaceUncheckedCreateNestedManyWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -289,6 +304,9 @@ export type UserUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  ownedWorkspaces?: Prisma.WorkspaceUpdateManyWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUpdateManyWithoutUserNestedInput
+  storeMembers?: Prisma.StoreMemberUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -301,6 +319,9 @@ export type UserUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  ownedWorkspaces?: Prisma.WorkspaceUncheckedUpdateManyWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutUserNestedInput
+  storeMembers?: Prisma.StoreMemberUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -412,6 +433,48 @@ export type UserUpdateOneRequiredWithoutAccountsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAccountsInput, Prisma.UserUpdateWithoutAccountsInput>, Prisma.UserUncheckedUpdateWithoutAccountsInput>
 }
 
+export type UserCreateNestedOneWithoutOwnedWorkspacesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutOwnedWorkspacesInput, Prisma.UserUncheckedCreateWithoutOwnedWorkspacesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOwnedWorkspacesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutOwnedWorkspacesInput, Prisma.UserUncheckedCreateWithoutOwnedWorkspacesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOwnedWorkspacesInput
+  upsert?: Prisma.UserUpsertWithoutOwnedWorkspacesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutOwnedWorkspacesInput, Prisma.UserUpdateWithoutOwnedWorkspacesInput>, Prisma.UserUncheckedUpdateWithoutOwnedWorkspacesInput>
+}
+
+export type UserCreateNestedOneWithoutWorkspaceMembersInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutWorkspaceMembersInput, Prisma.UserUncheckedCreateWithoutWorkspaceMembersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutWorkspaceMembersInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutWorkspaceMembersNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutWorkspaceMembersInput, Prisma.UserUncheckedCreateWithoutWorkspaceMembersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutWorkspaceMembersInput
+  upsert?: Prisma.UserUpsertWithoutWorkspaceMembersInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutWorkspaceMembersInput, Prisma.UserUpdateWithoutWorkspaceMembersInput>, Prisma.UserUncheckedUpdateWithoutWorkspaceMembersInput>
+}
+
+export type UserCreateNestedOneWithoutStoreMembersInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutStoreMembersInput, Prisma.UserUncheckedCreateWithoutStoreMembersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutStoreMembersInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutStoreMembersNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutStoreMembersInput, Prisma.UserUncheckedCreateWithoutStoreMembersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutStoreMembersInput
+  upsert?: Prisma.UserUpsertWithoutStoreMembersInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutStoreMembersInput, Prisma.UserUpdateWithoutStoreMembersInput>, Prisma.UserUncheckedUpdateWithoutStoreMembersInput>
+}
+
 export type UserCreateWithoutSessionsInput = {
   id?: string
   name: string
@@ -421,6 +484,9 @@ export type UserCreateWithoutSessionsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  ownedWorkspaces?: Prisma.WorkspaceCreateNestedManyWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -432,6 +498,9 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  ownedWorkspaces?: Prisma.WorkspaceUncheckedCreateNestedManyWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -459,6 +528,9 @@ export type UserUpdateWithoutSessionsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  ownedWorkspaces?: Prisma.WorkspaceUpdateManyWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUpdateManyWithoutUserNestedInput
+  storeMembers?: Prisma.StoreMemberUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -470,6 +542,9 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  ownedWorkspaces?: Prisma.WorkspaceUncheckedUpdateManyWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutUserNestedInput
+  storeMembers?: Prisma.StoreMemberUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -481,6 +556,9 @@ export type UserCreateWithoutAccountsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  ownedWorkspaces?: Prisma.WorkspaceCreateNestedManyWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -492,6 +570,9 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  ownedWorkspaces?: Prisma.WorkspaceUncheckedCreateNestedManyWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -519,6 +600,9 @@ export type UserUpdateWithoutAccountsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  ownedWorkspaces?: Prisma.WorkspaceUpdateManyWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUpdateManyWithoutUserNestedInput
+  storeMembers?: Prisma.StoreMemberUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -530,6 +614,225 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  ownedWorkspaces?: Prisma.WorkspaceUncheckedUpdateManyWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutUserNestedInput
+  storeMembers?: Prisma.StoreMemberUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutOwnedWorkspacesInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  workspaceMembers?: Prisma.WorkspaceMemberCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutOwnedWorkspacesInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutOwnedWorkspacesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutOwnedWorkspacesInput, Prisma.UserUncheckedCreateWithoutOwnedWorkspacesInput>
+}
+
+export type UserUpsertWithoutOwnedWorkspacesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutOwnedWorkspacesInput, Prisma.UserUncheckedUpdateWithoutOwnedWorkspacesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutOwnedWorkspacesInput, Prisma.UserUncheckedCreateWithoutOwnedWorkspacesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutOwnedWorkspacesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutOwnedWorkspacesInput, Prisma.UserUncheckedUpdateWithoutOwnedWorkspacesInput>
+}
+
+export type UserUpdateWithoutOwnedWorkspacesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUpdateManyWithoutUserNestedInput
+  storeMembers?: Prisma.StoreMemberUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutOwnedWorkspacesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutUserNestedInput
+  storeMembers?: Prisma.StoreMemberUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutWorkspaceMembersInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  ownedWorkspaces?: Prisma.WorkspaceCreateNestedManyWithoutOwnerInput
+  storeMembers?: Prisma.StoreMemberCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutWorkspaceMembersInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  ownedWorkspaces?: Prisma.WorkspaceUncheckedCreateNestedManyWithoutOwnerInput
+  storeMembers?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutWorkspaceMembersInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutWorkspaceMembersInput, Prisma.UserUncheckedCreateWithoutWorkspaceMembersInput>
+}
+
+export type UserUpsertWithoutWorkspaceMembersInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutWorkspaceMembersInput, Prisma.UserUncheckedUpdateWithoutWorkspaceMembersInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutWorkspaceMembersInput, Prisma.UserUncheckedCreateWithoutWorkspaceMembersInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutWorkspaceMembersInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutWorkspaceMembersInput, Prisma.UserUncheckedUpdateWithoutWorkspaceMembersInput>
+}
+
+export type UserUpdateWithoutWorkspaceMembersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  ownedWorkspaces?: Prisma.WorkspaceUpdateManyWithoutOwnerNestedInput
+  storeMembers?: Prisma.StoreMemberUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutWorkspaceMembersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  ownedWorkspaces?: Prisma.WorkspaceUncheckedUpdateManyWithoutOwnerNestedInput
+  storeMembers?: Prisma.StoreMemberUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutStoreMembersInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  ownedWorkspaces?: Prisma.WorkspaceCreateNestedManyWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutStoreMembersInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  ownedWorkspaces?: Prisma.WorkspaceUncheckedCreateNestedManyWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutStoreMembersInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutStoreMembersInput, Prisma.UserUncheckedCreateWithoutStoreMembersInput>
+}
+
+export type UserUpsertWithoutStoreMembersInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutStoreMembersInput, Prisma.UserUncheckedUpdateWithoutStoreMembersInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutStoreMembersInput, Prisma.UserUncheckedCreateWithoutStoreMembersInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutStoreMembersInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutStoreMembersInput, Prisma.UserUncheckedUpdateWithoutStoreMembersInput>
+}
+
+export type UserUpdateWithoutStoreMembersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  ownedWorkspaces?: Prisma.WorkspaceUpdateManyWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutStoreMembersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  ownedWorkspaces?: Prisma.WorkspaceUncheckedUpdateManyWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -540,11 +843,17 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
 export type UserCountOutputType = {
   sessions: number
   accounts: number
+  ownedWorkspaces: number
+  workspaceMembers: number
+  storeMembers: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sessions?: boolean | UserCountOutputTypeCountSessionsArgs
   accounts?: boolean | UserCountOutputTypeCountAccountsArgs
+  ownedWorkspaces?: boolean | UserCountOutputTypeCountOwnedWorkspacesArgs
+  workspaceMembers?: boolean | UserCountOutputTypeCountWorkspaceMembersArgs
+  storeMembers?: boolean | UserCountOutputTypeCountStoreMembersArgs
 }
 
 /**
@@ -571,6 +880,27 @@ export type UserCountOutputTypeCountAccountsArgs<ExtArgs extends runtime.Types.E
   where?: Prisma.AccountWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountOwnedWorkspacesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WorkspaceWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountWorkspaceMembersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WorkspaceMemberWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountStoreMembersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.StoreMemberWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -582,6 +912,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   updatedAt?: boolean
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
+  ownedWorkspaces?: boolean | Prisma.User$ownedWorkspacesArgs<ExtArgs>
+  workspaceMembers?: boolean | Prisma.User$workspaceMembersArgs<ExtArgs>
+  storeMembers?: boolean | Prisma.User$storeMembersArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -619,6 +952,9 @@ export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = run
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
+  ownedWorkspaces?: boolean | Prisma.User$ownedWorkspacesArgs<ExtArgs>
+  workspaceMembers?: boolean | Prisma.User$workspaceMembersArgs<ExtArgs>
+  storeMembers?: boolean | Prisma.User$storeMembersArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -629,6 +965,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   objects: {
     sessions: Prisma.$SessionPayload<ExtArgs>[]
     accounts: Prisma.$AccountPayload<ExtArgs>[]
+    ownedWorkspaces: Prisma.$WorkspacePayload<ExtArgs>[]
+    workspaceMembers: Prisma.$WorkspaceMemberPayload<ExtArgs>[]
+    storeMembers: Prisma.$StoreMemberPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1034,6 +1373,9 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   readonly [Symbol.toStringTag]: "PrismaPromise"
   sessions<T extends Prisma.User$sessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   accounts<T extends Prisma.User$accountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$accountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  ownedWorkspaces<T extends Prisma.User$ownedWorkspacesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$ownedWorkspacesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkspacePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  workspaceMembers<T extends Prisma.User$workspaceMembersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$workspaceMembersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkspaceMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  storeMembers<T extends Prisma.User$storeMembersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$storeMembersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StoreMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1508,6 +1850,78 @@ export type User$accountsArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.AccountScalarFieldEnum | Prisma.AccountScalarFieldEnum[]
+}
+
+/**
+ * User.ownedWorkspaces
+ */
+export type User$ownedWorkspacesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Workspace
+   */
+  select?: Prisma.WorkspaceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Workspace
+   */
+  omit?: Prisma.WorkspaceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WorkspaceInclude<ExtArgs> | null
+  where?: Prisma.WorkspaceWhereInput
+  orderBy?: Prisma.WorkspaceOrderByWithRelationInput | Prisma.WorkspaceOrderByWithRelationInput[]
+  cursor?: Prisma.WorkspaceWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WorkspaceScalarFieldEnum | Prisma.WorkspaceScalarFieldEnum[]
+}
+
+/**
+ * User.workspaceMembers
+ */
+export type User$workspaceMembersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WorkspaceMember
+   */
+  select?: Prisma.WorkspaceMemberSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WorkspaceMember
+   */
+  omit?: Prisma.WorkspaceMemberOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WorkspaceMemberInclude<ExtArgs> | null
+  where?: Prisma.WorkspaceMemberWhereInput
+  orderBy?: Prisma.WorkspaceMemberOrderByWithRelationInput | Prisma.WorkspaceMemberOrderByWithRelationInput[]
+  cursor?: Prisma.WorkspaceMemberWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WorkspaceMemberScalarFieldEnum | Prisma.WorkspaceMemberScalarFieldEnum[]
+}
+
+/**
+ * User.storeMembers
+ */
+export type User$storeMembersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StoreMember
+   */
+  select?: Prisma.StoreMemberSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the StoreMember
+   */
+  omit?: Prisma.StoreMemberOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreMemberInclude<ExtArgs> | null
+  where?: Prisma.StoreMemberWhereInput
+  orderBy?: Prisma.StoreMemberOrderByWithRelationInput | Prisma.StoreMemberOrderByWithRelationInput[]
+  cursor?: Prisma.StoreMemberWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.StoreMemberScalarFieldEnum | Prisma.StoreMemberScalarFieldEnum[]
 }
 
 /**

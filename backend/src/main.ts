@@ -1,9 +1,18 @@
 import 'dotenv/config';
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
 
   app.enableCors({
     origin: [
@@ -26,4 +35,4 @@ async function bootstrap() {
   console.log(`🚀 Backend çalışıyor: http://localhost:${port}`);
   console.log(`🔐 Better Auth API: http://localhost:${port}/api/auth`);
 }
-bootstrap();
+void bootstrap();

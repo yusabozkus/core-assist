@@ -148,6 +148,57 @@ export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
 }
 
+export type EnumChannelProviderFilter<$PrismaModel = never> = {
+  equals?: $Enums.ChannelProvider | Prisma.EnumChannelProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.ChannelProvider[] | Prisma.ListEnumChannelProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ChannelProvider[] | Prisma.ListEnumChannelProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumChannelProviderFilter<$PrismaModel> | $Enums.ChannelProvider
+}
+
+export type EnumChannelTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.ChannelType | Prisma.EnumChannelTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.ChannelType[] | Prisma.ListEnumChannelTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ChannelType[] | Prisma.ListEnumChannelTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumChannelTypeFilter<$PrismaModel> | $Enums.ChannelType
+}
+
+export type EnumChannelConnectionStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.ChannelConnectionStatus | Prisma.EnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ChannelConnectionStatus[] | Prisma.ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ChannelConnectionStatus[] | Prisma.ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumChannelConnectionStatusFilter<$PrismaModel> | $Enums.ChannelConnectionStatus
+}
+
+export type EnumChannelProviderWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ChannelProvider | Prisma.EnumChannelProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.ChannelProvider[] | Prisma.ListEnumChannelProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ChannelProvider[] | Prisma.ListEnumChannelProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumChannelProviderWithAggregatesFilter<$PrismaModel> | $Enums.ChannelProvider
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumChannelProviderFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumChannelProviderFilter<$PrismaModel>
+}
+
+export type EnumChannelTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ChannelType | Prisma.EnumChannelTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.ChannelType[] | Prisma.ListEnumChannelTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ChannelType[] | Prisma.ListEnumChannelTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumChannelTypeWithAggregatesFilter<$PrismaModel> | $Enums.ChannelType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumChannelTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumChannelTypeFilter<$PrismaModel>
+}
+
+export type EnumChannelConnectionStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ChannelConnectionStatus | Prisma.EnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ChannelConnectionStatus[] | Prisma.ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ChannelConnectionStatus[] | Prisma.ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumChannelConnectionStatusWithAggregatesFilter<$PrismaModel> | $Enums.ChannelConnectionStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumChannelConnectionStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumChannelConnectionStatusFilter<$PrismaModel>
+}
+
 export type NestedStringFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -293,6 +344,57 @@ export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
   _max?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumChannelProviderFilter<$PrismaModel = never> = {
+  equals?: $Enums.ChannelProvider | Prisma.EnumChannelProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.ChannelProvider[] | Prisma.ListEnumChannelProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ChannelProvider[] | Prisma.ListEnumChannelProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumChannelProviderFilter<$PrismaModel> | $Enums.ChannelProvider
+}
+
+export type NestedEnumChannelTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.ChannelType | Prisma.EnumChannelTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.ChannelType[] | Prisma.ListEnumChannelTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ChannelType[] | Prisma.ListEnumChannelTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumChannelTypeFilter<$PrismaModel> | $Enums.ChannelType
+}
+
+export type NestedEnumChannelConnectionStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.ChannelConnectionStatus | Prisma.EnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ChannelConnectionStatus[] | Prisma.ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ChannelConnectionStatus[] | Prisma.ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumChannelConnectionStatusFilter<$PrismaModel> | $Enums.ChannelConnectionStatus
+}
+
+export type NestedEnumChannelProviderWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ChannelProvider | Prisma.EnumChannelProviderFieldRefInput<$PrismaModel>
+  in?: $Enums.ChannelProvider[] | Prisma.ListEnumChannelProviderFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ChannelProvider[] | Prisma.ListEnumChannelProviderFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumChannelProviderWithAggregatesFilter<$PrismaModel> | $Enums.ChannelProvider
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumChannelProviderFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumChannelProviderFilter<$PrismaModel>
+}
+
+export type NestedEnumChannelTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ChannelType | Prisma.EnumChannelTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.ChannelType[] | Prisma.ListEnumChannelTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ChannelType[] | Prisma.ListEnumChannelTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumChannelTypeWithAggregatesFilter<$PrismaModel> | $Enums.ChannelType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumChannelTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumChannelTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumChannelConnectionStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ChannelConnectionStatus | Prisma.EnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ChannelConnectionStatus[] | Prisma.ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ChannelConnectionStatus[] | Prisma.ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumChannelConnectionStatusWithAggregatesFilter<$PrismaModel> | $Enums.ChannelConnectionStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumChannelConnectionStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumChannelConnectionStatusFilter<$PrismaModel>
 }
 
 

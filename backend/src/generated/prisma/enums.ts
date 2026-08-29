@@ -9,7 +9,31 @@
 * 🟢 You can import this file directly.
 */
 
+export const ChannelProvider = {
+  TRENDYOL: 'TRENDYOL',
+  HEPSIBURADA: 'HEPSIBURADA',
+  INSTAGRAM: 'INSTAGRAM',
+  WHATSAPP: 'WHATSAPP',
+  WOOCOMMERCE: 'WOOCOMMERCE'
+} as const
+
+export type ChannelProvider = (typeof ChannelProvider)[keyof typeof ChannelProvider]
 
 
-// This file is empty because there are no enums in the schema.
-export {}
+export const ChannelType = {
+  COMMERCE: 'COMMERCE',
+  MESSAGING: 'MESSAGING',
+  SOCIAL: 'SOCIAL'
+} as const
+
+export type ChannelType = (typeof ChannelType)[keyof typeof ChannelType]
+
+
+export const ChannelConnectionStatus = {
+  PENDING: 'PENDING',
+  CONNECTED: 'CONNECTED',
+  DISCONNECTED: 'DISCONNECTED',
+  ERROR: 'ERROR'
+} as const
+
+export type ChannelConnectionStatus = (typeof ChannelConnectionStatus)[keyof typeof ChannelConnectionStatus]

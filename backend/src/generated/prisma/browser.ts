@@ -37,3 +37,28 @@ export type Account = Prisma.AccountModel
  * 
  */
 export type Verification = Prisma.VerificationModel
+/**
+ * Model Workspace
+ * 
+ */
+export type Workspace = Prisma.WorkspaceModel
+/**
+ * Model WorkspaceMember
+ * 
+ */
+export type WorkspaceMember = Prisma.WorkspaceMemberModel
+/**
+ * Model Store
+ * 
+ */
+export type Store = Prisma.StoreModel
+/**
+ * Model ChannelConnection
+ * 
+ */
+export type ChannelConnection = Prisma.ChannelConnectionModel
+/**
+ * Model StoreMember
+ * 
+ */
+export type StoreMember = Prisma.StoreMemberModel
