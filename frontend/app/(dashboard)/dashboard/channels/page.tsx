@@ -2,7 +2,10 @@ import { redirect } from "next/navigation"
 
 import { ChannelManagement } from "./channel-management"
 import { APP_ROUTES } from "@/constants/site"
-import { getServerChannelConnections } from "@/lib/api/channels.server"
+import {
+  getServerChannelConnections,
+  getServerIntegrationProviders,
+} from "@/lib/api/channels.server"
 import { getActiveStoreContext } from "@/lib/stores/active-store"
 
 export const dynamic = "force-dynamic"
@@ -14,7 +17,10 @@ export default async function ChannelsPage() {
     redirect(APP_ROUTES.onboarding)
   }
 
-  const connections = await getServerChannelConnections(activeStore.id)
+  const [connections, providers] = await Promise.all([
+    getServerChannelConnections(activeStore.id),
+    getServerIntegrationProviders(activeStore.id),
+  ])
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 lg:px-10">
@@ -23,12 +29,16 @@ export default async function ChannelsPage() {
           Satış kanalları
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-          {activeStore.name} mağazasının pazaryeri, sosyal medya ve mesajlaşma
-          bağlantılarını yönetin.
+          {activeStore.name} mağazasının pazaryeri bağlantılarını ve ürün
+          senkronizasyonlarını yönetin.
         </p>
       </div>
 
-      <ChannelManagement storeId={activeStore.id} connections={connections} />
+      <ChannelManagement
+        storeId={activeStore.id}
+        connections={connections}
+        providers={providers}
+      />
     </div>
   )
 }

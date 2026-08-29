@@ -3,10 +3,13 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
@@ -14,11 +17,20 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { ChannelsService } from './channels.service';
 import { CreateChannelConnectionDto } from './dto/create-channel-connection.dto';
+import { ConfigureChannelConnectionDto } from './dto/configure-channel-connection.dto';
 
 @Controller('stores/:storeId/channels')
 @UseGuards(AuthGuard)
 export class ChannelsController {
   constructor(private readonly channelsService: ChannelsService) {}
+
+  @Get('providers/available')
+  findAvailableProviders(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.channelsService.findAvailableProviders(storeId, user.id);
+  }
 
   @Get()
   findAll(
@@ -26,6 +38,26 @@ export class ChannelsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.channelsService.findAll(storeId, user.id);
+  }
+
+  @Put(':connectionId')
+  configure(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
+    @Param('connectionId', new ParseUUIDPipe()) connectionId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: ConfigureChannelConnectionDto,
+  ) {
+    return this.channelsService.configure(storeId, connectionId, user.id, dto);
+  }
+
+  @Post(':connectionId/sync')
+  @HttpCode(HttpStatus.ACCEPTED)
+  syncCatalog(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
+    @Param('connectionId', new ParseUUIDPipe()) connectionId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.channelsService.syncCatalog(storeId, connectionId, user.id);
   }
 
   @Post()

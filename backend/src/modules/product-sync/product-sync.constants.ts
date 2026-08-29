@@ -1,0 +1,5 @@
+export const PRODUCT_SYNC_QUEUE = 'product-sync';
+export const SYNC_STORE_PRODUCTS_JOB = 'SYNC_STORE_PRODUCTS';
+export const PRODUCT_SYNC_DISPATCHER = Symbol('PRODUCT_SYNC_DISPATCHER');
+export const PRODUCT_SYNC_LOCK_TIMEOUT_MS = 30 * 60 * 1000;
+export const PRODUCT_SYNC_MAX_BATCHES = 100;

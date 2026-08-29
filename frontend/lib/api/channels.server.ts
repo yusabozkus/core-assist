@@ -3,7 +3,7 @@ import "server-only"
 import { headers } from "next/headers"
 import { cache } from "react"
 
-import type { ChannelConnection } from "@/types/channel"
+import type { ChannelConnection, IntegrationProvider } from "@/types/channel"
 
 const CHANNELS_REQUEST_TIMEOUT_MS = 8_000
 
@@ -37,5 +37,35 @@ export const getServerChannelConnections = cache(
     }
 
     return (await response.json()) as ChannelConnection[]
+  }
+)
+
+export const getServerIntegrationProviders = cache(
+  async (storeId: string): Promise<IntegrationProvider[]> => {
+    const cookie = (await headers()).get("cookie")
+
+    if (!cookie) {
+      return []
+    }
+
+    const response = await fetch(
+      `${apiUrl}/stores/${storeId}/channels/providers/available`,
+      {
+        cache: "no-store",
+        headers: {
+          Accept: "application/json",
+          cookie,
+        },
+        signal: AbortSignal.timeout(CHANNELS_REQUEST_TIMEOUT_MS),
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(
+        `Integration providers request failed with status ${response.status}.`
+      )
+    }
+
+    return (await response.json()) as IntegrationProvider[]
   }
 )

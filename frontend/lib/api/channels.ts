@@ -1,14 +1,46 @@
 import { apiFetch } from "@/lib/api/client"
-import type { ChannelConnection, ChannelProvider } from "@/types/channel"
+import type {
+  CatalogSyncResult,
+  ChannelConnection,
+  IntegrationEnvironment,
+} from "@/types/channel"
 
 export function createChannelConnection(
   storeId: string,
-  input: { provider: ChannelProvider }
+  input: {
+    providerKey: string
+    environment: IntegrationEnvironment
+    credentials: Record<string, string>
+  }
 ) {
   return apiFetch<ChannelConnection>(`/stores/${storeId}/channels`, {
     method: "POST",
     body: JSON.stringify(input),
   })
+}
+
+export function configureChannelConnection(
+  storeId: string,
+  connectionId: string,
+  input: {
+    environment: IntegrationEnvironment
+    credentials: Record<string, string>
+  }
+) {
+  return apiFetch<ChannelConnection>(
+    `/stores/${storeId}/channels/${connectionId}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(input),
+    }
+  )
+}
+
+export function syncChannelCatalog(storeId: string, connectionId: string) {
+  return apiFetch<CatalogSyncResult>(
+    `/stores/${storeId}/channels/${connectionId}/sync`,
+    { method: "POST" }
+  )
 }
 
 export function disconnectChannelConnection(

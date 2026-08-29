@@ -1,118 +1,194 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   CheckmarkCircle01Icon,
   Delete02Icon,
+  Package01Icon,
   PlusSignIcon,
   RefreshIcon,
+  Settings02Icon,
   Unlink01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
-import { CHANNEL_CATALOG, getChannelCatalogItem } from "@/constants/channels"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { APP_ROUTES } from "@/constants/site"
+import {
+  configureChannelConnection,
   createChannelConnection,
   disconnectChannelConnection,
   reconnectChannelConnection,
   removeChannelConnection,
+  syncChannelCatalog,
 } from "@/lib/api/channels"
 import type {
   ChannelConnection,
   ChannelConnectionStatus,
-  ChannelProvider,
+  IntegrationEnvironment,
+  IntegrationProvider,
 } from "@/types/channel"
 
 type ChannelManagementProps = {
   storeId: string
   connections: ChannelConnection[]
+  providers: IntegrationProvider[]
 }
+
+type PendingAction = {
+  connectionId: string
+  type: "disconnect" | "reconnect" | "sync"
+} | null
 
 const dateFormatter = new Intl.DateTimeFormat("tr-TR", {
   day: "numeric",
   month: "short",
   year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
   timeZone: "Europe/Istanbul",
 })
 
 export function ChannelManagement({
   storeId,
   connections,
+  providers,
 }: ChannelManagementProps) {
   const router = useRouter()
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [selectedProvider, setSelectedProvider] =
-    useState<ChannelProvider | null>(null)
-  const [connectionToRemove, setConnectionToRemove] =
-    useState<ChannelConnection | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
-  const [isRemoving, setIsRemoving] = useState(false)
-  const [pendingConnectionId, setPendingConnectionId] = useState<string | null>(
+  const [isConnectionDialogOpen, setIsConnectionDialogOpen] = useState(false)
+  const [selectedProviderKey, setSelectedProviderKey] = useState<string | null>(
     null
   )
+  const [configuringConnection, setConfiguringConnection] =
+    useState<ChannelConnection | null>(null)
+  const [environment, setEnvironment] =
+    useState<IntegrationEnvironment>("SANDBOX")
+  const [credentials, setCredentials] = useState<Record<string, string>>({})
+  const [connectionToRemove, setConnectionToRemove] =
+    useState<ChannelConnection | null>(null)
+  const [isSavingConnection, setIsSavingConnection] = useState(false)
+  const [isRemoving, setIsRemoving] = useState(false)
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null)
   const [dialogError, setDialogError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isUpdating, startUpdateTransition] = useTransition()
 
-  const connectedProviderIds = new Set(
-    connections.map((connection) => connection.provider)
+  const connectedProviderKeys = new Set(
+    connections.map((connection) => connection.providerKey)
   )
+  const selectedProvider = providers.find(
+    (provider) =>
+      provider.key ===
+      (configuringConnection?.providerKey ?? selectedProviderKey)
+  )
+  const removalProvider = connectionToRemove
+    ? getProvider(providers, connectionToRemove.providerKey)
+    : null
   const connectedCount = connections.filter(
     (connection) => connection.status === "CONNECTED"
   ).length
-  const pendingCount = connections.filter(
-    (connection) => connection.status === "PENDING"
+  const syncedCount = connections.filter(
+    (connection) => connection.lastSyncAt
   ).length
-  const removalChannel = connectionToRemove
-    ? getChannelCatalogItem(connectionToRemove.provider)
-    : null
+  const hasRunningSync = connections.some(
+    (connection) => connection.processingStartedAt
+  )
 
-  async function handleCreate() {
+  useEffect(() => {
+    if (!hasRunningSync) return
+
+    const intervalId = window.setInterval(() => router.refresh(), 2_000)
+    return () => window.clearInterval(intervalId)
+  }, [hasRunningSync, router])
+
+  function selectProvider(provider: IntegrationProvider) {
+    setSelectedProviderKey(provider.key)
+    setCredentials({})
+    setEnvironment(provider.environments[0] ?? "SANDBOX")
+    setDialogError(null)
+  }
+
+  function openConfiguration(connection: ChannelConnection) {
+    setConfiguringConnection(connection)
+    setSelectedProviderKey(connection.providerKey)
+    setEnvironment(connection.environment)
+    setCredentials({})
+    setDialogError(null)
+    setIsConnectionDialogOpen(true)
+  }
+
+  async function saveConnection() {
     if (!selectedProvider) {
-      setDialogError("Bağlamak istediğiniz satış kanalını seçin.")
+      setDialogError("Bağlamak istediğiniz pazaryerini seçin.")
       return
     }
 
-    setIsCreating(true)
+    const missingField = selectedProvider.credentialFields.find(
+      (field) => !credentials[field.key]?.trim()
+    )
+
+    if (missingField) {
+      setDialogError(`${missingField.label} alanı zorunludur.`)
+      return
+    }
+
+    setIsSavingConnection(true)
     setDialogError(null)
     setActionError(null)
     setMessage(null)
 
     try {
-      const connection = await createChannelConnection(storeId, {
-        provider: selectedProvider,
-      })
-      const channel = getChannelCatalogItem(connection.provider)
+      if (configuringConnection) {
+        await configureChannelConnection(storeId, configuringConnection.id, {
+          environment,
+          credentials,
+        })
+        setMessage(`${selectedProvider.name} bağlantısı güncellendi.`)
+      } else {
+        await createChannelConnection(storeId, {
+          providerKey: selectedProvider.key,
+          environment,
+          credentials,
+        })
+        setMessage(`${selectedProvider.name} mağazaya bağlandı.`)
+      }
 
-      setIsAddDialogOpen(false)
-      setSelectedProvider(null)
-      setMessage(`${channel.name} bağlantısı kurulum sırasına eklendi.`)
+      resetConnectionDialog()
       router.refresh()
     } catch (caughtError) {
       setDialogError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Satış kanalı eklenemedi."
+          : "Pazaryeri bağlantısı kaydedilemedi."
       )
     } finally {
-      setIsCreating(false)
+      setIsSavingConnection(false)
     }
   }
 
-  function handleConnectionUpdate(
+  function runConnectionAction(
     connection: ChannelConnection,
-    action: "disconnect" | "reconnect"
+    action: "disconnect" | "reconnect" | "sync"
   ) {
     if (isUpdating) return
 
-    const channel = getChannelCatalogItem(connection.provider)
-    setPendingConnectionId(connection.id)
+    const provider = getProvider(providers, connection.providerKey)
+    setPendingAction({ connectionId: connection.id, type: action })
     setActionError(null)
     setMessage(null)
 
@@ -120,10 +196,13 @@ export function ChannelManagement({
       try {
         if (action === "disconnect") {
           await disconnectChannelConnection(storeId, connection.id)
-          setMessage(`${channel.name} bağlantısı devre dışı bırakıldı.`)
-        } else {
+          setMessage(`${provider.name} bağlantısı devre dışı bırakıldı.`)
+        } else if (action === "reconnect") {
           await reconnectChannelConnection(storeId, connection.id)
-          setMessage(`${channel.name} yeniden bağlantı sırasına alındı.`)
+          setMessage(`${provider.name} bağlantısı yeniden doğrulandı.`)
+        } else {
+          await syncChannelCatalog(storeId, connection.id)
+          setMessage(`${provider.name} ürün senkronizasyonu kuyruğa alındı.`)
         }
 
         router.refresh()
@@ -131,16 +210,16 @@ export function ChannelManagement({
         setActionError(
           caughtError instanceof Error
             ? caughtError.message
-            : "Kanal durumu güncellenemedi."
+            : "İşlem tamamlanamadı."
         )
       } finally {
-        setPendingConnectionId(null)
+        setPendingAction(null)
       }
     })
   }
 
-  async function handleRemove() {
-    if (!connectionToRemove || !removalChannel) return
+  async function removeConnection() {
+    if (!connectionToRemove || !removalProvider) return
 
     setIsRemoving(true)
     setDialogError(null)
@@ -150,28 +229,37 @@ export function ChannelManagement({
     try {
       await removeChannelConnection(storeId, connectionToRemove.id)
       setConnectionToRemove(null)
-      setMessage(`${removalChannel.name} bağlantısı kaldırıldı.`)
+      setMessage(`${removalProvider.name} bağlantısı kaldırıldı.`)
       router.refresh()
     } catch (caughtError) {
       setDialogError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Satış kanalı kaldırılamadı."
+          : "Pazaryeri bağlantısı kaldırılamadı."
       )
     } finally {
       setIsRemoving(false)
     }
   }
 
-  function handleAddDialogChange(open: boolean) {
-    if (!open && isCreating) return
+  function handleConnectionDialogChange(open: boolean) {
+    if (!open && isSavingConnection) return
 
-    setIsAddDialogOpen(open)
-    setDialogError(null)
-
-    if (!open) {
-      setSelectedProvider(null)
+    if (open) {
+      setIsConnectionDialogOpen(true)
+      return
     }
+
+    resetConnectionDialog()
+  }
+
+  function resetConnectionDialog() {
+    setIsConnectionDialogOpen(false)
+    setConfiguringConnection(null)
+    setSelectedProviderKey(null)
+    setEnvironment("SANDBOX")
+    setCredentials({})
+    setDialogError(null)
   }
 
   function handleRemoveDialogChange(open: boolean) {
@@ -187,111 +275,188 @@ export function ChannelManagement({
     <div className="space-y-6">
       <section className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-xs sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
-          <ChannelMetric label="Eklenen kanal" value={connections.length} />
+          <ChannelMetric label="Pazaryeri" value={connections.length} />
           <ChannelMetric label="Bağlı" value={connectedCount} />
-          <ChannelMetric label="Kurulum bekliyor" value={pendingCount} />
+          <ChannelMetric label="Senkronize" value={syncedCount} />
         </div>
 
-        <ResponsiveDialog
-          open={isAddDialogOpen}
-          onOpenChange={handleAddDialogChange}
-          title="Satış kanalı ekle"
-          description="Mağazanıza bağlamak istediğiniz kanalı seçin. Bağlantı bilgilerini sonraki kurulum adımında tamamlayabilirsiniz."
-          contentClassName="sm:max-w-2xl"
-          trigger={
-            <Button type="button">
-              <HugeiconsIcon icon={PlusSignIcon} className="size-4" />
-              Kanal ekle
-            </Button>
-          }
-          footer={({ close }) => (
-            <>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={close}
-                disabled={isCreating}
-              >
-                Vazgeç
+        <div className="flex flex-wrap gap-2">
+          <Button asChild type="button" variant="outline">
+            <Link href={APP_ROUTES.dashboard.catalog.products}>
+              <HugeiconsIcon icon={Package01Icon} className="size-4" />
+              Ürün kataloğu
+            </Link>
+          </Button>
+          <ResponsiveDialog
+            open={isConnectionDialogOpen}
+            onOpenChange={handleConnectionDialogChange}
+            title={
+              configuringConnection
+                ? `${selectedProvider?.name ?? "Pazaryeri"} bağlantısını yapılandır`
+                : "Pazaryeri bağla"
+            }
+            description="Mağaza erişim bilgileri şifrelenerek saklanır ve hiçbir API cevabında geri gönderilmez."
+            contentClassName="sm:max-w-2xl"
+            trigger={
+              <Button type="button">
+                <HugeiconsIcon icon={PlusSignIcon} className="size-4" />
+                Pazaryeri bağla
               </Button>
-              <Button
-                type="button"
-                onClick={handleCreate}
-                disabled={!selectedProvider || isCreating}
-              >
-                {isCreating ? "Ekleniyor..." : "Kanalı ekle"}
-              </Button>
-            </>
-          )}
-        >
-          <div className="grid gap-3 sm:grid-cols-2">
-            {CHANNEL_CATALOG.map((channel) => {
-              const isAlreadyAdded = connectedProviderIds.has(channel.provider)
-              const isSelected = selectedProvider === channel.provider
-
-              return (
-                <button
-                  key={channel.provider}
+            }
+            footer={({ close }) => (
+              <>
+                <Button
                   type="button"
-                  onClick={() => setSelectedProvider(channel.provider)}
-                  disabled={isAlreadyAdded || isCreating}
-                  aria-pressed={isSelected}
-                  className={`flex min-h-32 items-start gap-4 rounded-xl border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-55 ${
-                    isSelected
-                      ? "border-primary bg-primary/5 ring-1 ring-primary"
-                      : "border-border bg-background hover:border-primary/35 hover:bg-muted/40"
-                  }`}
+                  variant="outline"
+                  onClick={close}
+                  disabled={isSavingConnection}
                 >
-                  <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-white shadow-xs">
-                    <Image
-                      src={channel.image}
-                      alt={`${channel.name} logosu`}
-                      width={48}
-                      height={48}
-                      className="size-full object-cover"
-                    />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center justify-between gap-2">
-                      <span className="truncate text-sm font-semibold text-foreground">
-                        {channel.name}
+                  Vazgeç
+                </Button>
+                <Button
+                  type="button"
+                  onClick={saveConnection}
+                  disabled={!selectedProvider || isSavingConnection}
+                >
+                  {isSavingConnection
+                    ? "Doğrulanıyor..."
+                    : configuringConnection
+                      ? "Bağlantıyı güncelle"
+                      : "Bağlantıyı doğrula"}
+                </Button>
+              </>
+            )}
+          >
+            {!configuringConnection ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {providers.map((provider) => {
+                  const isAlreadyAdded = connectedProviderKeys.has(provider.key)
+                  const isSelected = selectedProviderKey === provider.key
+
+                  return (
+                    <button
+                      key={provider.key}
+                      type="button"
+                      onClick={() => selectProvider(provider)}
+                      disabled={isAlreadyAdded || isSavingConnection}
+                      aria-pressed={isSelected}
+                      className={`flex min-h-28 items-start gap-4 rounded-xl border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-55 ${
+                        isSelected
+                          ? "border-primary bg-primary/5 ring-1 ring-primary"
+                          : "border-border bg-background hover:border-primary/35 hover:bg-muted/40"
+                      }`}
+                    >
+                      <ProviderLogo provider={provider} />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between gap-2">
+                          <span className="truncate text-sm font-semibold text-foreground">
+                            {provider.name}
+                          </span>
+                          {isSelected ? (
+                            <HugeiconsIcon
+                              icon={CheckmarkCircle01Icon}
+                              className="size-4 shrink-0 text-primary"
+                            />
+                          ) : null}
+                        </span>
+                        <span className="mt-2 line-clamp-2 block text-xs leading-5 text-muted-foreground">
+                          {isAlreadyAdded
+                            ? "Bu pazaryeri zaten mağazaya bağlı."
+                            : provider.description}
+                        </span>
                       </span>
-                      {isSelected ? (
-                        <HugeiconsIcon
-                          icon={CheckmarkCircle01Icon}
-                          className="size-4 shrink-0 text-primary"
-                        />
-                      ) : null}
-                    </span>
-                    <span className="mt-1 block text-xs text-muted-foreground">
-                      {isAlreadyAdded ? "Zaten eklendi" : channel.category}
-                    </span>
-                    <span className="mt-2 line-clamp-2 block text-xs leading-5 text-muted-foreground">
-                      {channel.description}
-                    </span>
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-          <div className="mt-4 min-h-5 text-sm" aria-live="polite">
-            {dialogError ? (
-              <p className="text-destructive">{dialogError}</p>
+                    </button>
+                  )
+                })}
+              </div>
             ) : null}
-          </div>
-        </ResponsiveDialog>
+
+            {selectedProvider ? (
+              <div className={configuringConnection ? "" : "mt-6"}>
+                <div className="mb-5 flex items-center gap-3 rounded-xl border border-border bg-muted/35 p-3">
+                  <ProviderLogo provider={selectedProvider} />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {selectedProvider.name}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Güvenli API bağlantısı
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-5">
+                  <div className="grid gap-2">
+                    <Label htmlFor="connection-environment">Ortam</Label>
+                    <Select
+                      value={environment}
+                      onValueChange={(value) =>
+                        setEnvironment(value as IntegrationEnvironment)
+                      }
+                      disabled={isSavingConnection}
+                    >
+                      <SelectTrigger
+                        id="connection-environment"
+                        className="h-11 w-full rounded-xl border-border bg-background"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent position="popper">
+                        {selectedProvider.environments.map((value) => (
+                          <SelectItem key={value} value={value}>
+                            {value === "SANDBOX"
+                              ? "Test / Sandbox"
+                              : "Production / Canlı"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {selectedProvider.credentialFields.map((field) => (
+                    <div key={field.key} className="grid gap-2">
+                      <Label htmlFor={`credential-${field.key}`}>
+                        {field.label}
+                      </Label>
+                      <Input
+                        id={`credential-${field.key}`}
+                        name={field.key}
+                        type={field.type}
+                        value={credentials[field.key] ?? ""}
+                        onChange={(event) =>
+                          setCredentials((current) => ({
+                            ...current,
+                            [field.key]: event.target.value,
+                          }))
+                        }
+                        placeholder={field.placeholder}
+                        autoComplete="off"
+                        disabled={isSavingConnection}
+                        required
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="mt-4 min-h-5 text-sm" aria-live="polite">
+              {dialogError ? (
+                <p className="text-destructive">{dialogError}</p>
+              ) : null}
+            </div>
+          </ResponsiveDialog>
+        </div>
       </section>
 
       <section>
-        <div className="mb-4 flex items-end justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold tracking-[-0.02em] text-foreground">
-              Bağlı kanallar
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Bu mağaza için eklenen entegrasyonlar
-            </p>
-          </div>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold tracking-[-0.02em] text-foreground">
+            Bağlantılar
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Ürün kataloğunu besleyen pazaryeri bağlantıları
+          </p>
         </div>
 
         {connections.length === 0 ? (
@@ -300,22 +465,28 @@ export function ChannelManagement({
               <HugeiconsIcon icon={PlusSignIcon} className="size-5" />
             </span>
             <h3 className="mt-5 font-semibold text-foreground">
-              Henüz satış kanalı eklenmedi
+              Henüz pazaryeri bağlanmadı
             </h3>
             <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
-              İlk entegrasyonunuzu ekleyerek sipariş ve mesaj akışınızı bu
-              mağazada toplamaya başlayın.
+              Trendyol veya Hepsiburada bağlantısı kurarak ürün kataloğunuzu
+              içeri aktarabilirsiniz.
             </p>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             {connections.map((connection) => (
               <ChannelCard
                 key={connection.id}
                 connection={connection}
-                isPending={pendingConnectionId === connection.id}
-                actionsDisabled={isUpdating || isRemoving || isCreating}
-                onUpdate={handleConnectionUpdate}
+                provider={getProvider(providers, connection.providerKey)}
+                pendingAction={
+                  pendingAction?.connectionId === connection.id
+                    ? pendingAction.type
+                    : null
+                }
+                actionsDisabled={isUpdating || isRemoving || isSavingConnection}
+                onConfigure={openConfiguration}
+                onAction={runConnectionAction}
                 onRemove={setConnectionToRemove}
               />
             ))}
@@ -338,8 +509,8 @@ export function ChannelManagement({
       <ResponsiveDialog
         open={Boolean(connectionToRemove)}
         onOpenChange={handleRemoveDialogChange}
-        title={`${removalChannel?.name ?? "Satış kanalı"} kaldırılsın mı?`}
-        description="Kanal bağlantısı ve mevcut kurulum durumu bu mağazadan kaldırılacak."
+        title={`${removalProvider?.name ?? "Pazaryeri"} kaldırılsın mı?`}
+        description="Bağlantı ve senkronizasyon geçmişi mağazadan kaldırılacak. İçeri aktarılan katalog ürünleri korunur."
         contentClassName="sm:max-w-md"
         footer={({ close }) => (
           <>
@@ -354,7 +525,7 @@ export function ChannelManagement({
             <Button
               type="button"
               variant="destructive"
-              onClick={handleRemove}
+              onClick={removeConnection}
               disabled={isRemoving}
             >
               <HugeiconsIcon icon={Delete02Icon} className="size-4" />
@@ -364,7 +535,7 @@ export function ChannelManagement({
         )}
       >
         <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm leading-6 text-muted-foreground">
-          Bu işlem kanalın CoreAssist üzerindeki bağlantı kaydını siler. Kanal
+          Şifrelenmiş API bilgileri kalıcı olarak silinecektir. Pazaryeri
           hesabınızdaki veriler etkilenmez.
         </div>
         <div className="mt-4 min-h-5 text-sm" aria-live="polite">
@@ -388,64 +559,125 @@ function ChannelMetric({ label, value }: { label: string; value: number }) {
   )
 }
 
+function ProviderLogo({ provider }: { provider: IntegrationProvider }) {
+  return (
+    <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-white shadow-xs">
+      <Image
+        src={provider.image}
+        alt={`${provider.name} logosu`}
+        width={48}
+        height={48}
+        className="size-full object-cover"
+      />
+    </span>
+  )
+}
+
 function ChannelCard({
   connection,
-  isPending,
+  provider,
+  pendingAction,
   actionsDisabled,
-  onUpdate,
+  onConfigure,
+  onAction,
   onRemove,
 }: {
   connection: ChannelConnection
-  isPending: boolean
+  provider: IntegrationProvider
+  pendingAction: "disconnect" | "reconnect" | "sync" | null
   actionsDisabled: boolean
-  onUpdate: (
+  onConfigure: (connection: ChannelConnection) => void
+  onAction: (
     connection: ChannelConnection,
-    action: "disconnect" | "reconnect"
+    action: "disconnect" | "reconnect" | "sync"
   ) => void
   onRemove: (connection: ChannelConnection) => void
 }) {
-  const channel = getChannelCatalogItem(connection.provider)
   const canDisconnect = connection.status === "CONNECTED"
   const canReconnect =
     connection.status === "DISCONNECTED" || connection.status === "ERROR"
 
   return (
-    <article className="flex min-h-64 flex-col rounded-xl border border-border bg-card p-5 shadow-xs">
+    <article className="flex min-h-72 flex-col rounded-xl border border-border bg-card p-5 shadow-xs">
       <div className="flex items-start justify-between gap-3">
-        <span className="flex size-12 items-center justify-center overflow-hidden rounded-xl border border-border bg-white shadow-xs">
-          <Image
-            src={channel.image}
-            alt={`${channel.name} logosu`}
-            width={48}
-            height={48}
-            className="size-full object-cover"
-          />
-        </span>
-        <ConnectionStatusBadge status={connection.status} />
+        <ProviderLogo provider={provider} />
+        <ConnectionStatusBadge
+          status={connection.status}
+          isSyncing={Boolean(connection.processingStartedAt)}
+        />
       </div>
 
       <div className="mt-5">
-        <h3 className="font-semibold text-foreground">{channel.name}</h3>
+        <h3 className="font-semibold text-foreground">{provider.name}</h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          {channel.category} ·{" "}
-          {dateFormatter.format(new Date(connection.createdAt))}
+          {connection.environment === "SANDBOX" ? "Test ortamı" : "Canlı ortam"}
         </p>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          {channel.description}
+          {provider.description}
         </p>
+        <p className="mt-3 text-xs text-muted-foreground">
+          {connection.lastSyncAt
+            ? `Son senkronizasyon: ${dateFormatter.format(
+                new Date(connection.lastSyncAt)
+              )}`
+            : "Henüz ürün senkronizasyonu yapılmadı."}
+        </p>
+        {connection.failureReason ? (
+          <p className="mt-2 line-clamp-2 text-xs text-destructive">
+            {connection.failureReason}
+          </p>
+        ) : null}
       </div>
 
-      <div className="mt-auto flex items-center gap-2 border-t border-border pt-4">
+      <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-border pt-4">
+        {connection.status === "PENDING" ? (
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => onConfigure(connection)}
+            disabled={actionsDisabled}
+          >
+            <HugeiconsIcon icon={Settings02Icon} className="size-3.5" />
+            Kurulumu tamamla
+          </Button>
+        ) : null}
+        {connection.status !== "PENDING" ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onConfigure(connection)}
+            disabled={actionsDisabled}
+          >
+            <HugeiconsIcon icon={Settings02Icon} className="size-3.5" />
+            API bilgileri
+          </Button>
+        ) : null}
+        {connection.status === "CONNECTED" ? (
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => onAction(connection, "sync")}
+            disabled={actionsDisabled || Boolean(connection.processingStartedAt)}
+          >
+            <HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
+            {pendingAction === "sync" || connection.processingStartedAt
+              ? "Senkronize ediliyor..."
+              : "Ürünleri çek"}
+          </Button>
+        ) : null}
         {canDisconnect ? (
           <Button
             type="button"
             size="sm"
             variant="outline"
             disabled={actionsDisabled}
-            onClick={() => onUpdate(connection, "disconnect")}
+            onClick={() => onAction(connection, "disconnect")}
           >
             <HugeiconsIcon icon={Unlink01Icon} className="size-3.5" />
-            {isPending ? "Güncelleniyor..." : "Devre dışı bırak"}
+            {pendingAction === "disconnect"
+              ? "Güncelleniyor..."
+              : "Devre dışı bırak"}
           </Button>
         ) : null}
         {canReconnect ? (
@@ -454,23 +686,20 @@ function ChannelCard({
             size="sm"
             variant="outline"
             disabled={actionsDisabled}
-            onClick={() => onUpdate(connection, "reconnect")}
+            onClick={() => onAction(connection, "reconnect")}
           >
             <HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
-            {isPending ? "Güncelleniyor..." : "Yeniden bağla"}
+            {pendingAction === "reconnect"
+              ? "Doğrulanıyor..."
+              : "Yeniden bağla"}
           </Button>
-        ) : null}
-        {connection.status === "PENDING" ? (
-          <span className="text-xs text-muted-foreground">
-            Kurulum bilgileri bekleniyor
-          </span>
         ) : null}
         <Button
           type="button"
           size="icon-sm"
           variant="ghost"
           className="ml-auto text-muted-foreground hover:text-destructive"
-          aria-label={`${channel.name} bağlantısını kaldır`}
+          aria-label={`${provider.name} bağlantısını kaldır`}
           disabled={actionsDisabled}
           onClick={() => onRemove(connection)}
         >
@@ -483,9 +712,15 @@ function ChannelCard({
 
 function ConnectionStatusBadge({
   status,
+  isSyncing,
 }: {
   status: ChannelConnectionStatus
+  isSyncing: boolean
 }) {
+  if (isSyncing) {
+    return <Badge variant="warning">Senkronize ediliyor</Badge>
+  }
+
   if (status === "CONNECTED") {
     return <Badge variant="success">Bağlı</Badge>
   }
@@ -500,10 +735,27 @@ function ConnectionStatusBadge({
         variant="outline"
         className="border-destructive/25 text-destructive"
       >
-        Hata
+        Bağlantı hatası
       </Badge>
     )
   }
 
   return <Badge variant="secondary">Devre dışı</Badge>
+}
+
+function getProvider(
+  providers: IntegrationProvider[],
+  providerKey: string
+): IntegrationProvider {
+  return (
+    providers.find((provider) => provider.key === providerKey) ?? {
+      key: providerKey,
+      name: providerKey,
+      type: "COMMERCE",
+      image: "/merchants/trendyol.webp",
+      description: "Pazaryeri katalog bağlantısı",
+      environments: ["SANDBOX", "PRODUCTION"],
+      credentialFields: [],
+    }
+  )
 }

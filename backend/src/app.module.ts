@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './database/prisma.module';
@@ -8,9 +9,12 @@ import { StoresModule } from './modules/stores/stores.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { UsersModule } from './modules/users/users.module';
 import { ChannelsModule } from './modules/channels/channels.module';
+import { CatalogModule } from './modules/catalog/catalog.module';
+import { getRedisConnection } from './infrastructure/queue/redis-connection';
 
 @Module({
   imports: [
+    BullModule.forRoot({ connection: getRedisConnection() }),
     PrismaModule,
     AuthModule,
     WorkspacesModule,
@@ -18,6 +22,7 @@ import { ChannelsModule } from './modules/channels/channels.module';
     OnboardingModule,
     UsersModule,
     ChannelsModule,
+    CatalogModule,
   ],
   controllers: [AppController],
   providers: [AppService],

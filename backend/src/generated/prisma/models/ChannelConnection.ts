@@ -20,20 +20,33 @@ export type ChannelConnectionModel = runtime.Types.Result.DefaultSelection<Prism
 
 export type AggregateChannelConnection = {
   _count: ChannelConnectionCountAggregateOutputType | null
+  _avg: ChannelConnectionAvgAggregateOutputType | null
+  _sum: ChannelConnectionSumAggregateOutputType | null
   _min: ChannelConnectionMinAggregateOutputType | null
   _max: ChannelConnectionMaxAggregateOutputType | null
+}
+
+export type ChannelConnectionAvgAggregateOutputType = {
+  credentialSchemaVersion: number | null
+}
+
+export type ChannelConnectionSumAggregateOutputType = {
+  credentialSchemaVersion: number | null
 }
 
 export type ChannelConnectionMinAggregateOutputType = {
   id: string | null
   storeId: string | null
-  provider: $Enums.ChannelProvider | null
+  providerKey: string | null
   type: $Enums.ChannelType | null
+  environment: $Enums.IntegrationEnvironment | null
   status: $Enums.ChannelConnectionStatus | null
   credentialsEncrypted: string | null
+  credentialSchemaVersion: number | null
   connectedAt: Date | null
   processingStartedAt: Date | null
   lastSyncAt: Date | null
+  failureReason: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -41,13 +54,16 @@ export type ChannelConnectionMinAggregateOutputType = {
 export type ChannelConnectionMaxAggregateOutputType = {
   id: string | null
   storeId: string | null
-  provider: $Enums.ChannelProvider | null
+  providerKey: string | null
   type: $Enums.ChannelType | null
+  environment: $Enums.IntegrationEnvironment | null
   status: $Enums.ChannelConnectionStatus | null
   credentialsEncrypted: string | null
+  credentialSchemaVersion: number | null
   connectedAt: Date | null
   processingStartedAt: Date | null
   lastSyncAt: Date | null
+  failureReason: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -55,29 +71,43 @@ export type ChannelConnectionMaxAggregateOutputType = {
 export type ChannelConnectionCountAggregateOutputType = {
   id: number
   storeId: number
-  provider: number
+  providerKey: number
   type: number
+  environment: number
   status: number
   credentialsEncrypted: number
+  credentialSchemaVersion: number
   connectedAt: number
   processingStartedAt: number
   lastSyncAt: number
+  failureReason: number
   createdAt: number
   updatedAt: number
   _all: number
 }
 
 
+export type ChannelConnectionAvgAggregateInputType = {
+  credentialSchemaVersion?: true
+}
+
+export type ChannelConnectionSumAggregateInputType = {
+  credentialSchemaVersion?: true
+}
+
 export type ChannelConnectionMinAggregateInputType = {
   id?: true
   storeId?: true
-  provider?: true
+  providerKey?: true
   type?: true
+  environment?: true
   status?: true
   credentialsEncrypted?: true
+  credentialSchemaVersion?: true
   connectedAt?: true
   processingStartedAt?: true
   lastSyncAt?: true
+  failureReason?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -85,13 +115,16 @@ export type ChannelConnectionMinAggregateInputType = {
 export type ChannelConnectionMaxAggregateInputType = {
   id?: true
   storeId?: true
-  provider?: true
+  providerKey?: true
   type?: true
+  environment?: true
   status?: true
   credentialsEncrypted?: true
+  credentialSchemaVersion?: true
   connectedAt?: true
   processingStartedAt?: true
   lastSyncAt?: true
+  failureReason?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -99,13 +132,16 @@ export type ChannelConnectionMaxAggregateInputType = {
 export type ChannelConnectionCountAggregateInputType = {
   id?: true
   storeId?: true
-  provider?: true
+  providerKey?: true
   type?: true
+  environment?: true
   status?: true
   credentialsEncrypted?: true
+  credentialSchemaVersion?: true
   connectedAt?: true
   processingStartedAt?: true
   lastSyncAt?: true
+  failureReason?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -149,6 +185,18 @@ export type ChannelConnectionAggregateArgs<ExtArgs extends runtime.Types.Extensi
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: ChannelConnectionAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: ChannelConnectionSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: ChannelConnectionMinAggregateInputType
@@ -179,6 +227,8 @@ export type ChannelConnectionGroupByArgs<ExtArgs extends runtime.Types.Extension
   take?: number
   skip?: number
   _count?: ChannelConnectionCountAggregateInputType | true
+  _avg?: ChannelConnectionAvgAggregateInputType
+  _sum?: ChannelConnectionSumAggregateInputType
   _min?: ChannelConnectionMinAggregateInputType
   _max?: ChannelConnectionMaxAggregateInputType
 }
@@ -186,16 +236,21 @@ export type ChannelConnectionGroupByArgs<ExtArgs extends runtime.Types.Extension
 export type ChannelConnectionGroupByOutputType = {
   id: string
   storeId: string
-  provider: $Enums.ChannelProvider
+  providerKey: string
   type: $Enums.ChannelType
+  environment: $Enums.IntegrationEnvironment
   status: $Enums.ChannelConnectionStatus
   credentialsEncrypted: string | null
+  credentialSchemaVersion: number
   connectedAt: Date | null
   processingStartedAt: Date | null
   lastSyncAt: Date | null
+  failureReason: string | null
   createdAt: Date
   updatedAt: Date
   _count: ChannelConnectionCountAggregateOutputType | null
+  _avg: ChannelConnectionAvgAggregateOutputType | null
+  _sum: ChannelConnectionSumAggregateOutputType | null
   _min: ChannelConnectionMinAggregateOutputType | null
   _max: ChannelConnectionMaxAggregateOutputType | null
 }
@@ -221,67 +276,87 @@ export type ChannelConnectionWhereInput = {
   NOT?: Prisma.ChannelConnectionWhereInput | Prisma.ChannelConnectionWhereInput[]
   id?: Prisma.StringFilter<"ChannelConnection"> | string
   storeId?: Prisma.StringFilter<"ChannelConnection"> | string
-  provider?: Prisma.EnumChannelProviderFilter<"ChannelConnection"> | $Enums.ChannelProvider
+  providerKey?: Prisma.StringFilter<"ChannelConnection"> | string
   type?: Prisma.EnumChannelTypeFilter<"ChannelConnection"> | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFilter<"ChannelConnection"> | $Enums.IntegrationEnvironment
   status?: Prisma.EnumChannelConnectionStatusFilter<"ChannelConnection"> | $Enums.ChannelConnectionStatus
   credentialsEncrypted?: Prisma.StringNullableFilter<"ChannelConnection"> | string | null
+  credentialSchemaVersion?: Prisma.IntFilter<"ChannelConnection"> | number
   connectedAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
   processingStartedAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
   lastSyncAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
+  failureReason?: Prisma.StringNullableFilter<"ChannelConnection"> | string | null
   createdAt?: Prisma.DateTimeFilter<"ChannelConnection"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ChannelConnection"> | Date | string
   store?: Prisma.XOR<Prisma.StoreScalarRelationFilter, Prisma.StoreWhereInput>
+  externalProducts?: Prisma.ExternalProductListRelationFilter
+  syncRuns?: Prisma.CatalogSyncRunListRelationFilter
 }
 
 export type ChannelConnectionOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   storeId?: Prisma.SortOrder
-  provider?: Prisma.SortOrder
+  providerKey?: Prisma.SortOrder
   type?: Prisma.SortOrder
+  environment?: Prisma.SortOrder
   status?: Prisma.SortOrder
   credentialsEncrypted?: Prisma.SortOrderInput | Prisma.SortOrder
+  credentialSchemaVersion?: Prisma.SortOrder
   connectedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   processingStartedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  failureReason?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   store?: Prisma.StoreOrderByWithRelationInput
+  externalProducts?: Prisma.ExternalProductOrderByRelationAggregateInput
+  syncRuns?: Prisma.CatalogSyncRunOrderByRelationAggregateInput
 }
 
 export type ChannelConnectionWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  storeId_provider?: Prisma.ChannelConnectionStoreIdProviderCompoundUniqueInput
+  storeId_providerKey?: Prisma.ChannelConnectionStoreIdProviderKeyCompoundUniqueInput
   AND?: Prisma.ChannelConnectionWhereInput | Prisma.ChannelConnectionWhereInput[]
   OR?: Prisma.ChannelConnectionWhereInput[]
   NOT?: Prisma.ChannelConnectionWhereInput | Prisma.ChannelConnectionWhereInput[]
   storeId?: Prisma.StringFilter<"ChannelConnection"> | string
-  provider?: Prisma.EnumChannelProviderFilter<"ChannelConnection"> | $Enums.ChannelProvider
+  providerKey?: Prisma.StringFilter<"ChannelConnection"> | string
   type?: Prisma.EnumChannelTypeFilter<"ChannelConnection"> | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFilter<"ChannelConnection"> | $Enums.IntegrationEnvironment
   status?: Prisma.EnumChannelConnectionStatusFilter<"ChannelConnection"> | $Enums.ChannelConnectionStatus
   credentialsEncrypted?: Prisma.StringNullableFilter<"ChannelConnection"> | string | null
+  credentialSchemaVersion?: Prisma.IntFilter<"ChannelConnection"> | number
   connectedAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
   processingStartedAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
   lastSyncAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
+  failureReason?: Prisma.StringNullableFilter<"ChannelConnection"> | string | null
   createdAt?: Prisma.DateTimeFilter<"ChannelConnection"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ChannelConnection"> | Date | string
   store?: Prisma.XOR<Prisma.StoreScalarRelationFilter, Prisma.StoreWhereInput>
-}, "id" | "storeId_provider">
+  externalProducts?: Prisma.ExternalProductListRelationFilter
+  syncRuns?: Prisma.CatalogSyncRunListRelationFilter
+}, "id" | "storeId_providerKey">
 
 export type ChannelConnectionOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   storeId?: Prisma.SortOrder
-  provider?: Prisma.SortOrder
+  providerKey?: Prisma.SortOrder
   type?: Prisma.SortOrder
+  environment?: Prisma.SortOrder
   status?: Prisma.SortOrder
   credentialsEncrypted?: Prisma.SortOrderInput | Prisma.SortOrder
+  credentialSchemaVersion?: Prisma.SortOrder
   connectedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   processingStartedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  failureReason?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.ChannelConnectionCountOrderByAggregateInput
+  _avg?: Prisma.ChannelConnectionAvgOrderByAggregateInput
   _max?: Prisma.ChannelConnectionMaxOrderByAggregateInput
   _min?: Prisma.ChannelConnectionMinOrderByAggregateInput
+  _sum?: Prisma.ChannelConnectionSumOrderByAggregateInput
 }
 
 export type ChannelConnectionScalarWhereWithAggregatesInput = {
@@ -290,96 +365,125 @@ export type ChannelConnectionScalarWhereWithAggregatesInput = {
   NOT?: Prisma.ChannelConnectionScalarWhereWithAggregatesInput | Prisma.ChannelConnectionScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"ChannelConnection"> | string
   storeId?: Prisma.StringWithAggregatesFilter<"ChannelConnection"> | string
-  provider?: Prisma.EnumChannelProviderWithAggregatesFilter<"ChannelConnection"> | $Enums.ChannelProvider
+  providerKey?: Prisma.StringWithAggregatesFilter<"ChannelConnection"> | string
   type?: Prisma.EnumChannelTypeWithAggregatesFilter<"ChannelConnection"> | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentWithAggregatesFilter<"ChannelConnection"> | $Enums.IntegrationEnvironment
   status?: Prisma.EnumChannelConnectionStatusWithAggregatesFilter<"ChannelConnection"> | $Enums.ChannelConnectionStatus
   credentialsEncrypted?: Prisma.StringNullableWithAggregatesFilter<"ChannelConnection"> | string | null
+  credentialSchemaVersion?: Prisma.IntWithAggregatesFilter<"ChannelConnection"> | number
   connectedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ChannelConnection"> | Date | string | null
   processingStartedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ChannelConnection"> | Date | string | null
   lastSyncAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ChannelConnection"> | Date | string | null
+  failureReason?: Prisma.StringNullableWithAggregatesFilter<"ChannelConnection"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"ChannelConnection"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"ChannelConnection"> | Date | string
 }
 
 export type ChannelConnectionCreateInput = {
   id?: string
-  provider: $Enums.ChannelProvider
+  providerKey: string
   type: $Enums.ChannelType
+  environment?: $Enums.IntegrationEnvironment
   status?: $Enums.ChannelConnectionStatus
   credentialsEncrypted?: string | null
+  credentialSchemaVersion?: number
   connectedAt?: Date | string | null
   processingStartedAt?: Date | string | null
   lastSyncAt?: Date | string | null
+  failureReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   store: Prisma.StoreCreateNestedOneWithoutChannelConnectionsInput
+  externalProducts?: Prisma.ExternalProductCreateNestedManyWithoutConnectionInput
+  syncRuns?: Prisma.CatalogSyncRunCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionUncheckedCreateInput = {
   id?: string
   storeId: string
-  provider: $Enums.ChannelProvider
+  providerKey: string
   type: $Enums.ChannelType
+  environment?: $Enums.IntegrationEnvironment
   status?: $Enums.ChannelConnectionStatus
   credentialsEncrypted?: string | null
+  credentialSchemaVersion?: number
   connectedAt?: Date | string | null
   processingStartedAt?: Date | string | null
   lastSyncAt?: Date | string | null
+  failureReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  externalProducts?: Prisma.ExternalProductUncheckedCreateNestedManyWithoutConnectionInput
+  syncRuns?: Prisma.CatalogSyncRunUncheckedCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.EnumChannelProviderFieldUpdateOperationsInput | $Enums.ChannelProvider
+  providerKey?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFieldUpdateOperationsInput | $Enums.IntegrationEnvironment
   status?: Prisma.EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
   credentialsEncrypted?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  credentialSchemaVersion?: Prisma.IntFieldUpdateOperationsInput | number
   connectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   processingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   store?: Prisma.StoreUpdateOneRequiredWithoutChannelConnectionsNestedInput
+  externalProducts?: Prisma.ExternalProductUpdateManyWithoutConnectionNestedInput
+  syncRuns?: Prisma.CatalogSyncRunUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   storeId?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.EnumChannelProviderFieldUpdateOperationsInput | $Enums.ChannelProvider
+  providerKey?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFieldUpdateOperationsInput | $Enums.IntegrationEnvironment
   status?: Prisma.EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
   credentialsEncrypted?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  credentialSchemaVersion?: Prisma.IntFieldUpdateOperationsInput | number
   connectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   processingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  externalProducts?: Prisma.ExternalProductUncheckedUpdateManyWithoutConnectionNestedInput
+  syncRuns?: Prisma.CatalogSyncRunUncheckedUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionCreateManyInput = {
   id?: string
   storeId: string
-  provider: $Enums.ChannelProvider
+  providerKey: string
   type: $Enums.ChannelType
+  environment?: $Enums.IntegrationEnvironment
   status?: $Enums.ChannelConnectionStatus
   credentialsEncrypted?: string | null
+  credentialSchemaVersion?: number
   connectedAt?: Date | string | null
   processingStartedAt?: Date | string | null
   lastSyncAt?: Date | string | null
+  failureReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type ChannelConnectionUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.EnumChannelProviderFieldUpdateOperationsInput | $Enums.ChannelProvider
+  providerKey?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFieldUpdateOperationsInput | $Enums.IntegrationEnvironment
   status?: Prisma.EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
   credentialsEncrypted?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  credentialSchemaVersion?: Prisma.IntFieldUpdateOperationsInput | number
   connectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   processingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -387,13 +491,16 @@ export type ChannelConnectionUpdateManyMutationInput = {
 export type ChannelConnectionUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   storeId?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.EnumChannelProviderFieldUpdateOperationsInput | $Enums.ChannelProvider
+  providerKey?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFieldUpdateOperationsInput | $Enums.IntegrationEnvironment
   status?: Prisma.EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
   credentialsEncrypted?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  credentialSchemaVersion?: Prisma.IntFieldUpdateOperationsInput | number
   connectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   processingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -408,35 +515,45 @@ export type ChannelConnectionOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type ChannelConnectionStoreIdProviderCompoundUniqueInput = {
+export type ChannelConnectionStoreIdProviderKeyCompoundUniqueInput = {
   storeId: string
-  provider: $Enums.ChannelProvider
+  providerKey: string
 }
 
 export type ChannelConnectionCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   storeId?: Prisma.SortOrder
-  provider?: Prisma.SortOrder
+  providerKey?: Prisma.SortOrder
   type?: Prisma.SortOrder
+  environment?: Prisma.SortOrder
   status?: Prisma.SortOrder
   credentialsEncrypted?: Prisma.SortOrder
+  credentialSchemaVersion?: Prisma.SortOrder
   connectedAt?: Prisma.SortOrder
   processingStartedAt?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
+  failureReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type ChannelConnectionAvgOrderByAggregateInput = {
+  credentialSchemaVersion?: Prisma.SortOrder
 }
 
 export type ChannelConnectionMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   storeId?: Prisma.SortOrder
-  provider?: Prisma.SortOrder
+  providerKey?: Prisma.SortOrder
   type?: Prisma.SortOrder
+  environment?: Prisma.SortOrder
   status?: Prisma.SortOrder
   credentialsEncrypted?: Prisma.SortOrder
+  credentialSchemaVersion?: Prisma.SortOrder
   connectedAt?: Prisma.SortOrder
   processingStartedAt?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
+  failureReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -444,15 +561,27 @@ export type ChannelConnectionMaxOrderByAggregateInput = {
 export type ChannelConnectionMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   storeId?: Prisma.SortOrder
-  provider?: Prisma.SortOrder
+  providerKey?: Prisma.SortOrder
   type?: Prisma.SortOrder
+  environment?: Prisma.SortOrder
   status?: Prisma.SortOrder
   credentialsEncrypted?: Prisma.SortOrder
+  credentialSchemaVersion?: Prisma.SortOrder
   connectedAt?: Prisma.SortOrder
   processingStartedAt?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
+  failureReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type ChannelConnectionSumOrderByAggregateInput = {
+  credentialSchemaVersion?: Prisma.SortOrder
+}
+
+export type ChannelConnectionScalarRelationFilter = {
+  is?: Prisma.ChannelConnectionWhereInput
+  isNot?: Prisma.ChannelConnectionWhereInput
 }
 
 export type ChannelConnectionCreateNestedManyWithoutStoreInput = {
@@ -497,42 +626,88 @@ export type ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput = {
   deleteMany?: Prisma.ChannelConnectionScalarWhereInput | Prisma.ChannelConnectionScalarWhereInput[]
 }
 
-export type EnumChannelProviderFieldUpdateOperationsInput = {
-  set?: $Enums.ChannelProvider
-}
-
 export type EnumChannelTypeFieldUpdateOperationsInput = {
   set?: $Enums.ChannelType
+}
+
+export type EnumIntegrationEnvironmentFieldUpdateOperationsInput = {
+  set?: $Enums.IntegrationEnvironment
 }
 
 export type EnumChannelConnectionStatusFieldUpdateOperationsInput = {
   set?: $Enums.ChannelConnectionStatus
 }
 
+export type IntFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
+export type ChannelConnectionCreateNestedOneWithoutExternalProductsInput = {
+  create?: Prisma.XOR<Prisma.ChannelConnectionCreateWithoutExternalProductsInput, Prisma.ChannelConnectionUncheckedCreateWithoutExternalProductsInput>
+  connectOrCreate?: Prisma.ChannelConnectionCreateOrConnectWithoutExternalProductsInput
+  connect?: Prisma.ChannelConnectionWhereUniqueInput
+}
+
+export type ChannelConnectionUpdateOneRequiredWithoutExternalProductsNestedInput = {
+  create?: Prisma.XOR<Prisma.ChannelConnectionCreateWithoutExternalProductsInput, Prisma.ChannelConnectionUncheckedCreateWithoutExternalProductsInput>
+  connectOrCreate?: Prisma.ChannelConnectionCreateOrConnectWithoutExternalProductsInput
+  upsert?: Prisma.ChannelConnectionUpsertWithoutExternalProductsInput
+  connect?: Prisma.ChannelConnectionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ChannelConnectionUpdateToOneWithWhereWithoutExternalProductsInput, Prisma.ChannelConnectionUpdateWithoutExternalProductsInput>, Prisma.ChannelConnectionUncheckedUpdateWithoutExternalProductsInput>
+}
+
+export type ChannelConnectionCreateNestedOneWithoutSyncRunsInput = {
+  create?: Prisma.XOR<Prisma.ChannelConnectionCreateWithoutSyncRunsInput, Prisma.ChannelConnectionUncheckedCreateWithoutSyncRunsInput>
+  connectOrCreate?: Prisma.ChannelConnectionCreateOrConnectWithoutSyncRunsInput
+  connect?: Prisma.ChannelConnectionWhereUniqueInput
+}
+
+export type ChannelConnectionUpdateOneRequiredWithoutSyncRunsNestedInput = {
+  create?: Prisma.XOR<Prisma.ChannelConnectionCreateWithoutSyncRunsInput, Prisma.ChannelConnectionUncheckedCreateWithoutSyncRunsInput>
+  connectOrCreate?: Prisma.ChannelConnectionCreateOrConnectWithoutSyncRunsInput
+  upsert?: Prisma.ChannelConnectionUpsertWithoutSyncRunsInput
+  connect?: Prisma.ChannelConnectionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ChannelConnectionUpdateToOneWithWhereWithoutSyncRunsInput, Prisma.ChannelConnectionUpdateWithoutSyncRunsInput>, Prisma.ChannelConnectionUncheckedUpdateWithoutSyncRunsInput>
+}
+
 export type ChannelConnectionCreateWithoutStoreInput = {
   id?: string
-  provider: $Enums.ChannelProvider
+  providerKey: string
   type: $Enums.ChannelType
+  environment?: $Enums.IntegrationEnvironment
   status?: $Enums.ChannelConnectionStatus
   credentialsEncrypted?: string | null
+  credentialSchemaVersion?: number
   connectedAt?: Date | string | null
   processingStartedAt?: Date | string | null
   lastSyncAt?: Date | string | null
+  failureReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  externalProducts?: Prisma.ExternalProductCreateNestedManyWithoutConnectionInput
+  syncRuns?: Prisma.CatalogSyncRunCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionUncheckedCreateWithoutStoreInput = {
   id?: string
-  provider: $Enums.ChannelProvider
+  providerKey: string
   type: $Enums.ChannelType
+  environment?: $Enums.IntegrationEnvironment
   status?: $Enums.ChannelConnectionStatus
   credentialsEncrypted?: string | null
+  credentialSchemaVersion?: number
   connectedAt?: Date | string | null
   processingStartedAt?: Date | string | null
   lastSyncAt?: Date | string | null
+  failureReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  externalProducts?: Prisma.ExternalProductUncheckedCreateNestedManyWithoutConnectionInput
+  syncRuns?: Prisma.CatalogSyncRunUncheckedCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionCreateOrConnectWithoutStoreInput = {
@@ -567,96 +742,338 @@ export type ChannelConnectionScalarWhereInput = {
   NOT?: Prisma.ChannelConnectionScalarWhereInput | Prisma.ChannelConnectionScalarWhereInput[]
   id?: Prisma.StringFilter<"ChannelConnection"> | string
   storeId?: Prisma.StringFilter<"ChannelConnection"> | string
-  provider?: Prisma.EnumChannelProviderFilter<"ChannelConnection"> | $Enums.ChannelProvider
+  providerKey?: Prisma.StringFilter<"ChannelConnection"> | string
   type?: Prisma.EnumChannelTypeFilter<"ChannelConnection"> | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFilter<"ChannelConnection"> | $Enums.IntegrationEnvironment
   status?: Prisma.EnumChannelConnectionStatusFilter<"ChannelConnection"> | $Enums.ChannelConnectionStatus
   credentialsEncrypted?: Prisma.StringNullableFilter<"ChannelConnection"> | string | null
+  credentialSchemaVersion?: Prisma.IntFilter<"ChannelConnection"> | number
   connectedAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
   processingStartedAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
   lastSyncAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
+  failureReason?: Prisma.StringNullableFilter<"ChannelConnection"> | string | null
   createdAt?: Prisma.DateTimeFilter<"ChannelConnection"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ChannelConnection"> | Date | string
 }
 
-export type ChannelConnectionCreateManyStoreInput = {
+export type ChannelConnectionCreateWithoutExternalProductsInput = {
   id?: string
-  provider: $Enums.ChannelProvider
+  providerKey: string
   type: $Enums.ChannelType
+  environment?: $Enums.IntegrationEnvironment
   status?: $Enums.ChannelConnectionStatus
   credentialsEncrypted?: string | null
+  credentialSchemaVersion?: number
   connectedAt?: Date | string | null
   processingStartedAt?: Date | string | null
   lastSyncAt?: Date | string | null
+  failureReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  store: Prisma.StoreCreateNestedOneWithoutChannelConnectionsInput
+  syncRuns?: Prisma.CatalogSyncRunCreateNestedManyWithoutConnectionInput
+}
+
+export type ChannelConnectionUncheckedCreateWithoutExternalProductsInput = {
+  id?: string
+  storeId: string
+  providerKey: string
+  type: $Enums.ChannelType
+  environment?: $Enums.IntegrationEnvironment
+  status?: $Enums.ChannelConnectionStatus
+  credentialsEncrypted?: string | null
+  credentialSchemaVersion?: number
+  connectedAt?: Date | string | null
+  processingStartedAt?: Date | string | null
+  lastSyncAt?: Date | string | null
+  failureReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  syncRuns?: Prisma.CatalogSyncRunUncheckedCreateNestedManyWithoutConnectionInput
+}
+
+export type ChannelConnectionCreateOrConnectWithoutExternalProductsInput = {
+  where: Prisma.ChannelConnectionWhereUniqueInput
+  create: Prisma.XOR<Prisma.ChannelConnectionCreateWithoutExternalProductsInput, Prisma.ChannelConnectionUncheckedCreateWithoutExternalProductsInput>
+}
+
+export type ChannelConnectionUpsertWithoutExternalProductsInput = {
+  update: Prisma.XOR<Prisma.ChannelConnectionUpdateWithoutExternalProductsInput, Prisma.ChannelConnectionUncheckedUpdateWithoutExternalProductsInput>
+  create: Prisma.XOR<Prisma.ChannelConnectionCreateWithoutExternalProductsInput, Prisma.ChannelConnectionUncheckedCreateWithoutExternalProductsInput>
+  where?: Prisma.ChannelConnectionWhereInput
+}
+
+export type ChannelConnectionUpdateToOneWithWhereWithoutExternalProductsInput = {
+  where?: Prisma.ChannelConnectionWhereInput
+  data: Prisma.XOR<Prisma.ChannelConnectionUpdateWithoutExternalProductsInput, Prisma.ChannelConnectionUncheckedUpdateWithoutExternalProductsInput>
+}
+
+export type ChannelConnectionUpdateWithoutExternalProductsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  providerKey?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFieldUpdateOperationsInput | $Enums.IntegrationEnvironment
+  status?: Prisma.EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
+  credentialsEncrypted?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  credentialSchemaVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  connectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  processingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  store?: Prisma.StoreUpdateOneRequiredWithoutChannelConnectionsNestedInput
+  syncRuns?: Prisma.CatalogSyncRunUpdateManyWithoutConnectionNestedInput
+}
+
+export type ChannelConnectionUncheckedUpdateWithoutExternalProductsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storeId?: Prisma.StringFieldUpdateOperationsInput | string
+  providerKey?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFieldUpdateOperationsInput | $Enums.IntegrationEnvironment
+  status?: Prisma.EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
+  credentialsEncrypted?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  credentialSchemaVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  connectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  processingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  syncRuns?: Prisma.CatalogSyncRunUncheckedUpdateManyWithoutConnectionNestedInput
+}
+
+export type ChannelConnectionCreateWithoutSyncRunsInput = {
+  id?: string
+  providerKey: string
+  type: $Enums.ChannelType
+  environment?: $Enums.IntegrationEnvironment
+  status?: $Enums.ChannelConnectionStatus
+  credentialsEncrypted?: string | null
+  credentialSchemaVersion?: number
+  connectedAt?: Date | string | null
+  processingStartedAt?: Date | string | null
+  lastSyncAt?: Date | string | null
+  failureReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  store: Prisma.StoreCreateNestedOneWithoutChannelConnectionsInput
+  externalProducts?: Prisma.ExternalProductCreateNestedManyWithoutConnectionInput
+}
+
+export type ChannelConnectionUncheckedCreateWithoutSyncRunsInput = {
+  id?: string
+  storeId: string
+  providerKey: string
+  type: $Enums.ChannelType
+  environment?: $Enums.IntegrationEnvironment
+  status?: $Enums.ChannelConnectionStatus
+  credentialsEncrypted?: string | null
+  credentialSchemaVersion?: number
+  connectedAt?: Date | string | null
+  processingStartedAt?: Date | string | null
+  lastSyncAt?: Date | string | null
+  failureReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  externalProducts?: Prisma.ExternalProductUncheckedCreateNestedManyWithoutConnectionInput
+}
+
+export type ChannelConnectionCreateOrConnectWithoutSyncRunsInput = {
+  where: Prisma.ChannelConnectionWhereUniqueInput
+  create: Prisma.XOR<Prisma.ChannelConnectionCreateWithoutSyncRunsInput, Prisma.ChannelConnectionUncheckedCreateWithoutSyncRunsInput>
+}
+
+export type ChannelConnectionUpsertWithoutSyncRunsInput = {
+  update: Prisma.XOR<Prisma.ChannelConnectionUpdateWithoutSyncRunsInput, Prisma.ChannelConnectionUncheckedUpdateWithoutSyncRunsInput>
+  create: Prisma.XOR<Prisma.ChannelConnectionCreateWithoutSyncRunsInput, Prisma.ChannelConnectionUncheckedCreateWithoutSyncRunsInput>
+  where?: Prisma.ChannelConnectionWhereInput
+}
+
+export type ChannelConnectionUpdateToOneWithWhereWithoutSyncRunsInput = {
+  where?: Prisma.ChannelConnectionWhereInput
+  data: Prisma.XOR<Prisma.ChannelConnectionUpdateWithoutSyncRunsInput, Prisma.ChannelConnectionUncheckedUpdateWithoutSyncRunsInput>
+}
+
+export type ChannelConnectionUpdateWithoutSyncRunsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  providerKey?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFieldUpdateOperationsInput | $Enums.IntegrationEnvironment
+  status?: Prisma.EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
+  credentialsEncrypted?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  credentialSchemaVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  connectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  processingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  store?: Prisma.StoreUpdateOneRequiredWithoutChannelConnectionsNestedInput
+  externalProducts?: Prisma.ExternalProductUpdateManyWithoutConnectionNestedInput
+}
+
+export type ChannelConnectionUncheckedUpdateWithoutSyncRunsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storeId?: Prisma.StringFieldUpdateOperationsInput | string
+  providerKey?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFieldUpdateOperationsInput | $Enums.IntegrationEnvironment
+  status?: Prisma.EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
+  credentialsEncrypted?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  credentialSchemaVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  connectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  processingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  externalProducts?: Prisma.ExternalProductUncheckedUpdateManyWithoutConnectionNestedInput
+}
+
+export type ChannelConnectionCreateManyStoreInput = {
+  id?: string
+  providerKey: string
+  type: $Enums.ChannelType
+  environment?: $Enums.IntegrationEnvironment
+  status?: $Enums.ChannelConnectionStatus
+  credentialsEncrypted?: string | null
+  credentialSchemaVersion?: number
+  connectedAt?: Date | string | null
+  processingStartedAt?: Date | string | null
+  lastSyncAt?: Date | string | null
+  failureReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type ChannelConnectionUpdateWithoutStoreInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.EnumChannelProviderFieldUpdateOperationsInput | $Enums.ChannelProvider
+  providerKey?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFieldUpdateOperationsInput | $Enums.IntegrationEnvironment
   status?: Prisma.EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
   credentialsEncrypted?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  credentialSchemaVersion?: Prisma.IntFieldUpdateOperationsInput | number
   connectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   processingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  externalProducts?: Prisma.ExternalProductUpdateManyWithoutConnectionNestedInput
+  syncRuns?: Prisma.CatalogSyncRunUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionUncheckedUpdateWithoutStoreInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.EnumChannelProviderFieldUpdateOperationsInput | $Enums.ChannelProvider
+  providerKey?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFieldUpdateOperationsInput | $Enums.IntegrationEnvironment
   status?: Prisma.EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
   credentialsEncrypted?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  credentialSchemaVersion?: Prisma.IntFieldUpdateOperationsInput | number
   connectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   processingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  externalProducts?: Prisma.ExternalProductUncheckedUpdateManyWithoutConnectionNestedInput
+  syncRuns?: Prisma.CatalogSyncRunUncheckedUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionUncheckedUpdateManyWithoutStoreInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  provider?: Prisma.EnumChannelProviderFieldUpdateOperationsInput | $Enums.ChannelProvider
+  providerKey?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFieldUpdateOperationsInput | $Enums.IntegrationEnvironment
   status?: Prisma.EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
   credentialsEncrypted?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  credentialSchemaVersion?: Prisma.IntFieldUpdateOperationsInput | number
   connectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   processingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
+
+/**
+ * Count Type ChannelConnectionCountOutputType
+ */
+
+export type ChannelConnectionCountOutputType = {
+  externalProducts: number
+  syncRuns: number
+}
+
+export type ChannelConnectionCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  externalProducts?: boolean | ChannelConnectionCountOutputTypeCountExternalProductsArgs
+  syncRuns?: boolean | ChannelConnectionCountOutputTypeCountSyncRunsArgs
+}
+
+/**
+ * ChannelConnectionCountOutputType without action
+ */
+export type ChannelConnectionCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ChannelConnectionCountOutputType
+   */
+  select?: Prisma.ChannelConnectionCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * ChannelConnectionCountOutputType without action
+ */
+export type ChannelConnectionCountOutputTypeCountExternalProductsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ExternalProductWhereInput
+}
+
+/**
+ * ChannelConnectionCountOutputType without action
+ */
+export type ChannelConnectionCountOutputTypeCountSyncRunsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CatalogSyncRunWhereInput
+}
 
 
 export type ChannelConnectionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   storeId?: boolean
-  provider?: boolean
+  providerKey?: boolean
   type?: boolean
+  environment?: boolean
   status?: boolean
   credentialsEncrypted?: boolean
+  credentialSchemaVersion?: boolean
   connectedAt?: boolean
   processingStartedAt?: boolean
   lastSyncAt?: boolean
+  failureReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
+  externalProducts?: boolean | Prisma.ChannelConnection$externalProductsArgs<ExtArgs>
+  syncRuns?: boolean | Prisma.ChannelConnection$syncRunsArgs<ExtArgs>
+  _count?: boolean | Prisma.ChannelConnectionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["channelConnection"]>
 
 export type ChannelConnectionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   storeId?: boolean
-  provider?: boolean
+  providerKey?: boolean
   type?: boolean
+  environment?: boolean
   status?: boolean
   credentialsEncrypted?: boolean
+  credentialSchemaVersion?: boolean
   connectedAt?: boolean
   processingStartedAt?: boolean
   lastSyncAt?: boolean
+  failureReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
@@ -665,13 +1082,16 @@ export type ChannelConnectionSelectCreateManyAndReturn<ExtArgs extends runtime.T
 export type ChannelConnectionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   storeId?: boolean
-  provider?: boolean
+  providerKey?: boolean
   type?: boolean
+  environment?: boolean
   status?: boolean
   credentialsEncrypted?: boolean
+  credentialSchemaVersion?: boolean
   connectedAt?: boolean
   processingStartedAt?: boolean
   lastSyncAt?: boolean
+  failureReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
@@ -680,20 +1100,26 @@ export type ChannelConnectionSelectUpdateManyAndReturn<ExtArgs extends runtime.T
 export type ChannelConnectionSelectScalar = {
   id?: boolean
   storeId?: boolean
-  provider?: boolean
+  providerKey?: boolean
   type?: boolean
+  environment?: boolean
   status?: boolean
   credentialsEncrypted?: boolean
+  credentialSchemaVersion?: boolean
   connectedAt?: boolean
   processingStartedAt?: boolean
   lastSyncAt?: boolean
+  failureReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ChannelConnectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "storeId" | "provider" | "type" | "status" | "credentialsEncrypted" | "connectedAt" | "processingStartedAt" | "lastSyncAt" | "createdAt" | "updatedAt", ExtArgs["result"]["channelConnection"]>
+export type ChannelConnectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "storeId" | "providerKey" | "type" | "environment" | "status" | "credentialsEncrypted" | "credentialSchemaVersion" | "connectedAt" | "processingStartedAt" | "lastSyncAt" | "failureReason" | "createdAt" | "updatedAt", ExtArgs["result"]["channelConnection"]>
 export type ChannelConnectionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
+  externalProducts?: boolean | Prisma.ChannelConnection$externalProductsArgs<ExtArgs>
+  syncRuns?: boolean | Prisma.ChannelConnection$syncRunsArgs<ExtArgs>
+  _count?: boolean | Prisma.ChannelConnectionCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ChannelConnectionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
@@ -706,17 +1132,22 @@ export type $ChannelConnectionPayload<ExtArgs extends runtime.Types.Extensions.I
   name: "ChannelConnection"
   objects: {
     store: Prisma.$StorePayload<ExtArgs>
+    externalProducts: Prisma.$ExternalProductPayload<ExtArgs>[]
+    syncRuns: Prisma.$CatalogSyncRunPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     storeId: string
-    provider: $Enums.ChannelProvider
+    providerKey: string
     type: $Enums.ChannelType
+    environment: $Enums.IntegrationEnvironment
     status: $Enums.ChannelConnectionStatus
     credentialsEncrypted: string | null
+    credentialSchemaVersion: number
     connectedAt: Date | null
     processingStartedAt: Date | null
     lastSyncAt: Date | null
+    failureReason: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["channelConnection"]>
@@ -1114,6 +1545,8 @@ readonly fields: ChannelConnectionFieldRefs;
 export interface Prisma__ChannelConnectionClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   store<T extends Prisma.StoreDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StoreDefaultArgs<ExtArgs>>): Prisma.Prisma__StoreClient<runtime.Types.Result.GetResult<Prisma.$StorePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  externalProducts<T extends Prisma.ChannelConnection$externalProductsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ChannelConnection$externalProductsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ExternalProductPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  syncRuns<T extends Prisma.ChannelConnection$syncRunsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ChannelConnection$syncRunsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CatalogSyncRunPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1145,13 +1578,16 @@ export interface Prisma__ChannelConnectionClient<T, Null = never, ExtArgs extend
 export interface ChannelConnectionFieldRefs {
   readonly id: Prisma.FieldRef<"ChannelConnection", 'String'>
   readonly storeId: Prisma.FieldRef<"ChannelConnection", 'String'>
-  readonly provider: Prisma.FieldRef<"ChannelConnection", 'ChannelProvider'>
+  readonly providerKey: Prisma.FieldRef<"ChannelConnection", 'String'>
   readonly type: Prisma.FieldRef<"ChannelConnection", 'ChannelType'>
+  readonly environment: Prisma.FieldRef<"ChannelConnection", 'IntegrationEnvironment'>
   readonly status: Prisma.FieldRef<"ChannelConnection", 'ChannelConnectionStatus'>
   readonly credentialsEncrypted: Prisma.FieldRef<"ChannelConnection", 'String'>
+  readonly credentialSchemaVersion: Prisma.FieldRef<"ChannelConnection", 'Int'>
   readonly connectedAt: Prisma.FieldRef<"ChannelConnection", 'DateTime'>
   readonly processingStartedAt: Prisma.FieldRef<"ChannelConnection", 'DateTime'>
   readonly lastSyncAt: Prisma.FieldRef<"ChannelConnection", 'DateTime'>
+  readonly failureReason: Prisma.FieldRef<"ChannelConnection", 'String'>
   readonly createdAt: Prisma.FieldRef<"ChannelConnection", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"ChannelConnection", 'DateTime'>
 }
@@ -1552,6 +1988,54 @@ export type ChannelConnectionDeleteManyArgs<ExtArgs extends runtime.Types.Extens
    * Limit how many ChannelConnections to delete.
    */
   limit?: number
+}
+
+/**
+ * ChannelConnection.externalProducts
+ */
+export type ChannelConnection$externalProductsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ExternalProduct
+   */
+  select?: Prisma.ExternalProductSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ExternalProduct
+   */
+  omit?: Prisma.ExternalProductOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ExternalProductInclude<ExtArgs> | null
+  where?: Prisma.ExternalProductWhereInput
+  orderBy?: Prisma.ExternalProductOrderByWithRelationInput | Prisma.ExternalProductOrderByWithRelationInput[]
+  cursor?: Prisma.ExternalProductWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ExternalProductScalarFieldEnum | Prisma.ExternalProductScalarFieldEnum[]
+}
+
+/**
+ * ChannelConnection.syncRuns
+ */
+export type ChannelConnection$syncRunsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CatalogSyncRun
+   */
+  select?: Prisma.CatalogSyncRunSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CatalogSyncRun
+   */
+  omit?: Prisma.CatalogSyncRunOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CatalogSyncRunInclude<ExtArgs> | null
+  where?: Prisma.CatalogSyncRunWhereInput
+  orderBy?: Prisma.CatalogSyncRunOrderByWithRelationInput | Prisma.CatalogSyncRunOrderByWithRelationInput[]
+  cursor?: Prisma.CatalogSyncRunWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CatalogSyncRunScalarFieldEnum | Prisma.CatalogSyncRunScalarFieldEnum[]
 }
 
 /**

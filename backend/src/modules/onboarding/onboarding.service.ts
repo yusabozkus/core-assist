@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
   ChannelConnectionStatus,
-  ChannelProvider,
   ChannelType,
   StoreRole,
   WorkspaceRole,
@@ -12,25 +11,19 @@ import {
   OnboardingChannel,
 } from './dto/complete-onboarding.dto';
 
-const CHANNEL_PROVIDER: Record<OnboardingChannel, ChannelProvider> = {
-  [OnboardingChannel.TRENDYOL]: ChannelProvider.TRENDYOL,
-  [OnboardingChannel.HEPSIBURADA]: ChannelProvider.HEPSIBURADA,
-  [OnboardingChannel.INSTAGRAM]: ChannelProvider.INSTAGRAM,
-  [OnboardingChannel.WHATSAPP]: ChannelProvider.WHATSAPP,
-  [OnboardingChannel.WOOCOMMERCE]: ChannelProvider.WOOCOMMERCE,
+const CHANNEL_PROVIDER_KEY: Record<OnboardingChannel, string> = {
+  [OnboardingChannel.TRENDYOL]: 'trendyol',
+  [OnboardingChannel.HEPSIBURADA]: 'hepsiburada',
 };
 
 const CHANNEL_TYPE: Record<OnboardingChannel, ChannelType> = {
   [OnboardingChannel.TRENDYOL]: ChannelType.COMMERCE,
   [OnboardingChannel.HEPSIBURADA]: ChannelType.COMMERCE,
-  [OnboardingChannel.INSTAGRAM]: ChannelType.SOCIAL,
-  [OnboardingChannel.WHATSAPP]: ChannelType.MESSAGING,
-  [OnboardingChannel.WOOCOMMERCE]: ChannelType.COMMERCE,
 };
 
 const channelConnectionSelect = {
   id: true,
-  provider: true,
+  providerKey: true,
   type: true,
   status: true,
 } as const;
@@ -165,18 +158,18 @@ export class OnboardingService {
       let channelConnection = store.channelConnections[0] ?? null;
 
       if (dto.selectedChannel) {
-        const provider = CHANNEL_PROVIDER[dto.selectedChannel];
+        const providerKey = CHANNEL_PROVIDER_KEY[dto.selectedChannel];
 
         channelConnection = await transaction.channelConnection.upsert({
           where: {
-            storeId_provider: {
+            storeId_providerKey: {
               storeId: store.id,
-              provider,
+              providerKey,
             },
           },
           create: {
             storeId: store.id,
-            provider,
+            providerKey,
             type: CHANNEL_TYPE[dto.selectedChannel],
             status: ChannelConnectionStatus.PENDING,
           },

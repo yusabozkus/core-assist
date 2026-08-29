@@ -1,5 +1,4 @@
-export type OnboardingChannel =
-  "TRENDYOL" | "HEPSIBURADA" | "INSTAGRAM" | "WHATSAPP" | "WOOCOMMERCE"
+export type OnboardingChannel = "TRENDYOL" | "HEPSIBURADA"
 
 export type CompleteOnboardingPayload = {
   storeName: string
@@ -13,7 +12,7 @@ type OnboardingResource = {
 
 export type ChannelConnection = {
   id: string
-  provider: OnboardingChannel
+  providerKey: string
   type: "COMMERCE" | "MESSAGING" | "SOCIAL"
   status: "PENDING" | "CONNECTED" | "DISCONNECTED" | "ERROR"
 }

@@ -80,6 +80,36 @@ export type Store = Prisma.StoreModel
  */
 export type ChannelConnection = Prisma.ChannelConnectionModel
 /**
+ * Model Product
+ * 
+ */
+export type Product = Prisma.ProductModel
+/**
+ * Model ProductVariant
+ * 
+ */
+export type ProductVariant = Prisma.ProductVariantModel
+/**
+ * Model ProductAttribute
+ * 
+ */
+export type ProductAttribute = Prisma.ProductAttributeModel
+/**
+ * Model ProductImage
+ * 
+ */
+export type ProductImage = Prisma.ProductImageModel
+/**
+ * Model ExternalProduct
+ * 
+ */
+export type ExternalProduct = Prisma.ExternalProductModel
+/**
+ * Model CatalogSyncRun
+ * 
+ */
+export type CatalogSyncRun = Prisma.CatalogSyncRunModel
+/**
  * Model StoreMember
  * 
  */

@@ -26,17 +26,6 @@ export const StoreStatus = {
 export type StoreStatus = (typeof StoreStatus)[keyof typeof StoreStatus]
 
 
-export const ChannelProvider = {
-  TRENDYOL: 'TRENDYOL',
-  HEPSIBURADA: 'HEPSIBURADA',
-  INSTAGRAM: 'INSTAGRAM',
-  WHATSAPP: 'WHATSAPP',
-  WOOCOMMERCE: 'WOOCOMMERCE'
-} as const
-
-export type ChannelProvider = (typeof ChannelProvider)[keyof typeof ChannelProvider]
-
-
 export const ChannelType = {
   COMMERCE: 'COMMERCE',
   MESSAGING: 'MESSAGING',
@@ -54,6 +43,31 @@ export const ChannelConnectionStatus = {
 } as const
 
 export type ChannelConnectionStatus = (typeof ChannelConnectionStatus)[keyof typeof ChannelConnectionStatus]
+
+
+export const IntegrationEnvironment = {
+  SANDBOX: 'SANDBOX',
+  PRODUCTION: 'PRODUCTION'
+} as const
+
+export type IntegrationEnvironment = (typeof IntegrationEnvironment)[keyof typeof IntegrationEnvironment]
+
+
+export const ProductStatus = {
+  ACTIVE: 'ACTIVE',
+  ARCHIVED: 'ARCHIVED'
+} as const
+
+export type ProductStatus = (typeof ProductStatus)[keyof typeof ProductStatus]
+
+
+export const CatalogSyncStatus = {
+  RUNNING: 'RUNNING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED'
+} as const
+
+export type CatalogSyncStatus = (typeof CatalogSyncStatus)[keyof typeof CatalogSyncStatus]
 
 
 export const StoreRole = {

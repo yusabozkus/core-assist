@@ -69,28 +69,7 @@ const CHANNELS = [
     name: "Hepsiburada",
     type: "Pazaryeri",
     image: "/merchants/hepsiburada.webp",
-    available: false,
-  },
-  {
-    id: "instagram",
-    name: "Instagram",
-    type: "Sosyal medya",
-    image: "/merchants/instagram.webp",
-    available: false,
-  },
-  {
-    id: "whatsapp",
-    name: "WhatsApp Business",
-    type: "Mesajlaşma",
-    image: "/merchants/whatsapp.webp",
-    available: false,
-  },
-  {
-    id: "woocommerce",
-    name: "WooCommerce",
-    type: "E-ticaret altyapısı",
-    image: "/merchants/woo.webp",
-    available: false,
+    available: true,
   },
 ] as const
 

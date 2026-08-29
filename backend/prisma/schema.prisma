@@ -117,6 +117,7 @@ model Store {
   workspace          Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   members            StoreMember[]
   channelConnections ChannelConnection[]
+  products           Product[]
 
   @@map("store")
 }
@@ -124,14 +125,6 @@ model Store {
 enum StoreStatus {
   ACTIVE
   INACTIVE
-}
-
-enum ChannelProvider {
-  TRENDYOL
-  HEPSIBURADA
-  INSTAGRAM
-  WHATSAPP
-  WOOCOMMERCE
 }
 
 enum ChannelType {
@@ -147,24 +140,150 @@ enum ChannelConnectionStatus {
   ERROR
 }
 
+enum IntegrationEnvironment {
+  SANDBOX
+  PRODUCTION
+}
+
 model ChannelConnection {
-  id                   String                  @id @default(uuid())
-  storeId              String
-  provider             ChannelProvider
-  type                 ChannelType
-  status               ChannelConnectionStatus @default(PENDING)
-  credentialsEncrypted String?
-  connectedAt          DateTime?
-  processingStartedAt  DateTime?
-  lastSyncAt           DateTime?
-  createdAt            DateTime                @default(now())
-  updatedAt            DateTime                @updatedAt
+  id                      String                  @id @default(uuid())
+  storeId                 String
+  providerKey             String                  @map("provider")
+  type                    ChannelType
+  environment             IntegrationEnvironment  @default(SANDBOX)
+  status                  ChannelConnectionStatus @default(PENDING)
+  credentialsEncrypted    String?
+  credentialSchemaVersion Int                     @default(1)
+  connectedAt             DateTime?
+  processingStartedAt     DateTime?
+  lastSyncAt              DateTime?
+  failureReason           String?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
 
-  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  store            Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  externalProducts ExternalProduct[]
+  syncRuns         CatalogSyncRun[]
 
-  @@unique([storeId, provider])
+  @@unique([storeId, providerKey])
   @@index([storeId, status])
   @@map("channel_connection")
+}
+
+enum ProductStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  storeId     String
+  title       String
+  description String?
+  brand       String?
+  category    String?
+  status      ProductStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  store            Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  variants         ProductVariant[]
+  attributes       ProductAttribute[]
+  images           ProductImage[]
+  externalProducts ExternalProduct[]
+
+  @@index([storeId, status])
+  @@map("product")
+}
+
+model ProductVariant {
+  id        String   @id @default(uuid())
+  productId String
+  title     String?
+  sku       String
+  barcode   String?
+  color     String?
+  size      String?
+  price     Float
+  currency  String   @default("TRY")
+  stock     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, sku])
+  @@index([barcode])
+  @@map("product_variant")
+}
+
+model ProductAttribute {
+  id        String   @id @default(uuid())
+  productId String
+  name      String
+  value     String
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, name, value])
+  @@map("product_attribute")
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  productId String
+  url       String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, url])
+  @@map("product_image")
+}
+
+model ExternalProduct {
+  id           String   @id @default(uuid())
+  connectionId String
+  productId    String
+  externalId   String
+  externalUrl  String?
+  rawPayload   Json?
+  lastSyncedAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  connection ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  product    Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([connectionId, externalId])
+  @@index([productId])
+  @@map("external_product")
+}
+
+enum CatalogSyncStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model CatalogSyncRun {
+  id                String            @id @default(uuid())
+  connectionId      String
+  status            CatalogSyncStatus @default(RUNNING)
+  productsProcessed Int               @default(0)
+  cursor            String?
+  errorMessage      String?
+  startedAt         DateTime          @default(now())
+  completedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  connection ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([connectionId, startedAt])
+  @@map("catalog_sync_run")
 }
 
 model StoreMember {

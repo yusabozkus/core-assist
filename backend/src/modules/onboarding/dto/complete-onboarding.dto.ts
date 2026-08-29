@@ -8,9 +8,6 @@ function trimString({ value }: TransformFnParams): unknown {
 export enum OnboardingChannel {
   TRENDYOL = 'TRENDYOL',
   HEPSIBURADA = 'HEPSIBURADA',
-  INSTAGRAM = 'INSTAGRAM',
-  WHATSAPP = 'WHATSAPP',
-  WOOCOMMERCE = 'WOOCOMMERCE',
 }
 
 export class CompleteOnboardingDto {

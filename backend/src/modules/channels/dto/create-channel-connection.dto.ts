@@ -1,7 +1,14 @@
-import { IsEnum } from 'class-validator';
-import { ChannelProvider } from '../../../generated/prisma/enums';
+import { IsEnum, IsObject, IsString, Matches } from 'class-validator';
+import { IntegrationEnvironment } from '../../../generated/prisma/enums';
 
 export class CreateChannelConnectionDto {
-  @IsEnum(ChannelProvider)
-  provider: ChannelProvider;
+  @IsString()
+  @Matches(/^[a-z0-9-]+$/)
+  providerKey: string;
+
+  @IsEnum(IntegrationEnvironment)
+  environment: IntegrationEnvironment;
+
+  @IsObject()
+  credentials: Record<string, unknown>;
 }
