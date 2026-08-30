@@ -44,3 +44,17 @@ export type QueueQuestionAnswerResult = {
   status: "QUEUED"
   queuedAt: string
 }
+
+export type DraftQuestionAnswerResult = {
+  answer: string
+  status: "DRAFTED"
+  context: {
+    requestedFacts: Array<
+      "STOCK" | "PRICE" | "MATERIAL" | "SHIPPING" | "PRODUCT_INFO"
+    >
+    matchedColor: string | null
+    matchedSize: string | null
+    matchingVariantCount: number
+    source: "CATALOG"
+  }
+}

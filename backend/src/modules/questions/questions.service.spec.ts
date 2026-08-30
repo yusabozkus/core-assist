@@ -4,6 +4,7 @@ import { PrismaService } from '../../database/prisma.service';
 import type { QuestionSyncDispatcher } from '../question-sync/question-sync.types';
 import type { QuestionAnswerDispatcher } from '../question-answer/question-answer.types';
 import { QuestionsService } from './questions.service';
+import { QuestionDraftService } from './question-draft.service';
 
 describe('QuestionsService', () => {
   const findMembership = jest.fn();
@@ -11,6 +12,7 @@ describe('QuestionsService', () => {
   const findConnections = jest.fn();
   const enqueue = jest.fn();
   const enqueueAnswer = jest.fn();
+  const generateDraft = jest.fn();
   const prisma = {
     storeMember: { findUnique: findMembership },
     productQuestion: { findMany: findQuestions },
@@ -20,7 +22,15 @@ describe('QuestionsService', () => {
   const answerDispatcher = {
     enqueue: enqueueAnswer,
   } as unknown as QuestionAnswerDispatcher;
-  const service = new QuestionsService(prisma, dispatcher, answerDispatcher);
+  const draftService = {
+    generate: generateDraft,
+  } as unknown as QuestionDraftService;
+  const service = new QuestionsService(
+    prisma,
+    dispatcher,
+    answerDispatcher,
+    draftService,
+  );
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -96,6 +106,24 @@ describe('QuestionsService', () => {
     findMembership.mockResolvedValue({ role: StoreRole.VIEWER });
     await expect(
       service.answer('store-1', 'question-1', 'user-1', 'Cevap'),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('allows agents to generate a draft but rejects viewers', async () => {
+    findMembership.mockResolvedValue({ role: StoreRole.AGENT });
+    generateDraft.mockResolvedValue({
+      answer: 'Stokta mevcut.',
+      status: 'DRAFTED',
+    });
+
+    await expect(
+      service.draft('store-1', 'question-1', 'user-1'),
+    ).resolves.toEqual({ answer: 'Stokta mevcut.', status: 'DRAFTED' });
+    expect(generateDraft).toHaveBeenCalledWith('store-1', 'question-1');
+
+    findMembership.mockResolvedValue({ role: StoreRole.VIEWER });
+    await expect(
+      service.draft('store-1', 'question-1', 'user-1'),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });

@@ -52,4 +52,14 @@ export class QuestionsController {
       body.answer,
     );
   }
+
+  @Post(':questionId/draft')
+  @HttpCode(HttpStatus.OK)
+  draft(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
+    @Param('questionId', new ParseUUIDPipe()) questionId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.questionsService.draft(storeId, questionId, user.id);
+  }
 }

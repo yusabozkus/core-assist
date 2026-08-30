@@ -21,6 +21,7 @@ import {
   MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER,
   MOCK_QUESTIONS_PER_PROVIDER,
 } from '../modules/channels/providers/mock-question.connector';
+import { QuestionDraftService } from '../modules/questions/question-draft.service';
 
 const POLL_INTERVAL_MS = 100;
 const TIMEOUT_MS = 10_000;
@@ -38,6 +39,7 @@ async function run() {
   const questionAnswers = app.get<QuestionAnswerDispatcher>(
     QUESTION_ANSWER_DISPATCHER,
   );
+  const questionDrafts = app.get(QuestionDraftService);
   let userId: string | undefined;
   let workspaceId: string | undefined;
   let storeId: string | undefined;
@@ -100,11 +102,15 @@ async function run() {
       orderBy: { externalCreatedAt: 'asc' },
       select: { id: true },
     });
+    const generatedDraft = await questionDrafts.generate(
+      store.id,
+      questionToAnswer.id,
+    );
     const queuedAnswer = await questionAnswers.enqueue({
       storeId: store.id,
       questionId: questionToAnswer.id,
       requestedByUserId: user.id,
-      answer: 'Mock mağaza cevabı başarıyla gönderildi.',
+      answer: generatedDraft.answer,
     });
     await waitForQuestionAnswer(prisma, queuedAnswer.id);
 
@@ -155,6 +161,8 @@ async function run() {
       questions !== MOCK_QUESTIONS_PER_PROVIDER ||
       matchedQuestions !== MOCK_QUESTIONS_PER_PROVIDER ||
       sentAnswers !== 1 ||
+      generatedDraft.status !== 'DRAFTED' ||
+      generatedDraft.context.source !== 'CATALOG' ||
       !duplicateAnswerPrevented
     ) {
       throw new Error(
@@ -163,7 +171,7 @@ async function run() {
     }
 
     process.stdout.write(
-      `${JSON.stringify({ syncs: 2, products, events, ignoredEvents, questions, matchedQuestions, sentAnswers, duplicateSafe: true, duplicateAnswerPrevented })}\n`,
+      `${JSON.stringify({ syncs: 2, products, events, ignoredEvents, questions, matchedQuestions, draftedAnswers: 1, sentAnswers, duplicateSafe: true, duplicateAnswerPrevented })}\n`,
     );
   } finally {
     if (storeId) await prisma.store.deleteMany({ where: { id: storeId } });

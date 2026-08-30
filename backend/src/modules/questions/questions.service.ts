@@ -15,6 +15,7 @@ import { QUESTION_SYNC_DISPATCHER } from '../question-sync/question-sync.constan
 import type { QuestionSyncDispatcher } from '../question-sync/question-sync.types';
 import { QUESTION_ANSWER_DISPATCHER } from '../question-answer/question-answer.constants';
 import type { QuestionAnswerDispatcher } from '../question-answer/question-answer.types';
+import { QuestionDraftService } from './question-draft.service';
 
 @Injectable()
 export class QuestionsService {
@@ -24,6 +25,7 @@ export class QuestionsService {
     private readonly questionSync: QuestionSyncDispatcher,
     @Inject(QUESTION_ANSWER_DISPATCHER)
     private readonly questionAnswers: QuestionAnswerDispatcher,
+    private readonly questionDrafts: QuestionDraftService,
   ) {}
 
   async findAll(storeId: string, userId: string) {
@@ -185,6 +187,18 @@ export class QuestionsService {
       requestedByUserId: userId,
       answer,
     });
+  }
+
+  async draft(storeId: string, questionId: string, userId: string) {
+    const membership = await this.requireStoreMembership(storeId, userId);
+
+    if (membership.role === StoreRole.VIEWER) {
+      throw new ForbiddenException(
+        'Ürün soruları için taslak oluşturma yetkiniz bulunmuyor.',
+      );
+    }
+
+    return this.questionDrafts.generate(storeId, questionId);
   }
 
   private async requireStoreMembership(storeId: string, userId: string) {

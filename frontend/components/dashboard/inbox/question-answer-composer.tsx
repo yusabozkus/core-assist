@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import {
   CheckmarkCircle01Icon,
+  MagicWand01Icon,
   RefreshIcon,
   SendIcon,
 } from "@hugeicons/core-free-icons"
@@ -11,7 +12,10 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { answerProductQuestion } from "@/lib/api/questions"
+import {
+  answerProductQuestion,
+  generateProductQuestionDraft,
+} from "@/lib/api/questions"
 import type { ProductQuestion } from "@/types/question"
 
 const MAX_ANSWER_LENGTH = 2000
@@ -28,13 +32,18 @@ export function QuestionAnswerComposer({
   const router = useRouter()
   const delivery = question.answerDelivery
   const [answer, setAnswer] = useState(
-    delivery?.status === "FAILED" ? delivery.answer : ""
+    delivery?.status === "FAILED"
+      ? delivery.answer
+      : question.status === "DRAFTED"
+        ? (question.answer ?? "")
+        : ""
   )
   const [error, setError] = useState<string | null>(null)
   const [optimisticQueuedAt, setOptimisticQueuedAt] = useState<string | null>(
     null
   )
   const [isSubmitting, startSubmitTransition] = useTransition()
+  const [isDrafting, startDraftTransition] = useTransition()
   const isQueued =
     (optimisticQueuedAt !== null &&
       delivery?.queuedAt !== optimisticQueuedAt) ||
@@ -92,18 +101,62 @@ export function QuestionAnswerComposer({
     })
   }
 
+  function generateDraft() {
+    startDraftTransition(async () => {
+      setError(null)
+
+      try {
+        const result = await generateProductQuestionDraft(storeId, question.id)
+        setAnswer(result.answer)
+        router.refresh()
+      } catch (caughtError) {
+        setError(
+          caughtError instanceof Error
+            ? caughtError.message
+            : "Cevap taslağı oluşturulamadı."
+        )
+      }
+    })
+  }
+
   return (
     <form onSubmit={submitAnswer} className="mt-6 border-t border-border pt-6">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <label
           htmlFor={`question-answer-${question.id}`}
           className="text-sm font-semibold text-foreground"
         >
           Cevabınız
         </label>
-        <span className="text-xs text-muted-foreground tabular-nums">
-          {answer.length}/{MAX_ANSWER_LENGTH}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {answer.length}/{MAX_ANSWER_LENGTH}
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={generateDraft}
+            disabled={
+              isDrafting || isSubmitting || isQueued || !question.product
+            }
+            title={
+              question.product
+                ? undefined
+                : "Taslak için sorunun bir ürünle eşleşmesi gerekir."
+            }
+          >
+            <HugeiconsIcon
+              icon={isDrafting ? RefreshIcon : MagicWand01Icon}
+              className={`size-3.5 ${isDrafting ? "animate-spin" : ""}`}
+            />
+            {isDrafting
+              ? "Hazırlanıyor..."
+              : question.status === "DRAFTED"
+                ? "Taslağı yenile"
+                : "Taslak oluştur"}
+          </Button>
+        </div>
       </div>
       <Textarea
         id={`question-answer-${question.id}`}
@@ -111,7 +164,7 @@ export function QuestionAnswerComposer({
         onChange={(event) => setAnswer(event.target.value)}
         maxLength={MAX_ANSWER_LENGTH}
         rows={5}
-        disabled={isSubmitting || isQueued}
+        disabled={isSubmitting || isQueued || isDrafting}
         placeholder="Müşteriye göndermek istediğiniz cevabı yazın..."
         className="mt-3 min-h-32 resize-y"
         aria-invalid={Boolean(error || delivery?.lastError)}
@@ -133,7 +186,9 @@ export function QuestionAnswerComposer({
         </div>
         <Button
           type="submit"
-          disabled={isSubmitting || isQueued || answer.trim().length < 2}
+          disabled={
+            isSubmitting || isQueued || isDrafting || answer.trim().length < 2
+          }
         >
           <HugeiconsIcon
             icon={isQueued ? RefreshIcon : SendIcon}
