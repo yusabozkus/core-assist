@@ -69,7 +69,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
       >
         <div className="flex items-start gap-4 border-b border-border pb-6">
           <Avatar className="size-14">
-            {user.image ? <AvatarImage src={user.image} alt={user.name} /> : null}
+            {user.image ? (
+              <AvatarImage src={user.image} alt={user.name} />
+            ) : null}
             <AvatarFallback className="bg-primary font-semibold text-primary-foreground">
               {getInitials(name)}
             </AvatarFallback>
@@ -117,7 +119,10 @@ export function ProfileForm({ user }: ProfileFormProps) {
               </span>
             ) : null}
           </div>
-          <Button type="submit" disabled={isSaving || name.trim() === user.name}>
+          <Button
+            type="submit"
+            disabled={isSaving || name.trim() === user.name}
+          >
             {isSaving ? "Kaydediliyor..." : "Değişiklikleri kaydet"}
           </Button>
         </div>
@@ -139,7 +144,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
           </p>
         </div>
         <div className="mt-5 border-t border-border pt-5">
-          <p className="text-xs font-medium text-muted-foreground">E-posta durumu</p>
+          <p className="text-xs font-medium text-muted-foreground">
+            E-posta durumu
+          </p>
           <p className="mt-1 text-sm font-semibold text-foreground">
             {user.emailVerified ? "Doğrulanmış" : "Doğrulama bekliyor"}
           </p>

@@ -3,7 +3,8 @@ import { FileImportIcon, PlusSignIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { ProductCatalog } from "./product-catalog"
-import { Badge } from "@/components/ui/badge"
+import { CatalogBadge } from "@/components/dashboard/catalog/products/catalog-badge"
+import { CatalogFreshness } from "@/components/dashboard/catalog/products/catalog-freshness"
 import { Button } from "@/components/ui/button"
 import { APP_ROUTES } from "@/constants/site"
 import { getServerCatalogProducts } from "@/lib/api/catalog.server"
@@ -66,72 +67,5 @@ export default async function ProductsPage() {
 
       <ProductCatalog products={products} />
     </div>
-  )
-}
-
-function CatalogFreshness({
-  connections,
-}: {
-  connections: Awaited<ReturnType<typeof getServerChannelConnections>>
-}) {
-  const isSyncing = connections.some(
-    (connection) => connection.processingStartedAt
-  )
-  const lastInventorySyncAt = connections
-    .map(
-      (connection) => connection.lastInventorySyncAt ?? connection.lastSyncAt
-    )
-    .filter((value): value is string => Boolean(value))
-    .sort()
-    .at(-1)
-  const hasFailure = connections.some((connection) => connection.failureReason)
-  const hasCompletedSync = Boolean(lastInventorySyncAt)
-
-  return (
-    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-      <span className="flex items-center gap-2">
-        <span
-          className={`size-1.5 rounded-full ${
-            isSyncing
-              ? "animate-pulse bg-amber-500"
-              : hasFailure
-                ? "bg-destructive"
-                : hasCompletedSync
-                  ? "bg-emerald-500"
-                  : "bg-muted-foreground/50"
-          }`}
-        />
-        {isSyncing
-          ? "Ürün bilgileri güncelleniyor"
-          : lastInventorySyncAt
-            ? `Son stok kontrolü ${formatSyncDate(lastInventorySyncAt)}`
-            : "Henüz stok senkronizasyonu yapılmadı"}
-      </span>
-      {hasFailure && !isSyncing ? (
-        <span className="text-destructive">Son senkronizasyon başarısız</span>
-      ) : null}
-    </div>
-  )
-}
-
-function formatSyncDate(value: string) {
-  return new Intl.DateTimeFormat("tr-TR", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Europe/Istanbul",
-  }).format(new Date(value))
-}
-
-function CatalogBadge({ label, value }: { label: string; value: number }) {
-  return (
-    <Badge
-      variant="outline"
-      className="gap-2 border-border bg-white px-3 py-1.5 text-foreground shadow-none dark:bg-card"
-    >
-      <span className="size-2 rounded-full bg-emerald-500" />
-      {value.toLocaleString("tr-TR")} {label}
-    </Badge>
   )
 }

@@ -13,6 +13,8 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { QUESTION_SYNC_DISPATCHER } from '../question-sync/question-sync.constants';
 import type { QuestionSyncDispatcher } from '../question-sync/question-sync.types';
+import { QUESTION_ANSWER_DISPATCHER } from '../question-answer/question-answer.constants';
+import type { QuestionAnswerDispatcher } from '../question-answer/question-answer.types';
 
 @Injectable()
 export class QuestionsService {
@@ -20,6 +22,8 @@ export class QuestionsService {
     private readonly prisma: PrismaService,
     @Inject(QUESTION_SYNC_DISPATCHER)
     private readonly questionSync: QuestionSyncDispatcher,
+    @Inject(QUESTION_ANSWER_DISPATCHER)
+    private readonly questionAnswers: QuestionAnswerDispatcher,
   ) {}
 
   async findAll(storeId: string, userId: string) {
@@ -38,6 +42,8 @@ export class QuestionsService {
         status: true,
         externalCreatedAt: true,
         createdAt: true,
+        answer: true,
+        answeredAt: true,
         connection: {
           select: { providerKey: true },
         },
@@ -52,6 +58,17 @@ export class QuestionsService {
               take: 1,
               select: { url: true },
             },
+          },
+        },
+        answerDelivery: {
+          select: {
+            id: true,
+            answer: true,
+            status: true,
+            attempts: true,
+            lastError: true,
+            queuedAt: true,
+            sentAt: true,
           },
         },
       },
@@ -99,6 +116,28 @@ export class QuestionsService {
       queued: results.filter((result) => result.status === 'fulfilled').length,
       skipped: results.filter((result) => result.status === 'rejected').length,
     };
+  }
+
+  async answer(
+    storeId: string,
+    questionId: string,
+    userId: string,
+    answer: string,
+  ) {
+    const membership = await this.requireStoreMembership(storeId, userId);
+
+    if (membership.role === StoreRole.VIEWER) {
+      throw new ForbiddenException(
+        'Ürün sorularını yanıtlama yetkiniz bulunmuyor.',
+      );
+    }
+
+    return this.questionAnswers.enqueue({
+      storeId,
+      questionId,
+      requestedByUserId: userId,
+      answer,
+    });
   }
 
   private async requireStoreMembership(storeId: string, userId: string) {

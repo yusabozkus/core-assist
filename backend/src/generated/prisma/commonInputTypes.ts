@@ -525,6 +525,23 @@ export type EnumProductQuestionStatusWithAggregatesFilter<$PrismaModel = never> 
   _max?: Prisma.NestedEnumProductQuestionStatusFilter<$PrismaModel>
 }
 
+export type EnumQuestionAnswerStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuestionAnswerStatus | Prisma.EnumQuestionAnswerStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.QuestionAnswerStatus[] | Prisma.ListEnumQuestionAnswerStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuestionAnswerStatus[] | Prisma.ListEnumQuestionAnswerStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuestionAnswerStatusFilter<$PrismaModel> | $Enums.QuestionAnswerStatus
+}
+
+export type EnumQuestionAnswerStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuestionAnswerStatus | Prisma.EnumQuestionAnswerStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.QuestionAnswerStatus[] | Prisma.ListEnumQuestionAnswerStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuestionAnswerStatus[] | Prisma.ListEnumQuestionAnswerStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuestionAnswerStatusWithAggregatesFilter<$PrismaModel> | $Enums.QuestionAnswerStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumQuestionAnswerStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumQuestionAnswerStatusFilter<$PrismaModel>
+}
+
 export type EnumStoreRoleFilter<$PrismaModel = never> = {
   equals?: $Enums.StoreRole | Prisma.EnumStoreRoleFieldRefInput<$PrismaModel>
   in?: $Enums.StoreRole[] | Prisma.ListEnumStoreRoleFieldRefInput<$PrismaModel>
@@ -1010,6 +1027,23 @@ export type NestedEnumProductQuestionStatusWithAggregatesFilter<$PrismaModel = n
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumProductQuestionStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumProductQuestionStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumQuestionAnswerStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuestionAnswerStatus | Prisma.EnumQuestionAnswerStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.QuestionAnswerStatus[] | Prisma.ListEnumQuestionAnswerStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuestionAnswerStatus[] | Prisma.ListEnumQuestionAnswerStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuestionAnswerStatusFilter<$PrismaModel> | $Enums.QuestionAnswerStatus
+}
+
+export type NestedEnumQuestionAnswerStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuestionAnswerStatus | Prisma.EnumQuestionAnswerStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.QuestionAnswerStatus[] | Prisma.ListEnumQuestionAnswerStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuestionAnswerStatus[] | Prisma.ListEnumQuestionAnswerStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuestionAnswerStatusWithAggregatesFilter<$PrismaModel> | $Enums.QuestionAnswerStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumQuestionAnswerStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumQuestionAnswerStatusFilter<$PrismaModel>
 }
 
 export type NestedEnumStoreRoleFilter<$PrismaModel = never> = {

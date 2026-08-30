@@ -124,6 +124,16 @@ export const ProductQuestionStatus = {
 export type ProductQuestionStatus = (typeof ProductQuestionStatus)[keyof typeof ProductQuestionStatus]
 
 
+export const QuestionAnswerStatus = {
+  QUEUED: 'QUEUED',
+  PROCESSING: 'PROCESSING',
+  SENT: 'SENT',
+  FAILED: 'FAILED'
+} as const
+
+export type QuestionAnswerStatus = (typeof QuestionAnswerStatus)[keyof typeof QuestionAnswerStatus]
+
+
 export const StoreRole = {
   OWNER: 'OWNER',
   ADMIN: 'ADMIN',

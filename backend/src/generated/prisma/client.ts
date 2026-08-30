@@ -125,6 +125,11 @@ export type IncomingEvent = Prisma.IncomingEventModel
  */
 export type ProductQuestion = Prisma.ProductQuestionModel
 /**
+ * Model QuestionAnswer
+ * 
+ */
+export type QuestionAnswer = Prisma.QuestionAnswerModel
+/**
  * Model StoreMember
  * 
  */

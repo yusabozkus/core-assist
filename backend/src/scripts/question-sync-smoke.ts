@@ -14,6 +14,8 @@ import { PRODUCT_SYNC_DISPATCHER } from '../modules/product-sync/product-sync.co
 import type { ProductSyncDispatcher } from '../modules/product-sync/product-sync.types';
 import { QUESTION_SYNC_DISPATCHER } from '../modules/question-sync/question-sync.constants';
 import type { QuestionSyncDispatcher } from '../modules/question-sync/question-sync.types';
+import { QUESTION_ANSWER_DISPATCHER } from '../modules/question-answer/question-answer.constants';
+import type { QuestionAnswerDispatcher } from '../modules/question-answer/question-answer.types';
 
 const POLL_INTERVAL_MS = 100;
 const TIMEOUT_MS = 10_000;
@@ -27,6 +29,9 @@ async function run() {
   const productSync = app.get<ProductSyncDispatcher>(PRODUCT_SYNC_DISPATCHER);
   const questionSync = app.get<QuestionSyncDispatcher>(
     QUESTION_SYNC_DISPATCHER,
+  );
+  const questionAnswers = app.get<QuestionAnswerDispatcher>(
+    QUESTION_ANSWER_DISPATCHER,
   );
   let userId: string | undefined;
   let workspaceId: string | undefined;
@@ -84,10 +89,36 @@ async function run() {
 
     await questionSync.enqueue(store.id, connection.id);
     await waitForQuestionSync(prisma, connection.id);
+
+    const questionToAnswer = await prisma.productQuestion.findFirstOrThrow({
+      where: { connectionId: connection.id },
+      orderBy: { externalCreatedAt: 'asc' },
+      select: { id: true },
+    });
+    const queuedAnswer = await questionAnswers.enqueue({
+      storeId: store.id,
+      questionId: questionToAnswer.id,
+      requestedByUserId: user.id,
+      answer: 'Mock mağaza cevabı başarıyla gönderildi.',
+    });
+    await waitForQuestionAnswer(prisma, queuedAnswer.id);
+
+    let duplicateAnswerPrevented = false;
+
+    try {
+      await questionAnswers.enqueue({
+        storeId: store.id,
+        questionId: questionToAnswer.id,
+        requestedByUserId: user.id,
+        answer: 'Bu cevap ikinci kez gönderilmemeli.',
+      });
+    } catch {
+      duplicateAnswerPrevented = true;
+    }
     await questionSync.enqueue(store.id, connection.id);
     await waitForQuestionSync(prisma, connection.id);
 
-    const [events, ignoredEvents, questions, matchedQuestions] =
+    const [events, ignoredEvents, questions, matchedQuestions, sentAnswers] =
       await Promise.all([
         prisma.incomingEvent.count({ where: { connectionId: connection.id } }),
         prisma.incomingEvent.count({
@@ -99,21 +130,26 @@ async function run() {
         prisma.productQuestion.count({
           where: { connectionId: connection.id, productId: { not: null } },
         }),
+        prisma.questionAnswer.count({
+          where: { connectionId: connection.id, status: 'SENT' },
+        }),
       ]);
 
     if (
       events !== 3 ||
       ignoredEvents !== 1 ||
       questions !== 2 ||
-      matchedQuestions !== 2
+      matchedQuestions !== 2 ||
+      sentAnswers !== 1 ||
+      !duplicateAnswerPrevented
     ) {
       throw new Error(
-        `Unexpected question ingestion: ${events} events, ${ignoredEvents} ignored, ${questions} questions, ${matchedQuestions} matched.`,
+        `Unexpected question flow: ${events} events, ${ignoredEvents} ignored, ${questions} questions, ${matchedQuestions} matched, ${sentAnswers} answers.`,
       );
     }
 
     process.stdout.write(
-      `${JSON.stringify({ syncs: 2, events, ignoredEvents, questions, matchedQuestions, duplicateSafe: true })}\n`,
+      `${JSON.stringify({ syncs: 2, events, ignoredEvents, questions, matchedQuestions, sentAnswers, duplicateSafe: true, duplicateAnswerPrevented })}\n`,
     );
   } finally {
     if (storeId) await prisma.store.deleteMany({ where: { id: storeId } });
@@ -122,6 +158,31 @@ async function run() {
     }
     if (userId) await prisma.user.deleteMany({ where: { id: userId } });
     await app.close();
+  }
+}
+
+async function waitForQuestionAnswer(prisma: PrismaService, answerId: string) {
+  const deadline = Date.now() + TIMEOUT_MS;
+  let answer = await prisma.questionAnswer.findUniqueOrThrow({
+    where: { id: answerId },
+    select: { status: true, lastError: true },
+  });
+
+  while (
+    (answer.status === 'QUEUED' || answer.status === 'PROCESSING') &&
+    Date.now() < deadline
+  ) {
+    await wait(POLL_INTERVAL_MS);
+    answer = await prisma.questionAnswer.findUniqueOrThrow({
+      where: { id: answerId },
+      select: { status: true, lastError: true },
+    });
+  }
+
+  if (answer.status !== 'SENT') {
+    throw new Error(
+      answer.lastError ?? 'Question answer smoke test timed out.',
+    );
   }
 }
 

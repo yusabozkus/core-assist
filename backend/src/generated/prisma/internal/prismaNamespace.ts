@@ -414,6 +414,7 @@ export const ModelName = {
   CatalogSyncRun: 'CatalogSyncRun',
   IncomingEvent: 'IncomingEvent',
   ProductQuestion: 'ProductQuestion',
+  QuestionAnswer: 'QuestionAnswer',
   StoreMember: 'StoreMember'
 } as const
 
@@ -430,7 +431,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "store" | "channelConnection" | "product" | "productVariant" | "productAttribute" | "productImage" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "storeMember"
+    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "store" | "channelConnection" | "product" | "productVariant" | "productAttribute" | "productImage" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "questionAnswer" | "storeMember"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1692,6 +1693,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    QuestionAnswer: {
+      payload: Prisma.$QuestionAnswerPayload<ExtArgs>
+      fields: Prisma.QuestionAnswerFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.QuestionAnswerFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionAnswerPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.QuestionAnswerFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionAnswerPayload>
+        }
+        findFirst: {
+          args: Prisma.QuestionAnswerFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionAnswerPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.QuestionAnswerFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionAnswerPayload>
+        }
+        findMany: {
+          args: Prisma.QuestionAnswerFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionAnswerPayload>[]
+        }
+        create: {
+          args: Prisma.QuestionAnswerCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionAnswerPayload>
+        }
+        createMany: {
+          args: Prisma.QuestionAnswerCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.QuestionAnswerCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionAnswerPayload>[]
+        }
+        delete: {
+          args: Prisma.QuestionAnswerDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionAnswerPayload>
+        }
+        update: {
+          args: Prisma.QuestionAnswerUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionAnswerPayload>
+        }
+        deleteMany: {
+          args: Prisma.QuestionAnswerDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.QuestionAnswerUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.QuestionAnswerUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionAnswerPayload>[]
+        }
+        upsert: {
+          args: Prisma.QuestionAnswerUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionAnswerPayload>
+        }
+        aggregate: {
+          args: Prisma.QuestionAnswerAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateQuestionAnswer>
+        }
+        groupBy: {
+          args: Prisma.QuestionAnswerGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.QuestionAnswerGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.QuestionAnswerCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.QuestionAnswerCountAggregateOutputType> | number
+        }
+      }
+    }
     StoreMember: {
       payload: Prisma.$StoreMemberPayload<ExtArgs>
       fields: Prisma.StoreMemberFieldRefs
@@ -2080,6 +2155,27 @@ export const ProductQuestionScalarFieldEnum = {
 export type ProductQuestionScalarFieldEnum = (typeof ProductQuestionScalarFieldEnum)[keyof typeof ProductQuestionScalarFieldEnum]
 
 
+export const QuestionAnswerScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  connectionId: 'connectionId',
+  questionId: 'questionId',
+  requestedByUserId: 'requestedByUserId',
+  answer: 'answer',
+  status: 'status',
+  externalAnswerId: 'externalAnswerId',
+  attempts: 'attempts',
+  lastError: 'lastError',
+  queuedAt: 'queuedAt',
+  processingStartedAt: 'processingStartedAt',
+  sentAt: 'sentAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type QuestionAnswerScalarFieldEnum = (typeof QuestionAnswerScalarFieldEnum)[keyof typeof QuestionAnswerScalarFieldEnum]
+
+
 export const StoreMemberScalarFieldEnum = {
   id: 'id',
   storeId: 'storeId',
@@ -2406,6 +2502,20 @@ export type ListEnumProductQuestionStatusFieldRefInput<$PrismaModel> = FieldRefI
 
 
 /**
+ * Reference to a field of type 'QuestionAnswerStatus'
+ */
+export type EnumQuestionAnswerStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionAnswerStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'QuestionAnswerStatus[]'
+ */
+export type ListEnumQuestionAnswerStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionAnswerStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'StoreRole'
  */
 export type EnumStoreRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreRole'>
@@ -2600,6 +2710,7 @@ export type GlobalOmitConfig = {
   catalogSyncRun?: Prisma.CatalogSyncRunOmit
   incomingEvent?: Prisma.IncomingEventOmit
   productQuestion?: Prisma.ProductQuestionOmit
+  questionAnswer?: Prisma.QuestionAnswerOmit
   storeMember?: Prisma.StoreMemberOmit
 }
 

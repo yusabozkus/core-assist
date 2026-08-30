@@ -325,6 +325,7 @@ export type ChannelConnectionWhereInput = {
   syncRuns?: Prisma.CatalogSyncRunListRelationFilter
   incomingEvents?: Prisma.IncomingEventListRelationFilter
   productQuestions?: Prisma.ProductQuestionListRelationFilter
+  questionAnswers?: Prisma.QuestionAnswerListRelationFilter
 }
 
 export type ChannelConnectionOrderByWithRelationInput = {
@@ -351,6 +352,7 @@ export type ChannelConnectionOrderByWithRelationInput = {
   syncRuns?: Prisma.CatalogSyncRunOrderByRelationAggregateInput
   incomingEvents?: Prisma.IncomingEventOrderByRelationAggregateInput
   productQuestions?: Prisma.ProductQuestionOrderByRelationAggregateInput
+  questionAnswers?: Prisma.QuestionAnswerOrderByRelationAggregateInput
 }
 
 export type ChannelConnectionWhereUniqueInput = Prisma.AtLeast<{
@@ -381,6 +383,7 @@ export type ChannelConnectionWhereUniqueInput = Prisma.AtLeast<{
   syncRuns?: Prisma.CatalogSyncRunListRelationFilter
   incomingEvents?: Prisma.IncomingEventListRelationFilter
   productQuestions?: Prisma.ProductQuestionListRelationFilter
+  questionAnswers?: Prisma.QuestionAnswerListRelationFilter
 }, "id" | "storeId_providerKey">
 
 export type ChannelConnectionOrderByWithAggregationInput = {
@@ -456,6 +459,7 @@ export type ChannelConnectionCreateInput = {
   syncRuns?: Prisma.CatalogSyncRunCreateNestedManyWithoutConnectionInput
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutConnectionInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutConnectionInput
+  questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionUncheckedCreateInput = {
@@ -481,6 +485,7 @@ export type ChannelConnectionUncheckedCreateInput = {
   syncRuns?: Prisma.CatalogSyncRunUncheckedCreateNestedManyWithoutConnectionInput
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutConnectionInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutConnectionInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionUpdateInput = {
@@ -506,6 +511,7 @@ export type ChannelConnectionUpdateInput = {
   syncRuns?: Prisma.CatalogSyncRunUpdateManyWithoutConnectionNestedInput
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutConnectionNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutConnectionNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionUncheckedUpdateInput = {
@@ -531,6 +537,7 @@ export type ChannelConnectionUncheckedUpdateInput = {
   syncRuns?: Prisma.CatalogSyncRunUncheckedUpdateManyWithoutConnectionNestedInput
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutConnectionNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutConnectionNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionCreateManyInput = {
@@ -804,6 +811,20 @@ export type ChannelConnectionUpdateOneRequiredWithoutProductQuestionsNestedInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.ChannelConnectionUpdateToOneWithWhereWithoutProductQuestionsInput, Prisma.ChannelConnectionUpdateWithoutProductQuestionsInput>, Prisma.ChannelConnectionUncheckedUpdateWithoutProductQuestionsInput>
 }
 
+export type ChannelConnectionCreateNestedOneWithoutQuestionAnswersInput = {
+  create?: Prisma.XOR<Prisma.ChannelConnectionCreateWithoutQuestionAnswersInput, Prisma.ChannelConnectionUncheckedCreateWithoutQuestionAnswersInput>
+  connectOrCreate?: Prisma.ChannelConnectionCreateOrConnectWithoutQuestionAnswersInput
+  connect?: Prisma.ChannelConnectionWhereUniqueInput
+}
+
+export type ChannelConnectionUpdateOneRequiredWithoutQuestionAnswersNestedInput = {
+  create?: Prisma.XOR<Prisma.ChannelConnectionCreateWithoutQuestionAnswersInput, Prisma.ChannelConnectionUncheckedCreateWithoutQuestionAnswersInput>
+  connectOrCreate?: Prisma.ChannelConnectionCreateOrConnectWithoutQuestionAnswersInput
+  upsert?: Prisma.ChannelConnectionUpsertWithoutQuestionAnswersInput
+  connect?: Prisma.ChannelConnectionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ChannelConnectionUpdateToOneWithWhereWithoutQuestionAnswersInput, Prisma.ChannelConnectionUpdateWithoutQuestionAnswersInput>, Prisma.ChannelConnectionUncheckedUpdateWithoutQuestionAnswersInput>
+}
+
 export type ChannelConnectionCreateWithoutStoreInput = {
   id?: string
   providerKey: string
@@ -826,6 +847,7 @@ export type ChannelConnectionCreateWithoutStoreInput = {
   syncRuns?: Prisma.CatalogSyncRunCreateNestedManyWithoutConnectionInput
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutConnectionInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutConnectionInput
+  questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionUncheckedCreateWithoutStoreInput = {
@@ -850,6 +872,7 @@ export type ChannelConnectionUncheckedCreateWithoutStoreInput = {
   syncRuns?: Prisma.CatalogSyncRunUncheckedCreateNestedManyWithoutConnectionInput
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutConnectionInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutConnectionInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionCreateOrConnectWithoutStoreInput = {
@@ -924,6 +947,7 @@ export type ChannelConnectionCreateWithoutExternalProductsInput = {
   syncRuns?: Prisma.CatalogSyncRunCreateNestedManyWithoutConnectionInput
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutConnectionInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutConnectionInput
+  questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionUncheckedCreateWithoutExternalProductsInput = {
@@ -948,6 +972,7 @@ export type ChannelConnectionUncheckedCreateWithoutExternalProductsInput = {
   syncRuns?: Prisma.CatalogSyncRunUncheckedCreateNestedManyWithoutConnectionInput
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutConnectionInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutConnectionInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionCreateOrConnectWithoutExternalProductsInput = {
@@ -988,6 +1013,7 @@ export type ChannelConnectionUpdateWithoutExternalProductsInput = {
   syncRuns?: Prisma.CatalogSyncRunUpdateManyWithoutConnectionNestedInput
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutConnectionNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutConnectionNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionUncheckedUpdateWithoutExternalProductsInput = {
@@ -1012,6 +1038,7 @@ export type ChannelConnectionUncheckedUpdateWithoutExternalProductsInput = {
   syncRuns?: Prisma.CatalogSyncRunUncheckedUpdateManyWithoutConnectionNestedInput
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutConnectionNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutConnectionNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionCreateWithoutSyncRunsInput = {
@@ -1036,6 +1063,7 @@ export type ChannelConnectionCreateWithoutSyncRunsInput = {
   externalProducts?: Prisma.ExternalProductCreateNestedManyWithoutConnectionInput
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutConnectionInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutConnectionInput
+  questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionUncheckedCreateWithoutSyncRunsInput = {
@@ -1060,6 +1088,7 @@ export type ChannelConnectionUncheckedCreateWithoutSyncRunsInput = {
   externalProducts?: Prisma.ExternalProductUncheckedCreateNestedManyWithoutConnectionInput
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutConnectionInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutConnectionInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionCreateOrConnectWithoutSyncRunsInput = {
@@ -1100,6 +1129,7 @@ export type ChannelConnectionUpdateWithoutSyncRunsInput = {
   externalProducts?: Prisma.ExternalProductUpdateManyWithoutConnectionNestedInput
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutConnectionNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutConnectionNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionUncheckedUpdateWithoutSyncRunsInput = {
@@ -1124,6 +1154,7 @@ export type ChannelConnectionUncheckedUpdateWithoutSyncRunsInput = {
   externalProducts?: Prisma.ExternalProductUncheckedUpdateManyWithoutConnectionNestedInput
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutConnectionNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutConnectionNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionCreateWithoutIncomingEventsInput = {
@@ -1148,6 +1179,7 @@ export type ChannelConnectionCreateWithoutIncomingEventsInput = {
   externalProducts?: Prisma.ExternalProductCreateNestedManyWithoutConnectionInput
   syncRuns?: Prisma.CatalogSyncRunCreateNestedManyWithoutConnectionInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutConnectionInput
+  questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionUncheckedCreateWithoutIncomingEventsInput = {
@@ -1172,6 +1204,7 @@ export type ChannelConnectionUncheckedCreateWithoutIncomingEventsInput = {
   externalProducts?: Prisma.ExternalProductUncheckedCreateNestedManyWithoutConnectionInput
   syncRuns?: Prisma.CatalogSyncRunUncheckedCreateNestedManyWithoutConnectionInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutConnectionInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionCreateOrConnectWithoutIncomingEventsInput = {
@@ -1212,6 +1245,7 @@ export type ChannelConnectionUpdateWithoutIncomingEventsInput = {
   externalProducts?: Prisma.ExternalProductUpdateManyWithoutConnectionNestedInput
   syncRuns?: Prisma.CatalogSyncRunUpdateManyWithoutConnectionNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutConnectionNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionUncheckedUpdateWithoutIncomingEventsInput = {
@@ -1236,6 +1270,7 @@ export type ChannelConnectionUncheckedUpdateWithoutIncomingEventsInput = {
   externalProducts?: Prisma.ExternalProductUncheckedUpdateManyWithoutConnectionNestedInput
   syncRuns?: Prisma.CatalogSyncRunUncheckedUpdateManyWithoutConnectionNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutConnectionNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionCreateWithoutProductQuestionsInput = {
@@ -1260,6 +1295,7 @@ export type ChannelConnectionCreateWithoutProductQuestionsInput = {
   externalProducts?: Prisma.ExternalProductCreateNestedManyWithoutConnectionInput
   syncRuns?: Prisma.CatalogSyncRunCreateNestedManyWithoutConnectionInput
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutConnectionInput
+  questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionUncheckedCreateWithoutProductQuestionsInput = {
@@ -1284,6 +1320,7 @@ export type ChannelConnectionUncheckedCreateWithoutProductQuestionsInput = {
   externalProducts?: Prisma.ExternalProductUncheckedCreateNestedManyWithoutConnectionInput
   syncRuns?: Prisma.CatalogSyncRunUncheckedCreateNestedManyWithoutConnectionInput
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutConnectionInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutConnectionInput
 }
 
 export type ChannelConnectionCreateOrConnectWithoutProductQuestionsInput = {
@@ -1324,6 +1361,7 @@ export type ChannelConnectionUpdateWithoutProductQuestionsInput = {
   externalProducts?: Prisma.ExternalProductUpdateManyWithoutConnectionNestedInput
   syncRuns?: Prisma.CatalogSyncRunUpdateManyWithoutConnectionNestedInput
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutConnectionNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionUncheckedUpdateWithoutProductQuestionsInput = {
@@ -1348,6 +1386,123 @@ export type ChannelConnectionUncheckedUpdateWithoutProductQuestionsInput = {
   externalProducts?: Prisma.ExternalProductUncheckedUpdateManyWithoutConnectionNestedInput
   syncRuns?: Prisma.CatalogSyncRunUncheckedUpdateManyWithoutConnectionNestedInput
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutConnectionNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutConnectionNestedInput
+}
+
+export type ChannelConnectionCreateWithoutQuestionAnswersInput = {
+  id?: string
+  providerKey: string
+  type: $Enums.ChannelType
+  environment?: $Enums.IntegrationEnvironment
+  status?: $Enums.ChannelConnectionStatus
+  credentialsEncrypted?: string | null
+  credentialSchemaVersion?: number
+  connectedAt?: Date | string | null
+  processingStartedAt?: Date | string | null
+  lastSyncAt?: Date | string | null
+  lastInventorySyncAt?: Date | string | null
+  failureReason?: string | null
+  questionSyncStartedAt?: Date | string | null
+  lastQuestionSyncAt?: Date | string | null
+  questionSyncFailureReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  store: Prisma.StoreCreateNestedOneWithoutChannelConnectionsInput
+  externalProducts?: Prisma.ExternalProductCreateNestedManyWithoutConnectionInput
+  syncRuns?: Prisma.CatalogSyncRunCreateNestedManyWithoutConnectionInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutConnectionInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutConnectionInput
+}
+
+export type ChannelConnectionUncheckedCreateWithoutQuestionAnswersInput = {
+  id?: string
+  storeId: string
+  providerKey: string
+  type: $Enums.ChannelType
+  environment?: $Enums.IntegrationEnvironment
+  status?: $Enums.ChannelConnectionStatus
+  credentialsEncrypted?: string | null
+  credentialSchemaVersion?: number
+  connectedAt?: Date | string | null
+  processingStartedAt?: Date | string | null
+  lastSyncAt?: Date | string | null
+  lastInventorySyncAt?: Date | string | null
+  failureReason?: string | null
+  questionSyncStartedAt?: Date | string | null
+  lastQuestionSyncAt?: Date | string | null
+  questionSyncFailureReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  externalProducts?: Prisma.ExternalProductUncheckedCreateNestedManyWithoutConnectionInput
+  syncRuns?: Prisma.CatalogSyncRunUncheckedCreateNestedManyWithoutConnectionInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutConnectionInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutConnectionInput
+}
+
+export type ChannelConnectionCreateOrConnectWithoutQuestionAnswersInput = {
+  where: Prisma.ChannelConnectionWhereUniqueInput
+  create: Prisma.XOR<Prisma.ChannelConnectionCreateWithoutQuestionAnswersInput, Prisma.ChannelConnectionUncheckedCreateWithoutQuestionAnswersInput>
+}
+
+export type ChannelConnectionUpsertWithoutQuestionAnswersInput = {
+  update: Prisma.XOR<Prisma.ChannelConnectionUpdateWithoutQuestionAnswersInput, Prisma.ChannelConnectionUncheckedUpdateWithoutQuestionAnswersInput>
+  create: Prisma.XOR<Prisma.ChannelConnectionCreateWithoutQuestionAnswersInput, Prisma.ChannelConnectionUncheckedCreateWithoutQuestionAnswersInput>
+  where?: Prisma.ChannelConnectionWhereInput
+}
+
+export type ChannelConnectionUpdateToOneWithWhereWithoutQuestionAnswersInput = {
+  where?: Prisma.ChannelConnectionWhereInput
+  data: Prisma.XOR<Prisma.ChannelConnectionUpdateWithoutQuestionAnswersInput, Prisma.ChannelConnectionUncheckedUpdateWithoutQuestionAnswersInput>
+}
+
+export type ChannelConnectionUpdateWithoutQuestionAnswersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  providerKey?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFieldUpdateOperationsInput | $Enums.IntegrationEnvironment
+  status?: Prisma.EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
+  credentialsEncrypted?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  credentialSchemaVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  connectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  processingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastInventorySyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  store?: Prisma.StoreUpdateOneRequiredWithoutChannelConnectionsNestedInput
+  externalProducts?: Prisma.ExternalProductUpdateManyWithoutConnectionNestedInput
+  syncRuns?: Prisma.CatalogSyncRunUpdateManyWithoutConnectionNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutConnectionNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutConnectionNestedInput
+}
+
+export type ChannelConnectionUncheckedUpdateWithoutQuestionAnswersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storeId?: Prisma.StringFieldUpdateOperationsInput | string
+  providerKey?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumChannelTypeFieldUpdateOperationsInput | $Enums.ChannelType
+  environment?: Prisma.EnumIntegrationEnvironmentFieldUpdateOperationsInput | $Enums.IntegrationEnvironment
+  status?: Prisma.EnumChannelConnectionStatusFieldUpdateOperationsInput | $Enums.ChannelConnectionStatus
+  credentialsEncrypted?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  credentialSchemaVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  connectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  processingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastInventorySyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  externalProducts?: Prisma.ExternalProductUncheckedUpdateManyWithoutConnectionNestedInput
+  syncRuns?: Prisma.CatalogSyncRunUncheckedUpdateManyWithoutConnectionNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutConnectionNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionCreateManyStoreInput = {
@@ -1392,6 +1547,7 @@ export type ChannelConnectionUpdateWithoutStoreInput = {
   syncRuns?: Prisma.CatalogSyncRunUpdateManyWithoutConnectionNestedInput
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutConnectionNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutConnectionNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionUncheckedUpdateWithoutStoreInput = {
@@ -1416,6 +1572,7 @@ export type ChannelConnectionUncheckedUpdateWithoutStoreInput = {
   syncRuns?: Prisma.CatalogSyncRunUncheckedUpdateManyWithoutConnectionNestedInput
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutConnectionNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutConnectionNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutConnectionNestedInput
 }
 
 export type ChannelConnectionUncheckedUpdateManyWithoutStoreInput = {
@@ -1448,6 +1605,7 @@ export type ChannelConnectionCountOutputType = {
   syncRuns: number
   incomingEvents: number
   productQuestions: number
+  questionAnswers: number
 }
 
 export type ChannelConnectionCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1455,6 +1613,7 @@ export type ChannelConnectionCountOutputTypeSelect<ExtArgs extends runtime.Types
   syncRuns?: boolean | ChannelConnectionCountOutputTypeCountSyncRunsArgs
   incomingEvents?: boolean | ChannelConnectionCountOutputTypeCountIncomingEventsArgs
   productQuestions?: boolean | ChannelConnectionCountOutputTypeCountProductQuestionsArgs
+  questionAnswers?: boolean | ChannelConnectionCountOutputTypeCountQuestionAnswersArgs
 }
 
 /**
@@ -1495,6 +1654,13 @@ export type ChannelConnectionCountOutputTypeCountProductQuestionsArgs<ExtArgs ex
   where?: Prisma.ProductQuestionWhereInput
 }
 
+/**
+ * ChannelConnectionCountOutputType without action
+ */
+export type ChannelConnectionCountOutputTypeCountQuestionAnswersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.QuestionAnswerWhereInput
+}
+
 
 export type ChannelConnectionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1520,6 +1686,7 @@ export type ChannelConnectionSelect<ExtArgs extends runtime.Types.Extensions.Int
   syncRuns?: boolean | Prisma.ChannelConnection$syncRunsArgs<ExtArgs>
   incomingEvents?: boolean | Prisma.ChannelConnection$incomingEventsArgs<ExtArgs>
   productQuestions?: boolean | Prisma.ChannelConnection$productQuestionsArgs<ExtArgs>
+  questionAnswers?: boolean | Prisma.ChannelConnection$questionAnswersArgs<ExtArgs>
   _count?: boolean | Prisma.ChannelConnectionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["channelConnection"]>
 
@@ -1595,6 +1762,7 @@ export type ChannelConnectionInclude<ExtArgs extends runtime.Types.Extensions.In
   syncRuns?: boolean | Prisma.ChannelConnection$syncRunsArgs<ExtArgs>
   incomingEvents?: boolean | Prisma.ChannelConnection$incomingEventsArgs<ExtArgs>
   productQuestions?: boolean | Prisma.ChannelConnection$productQuestionsArgs<ExtArgs>
+  questionAnswers?: boolean | Prisma.ChannelConnection$questionAnswersArgs<ExtArgs>
   _count?: boolean | Prisma.ChannelConnectionCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ChannelConnectionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1612,6 +1780,7 @@ export type $ChannelConnectionPayload<ExtArgs extends runtime.Types.Extensions.I
     syncRuns: Prisma.$CatalogSyncRunPayload<ExtArgs>[]
     incomingEvents: Prisma.$IncomingEventPayload<ExtArgs>[]
     productQuestions: Prisma.$ProductQuestionPayload<ExtArgs>[]
+    questionAnswers: Prisma.$QuestionAnswerPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2031,6 +2200,7 @@ export interface Prisma__ChannelConnectionClient<T, Null = never, ExtArgs extend
   syncRuns<T extends Prisma.ChannelConnection$syncRunsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ChannelConnection$syncRunsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CatalogSyncRunPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   incomingEvents<T extends Prisma.ChannelConnection$incomingEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ChannelConnection$incomingEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$IncomingEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   productQuestions<T extends Prisma.ChannelConnection$productQuestionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ChannelConnection$productQuestionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductQuestionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  questionAnswers<T extends Prisma.ChannelConnection$questionAnswersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ChannelConnection$questionAnswersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$QuestionAnswerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2572,6 +2742,30 @@ export type ChannelConnection$productQuestionsArgs<ExtArgs extends runtime.Types
   take?: number
   skip?: number
   distinct?: Prisma.ProductQuestionScalarFieldEnum | Prisma.ProductQuestionScalarFieldEnum[]
+}
+
+/**
+ * ChannelConnection.questionAnswers
+ */
+export type ChannelConnection$questionAnswersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the QuestionAnswer
+   */
+  select?: Prisma.QuestionAnswerSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the QuestionAnswer
+   */
+  omit?: Prisma.QuestionAnswerOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.QuestionAnswerInclude<ExtArgs> | null
+  where?: Prisma.QuestionAnswerWhereInput
+  orderBy?: Prisma.QuestionAnswerOrderByWithRelationInput | Prisma.QuestionAnswerOrderByWithRelationInput[]
+  cursor?: Prisma.QuestionAnswerWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.QuestionAnswerScalarFieldEnum | Prisma.QuestionAnswerScalarFieldEnum[]
 }
 
 /**

@@ -68,6 +68,7 @@ export const ModelName = {
   CatalogSyncRun: 'CatalogSyncRun',
   IncomingEvent: 'IncomingEvent',
   ProductQuestion: 'ProductQuestion',
+  QuestionAnswer: 'QuestionAnswer',
   StoreMember: 'StoreMember'
 } as const
 
@@ -360,6 +361,27 @@ export const ProductQuestionScalarFieldEnum = {
 } as const
 
 export type ProductQuestionScalarFieldEnum = (typeof ProductQuestionScalarFieldEnum)[keyof typeof ProductQuestionScalarFieldEnum]
+
+
+export const QuestionAnswerScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  connectionId: 'connectionId',
+  questionId: 'questionId',
+  requestedByUserId: 'requestedByUserId',
+  answer: 'answer',
+  status: 'status',
+  externalAnswerId: 'externalAnswerId',
+  attempts: 'attempts',
+  lastError: 'lastError',
+  queuedAt: 'queuedAt',
+  processingStartedAt: 'processingStartedAt',
+  sentAt: 'sentAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type QuestionAnswerScalarFieldEnum = (typeof QuestionAnswerScalarFieldEnum)[keyof typeof QuestionAnswerScalarFieldEnum]
 
 
 export const StoreMemberScalarFieldEnum = {

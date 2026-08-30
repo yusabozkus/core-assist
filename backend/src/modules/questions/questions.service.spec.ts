@@ -2,6 +2,7 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { StoreRole } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import type { QuestionSyncDispatcher } from '../question-sync/question-sync.types';
+import type { QuestionAnswerDispatcher } from '../question-answer/question-answer.types';
 import { QuestionsService } from './questions.service';
 
 describe('QuestionsService', () => {
@@ -9,13 +10,17 @@ describe('QuestionsService', () => {
   const findQuestions = jest.fn();
   const findConnections = jest.fn();
   const enqueue = jest.fn();
+  const enqueueAnswer = jest.fn();
   const prisma = {
     storeMember: { findUnique: findMembership },
     productQuestion: { findMany: findQuestions },
     channelConnection: { findMany: findConnections },
   } as unknown as PrismaService;
   const dispatcher = { enqueue } as unknown as QuestionSyncDispatcher;
-  const service = new QuestionsService(prisma, dispatcher);
+  const answerDispatcher = {
+    enqueue: enqueueAnswer,
+  } as unknown as QuestionAnswerDispatcher;
+  const service = new QuestionsService(prisma, dispatcher, answerDispatcher);
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -58,5 +63,25 @@ describe('QuestionsService', () => {
     await expect(service.sync('store-1', 'user-1')).rejects.toBeInstanceOf(
       ForbiddenException,
     );
+  });
+
+  it('allows agents to queue a manual answer but rejects viewers', async () => {
+    findMembership.mockResolvedValue({ role: StoreRole.AGENT });
+    enqueueAnswer.mockResolvedValue({ id: 'answer-1', status: 'QUEUED' });
+
+    await expect(
+      service.answer('store-1', 'question-1', 'user-1', 'Stokta mevcut.'),
+    ).resolves.toEqual({ id: 'answer-1', status: 'QUEUED' });
+    expect(enqueueAnswer).toHaveBeenCalledWith({
+      storeId: 'store-1',
+      questionId: 'question-1',
+      requestedByUserId: 'user-1',
+      answer: 'Stokta mevcut.',
+    });
+
+    findMembership.mockResolvedValue({ role: StoreRole.VIEWER });
+    await expect(
+      service.answer('store-1', 'question-1', 'user-1', 'Cevap'),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });

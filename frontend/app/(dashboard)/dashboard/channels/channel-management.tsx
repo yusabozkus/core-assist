@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState, useTransition } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -9,13 +8,12 @@ import {
   Delete02Icon,
   Package01Icon,
   PlusSignIcon,
-  RefreshIcon,
-  Settings02Icon,
-  Unlink01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
-import { Badge } from "@/components/ui/badge"
+import { ChannelBadge } from "@/components/dashboard/channels/channel-badge"
+import { ChannelCard } from "@/components/dashboard/channels/channel-card"
+import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -28,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { APP_ROUTES } from "@/constants/site"
+import { getProvider } from "@/components/dashboard/channels/channel-utils"
 import {
   configureChannelConnection,
   createChannelConnection,
@@ -39,12 +38,11 @@ import {
 } from "@/lib/api/channels"
 import type {
   ChannelConnection,
-  ChannelConnectionStatus,
   IntegrationEnvironment,
   IntegrationProvider,
 } from "@/types/channel"
 
-type ChannelManagementProps = {
+export type ChannelManagementProps = {
   storeId: string
   storeName: string
   connections: ChannelConnection[]
@@ -55,15 +53,6 @@ type PendingAction = {
   connectionId: string
   type: "disconnect" | "reconnect" | "sync" | "inventory-sync"
 } | null
-
-const dateFormatter = new Intl.DateTimeFormat("tr-TR", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "Europe/Istanbul",
-})
 
 export function ChannelManagement({
   storeId,
@@ -416,7 +405,7 @@ export function ChannelManagement({
                       >
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent position="popper">
+                      <SelectContent>
                         {selectedProvider.environments.map((value) => (
                           <SelectItem key={value} value={value}>
                             {value === "SANDBOX"
@@ -560,259 +549,5 @@ export function ChannelManagement({
         </div>
       </ResponsiveDialog>
     </div>
-  )
-}
-
-function ChannelBadge({ label, value }: { label: string; value: number }) {
-  return (
-    <Badge
-      variant="outline"
-      className="gap-2 border-border bg-white px-3 py-1.5 text-foreground shadow-none dark:bg-card"
-    >
-      <span className="size-2 rounded-full bg-emerald-500" />
-      {value.toLocaleString("tr-TR")} {label}
-    </Badge>
-  )
-}
-
-function ProviderLogo({ provider }: { provider: IntegrationProvider }) {
-  return (
-    <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-white shadow-xs">
-      <Image
-        src={provider.image}
-        alt={`${provider.name} logosu`}
-        width={48}
-        height={48}
-        className="size-full object-cover"
-      />
-    </span>
-  )
-}
-
-function ChannelCard({
-  connection,
-  provider,
-  pendingAction,
-  actionsDisabled,
-  onConfigure,
-  onAction,
-  onRemove,
-}: {
-  connection: ChannelConnection
-  provider: IntegrationProvider
-  pendingAction: "disconnect" | "reconnect" | "sync" | "inventory-sync" | null
-  actionsDisabled: boolean
-  onConfigure: (connection: ChannelConnection) => void
-  onAction: (
-    connection: ChannelConnection,
-    action: "disconnect" | "reconnect" | "sync" | "inventory-sync"
-  ) => void
-  onRemove: (connection: ChannelConnection) => void
-}) {
-  const canDisconnect = connection.status === "CONNECTED"
-  const canReconnect =
-    connection.status === "DISCONNECTED" || connection.status === "ERROR"
-
-  return (
-    <article className="flex flex-col rounded-xl border border-border bg-card p-5 shadow-xs">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-row items-center gap-2">
-          <ProviderLogo provider={provider} />
-          <div>
-            <h3 className="font-semibold text-foreground">{provider.name}</h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {connection.environment === "SANDBOX"
-                ? "Test ortamı"
-                : "Canlı ortam"}
-            </p>
-          </div>
-        </div>
-        <div className="flex w-full items-center justify-end">
-          {connection.status !== "PENDING" ? (
-            <Button
-              type="button"
-              size="icon-sm"
-              variant="ghost"
-              className="text-muted-foreground"
-              aria-label={`${provider.name} bağlantısını kaldır`}
-              onClick={() => onConfigure(connection)}
-              disabled={actionsDisabled}
-            >
-              <HugeiconsIcon
-                icon={Settings02Icon}
-                className="size-3.5"
-                strokeWidth={2}
-              />
-            </Button>
-          ) : null}
-          <Button
-            type="button"
-            size="icon-sm"
-            variant="ghost"
-            className="text-destructive hover:bg-destructive! hover:text-white"
-
-            disabled={actionsDisabled}
-            onClick={() => onRemove(connection)}
-          >
-            <HugeiconsIcon
-              icon={Delete02Icon}
-              className="size-4"
-              strokeWidth={2}
-            />
-          </Button>
-        </div>
-      </div>
-
-      <div className="mt-2 mb-4">
-        <ConnectionStatusBadge
-          status={connection.status}
-          isSyncing={Boolean(connection.processingStartedAt)}
-        />
-      </div>
-
-      <div className="">
-        <p className="text-sm leading-6 text-muted-foreground">
-          {provider.description}
-        </p>
-        <p className="mt-3 text-xs text-muted-foreground">
-          {(connection.lastInventorySyncAt ?? connection.lastSyncAt)
-            ? `Son stok kontrolü: ${dateFormatter.format(
-                new Date(
-                  connection.lastInventorySyncAt ?? connection.lastSyncAt!
-                )
-              )}`
-            : "Henüz ürün senkronizasyonu yapılmadı."}
-        </p>
-        {connection.failureReason ? (
-          <p className="mt-2 line-clamp-2 text-xs text-destructive">
-            {connection.failureReason}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        {connection.status === "PENDING" ? (
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => onConfigure(connection)}
-            disabled={actionsDisabled}
-          >
-            <HugeiconsIcon icon={Settings02Icon} className="size-3.5" />
-            Kurulumu tamamla
-          </Button>
-        ) : null}
-        {connection.status === "CONNECTED" ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => onAction(connection, "inventory-sync")}
-            disabled={
-              actionsDisabled || Boolean(connection.processingStartedAt)
-            }
-          >
-            <HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
-            {pendingAction === "inventory-sync"
-              ? "Kontrol ediliyor..."
-              : "Stokları güncelle"}
-          </Button>
-        ) : null}
-        {connection.status === "CONNECTED" ? (
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => onAction(connection, "sync")}
-            disabled={
-              actionsDisabled || Boolean(connection.processingStartedAt)
-            }
-          >
-            <HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
-            {pendingAction === "sync" || connection.processingStartedAt
-              ? "Senkronize ediliyor..."
-              : "Tam katalog çek"}
-          </Button>
-        ) : null}
-        {canDisconnect ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={actionsDisabled}
-            onClick={() => onAction(connection, "disconnect")}
-          >
-            <HugeiconsIcon icon={Unlink01Icon} className="size-3.5" />
-            {pendingAction === "disconnect"
-              ? "Güncelleniyor..."
-              : "Devre dışı bırak"}
-          </Button>
-        ) : null}
-        {canReconnect ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={actionsDisabled}
-            onClick={() => onAction(connection, "reconnect")}
-          >
-            <HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
-            {pendingAction === "reconnect"
-              ? "Doğrulanıyor..."
-              : "Yeniden bağla"}
-          </Button>
-        ) : null}
-      </div>
-    </article>
-  )
-}
-
-function ConnectionStatusBadge({
-  status,
-  isSyncing,
-}: {
-  status: ChannelConnectionStatus
-  isSyncing: boolean
-}) {
-  if (isSyncing) {
-    return <Badge variant="warning">Senkronize ediliyor</Badge>
-  }
-
-  if (status === "CONNECTED") {
-    return <Badge variant="success">Bağlı</Badge>
-  }
-
-  if (status === "PENDING") {
-    return <Badge variant="warning">Kurulum bekliyor</Badge>
-  }
-
-  if (status === "ERROR") {
-    return (
-      <Badge
-        variant="outline"
-        className="border-destructive/25 text-destructive"
-      >
-        Bağlantı hatası
-      </Badge>
-    )
-  }
-
-  return <Badge variant="secondary">Devre dışı</Badge>
-}
-
-function getProvider(
-  providers: IntegrationProvider[],
-  providerKey: string
-): IntegrationProvider {
-  return (
-    providers.find((provider) => provider.key === providerKey) ?? {
-      key: providerKey,
-      name: providerKey,
-      type: "COMMERCE",
-      image: "/merchants/trendyol.webp",
-      description: "Pazaryeri katalog bağlantısı",
-      capabilities: ["CATALOG_READ", "INVENTORY_READ"],
-      environments: ["SANDBOX", "PRODUCTION"],
-      credentialFields: [],
-    }
   )
 }

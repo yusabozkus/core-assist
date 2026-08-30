@@ -9,18 +9,19 @@ generator client {
 }
 
 model User {
-  id               String            @id @default(uuid())
-  name             String
-  email            String            @unique
-  emailVerified    Boolean           @default(false)
-  image            String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  sessions         Session[]
-  accounts         Account[]
-  ownedWorkspaces  Workspace[]       @relation("WorkspaceOwner")
-  workspaceMembers WorkspaceMember[]
-  storeMembers     StoreMember[]
+  id                       String            @id @default(uuid())
+  name                     String
+  email                    String            @unique
+  emailVerified            Boolean           @default(false)
+  image                    String?
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @updatedAt
+  sessions                 Session[]
+  accounts                 Account[]
+  ownedWorkspaces          Workspace[]       @relation("WorkspaceOwner")
+  workspaceMembers         WorkspaceMember[]
+  storeMembers             StoreMember[]
+  requestedQuestionAnswers QuestionAnswer[]  @relation("QuestionAnswerRequester")
 
   @@map("user")
 }
@@ -120,6 +121,7 @@ model Store {
   products           Product[]
   incomingEvents     IncomingEvent[]
   productQuestions   ProductQuestion[]
+  questionAnswers    QuestionAnswer[]
 
   @@map("store")
 }
@@ -172,6 +174,7 @@ model ChannelConnection {
   syncRuns         CatalogSyncRun[]
   incomingEvents   IncomingEvent[]
   productQuestions ProductQuestion[]
+  questionAnswers  QuestionAnswer[]
 
   @@unique([storeId, providerKey])
   @@index([storeId, status])
@@ -393,6 +396,13 @@ enum ProductQuestionStatus {
   IGNORED
 }
 
+enum QuestionAnswerStatus {
+  QUEUED
+  PROCESSING
+  SENT
+  FAILED
+}
+
 model ProductQuestion {
   id                      String                @id @default(uuid())
   storeId                 String
@@ -417,12 +427,40 @@ model ProductQuestion {
   incomingEvent   IncomingEvent     @relation(fields: [incomingEventId], references: [id], onDelete: Cascade)
   product         Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
   externalProduct ExternalProduct?  @relation(fields: [externalProductRecordId], references: [id], onDelete: SetNull)
+  answerDelivery  QuestionAnswer?
 
   @@unique([connectionId, externalQuestionId])
   @@index([storeId, status, externalCreatedAt])
   @@index([productId])
   @@index([externalProductRecordId])
   @@map("product_question")
+}
+
+model QuestionAnswer {
+  id                  String               @id @default(uuid())
+  storeId             String
+  connectionId        String
+  questionId          String               @unique
+  requestedByUserId   String
+  answer              String
+  status              QuestionAnswerStatus @default(QUEUED)
+  externalAnswerId    String?
+  attempts            Int                  @default(0)
+  lastError           String?
+  queuedAt            DateTime             @default(now())
+  processingStartedAt DateTime?
+  sentAt              DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  store       Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  connection  ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  question    ProductQuestion   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  requestedBy User              @relation("QuestionAnswerRequester", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([storeId, status, queuedAt])
+  @@index([connectionId, status])
+  @@map("question_answer")
 }
 
 model StoreMember {
