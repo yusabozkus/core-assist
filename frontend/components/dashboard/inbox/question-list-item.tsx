@@ -27,10 +27,10 @@ export function QuestionListItem({
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={`group relative w-full rounded-xl border p-3 text-left transition-all focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
+      className={`group relative w-full rounded-xl border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
         selected
-          ? "border-border bg-card shadow-sm"
-          : "border-transparent hover:border-border/70 hover:bg-card/70"
+          ? "border-border bg-card"
+          : "border-transparent hover:border-border hover:bg-card"
       }`}
     >
       {selected ? (

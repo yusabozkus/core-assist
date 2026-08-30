@@ -65,7 +65,7 @@ export function QuestionAnswerComposer({
             <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-4" />
             Cevap gönderildi
           </div>
-          <p className="mt-3 rounded-xl border border-border bg-muted/25 p-4 text-sm leading-6 text-foreground">
+          <p className="mt-3 rounded-xl border border-border bg-card p-4 text-sm leading-6 text-foreground">
             {question.answer ?? delivery?.answer}
           </p>
         </div>
@@ -122,7 +122,7 @@ export function QuestionAnswerComposer({
   }
 
   return (
-    <div className="shrink-0 border-t border-border bg-background/95 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
+    <div className="shrink-0 border-t border-border bg-background px-4 py-4 sm:px-6 lg:px-8">
       <form onSubmit={submitAnswer} className="mx-auto w-full max-w-4xl">
         <div className="flex items-center justify-between gap-3">
           <label

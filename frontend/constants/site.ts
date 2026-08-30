@@ -43,7 +43,6 @@ export const APP_ROUTES = {
     settings: {
       root: "/dashboard/settings",
       profile: "/dashboard/settings/profile",
-      stores: "/dashboard/settings/stores",
       notifications: "/dashboard/settings/notifications",
       billing: "/dashboard/settings/billing",
     },
@@ -176,25 +175,6 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
           title: "Ayarlar",
           url: APP_ROUTES.dashboard.settings.root,
           icon: Settings02Icon,
-          items: [
-            {
-              title: "Genel Ayarlar",
-              url: APP_ROUTES.dashboard.settings.root,
-              exact: true,
-            },
-            {
-              title: "Mağazalar",
-              url: APP_ROUTES.dashboard.settings.stores,
-            },
-            {
-              title: "Bildirimler",
-              url: APP_ROUTES.dashboard.settings.notifications,
-            },
-            {
-              title: "Plan ve Faturalama",
-              url: APP_ROUTES.dashboard.settings.billing,
-            },
-          ],
         },
         {
           title: "Yardım Merkezi",
@@ -221,6 +201,9 @@ export function getDashboardNavigationTitle(pathname: string) {
       if (subItem) return subItem.title
     }
   }
+
+  const auxiliaryTitle = DASHBOARD_AUXILIARY_TITLES[pathname]
+  if (auxiliaryTitle) return auxiliaryTitle
 
   return null
 }
@@ -256,18 +239,26 @@ export function getDashboardBreadcrumbs(
     }
   }
 
-  if (pathname === APP_ROUTES.dashboard.settings.profile) {
+  const settingsTitle = DASHBOARD_AUXILIARY_TITLES[pathname]
+
+  if (settingsTitle) {
     return [
       {
         title: "Ayarlar",
         url: APP_ROUTES.dashboard.settings.root,
       },
       {
-        title: "Profil",
-        url: APP_ROUTES.dashboard.settings.profile,
+        title: settingsTitle,
+        url: pathname,
       },
     ]
   }
 
   return [{ title: "Dashboard", url: APP_ROUTES.dashboard.root }]
+}
+
+const DASHBOARD_AUXILIARY_TITLES: Readonly<Record<string, string>> = {
+  [APP_ROUTES.dashboard.settings.profile]: "Hesap bilgileri",
+  [APP_ROUTES.dashboard.settings.notifications]: "Bildirimler",
+  [APP_ROUTES.dashboard.settings.billing]: "Plan ve Faturalama",
 }

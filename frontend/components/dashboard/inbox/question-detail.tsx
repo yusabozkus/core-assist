@@ -29,7 +29,7 @@ export function QuestionDetail({
   return (
     <section className="flex min-w-0 flex-col bg-background lg:h-full lg:min-h-0">
       {showHeader ? (
-        <header className="flex shrink-0 flex-col gap-4 border-b border-border bg-background/95 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <header className="flex shrink-0 flex-col gap-4 border-b border-border bg-background px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div className="flex min-w-0 items-center gap-3.5">
             <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary ring-1 ring-primary/15">
               {customerInitial}
@@ -58,7 +58,7 @@ export function QuestionDetail({
         </header>
       ) : null}
 
-      <div className="themed-scrollbar bg-muted/10 px-4 py-5 sm:px-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-8 lg:py-7">
+      <div className="themed-scrollbar bg-background px-4 py-5 sm:px-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-8 lg:py-7">
         <div className="mx-auto w-full max-w-4xl space-y-5">
           <section>
             <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">

@@ -132,7 +132,7 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
   }
 
   const questionListPanel = (
-    <aside className="flex h-full min-h-0 flex-col border-b border-border bg-muted/15 lg:border-b-0">
+    <aside className="flex h-full min-h-0 flex-col border-b border-border bg-background lg:border-b-0">
       <div className="shrink-0 border-b border-border bg-background p-3.5">
         <div className="flex items-center justify-between gap-3 px-0.5">
           <div>
@@ -149,6 +149,7 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
             variant="outline"
             onClick={syncQuestions}
             disabled={isSyncing}
+            className="bg-card!"
           >
             <HugeiconsIcon
               icon={RefreshIcon}
@@ -168,11 +169,11 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Müşteri, ürün veya soru ara"
             aria-label="Gelen kutusunda ara"
-            className="h-9! bg-background pl-9"
+            className="h-9! bg-card pl-9"
           />
         </div>
 
-        <div className="mt-2.5 grid grid-cols-3 rounded-lg bg-muted p-1">
+        <div className="mt-2.5 grid grid-cols-3 rounded-lg bg-muted border border-border p-1">
           {inboxFilters.map((item) => {
             const count =
               item.value === "ALL"

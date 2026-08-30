@@ -12,7 +12,7 @@ export function ProductContext({ question }: { question: ProductQuestion }) {
 
   if (!product) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-muted/20 p-4">
+      <div className="rounded-xl border border-dashed border-border bg-card p-4">
         <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
           İlgili ürün
         </p>
@@ -47,7 +47,7 @@ export function ProductContext({ question }: { question: ProductQuestion }) {
       trigger={
         <button
           type="button"
-          className="group w-full overflow-hidden rounded-xl border border-border bg-card text-left shadow-xs transition-colors hover:border-foreground/20 hover:bg-muted/20 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="group w-full overflow-hidden rounded-xl border border-border bg-card text-left transition-colors hover:border-foreground/20 hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           aria-label={`${product.title} ürün detaylarını görüntüle`}
         >
           <span className="flex items-center gap-3 p-3.5 sm:gap-4 sm:p-4">

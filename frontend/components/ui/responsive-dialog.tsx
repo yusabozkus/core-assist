@@ -44,6 +44,7 @@ type ResponsiveDialogProps = {
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
   showCloseButton?: boolean
+  preventClose?: boolean
   contentClassName?: string
   bodyClassName?: string
   headerClassName?: string
@@ -60,6 +61,7 @@ function ResponsiveDialog({
   defaultOpen = false,
   onOpenChange,
   showCloseButton = true,
+  preventClose = false,
   contentClassName,
   bodyClassName,
   headerClassName,
@@ -70,6 +72,8 @@ function ResponsiveDialog({
   const resolvedOpen = open ?? internalOpen
 
   function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen && preventClose) return
+
     if (open === undefined) {
       setInternalOpen(nextOpen)
     }
@@ -83,7 +87,11 @@ function ResponsiveDialog({
 
   if (isMobile) {
     return (
-      <Drawer open={resolvedOpen} onOpenChange={handleOpenChange}>
+      <Drawer
+        open={resolvedOpen}
+        onOpenChange={handleOpenChange}
+        dismissible={!preventClose}
+      >
         {trigger ? <DrawerTrigger asChild>{trigger}</DrawerTrigger> : null}
         <DrawerContent
           className={cn(
@@ -91,7 +99,7 @@ function ResponsiveDialog({
             contentClassName
           )}
         >
-          {showCloseButton ? (
+          {showCloseButton && !preventClose ? (
             <DrawerClose asChild>
               <Button
                 type="button"
@@ -146,7 +154,7 @@ function ResponsiveDialog({
     <Dialog open={resolvedOpen} onOpenChange={handleOpenChange}>
       {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
       <DialogContent
-        showCloseButton={showCloseButton}
+        showCloseButton={showCloseButton && !preventClose}
         className={cn(
           "max-h-[min(92svh,56rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-lg",
           contentClassName
@@ -155,13 +163,9 @@ function ResponsiveDialog({
         <DialogHeader
           className={cn("shrink-0 border-b px-5 py-4 pr-14", headerClassName)}
         >
-          <DialogTitle className="tracking-[-0.02em]">
-            {title}
-          </DialogTitle>
+          <DialogTitle className="tracking-[-0.02em]">{title}</DialogTitle>
           {description ? (
-            <DialogDescription className="">
-              {description}
-            </DialogDescription>
+            <DialogDescription className="">{description}</DialogDescription>
           ) : null}
         </DialogHeader>
 

@@ -81,7 +81,9 @@ export function SidebarUser({ user }: { user: SidebarUserData }) {
                         >
                             <UserAvatar user={user} initials={initials} />
                             <div className="grid flex-1 text-left text-sm leading-tight">
-                                <span className="truncate font-medium">{user.name}</span>
+                                <span className="truncate font-medium">
+                                    {user.name}
+                                </span>
                                 <span className="truncate text-xs text-sidebar-foreground/60">
                                     {user.email}
                                 </span>
@@ -94,7 +96,7 @@ export function SidebarUser({ user }: { user: SidebarUserData }) {
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent
-                        className="w-(--radix-dropdown-menu-trigger-width) backdrop-blur-xl overflow-visible!"
+                        className="w-(--radix-dropdown-menu-trigger-width) overflow-visible! backdrop-blur-xl"
                         side={isMobile ? "bottom" : "right"}
                         align="end"
                         sideOffset={6}
@@ -103,7 +105,9 @@ export function SidebarUser({ user }: { user: SidebarUserData }) {
                             <div className="flex items-center gap-2 px-2 py-2 text-left text-sm">
                                 <UserAvatar user={user} initials={initials} />
                                 <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-medium">{user.name}</span>
+                                    <span className="truncate font-medium">
+                                        {user.name}
+                                    </span>
                                     <span className="truncate text-xs text-muted-foreground">
                                         {user.email}
                                     </span>
@@ -114,25 +118,34 @@ export function SidebarUser({ user }: { user: SidebarUserData }) {
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
                             <DropdownMenuItem asChild>
-                                <Link href={APP_ROUTES.dashboard.settings.profile}>
+                                <Link
+                                    href={APP_ROUTES.dashboard.settings.profile}
+                                >
                                     <HugeiconsIcon icon={UserCircleIcon} />
                                     Hesap bilgileri
                                 </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                                <Link href={APP_ROUTES.dashboard.settings.stores}>
+                                <Link href={APP_ROUTES.dashboard.settings.root}>
                                     <HugeiconsIcon icon={Building03Icon} />
-                                    Mağaza yönetimi
+                                    Mağaza ayarları
                                 </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                                <Link href={APP_ROUTES.dashboard.settings.notifications}>
+                                <Link
+                                    href={
+                                        APP_ROUTES.dashboard.settings
+                                            .notifications
+                                    }
+                                >
                                     <HugeiconsIcon icon={Notification01Icon} />
                                     Bildirimler
                                 </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                                <Link href={APP_ROUTES.dashboard.settings.billing}>
+                                <Link
+                                    href={APP_ROUTES.dashboard.settings.billing}
+                                >
                                     <HugeiconsIcon icon={CreditCardIcon} />
                                     Plan ve faturalama
                                 </Link>
@@ -156,7 +169,9 @@ export function SidebarUser({ user }: { user: SidebarUserData }) {
                                             Koyu
                                         </DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="system">
-                                            <HugeiconsIcon icon={ComputerIcon} />
+                                            <HugeiconsIcon
+                                                icon={ComputerIcon}
+                                            />
                                             Sistem
                                         </DropdownMenuRadioItem>
                                     </DropdownMenuRadioGroup>
@@ -177,7 +192,10 @@ export function SidebarUser({ user }: { user: SidebarUserData }) {
                 </DropdownMenu>
 
                 {signOutError ? (
-                    <p className="px-2 pt-1 text-xs text-destructive" role="alert">
+                    <p
+                        className="px-2 pt-1 text-xs text-destructive"
+                        role="alert"
+                    >
                         {signOutError}
                     </p>
                 ) : null}
@@ -202,6 +220,5 @@ function UserAvatar({
                 {initials}
             </AvatarFallback>
         </Avatar>
-
     )
 }
