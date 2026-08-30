@@ -14,7 +14,7 @@ export function NoSearchResults({ query, onClear }: NoSearchResultsProps) {
       />
       <h2 className="mt-4 font-semibold text-foreground">Ürün bulunamadı</h2>
       <p className="mt-1.5 text-sm text-muted-foreground">
-        “{query}” ile eşleşen ürün veya varyant yok.
+        “{query}” ile eşleşen ürün, varyant veya özellik yok.
       </p>
       <Button
         type="button"

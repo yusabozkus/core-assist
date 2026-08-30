@@ -151,11 +151,7 @@
 
 .subtle-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: color-mix(
-      in srgb,
-      var(--muted-foreground) 22%,
-      transparent
-    )
+  scrollbar-color: color-mix(in srgb, var(--muted-foreground) 22%, transparent)
     transparent;
 }
 
@@ -176,5 +172,58 @@
 
 .subtle-scrollbar:hover::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--muted-foreground) 38%, transparent);
+  background-clip: padding-box;
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted-foreground) 28%, transparent)
+    var(--background);
+  scrollbar-gutter: stable;
+}
+
+html::-webkit-scrollbar {
+  width: 9px;
+}
+
+html::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+html::-webkit-scrollbar-thumb {
+  border: 3px solid var(--background);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted-foreground) 30%, transparent);
+}
+
+html:hover::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted-foreground) 46%, transparent);
+  background-clip: padding-box;
+}
+
+.themed-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted-foreground) 26%, transparent)
+    transparent;
+}
+
+.themed-scrollbar::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.themed-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.themed-scrollbar::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted-foreground) 26%, transparent);
+  background-clip: padding-box;
+}
+
+.themed-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted-foreground) 44%, transparent);
   background-clip: padding-box;
 }

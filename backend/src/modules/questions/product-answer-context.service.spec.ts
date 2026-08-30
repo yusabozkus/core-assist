@@ -42,6 +42,20 @@ describe('ProductAnswerContextService', () => {
     expect(context.matchedColor).toBeNull();
     expect(context.matchingVariants).toHaveLength(0);
   });
+
+  it('detects material and durability questions separately', async () => {
+    const fixture = createQuestionFixture(
+      'Kemer hakiki deri mi, tokasında kararma olur mu?',
+    );
+    fixture.product.title = 'Hakiki Deri Kemer';
+    fixture.product.description = 'Mat tokalı hakiki deri kemer.';
+    fixture.product.attributes = [{ name: 'Materyal', value: 'Hakiki Deri' }];
+    findQuestion.mockResolvedValue(fixture);
+
+    const context = await service.build('store-1', 'question-1');
+
+    expect(context.requestedFacts).toEqual(['MATERIAL', 'DURABILITY']);
+  });
 });
 
 function createQuestionFixture(question: string) {

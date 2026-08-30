@@ -86,7 +86,10 @@ function ResponsiveDialog({
       <Drawer open={resolvedOpen} onOpenChange={handleOpenChange}>
         {trigger ? <DrawerTrigger asChild>{trigger}</DrawerTrigger> : null}
         <DrawerContent
-          className={cn("max-h-[92svh] overflow-hidden", contentClassName)}
+          className={cn(
+            "max-h-[96svh] overflow-hidden p-2 data-[vaul-drawer-direction=bottom]:max-h-[96svh]",
+            contentClassName
+          )}
         >
           {showCloseButton ? (
             <DrawerClose asChild>
@@ -94,49 +97,46 @@ function ResponsiveDialog({
                 type="button"
                 variant="ghost"
                 size="icon-sm"
-                className="absolute top-7 right-7 z-10 rounded-full bg-secondary text-muted-foreground"
-                aria-label="Close"
+                className="absolute top-6 right-6 z-10 rounded-full bg-secondary text-muted-foreground"
+                aria-label="Kapat"
               >
                 <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
               </Button>
             </DrawerClose>
           ) : null}
 
-          <DrawerHeader
-            className={cn(
-              "shrink-0 border-b px-4 pt-5 pr-12 pb-4 text-left group-data-[vaul-drawer-direction=bottom]/drawer-content:text-left",
-              headerClassName
-            )}
-          >
-            <DrawerTitle className="text-lg tracking-[-0.02em]">
-              {title}
-            </DrawerTitle>
-            {description ? (
-              <DrawerDescription className="mt-1 leading-5">
-                {description}
-              </DrawerDescription>
-            ) : null}
-          </DrawerHeader>
-
-          <div
-            className={cn(
-              "min-h-0 flex-1 overflow-y-auto px-4 py-5",
-              bodyClassName
-            )}
-          >
-            {renderSlot(children, controls)}
-          </div>
-
-          {footer ? (
-            <DrawerFooter
+          <div className="themed-scrollbar min-h-0 flex-1 overflow-y-auto">
+            <DrawerHeader
               className={cn(
-                "shrink-0 border-t bg-secondary/35 px-4 py-4",
-                footerClassName
+                "border-b px-3 pt-4 pr-11 pb-3 text-left group-data-[vaul-drawer-direction=bottom]/drawer-content:text-left",
+                headerClassName
               )}
             >
-              {renderSlot(footer, controls)}
-            </DrawerFooter>
-          ) : null}
+              <DrawerTitle className="text-lg tracking-[-0.02em]">
+                {title}
+              </DrawerTitle>
+              {description ? (
+                <DrawerDescription className="mt-1 leading-5">
+                  {description}
+                </DrawerDescription>
+              ) : null}
+            </DrawerHeader>
+
+            <div className={cn("px-3 py-4", bodyClassName)}>
+              {renderSlot(children, controls)}
+            </div>
+
+            {footer ? (
+              <DrawerFooter
+                className={cn(
+                  "border-t bg-secondary/35 px-3 py-3",
+                  footerClassName
+                )}
+              >
+                {renderSlot(footer, controls)}
+              </DrawerFooter>
+            ) : null}
+          </div>
         </DrawerContent>
       </Drawer>
     )
@@ -148,31 +148,36 @@ function ResponsiveDialog({
       <DialogContent
         showCloseButton={showCloseButton}
         className={cn(
-          "max-h-[min(85svh,48rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-lg",
+          "max-h-[min(92svh,56rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-lg",
           contentClassName
         )}
       >
         <DialogHeader
-          className={cn("shrink-0 border-b px-6 py-5 pr-14", headerClassName)}
+          className={cn("shrink-0 border-b px-5 py-4 pr-14", headerClassName)}
         >
-          <DialogTitle className="text-lg tracking-[-0.02em]">
+          <DialogTitle className="tracking-[-0.02em]">
             {title}
           </DialogTitle>
           {description ? (
-            <DialogDescription className="mt-1 leading-5">
+            <DialogDescription className="">
               {description}
             </DialogDescription>
           ) : null}
         </DialogHeader>
 
-        <div className={cn("min-h-0 overflow-y-auto px-6 py-5", bodyClassName)}>
+        <div
+          className={cn(
+            "themed-scrollbar min-h-0 overflow-y-auto px-5 py-4",
+            bodyClassName
+          )}
+        >
           {renderSlot(children, controls)}
         </div>
 
         {footer ? (
           <DialogFooter
             className={cn(
-              "shrink-0 border-t bg-secondary/35 px-6 py-4",
+              "shrink-0 border-t bg-secondary/35 px-5 py-3",
               footerClassName
             )}
           >

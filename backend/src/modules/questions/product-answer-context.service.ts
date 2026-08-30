@@ -17,6 +17,17 @@ import type {
 const STOCK_PATTERNS = ['stok', 'var mi', 'mevcut', 'kaldi', 'bulunuyor'];
 const PRICE_PATTERNS = ['fiyat', 'ne kadar', 'kac tl', 'ucret'];
 const MATERIAL_PATTERNS = ['materyal', 'malzeme', 'kumas', 'deri mi', 'pamuk'];
+const DURABILITY_PATTERNS = [
+  'kararma',
+  'kararir',
+  'solma',
+  'solar',
+  'paslan',
+  'soyul',
+  'dokul',
+  'dayanikli',
+  'su gecir',
+];
 const SHIPPING_PATTERNS = ['kargo', 'teslim', 'gonderim', 'ne zaman gelir'];
 const COMMON_COLORS = [
   'Siyah',
@@ -183,17 +194,9 @@ export class ProductAnswerContextService {
         title: question.product.title,
         description: question.product.description,
         attributes: question.product.attributes,
-        variants: variants.map((variant) => ({
-          ...variant,
-          status:
-            variant.status as ProductAnswerContext['product']['variants'][number]['status'],
-        })),
+        variants,
       },
-      matchingVariants: matchingVariants.map((variant) => ({
-        ...variant,
-        status:
-          variant.status as ProductAnswerContext['matchingVariants'][number]['status'],
-      })),
+      matchingVariants,
       relevantAttributes,
     };
   }
@@ -216,6 +219,9 @@ function detectRequestedFacts(
   if (includesAny(normalizedQuestion, PRICE_PATTERNS)) facts.push('PRICE');
   if (includesAny(normalizedQuestion, MATERIAL_PATTERNS)) {
     facts.push('MATERIAL');
+  }
+  if (includesAny(normalizedQuestion, DURABILITY_PATTERNS)) {
+    facts.push('DURABILITY');
   }
   if (includesAny(normalizedQuestion, SHIPPING_PATTERNS)) {
     facts.push('SHIPPING');

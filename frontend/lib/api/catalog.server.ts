@@ -3,7 +3,7 @@ import "server-only"
 import { headers } from "next/headers"
 import { cache } from "react"
 
-import type { CatalogProduct } from "@/types/product"
+import type { CatalogProductPage } from "@/types/product"
 
 const CATALOG_REQUEST_TIMEOUT_MS = 8_000
 
@@ -14,15 +14,20 @@ const apiUrl = (
 ).replace(/\/$/, "")
 
 export const getServerCatalogProducts = cache(
-  async (storeId: string): Promise<CatalogProduct[]> => {
+  async (storeId: string): Promise<CatalogProductPage> => {
     const cookie = (await headers()).get("cookie")
 
     if (!cookie) {
-      return []
+      return {
+        items: [],
+        nextCursor: null,
+        total: 0,
+        summary: { products: 0, variants: 0, totalStock: 0 },
+      }
     }
 
     const response = await fetch(
-      `${apiUrl}/stores/${storeId}/catalog/products`,
+      `${apiUrl}/stores/${storeId}/catalog/products?limit=12`,
       {
         cache: "no-store",
         headers: {
@@ -39,6 +44,6 @@ export const getServerCatalogProducts = cache(
       )
     }
 
-    return (await response.json()) as CatalogProduct[]
+    return (await response.json()) as CatalogProductPage
   }
 )

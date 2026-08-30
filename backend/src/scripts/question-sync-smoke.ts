@@ -27,6 +27,7 @@ const POLL_INTERVAL_MS = 100;
 const TIMEOUT_MS = 10_000;
 
 async function run() {
+  process.env.AI_DRAFT_MODE = 'deterministic';
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: false,
   });

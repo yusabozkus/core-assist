@@ -96,8 +96,11 @@ function createMockProduct(
 ): NormalizedProduct {
   const providerPrefix = provider === 'trendyol' ? 'ty' : 'hb';
   const externalPrefix = provider === 'trendyol' ? 'ty-content' : 'hb-listing';
+  const description = createMarketplaceDescription(seed);
+  const attributes = createMarketplaceAttributes(seed);
+  const sizes: Array<string | undefined> = seed.sizes ?? [undefined];
   const variants = seed.colors.flatMap((color) =>
-    (seed.sizes ?? [undefined]).map((size) => ({ color, size })),
+    sizes.map((size) => ({ color, size })),
   );
 
   return {
@@ -107,10 +110,10 @@ function createMockProduct(
         ? 'https://www.trendyol.com/'
         : 'https://www.hepsiburada.com/',
     title: seed.title,
-    description: seed.description,
+    description,
     brand: seed.brand,
     category: seed.category,
-    attributes: seed.attributes,
+    attributes,
     images: [TEST_PRODUCT_IMAGE_URL],
     variants: variants.map((variant, index) => ({
       externalId: `${providerPrefix}-variant-${seed.id}-${index + 1}`,
@@ -123,8 +126,100 @@ function createMockProduct(
       currency: 'TRY',
       stock: seed.stocks[index % seed.stocks.length],
     })),
-    rawPayload: { fixture: true, provider },
+    rawPayload: {
+      fixture: true,
+      provider,
+      contentId: `${externalPrefix}-${seed.id}`,
+      title: seed.title,
+      description,
+      attributes,
+      seller: {
+        name:
+          provider === 'trendyol' ? 'North Official Store' : 'North Mağazası',
+      },
+      commercialInfo: {
+        freeReturnDays: 15,
+        maximumOrderQuantity: 10,
+        sellerDeterminesPrice: true,
+      },
+    },
   };
+}
+
+function createMarketplaceDescription(seed: MockProductSeed) {
+  const careInstructions = createCareInstructions(seed);
+  const sizeInformation = seed.sizes?.length
+    ? `Ürün ${seed.sizes.join(', ')} beden seçenekleriyle sunulur.`
+    : 'Ürün standart ölçü seçeneğiyle sunulur.';
+
+  return [
+    seed.description,
+    `${seed.title}, ${seed.category.toLocaleLowerCase('tr-TR')} kategorisinde günlük kullanıma uyum sağlayan işlevsel bir modeldir.`,
+    `${seed.colors.join(', ')} renk seçenekleri farklı kombinlerle kullanım imkânı sunar.`,
+    sizeInformation,
+    'Ürünün materyal, kalıp ve diğer teknik bilgileri ürün özellikleri bölümünde ayrıntılı olarak belirtilmiştir.',
+    'Ürünün formunu ve yüzeyini korumak için kullanım sırasında sert darbe, kesici yüzey ve uygun olmayan kimyasallarla temastan kaçınılmalıdır.',
+    'Yıkama ve Kullanma Talimatları',
+    careInstructions,
+  ].join('\n\n');
+}
+
+function createMarketplaceAttributes(seed: MockProductSeed) {
+  const careInstructions = createCareInstructions(seed);
+  const material = seed.attributes.find((attribute) =>
+    /(materyal|kumaş|dokuma)/i.test(attribute.name),
+  );
+  const hasMaterialComposition = seed.attributes.some((attribute) =>
+    /materyal bileşeni/i.test(attribute.name),
+  );
+  const commonAttributes = [
+    { name: 'Sezon', value: 'Tüm Sezonlar' },
+    { name: 'Renk Seçenekleri', value: seed.colors.join(', ') },
+    { name: 'Menşei', value: 'TR' },
+    { name: 'Koleksiyon', value: 'Casual / Günlük' },
+    {
+      name: 'Kutu Durumu',
+      value: /(ayakkabı|bot|loafer|sandalet|terlik)/i.test(seed.category)
+        ? 'Kutulu'
+        : 'Kutu yok',
+    },
+    ...(seed.sizes?.length
+      ? [{ name: 'Beden Seçenekleri', value: seed.sizes.join(', ') }]
+      : []),
+    ...(material && !hasMaterialComposition
+      ? [{ name: 'Materyal Bileşeni', value: material.value }]
+      : []),
+    { name: 'Yıkama Talimatları', value: careInstructions },
+  ];
+
+  return [
+    ...new Map(
+      [...seed.attributes, ...commonAttributes].map((attribute) => [
+        `${attribute.name.toLocaleLowerCase('tr-TR')}:${attribute.value.toLocaleLowerCase('tr-TR')}`,
+        attribute,
+      ]),
+    ).values(),
+  ];
+}
+
+function createCareInstructions(seed: MockProductSeed) {
+  const searchableProduct = `${seed.title} ${seed.category} ${seed.attributes
+    .map((attribute) => `${attribute.name} ${attribute.value}`)
+    .join(' ')}`.toLocaleLowerCase('tr-TR');
+
+  if (searchableProduct.includes('deri')) {
+    return 'Su ile yıkamayınız. Gerektiğinde hafif nemli ve yumuşak bir bezle temizleyiniz. Kimyasal temizleyici ve ağartıcı kullanmayınız. Doğrudan güneş ışığına ve yüksek sıcaklığa uzun süre maruz bırakmayınız.';
+  }
+
+  if (/(çanta|valiz|cüzdan)/i.test(seed.category)) {
+    return 'Nemli ve yumuşak bir bezle nazikçe temizleyiniz. Makinede yıkamayınız. Kullanmadığınız zamanlarda kuru ve temiz bir ortamda muhafaza ediniz.';
+  }
+
+  if (/(ayakkabı|bot|loafer|sandalet|terlik)/i.test(seed.category)) {
+    return 'Yüzeyi yumuşak bir bezle temizleyiniz. Makinede yıkamayınız. Islak bırakmayınız ve doğrudan ısı kaynağında kurutmayınız.';
+  }
+
+  return 'Ürün etiketindeki bakım talimatlarına uyunuz. Benzer renklerle yıkayınız; ağartıcı kullanmayınız ve doğrudan yüksek ısıya maruz bırakmayınız.';
 }
 
 const TRENDYOL_PRODUCT_SEEDS: MockProductSeed[] = [
@@ -306,8 +401,8 @@ const TRENDYOL_PRODUCT_SEEDS: MockProductSeed[] = [
   {
     id: 1012,
     code: 'NST-BLT',
-    title: 'Hakiki Deri Kemer',
-    description: 'Mat tokalı, klasik tasarımlı hakiki deri unisex kemer.',
+    title: 'Klasik Tokalı Günlük Kemer',
+    description: 'Şık toka detaylı, klasik tasarımlı poliüretan unisex kemer.',
     brand: 'North Studio',
     category: 'Kemer',
     price: 749,
@@ -315,7 +410,8 @@ const TRENDYOL_PRODUCT_SEEDS: MockProductSeed[] = [
     sizes: ['90 cm', '100 cm', '110 cm'],
     stocks: [10, 7, 4, 8, 3, 0],
     attributes: [
-      { name: 'Materyal', value: 'Hakiki Deri' },
+      { name: 'Materyal', value: 'Poliüretan' },
+      { name: 'Materyal Bileşeni', value: '%100 Poliüretan' },
       { name: 'Cinsiyet', value: 'Unisex' },
     ],
   },

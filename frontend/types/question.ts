@@ -50,11 +50,20 @@ export type DraftQuestionAnswerResult = {
   status: "DRAFTED"
   context: {
     requestedFacts: Array<
-      "STOCK" | "PRICE" | "MATERIAL" | "SHIPPING" | "PRODUCT_INFO"
+      | "STOCK"
+      | "PRICE"
+      | "MATERIAL"
+      | "DURABILITY"
+      | "SHIPPING"
+      | "PRODUCT_INFO"
     >
     matchedColor: string | null
     matchedSize: string | null
     matchingVariantCount: number
-    source: "CATALOG"
+    source: "CATALOG" | "GEMINI_FAST" | "GEMINI_SMART"
+    model: string | null
+    decision: "DRAFT" | "NEEDS_REVIEW"
+    confidence: number | null
+    missingInformation: string[]
   }
 }

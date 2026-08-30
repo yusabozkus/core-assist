@@ -32,3 +32,35 @@ export type CatalogProduct = {
     connection: { providerKey: string }
   }>
 }
+
+export type CatalogProductListItem = {
+  id: string
+  title: string
+  brand: string | null
+  category: string | null
+  status: "ACTIVE" | "ARCHIVED"
+  updatedAt: string
+  imageUrl: string | null
+  variantCount: number
+  totalStock: number
+  minimumPrice: number | null
+  maximumPrice: number | null
+  currency: string
+  providers: Array<{
+    providerKey: string
+    status: "ACTIVE" | "ARCHIVED" | "UNAVAILABLE"
+  }>
+}
+
+export type CatalogSummary = {
+  products: number
+  variants: number
+  totalStock: number
+}
+
+export type CatalogProductPage = {
+  items: CatalogProductListItem[]
+  nextCursor: string | null
+  total: number
+  summary: CatalogSummary
+}

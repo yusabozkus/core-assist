@@ -20,23 +20,10 @@ export default async function ProductsPage() {
     redirect(APP_ROUTES.onboarding)
   }
 
-  const [products, connections] = await Promise.all([
+  const [catalogPage, connections] = await Promise.all([
     getServerCatalogProducts(activeStore.id),
     getServerChannelConnections(activeStore.id),
   ])
-  const variantCount = products.reduce(
-    (total, product) => total + product.variants.length,
-    0
-  )
-  const totalStock = products.reduce(
-    (productTotal, product) =>
-      productTotal +
-      product.variants.reduce(
-        (variantTotal, variant) => variantTotal + variant.stock,
-        0
-      ),
-    0
-  )
 
   return (
     <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
@@ -46,9 +33,15 @@ export default async function ProductsPage() {
             Ürünler
           </h1>
           <div className="mt-3 flex flex-wrap gap-2">
-            <CatalogBadge label="Ürün" value={products.length} />
-            <CatalogBadge label="Varyant" value={variantCount} />
-            <CatalogBadge label="Toplam stok" value={totalStock} />
+            <CatalogBadge label="Ürün" value={catalogPage.summary.products} />
+            <CatalogBadge
+              label="Varyant"
+              value={catalogPage.summary.variants}
+            />
+            <CatalogBadge
+              label="Toplam stok"
+              value={catalogPage.summary.totalStock}
+            />
           </div>
           <CatalogFreshness connections={connections} />
         </div>
@@ -65,7 +58,7 @@ export default async function ProductsPage() {
         </div>
       </div>
 
-      <ProductCatalog products={products} />
+      <ProductCatalog storeId={activeStore.id} initialPage={catalogPage} />
     </div>
   )
 }

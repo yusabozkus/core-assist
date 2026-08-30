@@ -1,6 +1,7 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { ProductQuestionStatus } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { AiDraftGenerator } from '../ai/ai-draft.types';
 import {
   isSellableVariant,
   ProductAnswerContextService,
@@ -15,6 +16,7 @@ export class QuestionDraftService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly productContext: ProductAnswerContextService,
+    private readonly aiDrafts: AiDraftGenerator,
   ) {}
 
   async generate(
@@ -22,7 +24,8 @@ export class QuestionDraftService {
     questionId: string,
   ): Promise<DraftQuestionAnswer> {
     const context = await this.productContext.build(storeId, questionId);
-    const answer = createCatalogDraft(context);
+    const aiDraft = await this.aiDrafts.generate(context);
+    const answer = aiDraft?.answer ?? createCatalogDraft(context);
     const updated = await this.prisma.productQuestion.updateMany({
       where: {
         id: questionId,
@@ -49,13 +52,17 @@ export class QuestionDraftService {
         matchedColor: context.matchedColor,
         matchedSize: context.matchedSize,
         matchingVariantCount: context.matchingVariants.length,
-        source: 'CATALOG',
+        source: aiDraft?.source ?? 'CATALOG',
+        model: aiDraft?.model ?? null,
+        decision: aiDraft?.decision ?? 'DRAFT',
+        confidence: aiDraft?.confidence ?? null,
+        missingInformation: aiDraft?.missingInformation ?? [],
       },
     };
   }
 }
 
-function createCatalogDraft(context: ProductAnswerContext) {
+export function createCatalogDraft(context: ProductAnswerContext) {
   const { product, requestedFacts } = context;
   const includesStock = requestedFacts.includes('STOCK');
   const includesPrice = requestedFacts.includes('PRICE');
@@ -85,6 +92,19 @@ function createCatalogDraft(context: ProductAnswerContext) {
         : product.description
           ? product.description
           : 'Ürünün materyal bilgisi katalogda yer almıyor; kontrol ederek dönüş sağlayacağız.',
+    );
+  }
+
+  if (requestedFacts.includes('DURABILITY')) {
+    const durabilityAttributes = product.attributes.filter((attribute) =>
+      /(kararma|solma|paslan|kaplama|toka|dayanıklılık|garanti)/i.test(
+        `${attribute.name} ${attribute.value}`,
+      ),
+    );
+    parts.push(
+      durabilityAttributes.length > 0
+        ? `${product.title} ürününün ${formatAttributes(durabilityAttributes)}.`
+        : 'Ürünün kararma ve kullanım sonrası dayanıklılık bilgisi katalogda belirtilmediği için bu konuda kesin bilgi veremiyoruz.',
     );
   }
 

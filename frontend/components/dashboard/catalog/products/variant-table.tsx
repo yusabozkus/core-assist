@@ -8,14 +8,14 @@ export function VariantTable({
 }) {
   if (variants.length === 0) {
     return (
-      <div className="border-t border-border px-5 py-8 text-center text-sm text-muted-foreground">
+      <div className="border-y border-border px-5 py-8 text-center text-sm text-muted-foreground">
         Bu ürün için varyant bilgisi bulunmuyor.
       </div>
     )
   }
 
   return (
-    <div className="overflow-x-auto border-t border-border bg-card">
+    <div className="themed-scrollbar overflow-x-auto border-y border-border bg-card">
       <table className="w-full min-w-200 text-left text-sm">
         <thead className="bg-muted/40 text-xs text-muted-foreground">
           <tr>

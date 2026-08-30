@@ -21,6 +21,7 @@
     "smoke:catalog-sync": "npm run build && node dist/src/scripts/catalog-sync-smoke.js",
     "smoke:question-sync": "npm run build && node dist/src/scripts/question-sync-smoke.js",
     "smoke:question-flow": "npm run build && node dist/src/scripts/question-sync-smoke.js",
+    "smoke:gemini": "npm run build && node dist/src/scripts/gemini-smoke.js",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio --port 5556"

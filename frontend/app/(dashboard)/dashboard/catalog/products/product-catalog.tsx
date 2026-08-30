@@ -1,146 +1,248 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import {
-  ArrowDown01Icon,
-  ArrowUp01Icon,
-  Search01Icon,
-} from "@hugeicons/core-free-icons"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { Search01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { EmptyCatalog } from "@/components/dashboard/catalog/products/empty-catalog"
 import { NoSearchResults } from "@/components/dashboard/catalog/products/no-search-results"
 import { ProductCard } from "@/components/dashboard/catalog/products/product-card"
-import type { CatalogProduct } from "@/types/product"
+import { ProductDetailDialog } from "@/components/dashboard/catalog/products/product-detail-dialog"
+import { ProductCardGridSkeleton } from "@/components/skeletons/product-catalog-skeleton"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { getCatalogProducts } from "@/lib/api/catalog"
+import type {
+  CatalogProductListItem,
+  CatalogProductPage,
+} from "@/types/product"
+
+const PAGE_SIZE = 12
+const SEARCH_DEBOUNCE_MS = 300
 
 export type ProductCatalogProps = {
-  products: CatalogProduct[]
+  storeId: string
+  initialPage: CatalogProductPage
 }
 
-export function ProductCatalog({ products }: ProductCatalogProps) {
+export function ProductCatalog({ storeId, initialPage }: ProductCatalogProps) {
   const [query, setQuery] = useState("")
-  const [openProductIds, setOpenProductIds] = useState<Set<string>>(
-    () => new Set()
+  const [activeQuery, setActiveQuery] = useState("")
+  const [products, setProducts] = useState(initialPage.items)
+  const [nextCursor, setNextCursor] = useState(initialPage.nextCursor)
+  const [total, setTotal] = useState(initialPage.total)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null
   )
-  const filteredProducts = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase("tr-TR")
+  const loadMoreMarkerRef = useRef<HTMLDivElement | null>(null)
+  const requestSequence = useRef(0)
 
-    if (!normalizedQuery) return products
+  useEffect(() => {
+    const normalizedQuery = query.trim()
 
-    return products.filter((product) => {
-      const searchableValues = [
-        product.title,
-        product.brand,
-        product.category,
-        ...product.variants.flatMap((variant) => [
-          variant.sku,
-          variant.barcode,
-          variant.color,
-          variant.size,
-        ]),
-      ]
+    if (!normalizedQuery) {
+      requestSequence.current += 1
+      return
+    }
 
-      return searchableValues.some((value) =>
-        value?.toLocaleLowerCase("tr-TR").includes(normalizedQuery)
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(async () => {
+      const requestId = ++requestSequence.current
+      setIsLoading(true)
+      setError(null)
+
+      try {
+        const page = await getCatalogProducts(storeId, {
+          query: normalizedQuery,
+          limit: PAGE_SIZE,
+          signal: controller.signal,
+        })
+
+        if (requestId !== requestSequence.current) return
+        setActiveQuery(normalizedQuery)
+        setProducts(page.items)
+        setNextCursor(page.nextCursor)
+        setTotal(page.total)
+      } catch (caughtError) {
+        if (controller.signal.aborted) return
+        setError(
+          caughtError instanceof Error
+            ? caughtError.message
+            : "Ürünler aranırken bir hata oluştu."
+        )
+      } finally {
+        if (requestId === requestSequence.current) setIsLoading(false)
+      }
+    }, SEARCH_DEBOUNCE_MS)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+      controller.abort()
+    }
+  }, [initialPage, query, storeId])
+
+  const loadMore = useCallback(async () => {
+    if (!nextCursor || isLoading || query.trim() !== activeQuery) return
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const page = await getCatalogProducts(storeId, {
+        cursor: nextCursor,
+        query: activeQuery,
+        limit: PAGE_SIZE,
+      })
+      setProducts((current) => mergeProducts(current, page.items))
+      setNextCursor(page.nextCursor)
+      setTotal(page.total)
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Diğer ürünler yüklenemedi."
       )
-    })
-  }, [products, query])
-  const allVisibleProductsOpen =
-    filteredProducts.length > 0 &&
-    filteredProducts.every((product) => openProductIds.has(product.id))
+    } finally {
+      setIsLoading(false)
+    }
+  }, [activeQuery, isLoading, nextCursor, query, storeId])
 
-  function setProductOpen(productId: string, open: boolean) {
-    setOpenProductIds((current) => {
-      const next = new Set(current)
+  useEffect(() => {
+    const marker = loadMoreMarkerRef.current
+    if (!marker || !nextCursor) return
 
-      if (open) next.add(productId)
-      else next.delete(productId)
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) void loadMore()
+      },
+      { rootMargin: "320px 0px" }
+    )
 
-      return next
-    })
+    observer.observe(marker)
+    return () => observer.disconnect()
+  }, [loadMore, nextCursor])
+
+  function handleQueryChange(value: string) {
+    setQuery(value)
+
+    if (value.trim()) return
+
+    setActiveQuery("")
+    setProducts(initialPage.items)
+    setNextCursor(initialPage.nextCursor)
+    setTotal(initialPage.total)
+    setError(null)
+    setIsLoading(false)
   }
 
-  function openAllVisibleProducts() {
-    setOpenProductIds((current) => {
-      const next = new Set(current)
-      filteredProducts.forEach((product) => next.add(product.id))
-      return next
-    })
-  }
-
-  function closeAllVisibleProducts() {
-    setOpenProductIds((current) => {
-      const next = new Set(current)
-      filteredProducts.forEach((product) => next.delete(product.id))
-      return next
-    })
-  }
-
-  if (products.length === 0) {
+  if (initialPage.summary.products === 0) {
     return <EmptyCatalog />
   }
+
+  const isReplacingResults =
+    isLoading && Boolean(query.trim()) && query.trim() !== activeQuery
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative sm:w-80">
+        <div className="relative w-full sm:max-w-sm">
           <HugeiconsIcon
             icon={Search01Icon}
             className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground"
           />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Ürün, SKU, barkod, renk veya beden ara"
+            onChange={(event) => handleQueryChange(event.target.value)}
+            placeholder="Ürün, SKU, barkod, renk veya özellik ara"
             className="h-9! pl-9"
             aria-label="Katalogda ara"
           />
         </div>
-        <div className="flex gap-2 sm:justify-end">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={openAllVisibleProducts}
-            disabled={allVisibleProductsOpen || filteredProducts.length === 0}
-          >
-            <HugeiconsIcon icon={ArrowDown01Icon} className="size-3.5" />
-            Tümünü aç
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={closeAllVisibleProducts}
-            disabled={
-              filteredProducts.length === 0 ||
-              !filteredProducts.some((product) =>
-                openProductIds.has(product.id)
-              )
-            }
-          >
-            <HugeiconsIcon icon={ArrowUp01Icon} className="size-3.5" />
-            Tümünü kapat
-          </Button>
-        </div>
+        <p className="text-xs text-muted-foreground tabular-nums">
+          {products.length.toLocaleString("tr-TR")} /{" "}
+          {total.toLocaleString("tr-TR")} ürün gösteriliyor
+        </p>
       </div>
 
-      {filteredProducts.length === 0 ? (
-        <NoSearchResults query={query} onClear={() => setQuery("")} />
+      {isReplacingResults ? (
+        <ProductCardGridSkeleton />
+      ) : products.length === 0 && activeQuery && !isLoading ? (
+        <NoSearchResults
+          query={activeQuery}
+          onClear={() => handleQueryChange("")}
+        />
       ) : (
-        <div className="grid gap-2.5">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              open={openProductIds.has(product.id)}
-              onOpenChange={(open) => setProductOpen(product.id, open)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onSelect={setSelectedProductId}
+              />
+            ))}
+          </div>
+          {isLoading && nextCursor ? (
+            <div className="mt-3">
+              <ProductCardGridSkeleton count={3} />
+            </div>
+          ) : null}
+        </>
       )}
+
+      <div
+        ref={loadMoreMarkerRef}
+        className="flex min-h-14 items-center justify-center"
+        aria-live="polite"
+      >
+        {isLoading ? (
+          <span className="sr-only">Ürünler yükleniyor...</span>
+        ) : error ? (
+          <div className="flex flex-col items-center gap-2 text-center">
+            <p className="text-xs text-destructive">{error}</p>
+            {nextCursor ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={loadMore}
+              >
+                Tekrar dene
+              </Button>
+            ) : null}
+          </div>
+        ) : nextCursor ? (
+          <span className="text-xs text-muted-foreground">
+            Daha fazla ürün için aşağı kaydırın
+          </span>
+        ) : products.length > 0 ? (
+          <span className="text-xs text-muted-foreground">
+            Tüm ürünler gösteriliyor
+          </span>
+        ) : null}
+      </div>
+
+      <ProductDetailDialog
+        storeId={storeId}
+        productId={selectedProductId}
+        open={selectedProductId !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedProductId(null)
+        }}
+      />
     </div>
   )
+}
+
+function mergeProducts(
+  current: CatalogProductListItem[],
+  incoming: CatalogProductListItem[]
+) {
+  return [
+    ...new Map(
+      [...current, ...incoming].map((product) => [product.id, product])
+    ).values(),
+  ]
 }

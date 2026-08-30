@@ -1,5 +1,5 @@
 export type ProductAnswerFact =
-  'STOCK' | 'PRICE' | 'MATERIAL' | 'SHIPPING' | 'PRODUCT_INFO';
+  'STOCK' | 'PRICE' | 'MATERIAL' | 'DURABILITY' | 'SHIPPING' | 'PRODUCT_INFO';
 
 export type ProductAnswerVariantContext = {
   title: string | null;
@@ -39,6 +39,10 @@ export type DraftQuestionAnswer = {
     matchedColor: string | null;
     matchedSize: string | null;
     matchingVariantCount: number;
-    source: 'CATALOG';
+    source: 'CATALOG' | 'GEMINI_FAST' | 'GEMINI_SMART';
+    model: string | null;
+    decision: 'DRAFT' | 'NEEDS_REVIEW';
+    confidence: number | null;
+    missingInformation: string[];
   };
 };

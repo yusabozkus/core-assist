@@ -13,6 +13,11 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { EmptyInbox } from "@/components/dashboard/inbox/empty-inbox"
 import { QuestionDetail } from "@/components/dashboard/inbox/question-detail"
 import { QuestionListItem } from "@/components/dashboard/inbox/question-list-item"
+import { QuestionStatus } from "@/components/dashboard/inbox/question-status"
+import {
+  inboxDateFormatter,
+  providerName,
+} from "@/components/dashboard/inbox/question-inbox-utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -20,6 +25,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
 import { useIsDesktop } from "@/hooks/use-desktop"
 import { syncStoreQuestions } from "@/lib/api/questions"
 import type { ProductQuestion } from "@/types/question"
@@ -43,6 +49,7 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
   const [selectedQuestionId, setSelectedQuestionId] = useState(
     questions[0]?.id ?? null
   )
+  const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false)
   const [filter, setFilter] = useState<InboxFilter>("ALL")
   const [query, setQuery] = useState("")
   const [message, setMessage] = useState<string | null>(null)
@@ -83,6 +90,14 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
     filteredQuestions.find((question) => question.id === selectedQuestionId) ??
     filteredQuestions[0] ??
     null
+
+  function selectQuestion(questionId: string) {
+    setSelectedQuestionId(questionId)
+
+    if (!isDesktop) {
+      setIsMobileDetailOpen(true)
+    }
+  }
 
   function syncQuestions() {
     startSyncTransition(async () => {
@@ -200,14 +215,14 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
         ) : null}
       </div>
 
-      <div className="subtle-scrollbar max-h-[32rem] min-h-0 space-y-1 overflow-y-auto p-2 lg:max-h-none lg:flex-1">
+      <div className="subtle-scrollbar min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
         {filteredQuestions.length > 0 ? (
           filteredQuestions.map((question) => (
             <QuestionListItem
               key={question.id}
               question={question}
               selected={question.id === selectedQuestion?.id}
-              onSelect={() => setSelectedQuestionId(question.id)}
+              onSelect={() => selectQuestion(question.id)}
             />
           ))
         ) : (
@@ -270,9 +285,37 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
           </ResizablePanel>
         </ResizablePanelGroup>
       ) : (
-        <div className="min-h-full bg-background">
+        <div className="h-full min-h-0 bg-background">
           {questionListPanel}
-          {questionDetailPanel}
+          {selectedQuestion ? (
+            <ResponsiveDialog
+              open={isMobileDetailOpen}
+              onOpenChange={setIsMobileDetailOpen}
+              title={
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="truncate">
+                    {selectedQuestion.customerName ?? "Pazaryeri müşterisi"}
+                  </span>
+                  <QuestionStatus
+                    status={selectedQuestion.status}
+                    deliveryStatus={selectedQuestion.answerDelivery?.status}
+                  />
+                </span>
+              }
+              description={`${providerName(
+                selectedQuestion.connection.providerKey
+              )} · ${inboxDateFormatter.format(
+                new Date(selectedQuestion.externalCreatedAt)
+              )}`}
+              bodyClassName="px-0 py-0"
+            >
+              <QuestionDetail
+                storeId={storeId}
+                question={selectedQuestion}
+                showHeader={false}
+              />
+            </ResponsiveDialog>
+          ) : null}
         </div>
       )}
     </div>

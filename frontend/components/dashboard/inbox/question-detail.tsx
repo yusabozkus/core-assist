@@ -14,9 +14,11 @@ import type { ProductQuestion } from "@/types/question"
 export function QuestionDetail({
   storeId,
   question,
+  showHeader = true,
 }: {
   storeId: string
   question: ProductQuestion
+  showHeader?: boolean
 }) {
   const customerName = question.customerName ?? "Pazaryeri müşterisi"
   const customerInitial = customerName
@@ -25,57 +27,60 @@ export function QuestionDetail({
     .toLocaleUpperCase("tr-TR")
 
   return (
-    <section className="min-w-0 bg-background lg:h-full lg:overflow-y-auto">
-      <header className="flex flex-col gap-4 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-            {customerInitial}
-          </span>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="truncate font-semibold text-foreground">
-                {customerName}
-              </h2>
-              <Badge variant="outline" className="font-medium">
-                {providerName(question.connection.providerKey)}
-              </Badge>
-            </div>
-            <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <HugeiconsIcon icon={Clock01Icon} className="size-3.5" />
-              {inboxDateFormatter.format(new Date(question.externalCreatedAt))}
-            </p>
-          </div>
-        </div>
-        <QuestionStatus
-          status={question.status}
-          deliveryStatus={question.answerDelivery?.status}
-        />
-      </header>
-
-      <div className="px-5 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <div className="mx-auto max-w-3xl">
-          <div>
-            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Müşteri sorusu
-            </p>
-            <div className="mt-3 rounded-xl border border-border bg-muted/25 p-4 sm:p-5">
-              <p className="text-[15px] leading-7 text-foreground">
-                {question.question}
+    <section className="flex min-w-0 flex-col bg-background lg:h-full lg:min-h-0">
+      {showHeader ? (
+        <header className="flex shrink-0 flex-col gap-4 border-b border-border bg-background/95 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="flex min-w-0 items-center gap-3.5">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary ring-1 ring-primary/15">
+              {customerInitial}
+            </span>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="truncate font-semibold text-foreground">
+                  {customerName}
+                </h2>
+                <Badge variant="outline" className="bg-card font-medium">
+                  {providerName(question.connection.providerKey)}
+                </Badge>
+              </div>
+              <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <HugeiconsIcon icon={Clock01Icon} className="size-3.5" />
+                {inboxDateFormatter.format(
+                  new Date(question.externalCreatedAt)
+                )}
               </p>
             </div>
           </div>
-
-          <div className="mt-5">
-            <ProductContext question={question} />
-          </div>
-
-          <QuestionAnswerComposer
-            key={question.id}
-            storeId={storeId}
-            question={question}
+          <QuestionStatus
+            status={question.status}
+            deliveryStatus={question.answerDelivery?.status}
           />
+        </header>
+      ) : null}
+
+      <div className="themed-scrollbar bg-muted/10 px-4 py-5 sm:px-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-8 lg:py-7">
+        <div className="mx-auto w-full max-w-4xl space-y-5">
+          <section>
+            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Müşteri sorusu
+            </p>
+            <div className="relative mt-3 overflow-hidden rounded-xl border border-border bg-card p-4 shadow-xs sm:p-5">
+              <span className="absolute inset-y-0 left-0 w-1 bg-primary/70" />
+              <p className="pl-1 text-[15px] leading-7 text-foreground">
+                {question.question}
+              </p>
+            </div>
+          </section>
+
+          <ProductContext question={question} />
         </div>
       </div>
+
+      <QuestionAnswerComposer
+        key={question.id}
+        storeId={storeId}
+        question={question}
+      />
     </section>
   )
 }
