@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation"
 import { FileImportIcon, PlusSignIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
@@ -6,19 +5,14 @@ import { ProductCatalog } from "./product-catalog"
 import { CatalogBadge } from "@/components/dashboard/catalog/products/catalog-badge"
 import { CatalogFreshness } from "@/components/dashboard/catalog/products/catalog-freshness"
 import { Button } from "@/components/ui/button"
-import { APP_ROUTES } from "@/constants/site"
 import { getServerCatalogProducts } from "@/lib/api/catalog.server"
 import { getServerChannelConnections } from "@/lib/api/channels.server"
-import { getActiveStoreContext } from "@/lib/stores/active-store"
+import { getOperationalStoreContext } from "@/lib/stores/active-store"
 
 export const dynamic = "force-dynamic"
 
 export default async function ProductsPage() {
-  const { activeStore } = await getActiveStoreContext()
-
-  if (!activeStore) {
-    redirect(APP_ROUTES.onboarding)
-  }
+  const { activeStore } = await getOperationalStoreContext()
 
   const [catalogPage, connections] = await Promise.all([
     getServerCatalogProducts(activeStore.id),

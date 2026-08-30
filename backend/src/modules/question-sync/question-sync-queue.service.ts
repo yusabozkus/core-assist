@@ -5,7 +5,10 @@ import {
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
-import { ChannelConnectionStatus } from '../../generated/prisma/enums';
+import {
+  ChannelConnectionStatus,
+  StoreStatus,
+} from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import {
   QUESTION_SYNC_LOCK_TIMEOUT_MS,
@@ -40,6 +43,7 @@ export class QuestionSyncQueueService implements QuestionSyncDispatcher {
         storeId,
         status: ChannelConnectionStatus.CONNECTED,
         credentialsEncrypted: { not: null },
+        store: { status: StoreStatus.ACTIVE },
         OR: [
           { questionSyncStartedAt: null },
           { questionSyncStartedAt: { lt: staleBefore } },

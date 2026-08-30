@@ -6,6 +6,7 @@ import {
   ExternalEntityStatus,
   ProductStatus,
   ProductVariantStatus,
+  StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { CredentialsEncryptionService } from '../channels/credentials-encryption.service';
@@ -44,7 +45,12 @@ export class ProductSyncWorkerService {
     updateProgress: (progress: number) => Promise<void>,
   ) {
     const connection = await this.prisma.channelConnection.findFirst({
-      where: { id: data.connectionId, storeId: data.storeId },
+      where: {
+        id: data.connectionId,
+        storeId: data.storeId,
+        status: ChannelConnectionStatus.CONNECTED,
+        store: { status: StoreStatus.ACTIVE },
+      },
       select: {
         id: true,
         providerKey: true,

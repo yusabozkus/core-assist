@@ -28,7 +28,7 @@ export function ProductCardSkeleton() {
   )
 }
 
-export function ProductCardGridSkeleton({ count = 12 }: { count?: number }) {
+export function ProductCardGridSkeleton({ count = 6 }: { count?: number }) {
   return (
     <div
       className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"

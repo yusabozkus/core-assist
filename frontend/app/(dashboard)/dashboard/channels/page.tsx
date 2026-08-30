@@ -1,21 +1,14 @@
-import { redirect } from "next/navigation"
-
 import { ChannelManagement } from "./channel-management"
-import { APP_ROUTES } from "@/constants/site"
 import {
   getServerChannelConnections,
   getServerIntegrationProviders,
 } from "@/lib/api/channels.server"
-import { getActiveStoreContext } from "@/lib/stores/active-store"
+import { getOperationalStoreContext } from "@/lib/stores/active-store"
 
 export const dynamic = "force-dynamic"
 
 export default async function ChannelsPage() {
-  const { activeStore } = await getActiveStoreContext()
-
-  if (!activeStore) {
-    redirect(APP_ROUTES.onboarding)
-  }
+  const { activeStore } = await getOperationalStoreContext()
 
   const [connections, providers] = await Promise.all([
     getServerChannelConnections(activeStore.id),

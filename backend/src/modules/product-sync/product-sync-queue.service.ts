@@ -9,6 +9,7 @@ import {
   CatalogSyncStatus,
   CatalogSyncKind,
   ChannelConnectionStatus,
+  StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import {
@@ -47,6 +48,7 @@ export class ProductSyncQueueService implements ProductSyncDispatcher {
         storeId,
         status: ChannelConnectionStatus.CONNECTED,
         credentialsEncrypted: { not: null },
+        store: { status: StoreStatus.ACTIVE },
         OR: [
           { processingStartedAt: null },
           { processingStartedAt: { lt: staleBefore } },

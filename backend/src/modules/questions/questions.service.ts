@@ -9,6 +9,7 @@ import {
   ChannelConnectionStatus,
   ChannelType,
   StoreRole,
+  StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { QUESTION_SYNC_DISPATCHER } from '../question-sync/question-sync.constants';
@@ -202,13 +203,19 @@ export class QuestionsService {
   }
 
   private async requireStoreMembership(storeId: string, userId: string) {
-    const membership = await this.prisma.storeMember.findUnique({
-      where: { storeId_userId: { storeId, userId } },
+    const membership = await this.prisma.storeMember.findFirst({
+      where: {
+        storeId,
+        userId,
+        store: { status: StoreStatus.ACTIVE },
+      },
       select: { role: true },
     });
 
     if (!membership) {
-      throw new NotFoundException('Mağaza bulunamadı veya erişiminiz yok.');
+      throw new NotFoundException(
+        'Mağaza bulunamadı, arşivlenmiş veya erişiminiz yok.',
+      );
     }
 
     return membership;

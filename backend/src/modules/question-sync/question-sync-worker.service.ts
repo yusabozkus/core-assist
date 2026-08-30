@@ -3,6 +3,7 @@ import {
   ChannelConnectionStatus,
   IncomingEventProcessingStatus,
   IncomingEventType,
+  StoreStatus,
 } from '../../generated/prisma/enums';
 import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
@@ -37,6 +38,7 @@ export class QuestionSyncWorkerService {
         status: ChannelConnectionStatus.CONNECTED,
         credentialsEncrypted: { not: null },
         connectedAt: { not: null },
+        store: { status: StoreStatus.ACTIVE },
       },
       select: {
         id: true,

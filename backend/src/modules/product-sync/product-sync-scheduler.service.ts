@@ -4,6 +4,7 @@ import type { Queue } from 'bullmq';
 import {
   ChannelConnectionStatus,
   ChannelType,
+  StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import {
@@ -48,6 +49,7 @@ export class ProductSyncSchedulerService implements OnModuleInit {
         type: ChannelType.COMMERCE,
         status: ChannelConnectionStatus.CONNECTED,
         credentialsEncrypted: { not: null },
+        store: { status: StoreStatus.ACTIVE },
       },
       select: {
         id: true,

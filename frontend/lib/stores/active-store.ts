@@ -1,8 +1,10 @@
 import "server-only"
 
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 import { cache } from "react"
 
+import { APP_ROUTES } from "@/constants/site"
 import { getServerStores } from "@/lib/api/stores.server"
 import type { StoreSummary } from "@/types/store"
 
@@ -26,3 +28,19 @@ export const getActiveStoreContext = cache(
     return { stores, activeStore }
   }
 )
+
+export async function getOperationalStoreContext(): Promise<
+  ActiveStoreContext & { activeStore: StoreSummary }
+> {
+  const context = await getActiveStoreContext()
+
+  if (!context.activeStore) {
+    redirect(APP_ROUTES.onboarding)
+  }
+
+  if (context.activeStore.status !== "ACTIVE") {
+    redirect(APP_ROUTES.dashboard.settings.root)
+  }
+
+  return context as ActiveStoreContext & { activeStore: StoreSummary }
+}

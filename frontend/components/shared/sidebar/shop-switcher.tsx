@@ -70,6 +70,9 @@ export function ShopSwitcher({
     startTransition(async () => {
       try {
         await selectActiveStore(shop.id)
+        if (shop.status === "INACTIVE") {
+          router.replace(APP_ROUTES.dashboard.settings.root)
+        }
         router.refresh()
       } catch {
         setSelectedShopId(previousShopId)
@@ -150,7 +153,11 @@ export function ShopSwitcher({
                     {activeShop.name}
                   </span>
                   <span className="truncate text-xs text-sidebar-foreground/60">
-                    {isPending ? "Değiştiriliyor..." : "Aktif mağaza"}
+                    {isPending
+                      ? "Değiştiriliyor..."
+                      : activeShop.status === "INACTIVE"
+                        ? "Arşivlenmiş mağaza"
+                        : "Aktif mağaza"}
                   </span>
                 </div>
                 <HugeiconsIcon
@@ -176,16 +183,21 @@ export function ShopSwitcher({
                   className="gap-2 p-2"
                 >
                   <div className="flex size-7 items-center justify-center rounded-lg border bg-background">
-                    <HugeiconsIcon icon={Store01Icon} className="size-3.5" />
+                    <HugeiconsIcon
+                      icon={Store01Icon}
+                      className={`size-3.5 ${shop.status === "INACTIVE" ? "text-muted-foreground" : ""}`}
+                    />
                   </div>
                   <div className="grid min-w-0 flex-1">
                     <span className="truncate text-sm font-medium">
                       {shop.name}
                     </span>
                     <span className="truncate text-xs text-muted-foreground">
-                      {shop.id === selectedShopId
-                        ? "Şu anda aktif"
-                        : "Geçiş yap"}
+                      {shop.status === "INACTIVE"
+                        ? "Arşivlenmiş"
+                        : shop.id === selectedShopId
+                          ? "Şu anda aktif"
+                          : "Geçiş yap"}
                     </span>
                   </div>
                   {shop.id === selectedShopId ? (

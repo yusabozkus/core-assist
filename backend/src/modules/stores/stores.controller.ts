@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { StoresService } from './stores.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { AuthGuard } from '../auth/auth.guard';
@@ -23,8 +31,23 @@ export class StoresController {
     return this.storesService.findAllForUser(user.id);
   }
 
+  @Get('archived')
+  findArchived(@CurrentUser() user: AuthenticatedUser) {
+    return this.storesService.findArchivedForUser(user.id);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.storesService.findOne(id, user.id);
+  }
+
+  @Patch(':id/archive')
+  archive(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.storesService.archive(id, user.id);
+  }
+
+  @Patch(':id/restore')
+  restore(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.storesService.restore(id, user.id);
   }
 }

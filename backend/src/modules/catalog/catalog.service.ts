@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '../../generated/prisma/client';
+import { StoreStatus } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import type { CatalogProductsQueryDto } from './catalog-products-query.dto';
 
@@ -211,15 +212,19 @@ export class CatalogService {
   }
 
   private async assertStoreMembership(storeId: string, userId: string) {
-    const membership = await this.prisma.storeMember.findUnique({
+    const membership = await this.prisma.storeMember.findFirst({
       where: {
-        storeId_userId: { storeId, userId },
+        storeId,
+        userId,
+        store: { status: StoreStatus.ACTIVE },
       },
       select: { id: true },
     });
 
     if (!membership) {
-      throw new NotFoundException('Mağaza bulunamadı veya erişiminiz yok.');
+      throw new NotFoundException(
+        'Mağaza bulunamadı, arşivlenmiş veya erişiminiz yok.',
+      );
     }
   }
 }

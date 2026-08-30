@@ -14,13 +14,17 @@ const apiUrl = (
 ).replace(/\/$/, "")
 
 export const getServerStores = cache(async (): Promise<StoreSummary[]> => {
+  return getStores("/stores")
+})
+
+async function getStores(path: string): Promise<StoreSummary[]> {
   const cookie = (await headers()).get("cookie")
 
   if (!cookie) {
     return []
   }
 
-  const response = await fetch(`${apiUrl}/stores`, {
+  const response = await fetch(`${apiUrl}${path}`, {
     cache: "no-store",
     headers: {
       Accept: "application/json",
@@ -30,8 +34,10 @@ export const getServerStores = cache(async (): Promise<StoreSummary[]> => {
   })
 
   if (!response.ok) {
-    throw new Error(`Stores request failed with status ${response.status}.`)
+    throw new Error(
+      `Stores request to ${path} failed with status ${response.status}.`
+    )
   }
 
   return (await response.json()) as StoreSummary[]
-})
+}

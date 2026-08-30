@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { APP_ROUTES } from "@/constants/site"
 import { getActiveStoreContext } from "@/lib/stores/active-store"
+import { StoreArchiveAction } from "./store-archive-action"
+import { StoreRestoreAction } from "./store-restore-action"
 
 export const dynamic = "force-dynamic"
 
@@ -37,7 +39,7 @@ export default async function SettingsPage() {
             </span>
             <div className="min-w-0">
               <p className="text-xs font-medium text-muted-foreground">
-                Aktif mağaza
+                Seçili mağaza
               </p>
               <h1 className="mt-1 truncate text-xl font-semibold tracking-[-0.025em] text-foreground">
                 {activeStore.name}
@@ -64,30 +66,50 @@ export default async function SettingsPage() {
       </section>
 
       <div className="mt-6 grid gap-4">
-        <section className="flex flex-col gap-5 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-          <div className="flex min-w-0 items-start gap-4">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
-              <HugeiconsIcon icon={Archive02Icon} className="size-4.5" />
-            </span>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
+        {activeStore.status === "ACTIVE" ? (
+          <section className="flex flex-col gap-5 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div className="flex min-w-0 items-start gap-4">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <HugeiconsIcon icon={Archive02Icon} className="size-4.5" />
+              </span>
+              <div>
                 <h2 className="font-semibold text-foreground">
                   Mağazayı arşivle
                 </h2>
-                <Badge variant="secondary">Yakında</Badge>
+                <p className="mt-1.5 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Mağazayı geçici olarak kullanımdan kaldırır. Kanal
+                  senkronizasyonları durdurulur ve mağaza yalnızca ayarlar
+                  sayfasından yönetilebilir.
+                </p>
               </div>
-              <p className="mt-1.5 max-w-2xl text-sm leading-6 text-muted-foreground">
-                Mağazayı geçici olarak kullanımdan kaldırır. Kanal
-                senkronizasyonları durdurulur ve mağaza daha sonra yeniden
-                etkinleştirilebilir.
-              </p>
             </div>
-          </div>
-          <Button type="button" variant="outline" disabled>
-            <HugeiconsIcon icon={Archive02Icon} className="size-4" />
-            Arşivle
-          </Button>
-        </section>
+            <StoreArchiveAction
+              storeId={activeStore.id}
+              storeName={activeStore.name}
+            />
+          </section>
+        ) : (
+          <section className="flex flex-col gap-5 rounded-xl border border-primary/25 bg-card p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div className="flex min-w-0 items-start gap-4">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <HugeiconsIcon icon={Archive02Icon} className="size-4.5" />
+              </span>
+              <div>
+                <h2 className="font-semibold text-foreground">
+                  Mağazayı geri yükle
+                </h2>
+                <p className="mt-1.5 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Mağazayı yeniden kullanıma açar. Operasyon sayfaları tekrar
+                  erişilebilir olur ve kanal senkronizasyonları devam eder.
+                </p>
+              </div>
+            </div>
+            <StoreRestoreAction
+              storeId={activeStore.id}
+              storeName={activeStore.name}
+            />
+          </section>
+        )}
 
         <section className="flex flex-col gap-5 rounded-xl border border-destructive/35 bg-card p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div className="flex min-w-0 items-start gap-4">

@@ -37,9 +37,10 @@ export default async function DashboardLayout({
     redirect(APP_ROUTES.onboarding)
   }
 
-  const connections = await getServerChannelConnections(activeStore.id).catch(
-    () => null
-  )
+  const connections =
+    activeStore.status === "ACTIVE"
+      ? await getServerChannelConnections(activeStore.id).catch(() => null)
+      : []
   const syncState = getDashboardSyncState(connections)
 
   return (
@@ -55,7 +56,10 @@ export default async function DashboardLayout({
         activeShopId={activeStore.id}
       />
       <SidebarInset className="h-[98vh]">
-        <DashboardHeader syncState={syncState} />
+        <DashboardHeader
+          syncState={syncState}
+          isStoreArchived={activeStore.status === "INACTIVE"}
+        />
         <div className="min-h-0 flex-1 overflow-y-auto bg-background">
           {children}
         </div>

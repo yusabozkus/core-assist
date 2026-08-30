@@ -16,6 +16,7 @@ import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   Command,
   CommandEmpty,
@@ -39,6 +40,7 @@ export type DashboardSyncState =
 
 type DashboardHeaderProps = {
   syncState: DashboardSyncState
+  isStoreArchived?: boolean
 }
 
 const SEARCH_SCOPES = [
@@ -94,13 +96,18 @@ const SYNC_STATE_DETAILS: Record<
   },
 }
 
-export function DashboardHeader({ syncState }: DashboardHeaderProps) {
+export function DashboardHeader({
+  syncState,
+  isStoreArchived = false,
+}: DashboardHeaderProps) {
   const pathname = usePathname()
   const breadcrumbs = getDashboardBreadcrumbs(pathname)
   const currentPage = breadcrumbs.at(-1)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   useEffect(() => {
+    if (isStoreArchived) return
+
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault()
@@ -110,7 +117,7 @@ export function DashboardHeader({ syncState }: DashboardHeaderProps) {
 
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [])
+  }, [isStoreArchived])
 
   return (
     <>
@@ -169,50 +176,70 @@ export function DashboardHeader({ syncState }: DashboardHeaderProps) {
           </span>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsSearchOpen(true)}
-          className="hidden h-9 w-full items-center gap-2 rounded-lg border border-border bg-card px-3 text-left text-sm text-muted-foreground shadow-xs transition-colors hover:border-foreground/15 hover:bg-muted/55 lg:flex dark:hover:border-foreground/20 dark:hover:bg-secondary"
-          aria-label="Genel aramayı aç"
-        >
-          <HugeiconsIcon icon={Search01Icon} className="size-4 shrink-0" />
-          <span className="min-w-0 flex-1 truncate">Her yerde ara...</span>
-          <kbd className="rounded-md border border-border bg-background px-1.5 py-0.5 font-sans text-[10px] leading-none text-muted-foreground shadow-xs">
-            Ctrl K
-          </kbd>
-        </button>
-
-        <div className="flex shrink-0 items-center gap-1.5 justify-self-end">
-          <Button
+        {isStoreArchived ? (
+          <Badge
+            variant="warning"
+            className="hidden justify-self-center lg:flex"
+          >
+            <span className="size-1.5 rounded-full bg-current" />
+            Arşivlenmiş mağaza
+          </Badge>
+        ) : (
+          <button
             type="button"
-            variant="outline"
-            size="icon-sm"
-            className="bg-card shadow-xs lg:hidden"
             onClick={() => setIsSearchOpen(true)}
+            className="hidden h-9 w-full items-center gap-2 rounded-lg border border-border bg-card px-3 text-left text-sm text-muted-foreground shadow-xs transition-colors hover:border-foreground/15 hover:bg-muted/55 lg:flex dark:hover:border-foreground/20 dark:hover:bg-secondary"
             aria-label="Genel aramayı aç"
           >
-            <HugeiconsIcon icon={Search01Icon} className="size-4" />
-          </Button>
+            <HugeiconsIcon icon={Search01Icon} className="size-4 shrink-0" />
+            <span className="min-w-0 flex-1 truncate">Her yerde ara...</span>
+            <kbd className="rounded-md border border-border bg-background px-1.5 py-0.5 font-sans text-[10px] leading-none text-muted-foreground shadow-xs">
+              Ctrl K
+            </kbd>
+          </button>
+        )}
 
-          <SyncStatusLink state={syncState} />
+        <div className="flex shrink-0 items-center gap-1.5 justify-self-end">
+          {isStoreArchived ? (
+            <Badge variant="warning" className="lg:hidden">
+              Arşivlenmiş
+            </Badge>
+          ) : (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                className="bg-card shadow-xs lg:hidden"
+                onClick={() => setIsSearchOpen(true)}
+                aria-label="Genel aramayı aç"
+              >
+                <HugeiconsIcon icon={Search01Icon} className="size-4" />
+              </Button>
 
-          <Button
-            asChild
-            variant="outline"
-            size="icon-sm"
-            className="bg-card shadow-xs"
-          >
-            <Link
-              href={APP_ROUTES.dashboard.settings.notifications}
-              aria-label="Bildirimler"
-            >
-              <HugeiconsIcon icon={Notification01Icon} className="size-4" />
-            </Link>
-          </Button>
+              <SyncStatusLink state={syncState} />
+
+              <Button
+                asChild
+                variant="outline"
+                size="icon-sm"
+                className="bg-card shadow-xs"
+              >
+                <Link
+                  href={APP_ROUTES.dashboard.settings.notifications}
+                  aria-label="Bildirimler"
+                >
+                  <HugeiconsIcon icon={Notification01Icon} className="size-4" />
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
       </header>
 
-      <SearchCommand open={isSearchOpen} onOpenChange={setIsSearchOpen} />
+      {!isStoreArchived ? (
+        <SearchCommand open={isSearchOpen} onOpenChange={setIsSearchOpen} />
+      ) : null}
     </>
   )
 }

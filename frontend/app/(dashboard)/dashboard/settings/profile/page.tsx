@@ -3,11 +3,15 @@ import { redirect } from "next/navigation"
 import { ProfileForm } from "./profile-form"
 import { APP_ROUTES } from "@/constants/site"
 import { getCurrentUser } from "@/lib/server-auth"
+import { getOperationalStoreContext } from "@/lib/stores/active-store"
 
 export const dynamic = "force-dynamic"
 
 export default async function ProfilePage() {
-  const currentUser = await getCurrentUser()
+  const [currentUser] = await Promise.all([
+    getCurrentUser(),
+    getOperationalStoreContext(),
+  ])
 
   if (!currentUser) {
     redirect(APP_ROUTES.login)

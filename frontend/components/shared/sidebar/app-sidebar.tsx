@@ -27,6 +27,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import {
+  APP_ROUTES,
   DASHBOARD_NAVIGATION,
   type DashboardNavigationItem,
 } from "@/constants/site"
@@ -49,6 +50,11 @@ export function AppSidebar({
   const pathname = usePathname()
   const overview = DASHBOARD_NAVIGATION.overview
   const isOverviewActive = pathname === overview.url
+  const activeShop = shops.find((shop) => shop.id === activeShopId)
+  const isStoreArchived = activeShop?.status === "INACTIVE"
+  const settingsItem = DASHBOARD_NAVIGATION.navGroups
+    .flatMap((group) => group.items)
+    .find((item) => item.url === APP_ROUTES.dashboard.settings.root)
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -61,71 +67,100 @@ export function AppSidebar({
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip={overview.title}
-                isActive={isOverviewActive}
-              >
-                <Link
-                  href={overview.url}
-                  aria-current={isOverviewActive ? "page" : undefined}
-                >
-                  <HugeiconsIcon icon={overview.icon} />
-                  <span>{overview.title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-
-        {DASHBOARD_NAVIGATION.navGroups.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+        {isStoreArchived ? (
+          <SidebarGroup>
+            <SidebarGroupLabel>Arşivlenmiş mağaza</SidebarGroupLabel>
             <SidebarMenu>
-              {group.items.map((item) => {
-                const isActive =
-                  isPathActive(pathname, item.url) ||
-                  Boolean(
-                    item.items?.some((subItem) =>
-                      isPathActive(pathname, subItem.url, subItem.exact)
-                    )
-                  )
-
-                if (item.items) {
-                  return (
-                    <CollapsibleNavigationItem
-                      key={`${item.title}-${pathname}`}
-                      item={item}
-                      pathname={pathname}
-                      isActive={isActive}
-                    />
-                  )
-                }
-
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      tooltip={item.title}
-                      isActive={isActive}
+              {settingsItem ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={settingsItem.title}
+                    isActive={pathname === settingsItem.url}
+                  >
+                    <Link
+                      href={settingsItem.url}
+                      aria-current={
+                        pathname === settingsItem.url ? "page" : undefined
+                      }
                     >
-                      <Link
-                        href={item.url}
-                        aria-current={isActive ? "page" : undefined}
-                      >
-                        <HugeiconsIcon icon={item.icon} />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
+                      <HugeiconsIcon icon={settingsItem.icon} />
+                      <span>{settingsItem.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : null}
             </SidebarMenu>
           </SidebarGroup>
-        ))}
+        ) : (
+          <>
+            <SidebarGroup>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={overview.title}
+                    isActive={isOverviewActive}
+                  >
+                    <Link
+                      href={overview.url}
+                      aria-current={isOverviewActive ? "page" : undefined}
+                    >
+                      <HugeiconsIcon icon={overview.icon} />
+                      <span>{overview.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroup>
+
+            {DASHBOARD_NAVIGATION.navGroups.map((group) => (
+              <SidebarGroup key={group.label}>
+                <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+                <SidebarMenu>
+                  {group.items.map((item) => {
+                    const isActive =
+                      isPathActive(pathname, item.url) ||
+                      Boolean(
+                        item.items?.some((subItem) =>
+                          isPathActive(pathname, subItem.url, subItem.exact)
+                        )
+                      )
+
+                    if (item.items) {
+                      return (
+                        <CollapsibleNavigationItem
+                          key={`${item.title}-${pathname}`}
+                          item={item}
+                          pathname={pathname}
+                          isActive={isActive}
+                        />
+                      )
+                    }
+
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton
+                          asChild
+                          tooltip={item.title}
+                          isActive={isActive}
+                        >
+                          <Link
+                            href={item.url}
+                            aria-current={isActive ? "page" : undefined}
+                          >
+                            <HugeiconsIcon icon={item.icon} />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
+                </SidebarMenu>
+              </SidebarGroup>
+            ))}
+          </>
+        )}
       </SidebarContent>
 
       <SidebarFooter>

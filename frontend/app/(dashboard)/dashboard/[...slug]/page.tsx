@@ -3,12 +3,15 @@ import { InformationCircleIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { getDashboardNavigationTitle } from "@/constants/site"
+import { getOperationalStoreContext } from "@/lib/stores/active-store"
 
 export default async function DashboardPlaceholderPage({
   params,
 }: {
   params: Promise<{ slug: string[] }>
 }) {
+  await getOperationalStoreContext()
+
   const { slug } = await params
   const pathname = `/dashboard/${slug.join("/")}`
   const title = getDashboardNavigationTitle(pathname)
