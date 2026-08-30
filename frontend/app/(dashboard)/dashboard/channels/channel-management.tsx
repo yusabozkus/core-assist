@@ -35,6 +35,7 @@ import {
   reconnectChannelConnection,
   removeChannelConnection,
   syncChannelCatalog,
+  syncChannelInventory,
 } from "@/lib/api/channels"
 import type {
   ChannelConnection,
@@ -45,13 +46,14 @@ import type {
 
 type ChannelManagementProps = {
   storeId: string
+  storeName: string
   connections: ChannelConnection[]
   providers: IntegrationProvider[]
 }
 
 type PendingAction = {
   connectionId: string
-  type: "disconnect" | "reconnect" | "sync"
+  type: "disconnect" | "reconnect" | "sync" | "inventory-sync"
 } | null
 
 const dateFormatter = new Intl.DateTimeFormat("tr-TR", {
@@ -65,6 +67,7 @@ const dateFormatter = new Intl.DateTimeFormat("tr-TR", {
 
 export function ChannelManagement({
   storeId,
+  storeName,
   connections,
   providers,
 }: ChannelManagementProps) {
@@ -183,7 +186,7 @@ export function ChannelManagement({
 
   function runConnectionAction(
     connection: ChannelConnection,
-    action: "disconnect" | "reconnect" | "sync"
+    action: "disconnect" | "reconnect" | "sync" | "inventory-sync"
   ) {
     if (isUpdating) return
 
@@ -200,9 +203,12 @@ export function ChannelManagement({
         } else if (action === "reconnect") {
           await reconnectChannelConnection(storeId, connection.id)
           setMessage(`${provider.name} bağlantısı yeniden doğrulandı.`)
-        } else {
+        } else if (action === "sync") {
           await syncChannelCatalog(storeId, connection.id)
           setMessage(`${provider.name} ürün senkronizasyonu kuyruğa alındı.`)
+        } else {
+          await syncChannelInventory(storeId, connection.id)
+          setMessage(`${provider.name} stok kontrolü kuyruğa alındı.`)
         }
 
         router.refresh()
@@ -272,15 +278,24 @@ export function ChannelManagement({
   }
 
   return (
-    <div className="space-y-6">
-      <section className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-xs sm:flex-row sm:items-center sm:justify-between sm:p-6">
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
-          <ChannelMetric label="Pazaryeri" value={connections.length} />
-          <ChannelMetric label="Bağlı" value={connectedCount} />
-          <ChannelMetric label="Senkronize" value={syncedCount} />
+    <div>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-3xl font-semibold tracking-[-0.04em] text-foreground">
+            Satış kanalları
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+            {storeName} mağazasının pazaryeri bağlantılarını ve ürün
+            senkronizasyonlarını yönetin.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <ChannelBadge label="Pazaryeri" value={connections.length} />
+            <ChannelBadge label="Bağlı" value={connectedCount} />
+            <ChannelBadge label="Senkronize" value={syncedCount} />
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 sm:self-center">
           <Button asChild type="button" variant="outline">
             <Link href={APP_ROUTES.dashboard.catalog.products}>
               <HugeiconsIcon icon={Package01Icon} className="size-4" />
@@ -447,7 +462,7 @@ export function ChannelManagement({
             </div>
           </ResponsiveDialog>
         </div>
-      </section>
+      </div>
 
       <section>
         <div className="mb-4">
@@ -548,14 +563,15 @@ export function ChannelManagement({
   )
 }
 
-function ChannelMetric({ label, value }: { label: string; value: number }) {
+function ChannelBadge({ label, value }: { label: string; value: number }) {
   return (
-    <div>
-      <p className="text-2xl font-semibold tracking-[-0.04em] text-foreground">
-        {value}
-      </p>
-      <p className="mt-1 text-xs text-muted-foreground">{label}</p>
-    </div>
+    <Badge
+      variant="outline"
+      className="gap-2 border-border bg-white px-3 py-1.5 text-foreground shadow-none dark:bg-card"
+    >
+      <span className="size-2 rounded-full bg-emerald-500" />
+      {value.toLocaleString("tr-TR")} {label}
+    </Badge>
   )
 }
 
@@ -584,12 +600,12 @@ function ChannelCard({
 }: {
   connection: ChannelConnection
   provider: IntegrationProvider
-  pendingAction: "disconnect" | "reconnect" | "sync" | null
+  pendingAction: "disconnect" | "reconnect" | "sync" | "inventory-sync" | null
   actionsDisabled: boolean
   onConfigure: (connection: ChannelConnection) => void
   onAction: (
     connection: ChannelConnection,
-    action: "disconnect" | "reconnect" | "sync"
+    action: "disconnect" | "reconnect" | "sync" | "inventory-sync"
   ) => void
   onRemove: (connection: ChannelConnection) => void
 }) {
@@ -598,27 +614,72 @@ function ChannelCard({
     connection.status === "DISCONNECTED" || connection.status === "ERROR"
 
   return (
-    <article className="flex min-h-72 flex-col rounded-xl border border-border bg-card p-5 shadow-xs">
+    <article className="flex flex-col rounded-xl border border-border bg-card p-5 shadow-xs">
       <div className="flex items-start justify-between gap-3">
-        <ProviderLogo provider={provider} />
+        <div className="flex flex-row items-center gap-2">
+          <ProviderLogo provider={provider} />
+          <div>
+            <h3 className="font-semibold text-foreground">{provider.name}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {connection.environment === "SANDBOX"
+                ? "Test ortamı"
+                : "Canlı ortam"}
+            </p>
+          </div>
+        </div>
+        <div className="flex w-full items-center justify-end">
+          {connection.status !== "PENDING" ? (
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="ghost"
+              className="text-muted-foreground"
+              aria-label={`${provider.name} bağlantısını kaldır`}
+              onClick={() => onConfigure(connection)}
+              disabled={actionsDisabled}
+            >
+              <HugeiconsIcon
+                icon={Settings02Icon}
+                className="size-3.5"
+                strokeWidth={2}
+              />
+            </Button>
+          ) : null}
+          <Button
+            type="button"
+            size="icon-sm"
+            variant="ghost"
+            className="text-destructive hover:bg-destructive! hover:text-white"
+
+            disabled={actionsDisabled}
+            onClick={() => onRemove(connection)}
+          >
+            <HugeiconsIcon
+              icon={Delete02Icon}
+              className="size-4"
+              strokeWidth={2}
+            />
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-2 mb-4">
         <ConnectionStatusBadge
           status={connection.status}
           isSyncing={Boolean(connection.processingStartedAt)}
         />
       </div>
 
-      <div className="mt-5">
-        <h3 className="font-semibold text-foreground">{provider.name}</h3>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {connection.environment === "SANDBOX" ? "Test ortamı" : "Canlı ortam"}
-        </p>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
+      <div className="">
+        <p className="text-sm leading-6 text-muted-foreground">
           {provider.description}
         </p>
         <p className="mt-3 text-xs text-muted-foreground">
-          {connection.lastSyncAt
-            ? `Son senkronizasyon: ${dateFormatter.format(
-                new Date(connection.lastSyncAt)
+          {(connection.lastInventorySyncAt ?? connection.lastSyncAt)
+            ? `Son stok kontrolü: ${dateFormatter.format(
+                new Date(
+                  connection.lastInventorySyncAt ?? connection.lastSyncAt!
+                )
               )}`
             : "Henüz ürün senkronizasyonu yapılmadı."}
         </p>
@@ -629,7 +690,7 @@ function ChannelCard({
         ) : null}
       </div>
 
-      <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-border pt-4">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         {connection.status === "PENDING" ? (
           <Button
             type="button"
@@ -641,16 +702,20 @@ function ChannelCard({
             Kurulumu tamamla
           </Button>
         ) : null}
-        {connection.status !== "PENDING" ? (
+        {connection.status === "CONNECTED" ? (
           <Button
             type="button"
             size="sm"
             variant="outline"
-            onClick={() => onConfigure(connection)}
-            disabled={actionsDisabled}
+            onClick={() => onAction(connection, "inventory-sync")}
+            disabled={
+              actionsDisabled || Boolean(connection.processingStartedAt)
+            }
           >
-            <HugeiconsIcon icon={Settings02Icon} className="size-3.5" />
-            API bilgileri
+            <HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
+            {pendingAction === "inventory-sync"
+              ? "Kontrol ediliyor..."
+              : "Stokları güncelle"}
           </Button>
         ) : null}
         {connection.status === "CONNECTED" ? (
@@ -658,12 +723,14 @@ function ChannelCard({
             type="button"
             size="sm"
             onClick={() => onAction(connection, "sync")}
-            disabled={actionsDisabled || Boolean(connection.processingStartedAt)}
+            disabled={
+              actionsDisabled || Boolean(connection.processingStartedAt)
+            }
           >
             <HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
             {pendingAction === "sync" || connection.processingStartedAt
               ? "Senkronize ediliyor..."
-              : "Ürünleri çek"}
+              : "Tam katalog çek"}
           </Button>
         ) : null}
         {canDisconnect ? (
@@ -694,17 +761,6 @@ function ChannelCard({
               : "Yeniden bağla"}
           </Button>
         ) : null}
-        <Button
-          type="button"
-          size="icon-sm"
-          variant="ghost"
-          className="ml-auto text-muted-foreground hover:text-destructive"
-          aria-label={`${provider.name} bağlantısını kaldır`}
-          disabled={actionsDisabled}
-          onClick={() => onRemove(connection)}
-        >
-          <HugeiconsIcon icon={Delete02Icon} className="size-4" />
-        </Button>
       </div>
     </article>
   )
@@ -754,6 +810,7 @@ function getProvider(
       type: "COMMERCE",
       image: "/merchants/trendyol.webp",
       description: "Pazaryeri katalog bağlantısı",
+      capabilities: ["CATALOG_READ", "INVENTORY_READ"],
       environments: ["SANDBOX", "PRODUCTION"],
       credentialFields: [],
     }

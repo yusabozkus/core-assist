@@ -43,6 +43,13 @@ export function syncChannelCatalog(storeId: string, connectionId: string) {
   )
 }
 
+export function syncChannelInventory(storeId: string, connectionId: string) {
+  return apiFetch<CatalogSyncResult>(
+    `/stores/${storeId}/channels/${connectionId}/inventory-sync`,
+    { method: "POST" }
+  )
+}
+
 export function disconnectChannelConnection(
   storeId: string,
   connectionId: string

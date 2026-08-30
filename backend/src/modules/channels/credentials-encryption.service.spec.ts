@@ -30,7 +30,13 @@ describe('CredentialsEncryptionService', () => {
   it('rejects modified encrypted payloads', () => {
     const service = new CredentialsEncryptionService();
     const encrypted = service.encrypt({ apiKey: 'seller-key' });
-    const tampered = `${encrypted.slice(0, -1)}x`;
+    const parts = encrypted.split('.');
+    const ciphertext = parts[3];
+
+    if (!ciphertext) throw new Error('Encrypted test payload is invalid.');
+
+    parts[3] = `${ciphertext[0] === 'A' ? 'B' : 'A'}${ciphertext.slice(1)}`;
+    const tampered = parts.join('.');
 
     expect(() => service.decrypt(tampered)).toThrow();
   });

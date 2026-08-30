@@ -163,6 +163,19 @@ export class ChannelsService {
   }
 
   async syncCatalog(storeId: string, connectionId: string, userId: string) {
+    return this.queueSync(storeId, connectionId, userId, 'FULL');
+  }
+
+  async syncInventory(storeId: string, connectionId: string, userId: string) {
+    return this.queueSync(storeId, connectionId, userId, 'INVENTORY');
+  }
+
+  private async queueSync(
+    storeId: string,
+    connectionId: string,
+    userId: string,
+    kind: 'FULL' | 'INVENTORY',
+  ) {
     await this.requireStoreManagement(storeId, userId);
     const connection = await this.getConnection(storeId, connectionId);
 
@@ -175,7 +188,7 @@ export class ChannelsService {
       );
     }
 
-    return this.productSyncQueue.enqueue(storeId, connectionId);
+    return this.productSyncQueue.enqueue(storeId, connectionId, kind);
   }
 
   async remove(storeId: string, connectionId: string, userId: string) {

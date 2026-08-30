@@ -3,6 +3,7 @@ import type { IntegrationEnvironment } from '../../../generated/prisma/enums';
 import type {
   CatalogConnector,
   ConnectorContext,
+  InventoryBatch,
   ProductBatch,
   ProviderCredentials,
   ProviderManifest,
@@ -109,6 +110,18 @@ export class ProviderRegistryService {
     }
 
     return this.getLiveConnector(providerKey).fetchProducts(context, cursor);
+  }
+
+  async fetchInventory(
+    providerKey: string,
+    context: ConnectorContext,
+    cursor?: string,
+  ): Promise<InventoryBatch> {
+    if (this.mode === 'mock') {
+      return this.mockConnector.fetchInventory(providerKey, context);
+    }
+
+    return this.getLiveConnector(providerKey).fetchInventory(context, cursor);
   }
 
   private getLiveConnector(providerKey: string) {

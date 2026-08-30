@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type {
   ConnectorContext,
+  InventoryBatch,
   ProductBatch,
   ProviderCredentials,
 } from './catalog-connector';
@@ -32,6 +33,32 @@ export class MockCatalogConnector {
           : createTrendyolProducts(),
     });
   }
+
+  fetchInventory(
+    providerKey: string,
+    context: ConnectorContext,
+  ): Promise<InventoryBatch> {
+    void context;
+    const products =
+      providerKey === 'hepsiburada'
+        ? createHepsiburadaProducts()
+        : createTrendyolProducts();
+
+    return Promise.resolve({
+      variants: products.flatMap((product) =>
+        product.variants.map((variant) => ({
+          externalProductId: product.externalId,
+          externalVariantId: variant.externalId,
+          sku: variant.sku,
+          barcode: variant.barcode,
+          price: variant.price,
+          currency: variant.currency,
+          stock: variant.stock,
+          sourceUpdatedAt: variant.sourceUpdatedAt,
+        })),
+      ),
+    });
+  }
 }
 
 function createTrendyolProducts(): ProductBatch['products'] {
@@ -50,6 +77,7 @@ function createTrendyolProducts(): ProductBatch['products'] {
       images: [TEST_PRODUCT_IMAGE_URL],
       variants: [
         {
+          externalId: 'ty-variant-1001-black-s',
           title: 'Siyah / S',
           sku: 'NST-TSH-BLK-S',
           barcode: '869000100001',
@@ -60,6 +88,7 @@ function createTrendyolProducts(): ProductBatch['products'] {
           stock: 8,
         },
         {
+          externalId: 'ty-variant-1001-black-m',
           title: 'Siyah / M',
           sku: 'NST-TSH-BLK-M',
           barcode: '869000100002',
@@ -70,6 +99,7 @@ function createTrendyolProducts(): ProductBatch['products'] {
           stock: 0,
         },
         {
+          externalId: 'ty-variant-1001-ecru-m',
           title: 'Ekru / M',
           sku: 'NST-TSH-ECR-M',
           barcode: '869000100003',
@@ -95,6 +125,7 @@ function createTrendyolProducts(): ProductBatch['products'] {
       images: [TEST_PRODUCT_IMAGE_URL],
       variants: [
         {
+          externalId: 'ty-variant-1002-blue-m',
           title: 'Mavi / M',
           sku: 'NST-SHT-BLU-M',
           color: 'Mavi',
@@ -104,6 +135,7 @@ function createTrendyolProducts(): ProductBatch['products'] {
           stock: 3,
         },
         {
+          externalId: 'ty-variant-1002-blue-l',
           title: 'Mavi / L',
           sku: 'NST-SHT-BLU-L',
           color: 'Mavi',
@@ -134,6 +166,7 @@ function createHepsiburadaProducts(): ProductBatch['products'] {
       images: [TEST_PRODUCT_IMAGE_URL],
       variants: [
         {
+          externalId: 'hb-variant-2001-white-40',
           title: 'Beyaz / 40',
           sku: 'NSS-SNK-WHT-40',
           barcode: '869000200001',
@@ -144,6 +177,7 @@ function createHepsiburadaProducts(): ProductBatch['products'] {
           stock: 4,
         },
         {
+          externalId: 'hb-variant-2001-white-41',
           title: 'Beyaz / 41',
           sku: 'NSS-SNK-WHT-41',
           barcode: '869000200002',
@@ -154,6 +188,7 @@ function createHepsiburadaProducts(): ProductBatch['products'] {
           stock: 2,
         },
         {
+          externalId: 'hb-variant-2001-black-42',
           title: 'Siyah / 42',
           sku: 'NSS-SNK-BLK-42',
           barcode: '869000200003',
@@ -179,6 +214,7 @@ function createHepsiburadaProducts(): ProductBatch['products'] {
       images: [TEST_PRODUCT_IMAGE_URL],
       variants: [
         {
+          externalId: 'hb-variant-2002-anthracite',
           title: 'Antrasit',
           sku: 'NCR-BAG-ANT',
           color: 'Antrasit',

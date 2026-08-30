@@ -157,6 +157,7 @@ model ChannelConnection {
   connectedAt             DateTime?
   processingStartedAt     DateTime?
   lastSyncAt              DateTime?
+  lastInventorySyncAt     DateTime?
   failureReason           String?
   createdAt               DateTime                @default(now())
   updatedAt               DateTime                @updatedAt
@@ -172,6 +173,13 @@ model ChannelConnection {
 
 enum ProductStatus {
   ACTIVE
+  ARCHIVED
+}
+
+enum ProductVariantStatus {
+  ACTIVE
+  OUT_OF_STOCK
+  UNAVAILABLE
   ARCHIVED
 }
 
@@ -197,20 +205,24 @@ model Product {
 }
 
 model ProductVariant {
-  id        String   @id @default(uuid())
-  productId String
-  title     String?
-  sku       String
-  barcode   String?
-  color     String?
-  size      String?
-  price     Float
-  currency  String   @default("TRY")
-  stock     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String               @id @default(uuid())
+  productId       String
+  title           String?
+  sku             String
+  barcode         String?
+  color           String?
+  size            String?
+  price           Decimal              @db.Decimal(12, 2)
+  currency        String               @default("TRY")
+  stock           Int                  @default(0)
+  status          ProductVariantStatus @default(ACTIVE)
+  sourceUpdatedAt DateTime?
+  lastSyncedAt    DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product          Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  externalVariants ExternalProductVariant[]
 
   @@unique([productId, sku])
   @@index([barcode])
@@ -244,22 +256,56 @@ model ProductImage {
 }
 
 model ExternalProduct {
-  id           String   @id @default(uuid())
-  connectionId String
-  productId    String
-  externalId   String
-  externalUrl  String?
-  rawPayload   Json?
-  lastSyncedAt DateTime @default(now())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String               @id @default(uuid())
+  connectionId    String
+  productId       String
+  externalId      String
+  externalUrl     String?
+  rawPayload      Json?
+  status          ExternalEntityStatus @default(ACTIVE)
+  lastSeenSyncId  String?
+  sourceUpdatedAt DateTime?
+  lastSyncedAt    DateTime             @default(now())
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
-  connection ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
-  product    Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  connection ChannelConnection        @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  product    Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variants   ExternalProductVariant[]
 
   @@unique([connectionId, externalId])
   @@index([productId])
   @@map("external_product")
+}
+
+enum ExternalEntityStatus {
+  ACTIVE
+  ARCHIVED
+  UNAVAILABLE
+}
+
+model ExternalProductVariant {
+  id                String               @id @default(uuid())
+  externalProductId String
+  productVariantId  String
+  externalId        String
+  sku               String
+  barcode           String?
+  status            ExternalEntityStatus @default(ACTIVE)
+  lastSeenSyncId    String?
+  sourceUpdatedAt   DateTime?
+  lastSyncedAt      DateTime             @default(now())
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  externalProduct ExternalProduct @relation(fields: [externalProductId], references: [id], onDelete: Cascade)
+  productVariant  ProductVariant  @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+
+  @@unique([externalProductId, externalId])
+  @@index([productVariantId])
+  @@index([barcode])
+  @@index([sku])
+  @@map("external_product_variant")
 }
 
 enum CatalogSyncStatus {
@@ -268,11 +314,19 @@ enum CatalogSyncStatus {
   FAILED
 }
 
+enum CatalogSyncKind {
+  FULL
+  INVENTORY
+}
+
 model CatalogSyncRun {
   id                String            @id @default(uuid())
   connectionId      String
+  kind              CatalogSyncKind   @default(FULL)
   status            CatalogSyncStatus @default(RUNNING)
   productsProcessed Int               @default(0)
+  variantsProcessed Int               @default(0)
+  productsArchived  Int               @default(0)
   cursor            String?
   errorMessage      String?
   startedAt         DateTime          @default(now())

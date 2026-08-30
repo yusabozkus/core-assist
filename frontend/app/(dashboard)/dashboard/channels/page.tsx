@@ -24,18 +24,9 @@ export default async function ChannelsPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 lg:px-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-[-0.04em] text-foreground">
-          Satış kanalları
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-          {activeStore.name} mağazasının pazaryeri bağlantılarını ve ürün
-          senkronizasyonlarını yönetin.
-        </p>
-      </div>
-
       <ChannelManagement
         storeId={activeStore.id}
+        storeName={activeStore.name}
         connections={connections}
         providers={providers}
       />

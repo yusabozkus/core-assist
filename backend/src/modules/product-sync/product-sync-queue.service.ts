@@ -7,17 +7,20 @@ import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
 import {
   CatalogSyncStatus,
+  CatalogSyncKind,
   ChannelConnectionStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import {
   PRODUCT_SYNC_LOCK_TIMEOUT_MS,
   PRODUCT_SYNC_QUEUE,
+  SYNC_STORE_INVENTORY_JOB,
   SYNC_STORE_PRODUCTS_JOB,
 } from './product-sync.constants';
 import type {
   ProductSyncDispatcher,
   ProductSyncJobData,
+  ProductSyncKind,
   QueuedProductSync,
 } from './product-sync.types';
 
@@ -32,6 +35,7 @@ export class ProductSyncQueueService implements ProductSyncDispatcher {
   async enqueue(
     storeId: string,
     connectionId: string,
+    kind: ProductSyncKind = 'FULL',
   ): Promise<QueuedProductSync> {
     const queuedAt = new Date();
     const staleBefore = new Date(
@@ -64,14 +68,22 @@ export class ProductSyncQueueService implements ProductSyncDispatcher {
 
     try {
       const syncRun = await this.prisma.catalogSyncRun.create({
-        data: { connectionId },
+        data: {
+          connectionId,
+          kind:
+            kind === 'INVENTORY'
+              ? CatalogSyncKind.INVENTORY
+              : CatalogSyncKind.FULL,
+        },
         select: { id: true },
       });
       syncRunId = syncRun.id;
 
       await this.queue.add(
-        SYNC_STORE_PRODUCTS_JOB,
-        { storeId, connectionId, syncRunId },
+        kind === 'INVENTORY'
+          ? SYNC_STORE_INVENTORY_JOB
+          : SYNC_STORE_PRODUCTS_JOB,
+        { storeId, connectionId, syncRunId, kind },
         {
           jobId: `sync-${connectionId}-${syncRunId}`,
           attempts: 3,
@@ -81,7 +93,7 @@ export class ProductSyncQueueService implements ProductSyncDispatcher {
         },
       );
 
-      return { syncRunId, status: 'RUNNING', queuedAt };
+      return { syncRunId, status: 'RUNNING', queuedAt, kind };
     } catch (error) {
       await this.releaseFailedEnqueue(connectionId, syncRunId);
       throw new ServiceUnavailableException(

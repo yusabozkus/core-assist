@@ -3,6 +3,8 @@ import { IntegrationEnvironment } from '../../../generated/prisma/enums';
 import type {
   CatalogConnector,
   ConnectorContext,
+  InventoryBatch,
+  NormalizedInventoryVariant,
   NormalizedProduct,
   ProductBatch,
 } from './catalog-connector';
@@ -10,7 +12,9 @@ import {
   asRecord,
   asRecordArray,
   basicAuthorization,
+  firstDate,
   firstNumber,
+  firstOptionalNumber,
   firstString,
   readProviderError,
 } from './connector-utils';
@@ -33,6 +37,20 @@ export class HepsiburadaConnector implements CatalogConnector {
 
     return {
       products: listings.map(normalizeHepsiburadaListing),
+      nextCursor: listings.length === 100 ? String(offset + 100) : undefined,
+    };
+  }
+
+  async fetchInventory(
+    context: ConnectorContext,
+    cursor = '0',
+  ): Promise<InventoryBatch> {
+    const payload = await this.requestListings(context, cursor, 100);
+    const listings = getListings(payload);
+    const offset = Number(cursor);
+
+    return {
+      variants: listings.map(normalizeHepsiburadaInventory),
       nextCursor: listings.length === 100 ? String(offset + 100) : undefined,
     };
   }
@@ -117,6 +135,8 @@ function normalizeHepsiburadaListing(
     images,
     variants: [
       {
+        externalId:
+          firstString(item, ['listingId', 'id', 'hbSku', 'merchantSku']) ?? sku,
         title: firstString(item, ['variantName', 'listingName']),
         sku,
         barcode: firstString(item, ['barcode']),
@@ -130,8 +150,49 @@ function normalizeHepsiburadaListing(
             firstNumber(item, ['availableStock', 'stock', 'quantity']),
           ),
         ),
+        sourceUpdatedAt: firstDate(item, [
+          'lastModifiedDate',
+          'updatedAt',
+          'lastUpdateDate',
+        ]),
       },
     ],
+    sourceUpdatedAt: firstDate(item, [
+      'lastModifiedDate',
+      'updatedAt',
+      'lastUpdateDate',
+    ]),
     rawPayload: item,
+  };
+}
+
+function normalizeHepsiburadaInventory(
+  item: Record<string, unknown>,
+): NormalizedInventoryVariant {
+  const sku =
+    firstString(item, ['merchantSku', 'sku', 'hbSku', 'barcode']) ??
+    `HB-${firstString(item, ['id', 'productId']) ?? 'UNKNOWN'}`;
+  const externalProductId =
+    firstString(item, ['listingId', 'id', 'hbSku', 'productId']) ?? sku;
+  const stock = firstOptionalNumber(item, [
+    'availableStock',
+    'stock',
+    'quantity',
+  ]);
+
+  return {
+    externalProductId,
+    externalVariantId:
+      firstString(item, ['listingId', 'id', 'hbSku', 'merchantSku']) ?? sku,
+    sku,
+    barcode: firstString(item, ['barcode']),
+    price: firstOptionalNumber(item, ['price', 'salePrice']),
+    currency: firstString(item, ['currency', 'currencyType']),
+    stock: stock === undefined ? undefined : Math.max(0, Math.trunc(stock)),
+    sourceUpdatedAt: firstDate(item, [
+      'lastModifiedDate',
+      'updatedAt',
+      'lastUpdateDate',
+    ]),
   };
 }

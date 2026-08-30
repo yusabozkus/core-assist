@@ -179,6 +179,7 @@ describe('ChannelsService', () => {
       syncRunId: 'sync-run-1',
       status: 'RUNNING',
       queuedAt,
+      kind: 'FULL',
     });
 
     const result = await service.syncCatalog(
@@ -187,12 +188,48 @@ describe('ChannelsService', () => {
       'user-1',
     );
 
-    expect(enqueueProductSync).toHaveBeenCalledWith('store-1', 'connection-1');
+    expect(enqueueProductSync).toHaveBeenCalledWith(
+      'store-1',
+      'connection-1',
+      'FULL',
+    );
     expect(result).toEqual({
       syncRunId: 'sync-run-1',
       status: 'RUNNING',
       queuedAt,
+      kind: 'FULL',
     });
+  });
+
+  it('queues a lightweight inventory sync for connected providers', async () => {
+    const queuedAt = new Date('2026-08-30T10:00:00.000Z');
+    findStoreMembership.mockResolvedValue({ role: StoreRole.OWNER });
+    findConnection.mockResolvedValue({
+      id: 'connection-1',
+      providerKey: 'trendyol',
+      environment: IntegrationEnvironment.SANDBOX,
+      status: ChannelConnectionStatus.CONNECTED,
+      credentialsEncrypted: 'encrypted',
+    });
+    enqueueProductSync.mockResolvedValue({
+      syncRunId: 'sync-run-2',
+      status: 'RUNNING',
+      queuedAt,
+      kind: 'INVENTORY',
+    });
+
+    const result = await service.syncInventory(
+      'store-1',
+      'connection-1',
+      'user-1',
+    );
+
+    expect(enqueueProductSync).toHaveBeenCalledWith(
+      'store-1',
+      'connection-1',
+      'INVENTORY',
+    );
+    expect(result.kind).toBe('INVENTORY');
   });
 
   it('does not remove a connection from another store', async () => {

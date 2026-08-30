@@ -17,8 +17,8 @@ export class CatalogService {
       throw new NotFoundException('Mağaza bulunamadı veya erişiminiz yok.');
     }
 
-    return this.prisma.product.findMany({
-      where: { storeId },
+    const products = await this.prisma.product.findMany({
+      where: { storeId, status: 'ACTIVE' },
       orderBy: { updatedAt: 'desc' },
       select: {
         id: true,
@@ -40,6 +40,9 @@ export class CatalogService {
             price: true,
             currency: true,
             stock: true,
+            status: true,
+            sourceUpdatedAt: true,
+            lastSyncedAt: true,
           },
         },
         attributes: {
@@ -54,6 +57,7 @@ export class CatalogService {
           select: {
             externalId: true,
             externalUrl: true,
+            status: true,
             lastSyncedAt: true,
             connection: {
               select: { providerKey: true },
@@ -62,5 +66,13 @@ export class CatalogService {
         },
       },
     });
+
+    return products.map((product) => ({
+      ...product,
+      variants: product.variants.map((variant) => ({
+        ...variant,
+        price: Number(variant.price),
+      })),
+    }));
   }
 }

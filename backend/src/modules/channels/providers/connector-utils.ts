@@ -48,6 +48,44 @@ export function firstNumber(
   return fallback;
 }
 
+export function firstOptionalNumber(
+  record: Record<string, unknown>,
+  keys: string[],
+): number | undefined {
+  for (const key of keys) {
+    const value = record[key];
+
+    if (value === null || value === undefined || value === '') continue;
+
+    const number = typeof value === 'number' ? value : Number(value);
+
+    if (Number.isFinite(number)) {
+      return number;
+    }
+  }
+
+  return undefined;
+}
+
+export function firstDate(
+  record: Record<string, unknown>,
+  keys: string[],
+): Date | undefined {
+  for (const key of keys) {
+    const value = record[key];
+    const date =
+      typeof value === 'number' || typeof value === 'string'
+        ? new Date(value)
+        : undefined;
+
+    if (date && !Number.isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  return undefined;
+}
+
 export function basicAuthorization(username: string, password: string) {
   return `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
 }

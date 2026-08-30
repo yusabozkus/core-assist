@@ -60,6 +60,16 @@ export class ChannelsController {
     return this.channelsService.syncCatalog(storeId, connectionId, user.id);
   }
 
+  @Post(':connectionId/inventory-sync')
+  @HttpCode(HttpStatus.ACCEPTED)
+  syncInventory(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
+    @Param('connectionId', new ParseUUIDPipe()) connectionId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.channelsService.syncInventory(storeId, connectionId, user.id);
+  }
+
   @Post()
   create(
     @Param('storeId', new ParseUUIDPipe()) storeId: string,

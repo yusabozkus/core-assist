@@ -3,6 +3,7 @@ import type { IntegrationEnvironment } from '../../../generated/prisma/enums';
 export type ProviderCredentials = Record<string, string>;
 
 export type NormalizedProductVariant = {
+  externalId: string;
   title?: string;
   sku: string;
   barcode?: string;
@@ -11,6 +12,7 @@ export type NormalizedProductVariant = {
   price: number;
   currency: string;
   stock: number;
+  sourceUpdatedAt?: Date;
 };
 
 export type NormalizedProduct = {
@@ -23,11 +25,28 @@ export type NormalizedProduct = {
   attributes: Array<{ name: string; value: string }>;
   images: string[];
   variants: NormalizedProductVariant[];
+  sourceUpdatedAt?: Date;
   rawPayload: Record<string, unknown>;
 };
 
 export type ProductBatch = {
   products: NormalizedProduct[];
+  nextCursor?: string;
+};
+
+export type NormalizedInventoryVariant = {
+  externalProductId: string;
+  externalVariantId: string;
+  sku: string;
+  barcode?: string;
+  price?: number;
+  currency?: string;
+  stock?: number;
+  sourceUpdatedAt?: Date;
+};
+
+export type InventoryBatch = {
+  variants: NormalizedInventoryVariant[];
   nextCursor?: string;
 };
 
@@ -43,7 +62,14 @@ export interface CatalogConnector {
     context: ConnectorContext,
     cursor?: string,
   ): Promise<ProductBatch>;
+  fetchInventory(
+    context: ConnectorContext,
+    cursor?: string,
+  ): Promise<InventoryBatch>;
 }
+
+export type CommerceCapability =
+  'CATALOG_READ' | 'INVENTORY_READ' | 'PRODUCT_QNA_READ' | 'PRODUCT_QNA_REPLY';
 
 export type CredentialFieldDefinition = {
   key: string;
@@ -58,6 +84,7 @@ export type ProviderManifest = {
   type: 'COMMERCE';
   image: string;
   description: string;
+  capabilities: CommerceCapability[];
   environments: Array<'SANDBOX' | 'PRODUCTION'>;
   credentialFields: CredentialFieldDefinition[];
 };

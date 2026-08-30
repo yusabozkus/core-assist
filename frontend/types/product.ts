@@ -8,6 +8,9 @@ export type CatalogProductVariant = {
   price: number
   currency: string
   stock: number
+  status: "ACTIVE" | "OUT_OF_STOCK" | "UNAVAILABLE" | "ARCHIVED"
+  sourceUpdatedAt: string | null
+  lastSyncedAt: string | null
 }
 
 export type CatalogProduct = {
@@ -24,6 +27,7 @@ export type CatalogProduct = {
   externalProducts: Array<{
     externalId: string
     externalUrl: string | null
+    status: "ACTIVE" | "ARCHIVED" | "UNAVAILABLE"
     lastSyncedAt: string
     connection: { providerKey: string }
   }>

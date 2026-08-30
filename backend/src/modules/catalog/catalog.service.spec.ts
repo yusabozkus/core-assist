@@ -17,13 +17,19 @@ describe('CatalogService', () => {
 
   it('returns the normalized catalog for store members', async () => {
     findMembership.mockResolvedValue({ id: 'member-1' });
-    findProducts.mockResolvedValue([{ id: 'product-1' }]);
+    findProducts.mockResolvedValue([
+      { id: 'product-1', variants: [{ id: 'variant-1', price: 100 }] },
+    ]);
 
     const products = await service.findProducts('store-1', 'user-1');
 
-    expect(products).toEqual([{ id: 'product-1' }]);
+    expect(products).toEqual([
+      { id: 'product-1', variants: [{ id: 'variant-1', price: 100 }] },
+    ]);
     expect(findProducts).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { storeId: 'store-1' } }),
+      expect.objectContaining({
+        where: { storeId: 'store-1', status: 'ACTIVE' },
+      }),
     );
   });
 

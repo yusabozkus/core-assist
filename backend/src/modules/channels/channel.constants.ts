@@ -7,6 +7,7 @@ export const channelConnectionSelect = {
   connectedAt: true,
   processingStartedAt: true,
   lastSyncAt: true,
+  lastInventorySyncAt: true,
   failureReason: true,
   createdAt: true,
   updatedAt: true,

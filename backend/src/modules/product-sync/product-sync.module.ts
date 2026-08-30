@@ -7,6 +7,7 @@ import {
 } from './product-sync.constants';
 import { ProductSyncProcessor } from './product-sync.processor';
 import { ProductSyncQueueService } from './product-sync-queue.service';
+import { ProductSyncSchedulerService } from './product-sync-scheduler.service';
 import { ProductSyncWorkerService } from './product-sync-worker.service';
 
 @Module({
@@ -22,6 +23,7 @@ import { ProductSyncWorkerService } from './product-sync-worker.service';
     },
     ProductSyncWorkerService,
     ProductSyncProcessor,
+    ProductSyncSchedulerService,
   ],
   exports: [PRODUCT_SYNC_DISPATCHER],
 })

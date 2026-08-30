@@ -190,7 +190,10 @@ function ProductCard({
               <h2 className="truncate text-sm font-semibold text-foreground sm:text-base">
                 {product.title}
               </h2>
-              <Badge variant="outline" className="hidden shrink-0 sm:flex">
+              <Badge
+                variant="outline"
+                className="hidden max-w-36 shrink-0 overflow-hidden text-ellipsis whitespace-nowrap sm:flex"
+              >
                 {sourceNames || "Pazaryeri"}
               </Badge>
             </div>
@@ -203,28 +206,29 @@ function ProductCard({
                 {product.description}
               </p>
             ) : null}
-            <div className="mt-2 flex items-center gap-2 text-xs lg:hidden">
-              <span className="font-semibold text-foreground">
+            <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 text-xs lg:hidden">
+              <span
+                className="truncate font-semibold text-foreground tabular-nums"
+                title={formatPriceRange(product.variants)}
+              >
                 {formatPriceRange(product.variants)}
               </span>
-              <span className="text-border">•</span>
-              <span className="text-muted-foreground">
+              <span className="whitespace-nowrap text-muted-foreground">
                 {product.variants.length} varyant
               </span>
-              <span className="text-border">•</span>
               <span
-                className={
+                className={`whitespace-nowrap tabular-nums ${
                   totalStock > 0
                     ? "text-emerald-600 dark:text-emerald-400"
                     : "text-amber-600 dark:text-amber-400"
-                }
+                }`}
               >
                 {totalStock} stok
               </span>
             </div>
           </div>
 
-          <div className="hidden min-w-72 grid-cols-3 gap-5 border-l border-border pl-5 lg:grid">
+          <div className="hidden w-[23rem] shrink-0 grid-cols-[minmax(0,1fr)_4.5rem_4.5rem] items-center border-l border-border pl-5 lg:grid [&>*+*]:border-l [&>*+*]:border-border [&>*+*]:pl-4">
             <ProductSummary
               label="Fiyat"
               value={formatPriceRange(product.variants)}
@@ -240,7 +244,7 @@ function ProductCard({
             />
           </div>
 
-          <span className="flex size-9 shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium text-muted-foreground sm:w-auto sm:px-3">
+          <span className="flex size-9 shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium text-muted-foreground sm:h-9 sm:w-24 sm:px-3">
             <span className="hidden sm:inline">
               {open ? "Gizle" : "Varyantlar"}
             </span>
@@ -369,6 +373,8 @@ function VariantTable({ variants }: { variants: CatalogProductVariant[] }) {
 }
 
 function VariantRow({ variant }: { variant: CatalogProductVariant }) {
+  const availability = getVariantAvailability(variant)
+
   return (
     <tr className="transition-colors hover:bg-muted/20">
       <td className="px-5 py-3.5 font-medium text-foreground">
@@ -390,15 +396,31 @@ function VariantRow({ variant }: { variant: CatalogProductVariant }) {
         {formatPrice(variant.price, variant.currency)}
       </td>
       <td className="px-5 py-3.5 text-right">
-        <Badge
-          variant={variant.stock > 0 ? "success" : "warning"}
-          className="justify-center"
-        >
-          {variant.stock > 0 ? `${variant.stock} adet` : "Tükendi"}
+        <Badge variant={availability.variant} className="justify-center">
+          {availability.label}
         </Badge>
       </td>
     </tr>
   )
+}
+
+function getVariantAvailability(variant: CatalogProductVariant): {
+  label: string
+  variant: "success" | "warning" | "secondary"
+} {
+  if (variant.status === "UNAVAILABLE") {
+    return { label: "Kullanılamıyor", variant: "secondary" }
+  }
+
+  if (variant.status === "ARCHIVED") {
+    return { label: "Arşivlendi", variant: "secondary" }
+  }
+
+  if (variant.stock <= 0) {
+    return { label: "Tükendi", variant: "warning" }
+  }
+
+  return { label: `${variant.stock} adet`, variant: "success" }
 }
 
 function ProductSummary({
@@ -412,9 +434,8 @@ function ProductSummary({
 }) {
   return (
     <div className="min-w-0">
-      <p className="truncate text-sm font-semibold text-foreground">{value}</p>
       <p
-        className={`mt-1 text-[11px] ${
+        className={`text-[10px] font-medium tracking-wide uppercase ${
           tone === "success"
             ? "text-emerald-600 dark:text-emerald-400"
             : tone === "warning"
@@ -423,6 +444,12 @@ function ProductSummary({
         }`}
       >
         {label}
+      </p>
+      <p
+        className="mt-1 truncate text-sm font-semibold text-foreground tabular-nums"
+        title={value}
+      >
+        {value}
       </p>
     </div>
   )

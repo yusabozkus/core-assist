@@ -76,27 +76,62 @@ async function run() {
     });
     const firstQueuedSync = await dispatcher.enqueue(store.id, connection.id);
     await waitForCompletedSync(prisma, firstQueuedSync.syncRunId);
+    const firstVariantIds = await prisma.productVariant.findMany({
+      where: { product: { storeId: store.id } },
+      orderBy: { sku: 'asc' },
+      select: { id: true },
+    });
     const secondQueuedSync = await dispatcher.enqueue(store.id, connection.id);
-    const syncRun = await waitForCompletedSync(
-      prisma,
-      secondQueuedSync.syncRunId,
+    await waitForCompletedSync(prisma, secondQueuedSync.syncRunId);
+    const inventorySync = await dispatcher.enqueue(
+      store.id,
+      connection.id,
+      'INVENTORY',
     );
+    const syncRun = await waitForCompletedSync(prisma, inventorySync.syncRunId);
 
-    const [products, variants] = await Promise.all([
-      prisma.product.count({ where: { storeId: store.id } }),
-      prisma.productVariant.count({
-        where: { product: { storeId: store.id } },
-      }),
-    ]);
+    const [products, variants, externalVariants, outOfStock, finalVariantIds] =
+      await Promise.all([
+        prisma.product.count({ where: { storeId: store.id } }),
+        prisma.productVariant.count({
+          where: { product: { storeId: store.id } },
+        }),
+        prisma.externalProductVariant.count({
+          where: { externalProduct: { connectionId: connection.id } },
+        }),
+        prisma.productVariant.count({
+          where: {
+            product: { storeId: store.id },
+            status: 'OUT_OF_STOCK',
+          },
+        }),
+        prisma.productVariant.findMany({
+          where: { product: { storeId: store.id } },
+          orderBy: { sku: 'asc' },
+          select: { id: true },
+        }),
+      ]);
 
-    if (products !== 2 || variants !== 5) {
+    if (
+      products !== 2 ||
+      variants !== 5 ||
+      externalVariants !== 5 ||
+      outOfStock !== 1
+    ) {
       throw new Error(
-        `Unexpected normalized catalog: ${products} products, ${variants} variants.`,
+        `Unexpected normalized catalog: ${products} products, ${variants} variants, ${externalVariants} external variants.`,
       );
     }
 
+    if (
+      firstVariantIds.map((variant) => variant.id).join(',') !==
+      finalVariantIds.map((variant) => variant.id).join(',')
+    ) {
+      throw new Error('Variant identities changed between catalog syncs.');
+    }
+
     process.stdout.write(
-      `${JSON.stringify({ status: syncRun.status, syncs: 2, products, variants })}\n`,
+      `${JSON.stringify({ status: syncRun.status, syncs: 3, products, variants, externalVariants, stableVariantIds: true })}\n`,
     );
   } finally {
     if (storeId) {

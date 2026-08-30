@@ -63,6 +63,11 @@ export type DashboardNavigationItem = Readonly<{
   items?: ReadonlyArray<DashboardNavigationSubItem>
 }>
 
+export type DashboardBreadcrumb = Readonly<{
+  title: string
+  url: string
+}>
+
 type DashboardNavigation = Readonly<{
   overview: DashboardNavigationItem
   navGroups: ReadonlyArray<{
@@ -218,4 +223,51 @@ export function getDashboardNavigationTitle(pathname: string) {
   }
 
   return null
+}
+
+export function getDashboardBreadcrumbs(
+  pathname: string
+): ReadonlyArray<DashboardBreadcrumb> {
+  if (pathname === DASHBOARD_NAVIGATION.overview.url) {
+    return [
+      {
+        title: DASHBOARD_NAVIGATION.overview.title,
+        url: DASHBOARD_NAVIGATION.overview.url,
+      },
+    ]
+  }
+
+  for (const group of DASHBOARD_NAVIGATION.navGroups) {
+    for (const item of group.items) {
+      if (item.url === pathname) {
+        return [{ title: item.title, url: item.url }]
+      }
+
+      const subItem = item.items?.find(
+        (candidate) => candidate.url === pathname
+      )
+
+      if (subItem) {
+        return [
+          { title: item.title, url: item.url },
+          { title: subItem.title, url: subItem.url },
+        ]
+      }
+    }
+  }
+
+  if (pathname === APP_ROUTES.dashboard.settings.profile) {
+    return [
+      {
+        title: "Ayarlar",
+        url: APP_ROUTES.dashboard.settings.root,
+      },
+      {
+        title: "Profil",
+        url: APP_ROUTES.dashboard.settings.profile,
+      },
+    ]
+  }
+
+  return [{ title: "Dashboard", url: APP_ROUTES.dashboard.root }]
 }
