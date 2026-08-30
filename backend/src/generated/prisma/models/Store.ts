@@ -202,6 +202,8 @@ export type StoreWhereInput = {
   members?: Prisma.StoreMemberListRelationFilter
   channelConnections?: Prisma.ChannelConnectionListRelationFilter
   products?: Prisma.ProductListRelationFilter
+  incomingEvents?: Prisma.IncomingEventListRelationFilter
+  productQuestions?: Prisma.ProductQuestionListRelationFilter
 }
 
 export type StoreOrderByWithRelationInput = {
@@ -216,6 +218,8 @@ export type StoreOrderByWithRelationInput = {
   members?: Prisma.StoreMemberOrderByRelationAggregateInput
   channelConnections?: Prisma.ChannelConnectionOrderByRelationAggregateInput
   products?: Prisma.ProductOrderByRelationAggregateInput
+  incomingEvents?: Prisma.IncomingEventOrderByRelationAggregateInput
+  productQuestions?: Prisma.ProductQuestionOrderByRelationAggregateInput
 }
 
 export type StoreWhereUniqueInput = Prisma.AtLeast<{
@@ -233,6 +237,8 @@ export type StoreWhereUniqueInput = Prisma.AtLeast<{
   members?: Prisma.StoreMemberListRelationFilter
   channelConnections?: Prisma.ChannelConnectionListRelationFilter
   products?: Prisma.ProductListRelationFilter
+  incomingEvents?: Prisma.IncomingEventListRelationFilter
+  productQuestions?: Prisma.ProductQuestionListRelationFilter
 }, "id">
 
 export type StoreOrderByWithAggregationInput = {
@@ -272,6 +278,8 @@ export type StoreCreateInput = {
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateInput = {
@@ -285,6 +293,8 @@ export type StoreUncheckedCreateInput = {
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUpdateInput = {
@@ -298,6 +308,8 @@ export type StoreUpdateInput = {
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateInput = {
@@ -311,6 +323,8 @@ export type StoreUncheckedUpdateInput = {
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateManyInput = {
@@ -461,6 +475,34 @@ export type StoreUpdateOneRequiredWithoutProductsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutProductsInput, Prisma.StoreUpdateWithoutProductsInput>, Prisma.StoreUncheckedUpdateWithoutProductsInput>
 }
 
+export type StoreCreateNestedOneWithoutIncomingEventsInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutIncomingEventsInput, Prisma.StoreUncheckedCreateWithoutIncomingEventsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutIncomingEventsInput
+  connect?: Prisma.StoreWhereUniqueInput
+}
+
+export type StoreUpdateOneRequiredWithoutIncomingEventsNestedInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutIncomingEventsInput, Prisma.StoreUncheckedCreateWithoutIncomingEventsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutIncomingEventsInput
+  upsert?: Prisma.StoreUpsertWithoutIncomingEventsInput
+  connect?: Prisma.StoreWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutIncomingEventsInput, Prisma.StoreUpdateWithoutIncomingEventsInput>, Prisma.StoreUncheckedUpdateWithoutIncomingEventsInput>
+}
+
+export type StoreCreateNestedOneWithoutProductQuestionsInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutProductQuestionsInput, Prisma.StoreUncheckedCreateWithoutProductQuestionsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutProductQuestionsInput
+  connect?: Prisma.StoreWhereUniqueInput
+}
+
+export type StoreUpdateOneRequiredWithoutProductQuestionsNestedInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutProductQuestionsInput, Prisma.StoreUncheckedCreateWithoutProductQuestionsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutProductQuestionsInput
+  upsert?: Prisma.StoreUpsertWithoutProductQuestionsInput
+  connect?: Prisma.StoreWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutProductQuestionsInput, Prisma.StoreUpdateWithoutProductQuestionsInput>, Prisma.StoreUncheckedUpdateWithoutProductQuestionsInput>
+}
+
 export type StoreCreateNestedOneWithoutMembersInput = {
   create?: Prisma.XOR<Prisma.StoreCreateWithoutMembersInput, Prisma.StoreUncheckedCreateWithoutMembersInput>
   connectOrCreate?: Prisma.StoreCreateOrConnectWithoutMembersInput
@@ -485,6 +527,8 @@ export type StoreCreateWithoutWorkspaceInput = {
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutWorkspaceInput = {
@@ -497,6 +541,8 @@ export type StoreUncheckedCreateWithoutWorkspaceInput = {
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutWorkspaceInput = {
@@ -548,6 +594,8 @@ export type StoreCreateWithoutChannelConnectionsInput = {
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutChannelConnectionsInput = {
@@ -560,6 +608,8 @@ export type StoreUncheckedCreateWithoutChannelConnectionsInput = {
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutChannelConnectionsInput = {
@@ -588,6 +638,8 @@ export type StoreUpdateWithoutChannelConnectionsInput = {
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutChannelConnectionsInput = {
@@ -600,6 +652,8 @@ export type StoreUncheckedUpdateWithoutChannelConnectionsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutProductsInput = {
@@ -612,6 +666,8 @@ export type StoreCreateWithoutProductsInput = {
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutProductsInput = {
@@ -624,6 +680,8 @@ export type StoreUncheckedCreateWithoutProductsInput = {
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutProductsInput = {
@@ -652,6 +710,8 @@ export type StoreUpdateWithoutProductsInput = {
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutProductsInput = {
@@ -664,6 +724,152 @@ export type StoreUncheckedUpdateWithoutProductsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreCreateWithoutIncomingEventsInput = {
+  id?: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
+  members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
+}
+
+export type StoreUncheckedCreateWithoutIncomingEventsInput = {
+  id?: string
+  workspaceId: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
+}
+
+export type StoreCreateOrConnectWithoutIncomingEventsInput = {
+  where: Prisma.StoreWhereUniqueInput
+  create: Prisma.XOR<Prisma.StoreCreateWithoutIncomingEventsInput, Prisma.StoreUncheckedCreateWithoutIncomingEventsInput>
+}
+
+export type StoreUpsertWithoutIncomingEventsInput = {
+  update: Prisma.XOR<Prisma.StoreUpdateWithoutIncomingEventsInput, Prisma.StoreUncheckedUpdateWithoutIncomingEventsInput>
+  create: Prisma.XOR<Prisma.StoreCreateWithoutIncomingEventsInput, Prisma.StoreUncheckedCreateWithoutIncomingEventsInput>
+  where?: Prisma.StoreWhereInput
+}
+
+export type StoreUpdateToOneWithWhereWithoutIncomingEventsInput = {
+  where?: Prisma.StoreWhereInput
+  data: Prisma.XOR<Prisma.StoreUpdateWithoutIncomingEventsInput, Prisma.StoreUncheckedUpdateWithoutIncomingEventsInput>
+}
+
+export type StoreUpdateWithoutIncomingEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
+  members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreUncheckedUpdateWithoutIncomingEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreCreateWithoutProductQuestionsInput = {
+  id?: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
+  members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
+}
+
+export type StoreUncheckedCreateWithoutProductQuestionsInput = {
+  id?: string
+  workspaceId: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
+}
+
+export type StoreCreateOrConnectWithoutProductQuestionsInput = {
+  where: Prisma.StoreWhereUniqueInput
+  create: Prisma.XOR<Prisma.StoreCreateWithoutProductQuestionsInput, Prisma.StoreUncheckedCreateWithoutProductQuestionsInput>
+}
+
+export type StoreUpsertWithoutProductQuestionsInput = {
+  update: Prisma.XOR<Prisma.StoreUpdateWithoutProductQuestionsInput, Prisma.StoreUncheckedUpdateWithoutProductQuestionsInput>
+  create: Prisma.XOR<Prisma.StoreCreateWithoutProductQuestionsInput, Prisma.StoreUncheckedCreateWithoutProductQuestionsInput>
+  where?: Prisma.StoreWhereInput
+}
+
+export type StoreUpdateToOneWithWhereWithoutProductQuestionsInput = {
+  where?: Prisma.StoreWhereInput
+  data: Prisma.XOR<Prisma.StoreUpdateWithoutProductQuestionsInput, Prisma.StoreUncheckedUpdateWithoutProductQuestionsInput>
+}
+
+export type StoreUpdateWithoutProductQuestionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
+  members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreUncheckedUpdateWithoutProductQuestionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutMembersInput = {
@@ -676,6 +882,8 @@ export type StoreCreateWithoutMembersInput = {
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutMembersInput = {
@@ -688,6 +896,8 @@ export type StoreUncheckedCreateWithoutMembersInput = {
   updatedAt?: Date | string
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutMembersInput = {
@@ -716,6 +926,8 @@ export type StoreUpdateWithoutMembersInput = {
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutMembersInput = {
@@ -728,6 +940,8 @@ export type StoreUncheckedUpdateWithoutMembersInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateManyWorkspaceInput = {
@@ -749,6 +963,8 @@ export type StoreUpdateWithoutWorkspaceInput = {
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutWorkspaceInput = {
@@ -761,6 +977,8 @@ export type StoreUncheckedUpdateWithoutWorkspaceInput = {
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateManyWithoutWorkspaceInput = {
@@ -781,12 +999,16 @@ export type StoreCountOutputType = {
   members: number
   channelConnections: number
   products: number
+  incomingEvents: number
+  productQuestions: number
 }
 
 export type StoreCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   members?: boolean | StoreCountOutputTypeCountMembersArgs
   channelConnections?: boolean | StoreCountOutputTypeCountChannelConnectionsArgs
   products?: boolean | StoreCountOutputTypeCountProductsArgs
+  incomingEvents?: boolean | StoreCountOutputTypeCountIncomingEventsArgs
+  productQuestions?: boolean | StoreCountOutputTypeCountProductQuestionsArgs
 }
 
 /**
@@ -820,6 +1042,20 @@ export type StoreCountOutputTypeCountProductsArgs<ExtArgs extends runtime.Types.
   where?: Prisma.ProductWhereInput
 }
 
+/**
+ * StoreCountOutputType without action
+ */
+export type StoreCountOutputTypeCountIncomingEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.IncomingEventWhereInput
+}
+
+/**
+ * StoreCountOutputType without action
+ */
+export type StoreCountOutputTypeCountProductQuestionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ProductQuestionWhereInput
+}
+
 
 export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -833,6 +1069,8 @@ export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   members?: boolean | Prisma.Store$membersArgs<ExtArgs>
   channelConnections?: boolean | Prisma.Store$channelConnectionsArgs<ExtArgs>
   products?: boolean | Prisma.Store$productsArgs<ExtArgs>
+  incomingEvents?: boolean | Prisma.Store$incomingEventsArgs<ExtArgs>
+  productQuestions?: boolean | Prisma.Store$productQuestionsArgs<ExtArgs>
   _count?: boolean | Prisma.StoreCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["store"]>
 
@@ -874,6 +1112,8 @@ export type StoreInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   members?: boolean | Prisma.Store$membersArgs<ExtArgs>
   channelConnections?: boolean | Prisma.Store$channelConnectionsArgs<ExtArgs>
   products?: boolean | Prisma.Store$productsArgs<ExtArgs>
+  incomingEvents?: boolean | Prisma.Store$incomingEventsArgs<ExtArgs>
+  productQuestions?: boolean | Prisma.Store$productQuestionsArgs<ExtArgs>
   _count?: boolean | Prisma.StoreCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type StoreIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -890,6 +1130,8 @@ export type $StorePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     members: Prisma.$StoreMemberPayload<ExtArgs>[]
     channelConnections: Prisma.$ChannelConnectionPayload<ExtArgs>[]
     products: Prisma.$ProductPayload<ExtArgs>[]
+    incomingEvents: Prisma.$IncomingEventPayload<ExtArgs>[]
+    productQuestions: Prisma.$ProductQuestionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1297,6 +1539,8 @@ export interface Prisma__StoreClient<T, Null = never, ExtArgs extends runtime.Ty
   members<T extends Prisma.Store$membersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$membersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StoreMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   channelConnections<T extends Prisma.Store$channelConnectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$channelConnectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChannelConnectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   products<T extends Prisma.Store$productsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$productsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  incomingEvents<T extends Prisma.Store$incomingEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$incomingEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$IncomingEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  productQuestions<T extends Prisma.Store$productQuestionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$productQuestionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductQuestionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1803,6 +2047,54 @@ export type Store$productsArgs<ExtArgs extends runtime.Types.Extensions.Internal
   take?: number
   skip?: number
   distinct?: Prisma.ProductScalarFieldEnum | Prisma.ProductScalarFieldEnum[]
+}
+
+/**
+ * Store.incomingEvents
+ */
+export type Store$incomingEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the IncomingEvent
+   */
+  select?: Prisma.IncomingEventSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the IncomingEvent
+   */
+  omit?: Prisma.IncomingEventOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.IncomingEventInclude<ExtArgs> | null
+  where?: Prisma.IncomingEventWhereInput
+  orderBy?: Prisma.IncomingEventOrderByWithRelationInput | Prisma.IncomingEventOrderByWithRelationInput[]
+  cursor?: Prisma.IncomingEventWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.IncomingEventScalarFieldEnum | Prisma.IncomingEventScalarFieldEnum[]
+}
+
+/**
+ * Store.productQuestions
+ */
+export type Store$productQuestionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ProductQuestion
+   */
+  select?: Prisma.ProductQuestionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ProductQuestion
+   */
+  omit?: Prisma.ProductQuestionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProductQuestionInclude<ExtArgs> | null
+  where?: Prisma.ProductQuestionWhereInput
+  orderBy?: Prisma.ProductQuestionOrderByWithRelationInput | Prisma.ProductQuestionOrderByWithRelationInput[]
+  cursor?: Prisma.ProductQuestionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ProductQuestionScalarFieldEnum | Prisma.ProductQuestionScalarFieldEnum[]
 }
 
 /**

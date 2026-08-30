@@ -10,7 +10,13 @@ import type {
 } from './catalog-connector';
 import { HepsiburadaConnector } from './hepsiburada.connector';
 import { MockCatalogConnector } from './mock-catalog.connector';
+import { MockQuestionConnector } from './mock-question.connector';
 import { PROVIDER_MANIFESTS } from './provider-manifests';
+import type {
+  ProductQuestionAnswerResult,
+  ProductQuestionBatch,
+  ProductQuestionConnector,
+} from './question-connector';
 import { TrendyolConnector } from './trendyol.connector';
 
 @Injectable()
@@ -18,32 +24,31 @@ export class ProviderRegistryService {
   private readonly manifests = new Map(
     PROVIDER_MANIFESTS.map((manifest) => [manifest.key, manifest]),
   );
-  private readonly liveConnectors: Map<string, CatalogConnector>;
-  private readonly mode: 'mock' | 'live';
+  private readonly liveConnectors: Map<
+    string,
+    CatalogConnector & ProductQuestionConnector
+  >;
+  private readonly catalogMode: 'mock' | 'live';
+  private readonly questionMode: 'mock' | 'live';
 
   constructor(
     trendyolConnector: TrendyolConnector,
     hepsiburadaConnector: HepsiburadaConnector,
     private readonly mockConnector: MockCatalogConnector,
+    private readonly mockQuestionConnector: MockQuestionConnector,
   ) {
-    this.liveConnectors = new Map<string, CatalogConnector>([
+    this.liveConnectors = new Map<
+      string,
+      CatalogConnector & ProductQuestionConnector
+    >([
       [trendyolConnector.providerKey, trendyolConnector],
       [hepsiburadaConnector.providerKey, hepsiburadaConnector],
     ]);
-    const configuredMode = process.env.CATALOG_CONNECTOR_MODE?.trim();
-
-    if (
-      configuredMode &&
-      configuredMode !== 'mock' &&
-      configuredMode !== 'live'
-    ) {
-      throw new Error('CATALOG_CONNECTOR_MODE must be either mock or live.');
-    }
-
-    this.mode =
-      configuredMode === 'live' || process.env.NODE_ENV === 'production'
-        ? 'live'
-        : 'mock';
+    this.catalogMode = resolveConnectorMode('CATALOG_CONNECTOR_MODE');
+    this.questionMode = resolveConnectorMode(
+      'QUESTION_CONNECTOR_MODE',
+      this.catalogMode,
+    );
   }
 
   getAvailableProviders(): ProviderManifest[] {
@@ -90,7 +95,7 @@ export class ProviderRegistryService {
     providerKey: string,
     context: ConnectorContext,
   ): Promise<void> {
-    if (this.mode === 'mock') {
+    if (this.catalogMode === 'mock') {
       return this.mockConnector.verifyCredentials(
         providerKey,
         context.credentials,
@@ -105,7 +110,7 @@ export class ProviderRegistryService {
     context: ConnectorContext,
     cursor?: string,
   ): Promise<ProductBatch> {
-    if (this.mode === 'mock') {
+    if (this.catalogMode === 'mock') {
       return this.mockConnector.fetchProducts(providerKey, context);
     }
 
@@ -117,11 +122,52 @@ export class ProviderRegistryService {
     context: ConnectorContext,
     cursor?: string,
   ): Promise<InventoryBatch> {
-    if (this.mode === 'mock') {
+    if (this.catalogMode === 'mock') {
       return this.mockConnector.fetchInventory(providerKey, context);
     }
 
     return this.getLiveConnector(providerKey).fetchInventory(context, cursor);
+  }
+
+  async fetchProductQuestions(
+    providerKey: string,
+    context: ConnectorContext,
+    options: { cursor?: string; createdAfter: Date },
+  ): Promise<ProductQuestionBatch> {
+    if (this.questionMode === 'mock') {
+      return this.mockQuestionConnector.fetchProductQuestions(
+        providerKey,
+        context,
+        options,
+      );
+    }
+
+    return this.getLiveConnector(providerKey).fetchProductQuestions(
+      context,
+      options,
+    );
+  }
+
+  async sendProductQuestionAnswer(
+    providerKey: string,
+    context: ConnectorContext,
+    externalQuestionId: string,
+    answer: string,
+  ): Promise<ProductQuestionAnswerResult> {
+    if (this.questionMode === 'mock') {
+      return this.mockQuestionConnector.sendProductQuestionAnswer(
+        providerKey,
+        context,
+        externalQuestionId,
+        answer,
+      );
+    }
+
+    return this.getLiveConnector(providerKey).sendProductQuestionAnswer(
+      context,
+      externalQuestionId,
+      answer,
+    );
   }
 
   private getLiveConnector(providerKey: string) {
@@ -135,4 +181,25 @@ export class ProviderRegistryService {
 
     return connector;
   }
+}
+
+function resolveConnectorMode(
+  environmentKey: 'CATALOG_CONNECTOR_MODE' | 'QUESTION_CONNECTOR_MODE',
+  fallback?: 'mock' | 'live',
+) {
+  const configuredMode = process.env[environmentKey]?.trim();
+
+  if (
+    configuredMode &&
+    configuredMode !== 'mock' &&
+    configuredMode !== 'live'
+  ) {
+    throw new Error(`${environmentKey} must be either mock or live.`);
+  }
+
+  if (configuredMode === 'mock' || configuredMode === 'live') {
+    return configuredMode;
+  }
+
+  return fallback ?? (process.env.NODE_ENV === 'production' ? 'live' : 'mock');
 }

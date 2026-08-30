@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { IntegrationEnvironment } from '../../../generated/prisma/enums';
 import type {
   CatalogConnector,
@@ -8,6 +8,11 @@ import type {
   NormalizedProduct,
   ProductBatch,
 } from './catalog-connector';
+import type {
+  ProductQuestionAnswerResult,
+  ProductQuestionBatch,
+  ProductQuestionConnector,
+} from './question-connector';
 import {
   asRecord,
   asRecordArray,
@@ -20,7 +25,9 @@ import {
 } from './connector-utils';
 
 @Injectable()
-export class HepsiburadaConnector implements CatalogConnector {
+export class HepsiburadaConnector
+  implements CatalogConnector, ProductQuestionConnector
+{
   readonly providerKey = 'hepsiburada';
 
   async verifyCredentials(context: ConnectorContext): Promise<void> {
@@ -53,6 +60,18 @@ export class HepsiburadaConnector implements CatalogConnector {
       variants: listings.map(normalizeHepsiburadaInventory),
       nextCursor: listings.length === 100 ? String(offset + 100) : undefined,
     };
+  }
+
+  fetchProductQuestions(): Promise<ProductQuestionBatch> {
+    throw new ServiceUnavailableException(
+      'Hepsiburada canlı ürün sorusu adaptörü henüz yapılandırılmadı.',
+    );
+  }
+
+  sendProductQuestionAnswer(): Promise<ProductQuestionAnswerResult> {
+    throw new ServiceUnavailableException(
+      'Hepsiburada canlı ürün sorusu yanıtlama adaptörü henüz yapılandırılmadı.',
+    );
   }
 
   private async requestListings(

@@ -19,6 +19,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "smoke:catalog-sync": "npm run build && node dist/src/scripts/catalog-sync-smoke.js",
+    "smoke:question-sync": "npm run build && node dist/src/scripts/question-sync-smoke.js",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio --port 5556"

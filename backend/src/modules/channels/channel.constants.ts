@@ -9,6 +9,9 @@ export const channelConnectionSelect = {
   lastSyncAt: true,
   lastInventorySyncAt: true,
   failureReason: true,
+  questionSyncStartedAt: true,
+  lastQuestionSyncAt: true,
+  questionSyncFailureReason: true,
   createdAt: true,
   updatedAt: true,
 } as const;

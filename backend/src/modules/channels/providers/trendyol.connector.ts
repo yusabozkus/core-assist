@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { IntegrationEnvironment } from '../../../generated/prisma/enums';
 import type {
   CatalogConnector,
@@ -9,6 +9,11 @@ import type {
   NormalizedProductVariant,
   ProductBatch,
 } from './catalog-connector';
+import type {
+  ProductQuestionAnswerResult,
+  ProductQuestionBatch,
+  ProductQuestionConnector,
+} from './question-connector';
 import {
   asRecord,
   asRecordArray,
@@ -21,7 +26,9 @@ import {
 } from './connector-utils';
 
 @Injectable()
-export class TrendyolConnector implements CatalogConnector {
+export class TrendyolConnector
+  implements CatalogConnector, ProductQuestionConnector
+{
   readonly providerKey = 'trendyol';
 
   async verifyCredentials(context: ConnectorContext): Promise<void> {
@@ -53,6 +60,18 @@ export class TrendyolConnector implements CatalogConnector {
       variants,
       nextCursor: getNextCursor(payload, cursor),
     };
+  }
+
+  fetchProductQuestions(): Promise<ProductQuestionBatch> {
+    throw new ServiceUnavailableException(
+      'Trendyol canlı ürün sorusu adaptörü henüz yapılandırılmadı.',
+    );
+  }
+
+  sendProductQuestionAnswer(): Promise<ProductQuestionAnswerResult> {
+    throw new ServiceUnavailableException(
+      'Trendyol canlı ürün sorusu yanıtlama adaptörü henüz yapılandırılmadı.',
+    );
   }
 
   private async requestProducts(

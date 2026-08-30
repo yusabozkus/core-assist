@@ -15,6 +15,9 @@ export type ChannelConnection = {
   lastSyncAt: string | null
   lastInventorySyncAt: string | null
   failureReason: string | null
+  questionSyncStartedAt: string | null
+  lastQuestionSyncAt: string | null
+  questionSyncFailureReason: string | null
   createdAt: string
   updatedAt: string
 }

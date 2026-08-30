@@ -118,6 +118,8 @@ model Store {
   members            StoreMember[]
   channelConnections ChannelConnection[]
   products           Product[]
+  incomingEvents     IncomingEvent[]
+  productQuestions   ProductQuestion[]
 
   @@map("store")
 }
@@ -146,25 +148,30 @@ enum IntegrationEnvironment {
 }
 
 model ChannelConnection {
-  id                      String                  @id @default(uuid())
-  storeId                 String
-  providerKey             String                  @map("provider")
-  type                    ChannelType
-  environment             IntegrationEnvironment  @default(SANDBOX)
-  status                  ChannelConnectionStatus @default(PENDING)
-  credentialsEncrypted    String?
-  credentialSchemaVersion Int                     @default(1)
-  connectedAt             DateTime?
-  processingStartedAt     DateTime?
-  lastSyncAt              DateTime?
-  lastInventorySyncAt     DateTime?
-  failureReason           String?
-  createdAt               DateTime                @default(now())
-  updatedAt               DateTime                @updatedAt
+  id                        String                  @id @default(uuid())
+  storeId                   String
+  providerKey               String                  @map("provider")
+  type                      ChannelType
+  environment               IntegrationEnvironment  @default(SANDBOX)
+  status                    ChannelConnectionStatus @default(PENDING)
+  credentialsEncrypted      String?
+  credentialSchemaVersion   Int                     @default(1)
+  connectedAt               DateTime?
+  processingStartedAt       DateTime?
+  lastSyncAt                DateTime?
+  lastInventorySyncAt       DateTime?
+  failureReason             String?
+  questionSyncStartedAt     DateTime?
+  lastQuestionSyncAt        DateTime?
+  questionSyncFailureReason String?
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
 
   store            Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
   externalProducts ExternalProduct[]
   syncRuns         CatalogSyncRun[]
+  incomingEvents   IncomingEvent[]
+  productQuestions ProductQuestion[]
 
   @@unique([storeId, providerKey])
   @@index([storeId, status])
@@ -199,6 +206,7 @@ model Product {
   attributes       ProductAttribute[]
   images           ProductImage[]
   externalProducts ExternalProduct[]
+  questions        ProductQuestion[]
 
   @@index([storeId, status])
   @@map("product")
@@ -272,6 +280,7 @@ model ExternalProduct {
   connection ChannelConnection        @relation(fields: [connectionId], references: [id], onDelete: Cascade)
   product    Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
   variants   ExternalProductVariant[]
+  questions  ProductQuestion[]
 
   @@unique([connectionId, externalId])
   @@index([productId])
@@ -338,6 +347,82 @@ model CatalogSyncRun {
 
   @@index([connectionId, startedAt])
   @@map("catalog_sync_run")
+}
+
+enum IncomingEventType {
+  PRODUCT_QUESTION
+}
+
+enum IncomingEventProcessingStatus {
+  PENDING
+  PROCESSED
+  IGNORED
+  FAILED
+}
+
+model IncomingEvent {
+  id                String                        @id @default(uuid())
+  storeId           String
+  connectionId      String
+  externalEventId   String
+  eventType         IncomingEventType
+  externalCreatedAt DateTime
+  receivedAt        DateTime                      @default(now())
+  processingStatus  IncomingEventProcessingStatus @default(PENDING)
+  ignoreReason      String?
+  errorMessage      String?
+  payload           Json
+  processedAt       DateTime?
+  createdAt         DateTime                      @default(now())
+  updatedAt         DateTime                      @updatedAt
+
+  store      Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  connection ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  question   ProductQuestion?
+
+  @@unique([connectionId, externalEventId])
+  @@index([storeId, processingStatus, receivedAt])
+  @@index([connectionId, externalCreatedAt])
+  @@map("incoming_event")
+}
+
+enum ProductQuestionStatus {
+  PENDING
+  DRAFTED
+  ANSWERED
+  IGNORED
+}
+
+model ProductQuestion {
+  id                      String                @id @default(uuid())
+  storeId                 String
+  connectionId            String
+  incomingEventId         String                @unique
+  productId               String?
+  externalProductRecordId String?
+  externalQuestionId      String
+  externalProductId       String
+  externalCustomerId      String?
+  customerName            String?
+  question                String
+  status                  ProductQuestionStatus @default(PENDING)
+  answer                  String?
+  externalCreatedAt       DateTime
+  answeredAt              DateTime?
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+
+  store           Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  connection      ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  incomingEvent   IncomingEvent     @relation(fields: [incomingEventId], references: [id], onDelete: Cascade)
+  product         Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
+  externalProduct ExternalProduct?  @relation(fields: [externalProductRecordId], references: [id], onDelete: SetNull)
+
+  @@unique([connectionId, externalQuestionId])
+  @@index([storeId, status, externalCreatedAt])
+  @@index([productId])
+  @@index([externalProductRecordId])
+  @@map("product_question")
 }
 
 model StoreMember {

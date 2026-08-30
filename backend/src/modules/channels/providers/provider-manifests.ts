@@ -7,7 +7,12 @@ export const PROVIDER_MANIFESTS: ProviderManifest[] = [
     type: 'COMMERCE',
     image: '/merchants/trendyol.webp',
     description: 'Ürün ve varyant kataloğunuzu Trendyol mağazanızdan alın.',
-    capabilities: ['CATALOG_READ', 'INVENTORY_READ'],
+    capabilities: [
+      'CATALOG_READ',
+      'INVENTORY_READ',
+      'PRODUCT_QNA_READ',
+      'PRODUCT_QNA_REPLY',
+    ],
     environments: ['SANDBOX', 'PRODUCTION'],
     credentialFields: [
       {
@@ -36,7 +41,12 @@ export const PROVIDER_MANIFESTS: ProviderManifest[] = [
     type: 'COMMERCE',
     image: '/merchants/hepsiburada.webp',
     description: 'Merchant listing verilerinizi CoreAssist kataloğuna aktarın.',
-    capabilities: ['CATALOG_READ', 'INVENTORY_READ'],
+    capabilities: [
+      'CATALOG_READ',
+      'INVENTORY_READ',
+      'PRODUCT_QNA_READ',
+      'PRODUCT_QNA_REPLY',
+    ],
     environments: ['SANDBOX', 'PRODUCTION'],
     credentialFields: [
       {

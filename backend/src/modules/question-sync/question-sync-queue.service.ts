@@ -1,0 +1,88 @@
+import {
+  ConflictException,
+  Injectable,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import type { Queue } from 'bullmq';
+import { ChannelConnectionStatus } from '../../generated/prisma/enums';
+import { PrismaService } from '../../database/prisma.service';
+import {
+  QUESTION_SYNC_LOCK_TIMEOUT_MS,
+  QUESTION_SYNC_QUEUE,
+  SYNC_STORE_QUESTIONS_JOB,
+} from './question-sync.constants';
+import type {
+  QueuedQuestionSync,
+  QuestionSyncDispatcher,
+  QuestionSyncJobData,
+} from './question-sync.types';
+
+@Injectable()
+export class QuestionSyncQueueService implements QuestionSyncDispatcher {
+  constructor(
+    private readonly prisma: PrismaService,
+    @InjectQueue(QUESTION_SYNC_QUEUE)
+    private readonly queue: Queue<QuestionSyncJobData>,
+  ) {}
+
+  async enqueue(
+    storeId: string,
+    connectionId: string,
+  ): Promise<QueuedQuestionSync> {
+    const queuedAt = new Date();
+    const staleBefore = new Date(
+      queuedAt.getTime() - QUESTION_SYNC_LOCK_TIMEOUT_MS,
+    );
+    const lock = await this.prisma.channelConnection.updateMany({
+      where: {
+        id: connectionId,
+        storeId,
+        status: ChannelConnectionStatus.CONNECTED,
+        credentialsEncrypted: { not: null },
+        OR: [
+          { questionSyncStartedAt: null },
+          { questionSyncStartedAt: { lt: staleBefore } },
+        ],
+      },
+      data: {
+        questionSyncStartedAt: queuedAt,
+        questionSyncFailureReason: null,
+      },
+    });
+
+    if (lock.count !== 1) {
+      throw new ConflictException(
+        'Bu bağlantı için soru senkronizasyonu zaten çalışıyor.',
+      );
+    }
+
+    try {
+      await this.queue.add(
+        SYNC_STORE_QUESTIONS_JOB,
+        { storeId, connectionId },
+        {
+          jobId: `question-sync-${connectionId}-${queuedAt.getTime()}`,
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2_000 },
+          removeOnComplete: { count: 100 },
+          removeOnFail: { count: 250 },
+        },
+      );
+
+      return { connectionId, status: 'RUNNING', queuedAt };
+    } catch (error) {
+      await this.prisma.channelConnection.updateMany({
+        where: { id: connectionId },
+        data: {
+          questionSyncStartedAt: null,
+          questionSyncFailureReason: 'Soru senkronizasyonu kuyruğa eklenemedi.',
+        },
+      });
+      throw new ServiceUnavailableException(
+        'Soru senkronizasyonu kuyruğuna şu anda ulaşılamıyor.',
+        { cause: error },
+      );
+    }
+  }
+}
