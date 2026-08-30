@@ -16,11 +16,5 @@ export default async function InboxPage() {
 
   const questions = await getServerProductQuestions(activeStore.id)
 
-  return (
-    <QuestionInbox
-      storeId={activeStore.id}
-      storeName={activeStore.name}
-      questions={questions}
-    />
-  )
+  return <QuestionInbox storeId={activeStore.id} questions={questions} />
 }

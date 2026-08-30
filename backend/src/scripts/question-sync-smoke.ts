@@ -16,6 +16,11 @@ import { QUESTION_SYNC_DISPATCHER } from '../modules/question-sync/question-sync
 import type { QuestionSyncDispatcher } from '../modules/question-sync/question-sync.types';
 import { QUESTION_ANSWER_DISPATCHER } from '../modules/question-answer/question-answer.constants';
 import type { QuestionAnswerDispatcher } from '../modules/question-answer/question-answer.types';
+import { MOCK_PRODUCTS_PER_PROVIDER } from '../modules/channels/providers/mock-catalog.connector';
+import {
+  MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER,
+  MOCK_QUESTIONS_PER_PROVIDER,
+} from '../modules/channels/providers/mock-question.connector';
 
 const POLL_INTERVAL_MS = 100;
 const TIMEOUT_MS = 10_000;
@@ -118,38 +123,47 @@ async function run() {
     await questionSync.enqueue(store.id, connection.id);
     await waitForQuestionSync(prisma, connection.id);
 
-    const [events, ignoredEvents, questions, matchedQuestions, sentAnswers] =
-      await Promise.all([
-        prisma.incomingEvent.count({ where: { connectionId: connection.id } }),
-        prisma.incomingEvent.count({
-          where: { connectionId: connection.id, processingStatus: 'IGNORED' },
-        }),
-        prisma.productQuestion.count({
-          where: { connectionId: connection.id },
-        }),
-        prisma.productQuestion.count({
-          where: { connectionId: connection.id, productId: { not: null } },
-        }),
-        prisma.questionAnswer.count({
-          where: { connectionId: connection.id, status: 'SENT' },
-        }),
-      ]);
+    const [
+      products,
+      events,
+      ignoredEvents,
+      questions,
+      matchedQuestions,
+      sentAnswers,
+    ] = await Promise.all([
+      prisma.product.count({ where: { storeId: store.id } }),
+      prisma.incomingEvent.count({ where: { connectionId: connection.id } }),
+      prisma.incomingEvent.count({
+        where: { connectionId: connection.id, processingStatus: 'IGNORED' },
+      }),
+      prisma.productQuestion.count({
+        where: { connectionId: connection.id },
+      }),
+      prisma.productQuestion.count({
+        where: { connectionId: connection.id, productId: { not: null } },
+      }),
+      prisma.questionAnswer.count({
+        where: { connectionId: connection.id, status: 'SENT' },
+      }),
+    ]);
 
     if (
-      events !== 3 ||
-      ignoredEvents !== 1 ||
-      questions !== 2 ||
-      matchedQuestions !== 2 ||
+      products !== MOCK_PRODUCTS_PER_PROVIDER ||
+      events !==
+        MOCK_QUESTIONS_PER_PROVIDER + MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER ||
+      ignoredEvents !== MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER ||
+      questions !== MOCK_QUESTIONS_PER_PROVIDER ||
+      matchedQuestions !== MOCK_QUESTIONS_PER_PROVIDER ||
       sentAnswers !== 1 ||
       !duplicateAnswerPrevented
     ) {
       throw new Error(
-        `Unexpected question flow: ${events} events, ${ignoredEvents} ignored, ${questions} questions, ${matchedQuestions} matched, ${sentAnswers} answers.`,
+        `Unexpected question flow: ${products} products, ${events} events, ${ignoredEvents} ignored, ${questions} questions, ${matchedQuestions} matched, ${sentAnswers} answers.`,
       );
     }
 
     process.stdout.write(
-      `${JSON.stringify({ syncs: 2, events, ignoredEvents, questions, matchedQuestions, sentAnswers, duplicateSafe: true, duplicateAnswerPrevented })}\n`,
+      `${JSON.stringify({ syncs: 2, products, events, ignoredEvents, questions, matchedQuestions, sentAnswers, duplicateSafe: true, duplicateAnswerPrevented })}\n`,
     );
   } finally {
     if (storeId) await prisma.store.deleteMany({ where: { id: storeId } });

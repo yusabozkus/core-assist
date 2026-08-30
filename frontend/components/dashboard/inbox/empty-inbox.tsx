@@ -7,7 +7,7 @@ type EmptyInboxProps = { onSync: () => void; isSyncing: boolean }
 
 export function EmptyInbox({ onSync, isSyncing }: EmptyInboxProps) {
   return (
-    <section className="flex min-h-96 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 text-center shadow-xs">
+    <section className="flex h-full min-h-96 flex-col items-center justify-center px-6 text-center">
       <span className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
         <HugeiconsIcon icon={InboxIcon} className="size-5" />
       </span>

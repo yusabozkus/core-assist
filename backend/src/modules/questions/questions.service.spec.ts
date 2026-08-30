@@ -28,10 +28,24 @@ describe('QuestionsService', () => {
 
   it('lists questions only for store members', async () => {
     findMembership.mockResolvedValue({ role: StoreRole.AGENT });
-    findQuestions.mockResolvedValue([{ id: 'question-1' }]);
+    findQuestions.mockResolvedValue([
+      {
+        id: 'question-1',
+        product: {
+          id: 'product-1',
+          variants: [{ id: 'variant-1', price: '499.90' }],
+        },
+      },
+    ]);
 
     await expect(service.findAll('store-1', 'user-1')).resolves.toEqual([
-      { id: 'question-1' },
+      {
+        id: 'question-1',
+        product: {
+          id: 'product-1',
+          variants: [{ id: 'variant-1', price: 499.9 }],
+        },
+      },
     ]);
     expect(findQuestions).toHaveBeenCalledWith(
       expect.objectContaining({ where: { storeId: 'store-1' } }),

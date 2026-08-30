@@ -18,42 +18,64 @@ export function QuestionDetail({
   storeId: string
   question: ProductQuestion
 }) {
+  const customerName = question.customerName ?? "Pazaryeri müşterisi"
+  const customerInitial = customerName
+    .trim()
+    .charAt(0)
+    .toLocaleUpperCase("tr-TR")
+
   return (
-    <section className="min-w-0 p-5 sm:p-6 lg:p-8">
-      <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-semibold text-foreground">
-              {question.customerName ?? "Pazaryeri müşterisi"}
-            </h2>
-            <Badge variant="outline">
-              {providerName(question.connection.providerKey)}
-            </Badge>
+    <section className="min-w-0 bg-background lg:h-full lg:overflow-y-auto">
+      <header className="flex flex-col gap-4 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+            {customerInitial}
+          </span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="truncate font-semibold text-foreground">
+                {customerName}
+              </h2>
+              <Badge variant="outline" className="font-medium">
+                {providerName(question.connection.providerKey)}
+              </Badge>
+            </div>
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <HugeiconsIcon icon={Clock01Icon} className="size-3.5" />
+              {inboxDateFormatter.format(new Date(question.externalCreatedAt))}
+            </p>
           </div>
-          <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <HugeiconsIcon icon={Clock01Icon} className="size-3.5" />
-            {inboxDateFormatter.format(new Date(question.externalCreatedAt))}
-          </p>
         </div>
         <QuestionStatus
           status={question.status}
           deliveryStatus={question.answerDelivery?.status}
         />
+      </header>
+
+      <div className="px-5 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <div className="mx-auto max-w-3xl">
+          <div>
+            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Müşteri sorusu
+            </p>
+            <div className="mt-3 rounded-xl border border-border bg-muted/25 p-4 sm:p-5">
+              <p className="text-[15px] leading-7 text-foreground">
+                {question.question}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5">
+            <ProductContext question={question} />
+          </div>
+
+          <QuestionAnswerComposer
+            key={question.id}
+            storeId={storeId}
+            question={question}
+          />
+        </div>
       </div>
-      <div className="py-7">
-        <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          Müşteri sorusu
-        </p>
-        <p className="mt-3 max-w-3xl text-base leading-7 text-foreground">
-          {question.question}
-        </p>
-      </div>
-      <ProductContext question={question} />
-      <QuestionAnswerComposer
-        key={question.id}
-        storeId={storeId}
-        question={question}
-      />
     </section>
   )
 }

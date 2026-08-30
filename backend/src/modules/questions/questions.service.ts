@@ -29,7 +29,7 @@ export class QuestionsService {
   async findAll(storeId: string, userId: string) {
     await this.requireStoreMembership(storeId, userId);
 
-    return this.prisma.productQuestion.findMany({
+    const questions = await this.prisma.productQuestion.findMany({
       where: { storeId },
       orderBy: { externalCreatedAt: 'desc' },
       take: 100,
@@ -51,12 +51,46 @@ export class QuestionsService {
           select: {
             id: true,
             title: true,
+            description: true,
             brand: true,
             category: true,
+            status: true,
+            updatedAt: true,
+            variants: {
+              orderBy: { createdAt: 'asc' },
+              select: {
+                id: true,
+                title: true,
+                sku: true,
+                barcode: true,
+                color: true,
+                size: true,
+                price: true,
+                currency: true,
+                stock: true,
+                status: true,
+                sourceUpdatedAt: true,
+                lastSyncedAt: true,
+              },
+            },
+            attributes: {
+              orderBy: { name: 'asc' },
+              select: { id: true, name: true, value: true },
+            },
             images: {
               orderBy: { position: 'asc' },
-              take: 1,
-              select: { url: true },
+              select: { id: true, url: true, position: true },
+            },
+            externalProducts: {
+              select: {
+                externalId: true,
+                externalUrl: true,
+                status: true,
+                lastSyncedAt: true,
+                connection: {
+                  select: { providerKey: true },
+                },
+              },
             },
           },
         },
@@ -73,6 +107,19 @@ export class QuestionsService {
         },
       },
     });
+
+    return questions.map((question) => ({
+      ...question,
+      product: question.product
+        ? {
+            ...question.product,
+            variants: question.product.variants.map((variant) => ({
+              ...variant,
+              price: Number(variant.price),
+            })),
+          }
+        : null,
+    }));
   }
 
   async sync(storeId: string, userId: string) {

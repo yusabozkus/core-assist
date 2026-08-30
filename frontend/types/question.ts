@@ -1,3 +1,5 @@
+import type { CatalogProduct } from "@/types/product"
+
 export type ProductQuestionStatus =
   "PENDING" | "DRAFTED" | "ANSWERED" | "IGNORED"
 
@@ -27,13 +29,7 @@ export type ProductQuestion = {
   connection: {
     providerKey: string
   }
-  product: {
-    id: string
-    title: string
-    brand: string | null
-    category: string | null
-    images: Array<{ url: string }>
-  } | null
+  product: CatalogProduct | null
   answerDelivery: QuestionAnswerDelivery | null
 }
 
