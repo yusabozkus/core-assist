@@ -25,3 +25,8 @@ export async function selectActiveStore(storeId: string) {
     secure: process.env.NODE_ENV === "production",
   })
 }
+
+export async function clearActiveStore() {
+  const cookieStore = await cookies()
+  cookieStore.delete(ACTIVE_STORE_COOKIE)
+}

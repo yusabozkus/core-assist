@@ -1,15 +1,21 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import {
+  QuestionAnswerStatus,
   StoreRole,
   StoreStatus,
   WorkspaceRole,
 } from '../../generated/prisma/enums';
 import { CreateStoreDto } from './dto/create-store.dto';
+import {
+  DeleteStoreDto,
+  STORE_DELETE_CONFIRMATION,
+} from './dto/delete-store.dto';
 import { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
@@ -139,6 +145,11 @@ export class StoresService {
           take: 1,
           select: { id: true },
         },
+        questionAnswers: {
+          where: { status: QuestionAnswerStatus.PROCESSING },
+          take: 1,
+          select: { id: true },
+        },
       },
     });
 
@@ -148,9 +159,12 @@ export class StoresService {
       );
     }
 
-    if (store.channelConnections.length > 0) {
+    if (
+      store.channelConnections.length > 0 ||
+      store.questionAnswers.length > 0
+    ) {
       throw new ConflictException(
-        'Devam eden senkronizasyon tamamlanmadan mağaza arşivlenemez.',
+        'Devam eden senkronizasyon veya cevap gönderimi tamamlanmadan mağaza arşivlenemez.',
       );
     }
 
@@ -196,5 +210,78 @@ export class StoresService {
         createdAt: true,
       },
     });
+  }
+
+  async remove(id: string, userId: string, deleteStoreDto: DeleteStoreDto) {
+    const store = await this.prisma.store.findFirst({
+      where: {
+        id,
+        members: {
+          some: {
+            userId,
+            role: { in: [StoreRole.OWNER, StoreRole.ADMIN] },
+          },
+        },
+      },
+      select: {
+        id: true,
+        channelConnections: {
+          where: {
+            OR: [
+              { processingStartedAt: { not: null } },
+              { questionSyncStartedAt: { not: null } },
+            ],
+          },
+          take: 1,
+          select: { id: true },
+        },
+        questionAnswers: {
+          where: { status: QuestionAnswerStatus.PROCESSING },
+          take: 1,
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!store) {
+      throw new NotFoundException('Mağaza bulunamadı veya silme yetkiniz yok.');
+    }
+
+    if (deleteStoreDto.confirmation !== STORE_DELETE_CONFIRMATION) {
+      throw new BadRequestException(
+        `Silme onayı birebir "${STORE_DELETE_CONFIRMATION}" olmalıdır.`,
+      );
+    }
+
+    if (
+      store.channelConnections.length > 0 ||
+      store.questionAnswers.length > 0
+    ) {
+      throw new ConflictException(
+        'Devam eden senkronizasyon veya cevap gönderimi tamamlanmadan mağaza silinemez.',
+      );
+    }
+
+    const nextStore = await this.prisma.store.findFirst({
+      where: {
+        id: { not: id },
+        members: { some: { userId } },
+      },
+      orderBy: [{ status: 'asc' }, { createdAt: 'asc' }],
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        createdAt: true,
+      },
+    });
+
+    await this.prisma.store.delete({ where: { id: store.id } });
+
+    return {
+      deleted: true as const,
+      deletedStoreId: store.id,
+      nextStore,
+    };
   }
 }

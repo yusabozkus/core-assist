@@ -49,7 +49,7 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const pathname = usePathname()
   const overview = DASHBOARD_NAVIGATION.overview
-  const isOverviewActive = pathname === overview.url
+  const primaryItems = [overview, ...DASHBOARD_NAVIGATION.primaryItems]
   const activeShop = shops.find((shop) => shop.id === activeShopId)
   const isStoreArchived = activeShop?.status === "INACTIVE"
   const settingsItem = DASHBOARD_NAVIGATION.navGroups
@@ -96,21 +96,30 @@ export function AppSidebar({
           <>
             <SidebarGroup>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    tooltip={overview.title}
-                    isActive={isOverviewActive}
-                  >
-                    <Link
-                      href={overview.url}
-                      aria-current={isOverviewActive ? "page" : undefined}
-                    >
-                      <HugeiconsIcon icon={overview.icon} />
-                      <span>{overview.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {primaryItems.map((item) => {
+                  const isActive =
+                    item.url === APP_ROUTES.dashboard.root
+                      ? pathname === item.url
+                      : isPathActive(pathname, item.url)
+
+                  return (
+                    <SidebarMenuItem key={item.url}>
+                      <SidebarMenuButton
+                        asChild
+                        tooltip={item.title}
+                        isActive={isActive}
+                      >
+                        <Link
+                          href={item.url}
+                          aria-current={isActive ? "page" : undefined}
+                        >
+                          <HugeiconsIcon icon={item.icon} />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
               </SidebarMenu>
             </SidebarGroup>
 
@@ -164,6 +173,31 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter>
+        {!isStoreArchived ? (
+          <SidebarMenu>
+            {DASHBOARD_NAVIGATION.footerItems.map((item) => {
+              const isActive = isPathActive(pathname, item.url)
+
+              return (
+                <SidebarMenuItem key={item.url}>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={item.title}
+                    isActive={isActive}
+                  >
+                    <Link
+                      href={item.url}
+                      aria-current={isActive ? "page" : undefined}
+                    >
+                      <HugeiconsIcon icon={item.icon} />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            })}
+          </SidebarMenu>
+        ) : null}
         <SidebarUser user={user} />
       </SidebarFooter>
       <SidebarRail />

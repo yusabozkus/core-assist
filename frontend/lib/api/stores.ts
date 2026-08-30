@@ -24,3 +24,16 @@ export function restoreStore(storeId: string) {
     method: "PATCH",
   })
 }
+
+export type DeleteStoreResult = {
+  deleted: true
+  deletedStoreId: string
+  nextStore: StoreSummary | null
+}
+
+export function deleteStore(storeId: string, confirmation: string) {
+  return apiFetch<DeleteStoreResult>(`/stores/${storeId}`, {
+    method: "DELETE",
+    body: JSON.stringify({ confirmation }),
+  })
+}

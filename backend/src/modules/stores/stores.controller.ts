@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Post,
   Patch,
@@ -9,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { StoresService } from './stores.service';
 import { CreateStoreDto } from './dto/create-store.dto';
+import { DeleteStoreDto } from './dto/delete-store.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.types';
@@ -49,5 +51,14 @@ export class StoresController {
   @Patch(':id/restore')
   restore(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.storesService.restore(id, user.id);
+  }
+
+  @Delete(':id')
+  remove(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() deleteStoreDto: DeleteStoreDto,
+  ) {
+    return this.storesService.remove(id, user.id, deleteStoreDto);
   }
 }

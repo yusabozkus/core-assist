@@ -7,10 +7,10 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { APP_ROUTES } from "@/constants/site"
 import { getActiveStoreContext } from "@/lib/stores/active-store"
 import { StoreArchiveAction } from "./store-archive-action"
+import { StoreDeleteAction } from "./store-delete-action"
 import { StoreRestoreAction } from "./store-restore-action"
 
 export const dynamic = "force-dynamic"
@@ -121,7 +121,6 @@ export default async function SettingsPage() {
                 <h2 className="font-semibold text-foreground">
                   Mağazayı kalıcı olarak sil
                 </h2>
-                <Badge variant="secondary">Yakında</Badge>
               </div>
               <p className="mt-1.5 max-w-2xl text-sm leading-6 text-muted-foreground">
                 Mağaza ile birlikte bağlı kanalların, ürünlerin ve soru
@@ -129,10 +128,10 @@ export default async function SettingsPage() {
               </p>
             </div>
           </div>
-          <Button type="button" variant="destructive" disabled>
-            <HugeiconsIcon icon={Delete02Icon} className="size-4" />
-            Mağazayı sil
-          </Button>
+          <StoreDeleteAction
+            storeId={activeStore.id}
+            storeName={activeStore.name}
+          />
         </section>
       </div>
     </div>

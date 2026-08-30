@@ -8,7 +8,6 @@ import {
   Settings02Icon,
   ShoppingBag01Icon,
   UserGroupIcon,
-  UserMultipleIcon,
   WorkflowSquare01Icon,
 } from "@hugeicons/core-free-icons"
 import type { IconSvgElement } from "@hugeicons/react"
@@ -69,6 +68,8 @@ export type DashboardBreadcrumb = Readonly<{
 
 type DashboardNavigation = Readonly<{
   overview: DashboardNavigationItem
+  primaryItems: ReadonlyArray<DashboardNavigationItem>
+  footerItems: ReadonlyArray<DashboardNavigationItem>
   navGroups: ReadonlyArray<{
     label: string
     items: ReadonlyArray<DashboardNavigationItem>
@@ -81,6 +82,20 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
     url: APP_ROUTES.dashboard.root,
     icon: DashboardSquare01Icon,
   },
+  primaryItems: [
+    {
+      title: "Stok Yönetimi",
+      url: APP_ROUTES.dashboard.catalog.inventory,
+      icon: Package01Icon,
+    },
+  ],
+  footerItems: [
+    {
+      title: "Yardım Merkezi",
+      url: APP_ROUTES.dashboard.support,
+      icon: CustomerSupportIcon,
+    },
+  ],
   navGroups: [
     {
       label: "Operasyonlar",
@@ -91,7 +106,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
           icon: InboxIcon,
         },
         {
-          title: "Siparişler",
+          title: "Siparişler & İadeler",
           url: APP_ROUTES.dashboard.orders.root,
           icon: ShoppingBag01Icon,
           items: [
@@ -107,19 +122,9 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
           ],
         },
         {
-          title: "Katalog",
-          url: APP_ROUTES.dashboard.catalog.root,
+          title: "Ürünler",
+          url: APP_ROUTES.dashboard.catalog.products,
           icon: Package01Icon,
-          items: [
-            {
-              title: "Ürünler",
-              url: APP_ROUTES.dashboard.catalog.products,
-            },
-            {
-              title: "Stok Yönetimi",
-              url: APP_ROUTES.dashboard.catalog.inventory,
-            },
-          ],
         },
         {
           title: "Müşteriler",
@@ -167,19 +172,9 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
           icon: Analytics01Icon,
         },
         {
-          title: "Ekip",
-          url: APP_ROUTES.dashboard.team,
-          icon: UserMultipleIcon,
-        },
-        {
           title: "Ayarlar",
           url: APP_ROUTES.dashboard.settings.root,
           icon: Settings02Icon,
-        },
-        {
-          title: "Yardım Merkezi",
-          url: APP_ROUTES.dashboard.support,
-          icon: CustomerSupportIcon,
         },
       ],
     },
@@ -187,9 +182,13 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
 }
 
 export function getDashboardNavigationTitle(pathname: string) {
-  if (pathname === DASHBOARD_NAVIGATION.overview.url) {
-    return DASHBOARD_NAVIGATION.overview.title
-  }
+  const standaloneItem = [
+    DASHBOARD_NAVIGATION.overview,
+    ...DASHBOARD_NAVIGATION.primaryItems,
+    ...DASHBOARD_NAVIGATION.footerItems,
+  ].find((item) => item.url === pathname)
+
+  if (standaloneItem) return standaloneItem.title
 
   for (const group of DASHBOARD_NAVIGATION.navGroups) {
     for (const item of group.items) {
@@ -211,13 +210,14 @@ export function getDashboardNavigationTitle(pathname: string) {
 export function getDashboardBreadcrumbs(
   pathname: string
 ): ReadonlyArray<DashboardBreadcrumb> {
-  if (pathname === DASHBOARD_NAVIGATION.overview.url) {
-    return [
-      {
-        title: DASHBOARD_NAVIGATION.overview.title,
-        url: DASHBOARD_NAVIGATION.overview.url,
-      },
-    ]
+  const standaloneItem = [
+    DASHBOARD_NAVIGATION.overview,
+    ...DASHBOARD_NAVIGATION.primaryItems,
+    ...DASHBOARD_NAVIGATION.footerItems,
+  ].find((item) => item.url === pathname)
+
+  if (standaloneItem) {
+    return [{ title: standaloneItem.title, url: standaloneItem.url }]
   }
 
   for (const group of DASHBOARD_NAVIGATION.navGroups) {
