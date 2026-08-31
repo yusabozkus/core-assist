@@ -204,6 +204,7 @@ function normalizeTrendyolProduct(item: Record<string, unknown>) {
     category: firstString(item, ['categoryName', 'category']),
     attributes,
     images,
+    sizeGuide: createNormalizedSizeGuide(item),
     variants,
     sourceUpdatedAt: firstDate(item, [
       'lastModifiedDate',
@@ -212,6 +213,22 @@ function normalizeTrendyolProduct(item: Record<string, unknown>) {
     ]),
     rawPayload: item,
   } satisfies NormalizedProduct;
+}
+
+function createNormalizedSizeGuide(item: Record<string, unknown>) {
+  const sourceUrl = firstString(item, [
+    'sizeChartUrl',
+    'sizeChartImageUrl',
+    'sizeGuideUrl',
+  ]);
+  const rawText = firstString(item, [
+    'sizeChartText',
+    'sizeGuideText',
+    'measurementTable',
+  ]);
+
+  if (!sourceUrl) return undefined;
+  return { sourceUrl, rawText };
 }
 
 function normalizeVariant(

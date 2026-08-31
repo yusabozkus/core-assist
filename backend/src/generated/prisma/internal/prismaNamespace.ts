@@ -409,6 +409,7 @@ export const ModelName = {
   ProductVariant: 'ProductVariant',
   ProductAttribute: 'ProductAttribute',
   ProductImage: 'ProductImage',
+  ProductSizeGuide: 'ProductSizeGuide',
   ExternalProduct: 'ExternalProduct',
   ExternalProductVariant: 'ExternalProductVariant',
   CatalogSyncRun: 'CatalogSyncRun',
@@ -431,7 +432,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "store" | "channelConnection" | "product" | "productVariant" | "productAttribute" | "productImage" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "questionAnswer" | "storeMember"
+    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "store" | "channelConnection" | "product" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "questionAnswer" | "storeMember"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1323,6 +1324,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ProductSizeGuide: {
+      payload: Prisma.$ProductSizeGuidePayload<ExtArgs>
+      fields: Prisma.ProductSizeGuideFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ProductSizeGuideFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductSizeGuidePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ProductSizeGuideFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductSizeGuidePayload>
+        }
+        findFirst: {
+          args: Prisma.ProductSizeGuideFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductSizeGuidePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ProductSizeGuideFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductSizeGuidePayload>
+        }
+        findMany: {
+          args: Prisma.ProductSizeGuideFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductSizeGuidePayload>[]
+        }
+        create: {
+          args: Prisma.ProductSizeGuideCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductSizeGuidePayload>
+        }
+        createMany: {
+          args: Prisma.ProductSizeGuideCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ProductSizeGuideCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductSizeGuidePayload>[]
+        }
+        delete: {
+          args: Prisma.ProductSizeGuideDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductSizeGuidePayload>
+        }
+        update: {
+          args: Prisma.ProductSizeGuideUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductSizeGuidePayload>
+        }
+        deleteMany: {
+          args: Prisma.ProductSizeGuideDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ProductSizeGuideUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ProductSizeGuideUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductSizeGuidePayload>[]
+        }
+        upsert: {
+          args: Prisma.ProductSizeGuideUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductSizeGuidePayload>
+        }
+        aggregate: {
+          args: Prisma.ProductSizeGuideAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateProductSizeGuide>
+        }
+        groupBy: {
+          args: Prisma.ProductSizeGuideGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProductSizeGuideGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ProductSizeGuideCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProductSizeGuideCountAggregateOutputType> | number
+        }
+      }
+    }
     ExternalProduct: {
       payload: Prisma.$ExternalProductPayload<ExtArgs>
       fields: Prisma.ExternalProductFieldRefs
@@ -2057,6 +2132,25 @@ export const ProductImageScalarFieldEnum = {
 export type ProductImageScalarFieldEnum = (typeof ProductImageScalarFieldEnum)[keyof typeof ProductImageScalarFieldEnum]
 
 
+export const ProductSizeGuideScalarFieldEnum = {
+  id: 'id',
+  productId: 'productId',
+  externalProductId: 'externalProductId',
+  sourceUrl: 'sourceUrl',
+  status: 'status',
+  rawText: 'rawText',
+  normalizedText: 'normalizedText',
+  structuredData: 'structuredData',
+  confidence: 'confidence',
+  failureReason: 'failureReason',
+  analyzedAt: 'analyzedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ProductSizeGuideScalarFieldEnum = (typeof ProductSizeGuideScalarFieldEnum)[keyof typeof ProductSizeGuideScalarFieldEnum]
+
+
 export const ExternalProductScalarFieldEnum = {
   id: 'id',
   connectionId: 'connectionId',
@@ -2405,6 +2499,20 @@ export type ListEnumProductVariantStatusFieldRefInput<$PrismaModel> = FieldRefIn
 
 
 /**
+ * Reference to a field of type 'SizeGuideStatus'
+ */
+export type EnumSizeGuideStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SizeGuideStatus'>
+
+
+
+/**
+ * Reference to a field of type 'SizeGuideStatus[]'
+ */
+export type ListEnumSizeGuideStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SizeGuideStatus[]'>
+
+
+
+/**
  * Reference to a field of type 'Json'
  */
 export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
@@ -2416,6 +2524,20 @@ export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'J
  */
 export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
+
+
+/**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+
 
 
 /**
@@ -2527,20 +2649,6 @@ export type EnumStoreRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$Prisma
  * Reference to a field of type 'StoreRole[]'
  */
 export type ListEnumStoreRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreRole[]'>
-    
-
-
-/**
- * Reference to a field of type 'Float'
- */
-export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-/**
- * Reference to a field of type 'Float[]'
- */
-export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 /**
@@ -2706,6 +2814,7 @@ export type GlobalOmitConfig = {
   productVariant?: Prisma.ProductVariantOmit
   productAttribute?: Prisma.ProductAttributeOmit
   productImage?: Prisma.ProductImageOmit
+  productSizeGuide?: Prisma.ProductSizeGuideOmit
   externalProduct?: Prisma.ExternalProductOmit
   externalProductVariant?: Prisma.ExternalProductVariantOmit
   catalogSyncRun?: Prisma.CatalogSyncRunOmit
@@ -2775,4 +2884,3 @@ export type PrismaAction =
  * `PrismaClient` proxy available in interactive transactions.
  */
 export type TransactionClient = Omit<DefaultPrismaClient, runtime.ITXClientDenyList>
-

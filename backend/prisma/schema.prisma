@@ -193,6 +193,13 @@ enum ProductVariantStatus {
   ARCHIVED
 }
 
+enum SizeGuideStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
 model Product {
   id          String        @id @default(uuid())
   storeId     String
@@ -208,6 +215,7 @@ model Product {
   variants         ProductVariant[]
   attributes       ProductAttribute[]
   images           ProductImage[]
+  sizeGuides       ProductSizeGuide[]
   externalProducts ExternalProduct[]
   questions        ProductQuestion[]
 
@@ -266,6 +274,29 @@ model ProductImage {
   @@map("product_image")
 }
 
+model ProductSizeGuide {
+  id                String          @id @default(uuid())
+  productId         String
+  externalProductId String?         @unique
+  sourceUrl         String
+  status            SizeGuideStatus @default(PENDING)
+  rawText           String?
+  normalizedText    String?
+  structuredData    Json?
+  confidence        Float?
+  failureReason     String?
+  analyzedAt        DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  product         Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  externalProduct ExternalProduct? @relation(fields: [externalProductId], references: [id], onDelete: SetNull)
+
+  @@index([productId, status])
+  @@index([sourceUrl, status])
+  @@map("product_size_guide")
+}
+
 model ExternalProduct {
   id              String               @id @default(uuid())
   connectionId    String
@@ -284,6 +315,7 @@ model ExternalProduct {
   product    Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
   variants   ExternalProductVariant[]
   questions  ProductQuestion[]
+  sizeGuide  ProductSizeGuide?
 
   @@unique([connectionId, externalId])
   @@index([productId])

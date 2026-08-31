@@ -12,7 +12,7 @@ export type ProductAnswerFact =
   | 'PRODUCT_INFO';
 
 export type ProductAnswerEvidenceSource =
-  'ATTRIBUTE' | 'DESCRIPTION' | 'VARIANT' | 'TITLE';
+  'ATTRIBUTE' | 'DESCRIPTION' | 'VARIANT' | 'TITLE' | 'SIZE_GUIDE';
 
 export type ProductAnswerEvidence = {
   id: string;
@@ -20,6 +20,7 @@ export type ProductAnswerEvidence = {
   label: string;
   value: string;
   source: ProductAnswerEvidenceSource;
+  confidence?: number;
 };
 
 export type ProductAnswerRisk =
@@ -41,6 +42,13 @@ export type ProductAnswerVariantContext = {
   status: 'ACTIVE' | 'OUT_OF_STOCK' | 'UNAVAILABLE' | 'ARCHIVED';
 };
 
+export type ProductAnswerSizeGuideContext = {
+  id: string;
+  sourceUrl: string;
+  normalizedText: string;
+  confidence: number | null;
+};
+
 export type ProductAnswerContext = {
   questionId: string;
   question: string;
@@ -55,6 +63,7 @@ export type ProductAnswerContext = {
     description: string | null;
     attributes: Array<{ name: string; value: string }>;
     variants: ProductAnswerVariantContext[];
+    sizeGuides?: ProductAnswerSizeGuideContext[];
   };
   matchingVariants: ProductAnswerVariantContext[];
   relevantAttributes: Array<{ name: string; value: string }>;

@@ -152,6 +152,7 @@ function normalizeHepsiburadaListing(
     category: firstString(item, ['categoryName', 'category']),
     attributes,
     images,
+    sizeGuide: createNormalizedSizeGuide(item),
     variants: [
       {
         externalId:
@@ -183,6 +184,22 @@ function normalizeHepsiburadaListing(
     ]),
     rawPayload: item,
   };
+}
+
+function createNormalizedSizeGuide(item: Record<string, unknown>) {
+  const sourceUrl = firstString(item, [
+    'sizeChartUrl',
+    'sizeChartImageUrl',
+    'sizeGuideUrl',
+  ]);
+  const rawText = firstString(item, [
+    'sizeChartText',
+    'sizeGuideText',
+    'measurementTable',
+  ]);
+
+  if (!sourceUrl) return undefined;
+  return { sourceUrl, rawText };
 }
 
 function normalizeHepsiburadaInventory(

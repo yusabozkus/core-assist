@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import {
   CatalogSyncStatus,
@@ -16,6 +16,7 @@ import type {
   NormalizedProductVariant,
 } from '../channels/providers/catalog-connector';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
+import { SizeGuideDispatcher } from '../size-guides/size-guide.types';
 import { PRODUCT_SYNC_MAX_BATCHES } from './product-sync.constants';
 import type { ProductSyncJobData } from './product-sync.types';
 
@@ -34,10 +35,13 @@ type SyncCounters = {
 
 @Injectable()
 export class ProductSyncWorkerService {
+  private readonly logger = new Logger(ProductSyncWorkerService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly providers: ProviderRegistryService,
     private readonly encryption: CredentialsEncryptionService,
+    private readonly sizeGuides: SizeGuideDispatcher,
   ) {}
 
   async run(
@@ -224,7 +228,7 @@ export class ProductSyncWorkerService {
     syncRunId: string,
     normalized: NormalizedProduct,
   ) {
-    await this.prisma.$transaction(async (transaction) => {
+    const saved = await this.prisma.$transaction(async (transaction) => {
       const syncedAt = new Date();
       const attributes = uniqueAttributes(normalized.attributes);
       const images = [...new Set(normalized.images.filter(Boolean))];
@@ -329,7 +333,24 @@ export class ProductSyncWorkerService {
         externalProductId,
         syncRunId,
       );
+
+      return { productId, externalProductId };
     });
+
+    if (normalized.sizeGuide) {
+      try {
+        await this.sizeGuides.register({
+          ...saved,
+          sizeGuide: normalized.sizeGuide,
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Bilinmeyen kuyruk hatası';
+        this.logger.warn(
+          `${normalized.externalId} beden tablosu kuyruğa eklenemedi: ${message}`,
+        );
+      }
+    }
   }
 
   private async upsertVariant(

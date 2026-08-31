@@ -1,6 +1,7 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { IntegrationsModule } from '../integrations/integrations.module';
+import { SizeGuideModule } from '../size-guides/size-guide.module';
 import {
   PRODUCT_SYNC_DISPATCHER,
   PRODUCT_SYNC_QUEUE,
@@ -13,6 +14,7 @@ import { ProductSyncWorkerService } from './product-sync-worker.service';
 @Module({
   imports: [
     IntegrationsModule,
+    SizeGuideModule,
     BullModule.registerQueue({ name: PRODUCT_SYNC_QUEUE }),
   ],
   providers: [

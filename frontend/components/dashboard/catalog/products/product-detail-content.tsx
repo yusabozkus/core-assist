@@ -18,7 +18,7 @@ import {
 import { VariantTable } from "@/components/dashboard/catalog/products/variant-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import type { CatalogProduct } from "@/types/product"
+import type { CatalogProduct, CatalogSizeGuide } from "@/types/product"
 
 export function ProductDetailContent({ product }: { product: CatalogProduct }) {
   const totalStock = product.variants.reduce(
@@ -107,6 +107,8 @@ export function ProductDetailContent({ product }: { product: CatalogProduct }) {
         )}
       </section>
 
+      <SizeGuideSection guides={product.sizeGuides} />
+
       <section className="py-6">
         <div className="flex items-center justify-between gap-4 px-5 pb-4 md:px-6">
           <div>
@@ -171,6 +173,88 @@ export function ProductDetailContent({ product }: { product: CatalogProduct }) {
   )
 }
 
+function SizeGuideSection({ guides = [] }: { guides?: CatalogSizeGuide[] }) {
+  if (guides.length === 0) return null
+
+  const guide =
+    guides.find((candidate) => candidate.status === "READY") ?? guides[0]
+  const data = guide.structuredData
+  const statusLabel = {
+    PENDING: "Analiz bekliyor",
+    PROCESSING: "Analiz ediliyor",
+    READY: "Hazır",
+    FAILED: "Analiz edilemedi",
+  }[guide.status]
+
+  return (
+    <section className="px-5 py-6 md:px-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-semibold text-foreground">
+              Beden tablosu
+            </h3>
+            <Badge variant={guide.status === "READY" ? "success" : "secondary"}>
+              {statusLabel}
+            </Badge>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Pazaryerindeki beden tablosundan alınan ölçüler
+          </p>
+        </div>
+        <Button asChild size="sm" variant="outline">
+          <a href={guide.sourceUrl} target="_blank" rel="noreferrer">
+            <HugeiconsIcon icon={LinkSquare02Icon} className="size-3.5" />
+            Orijinal tablo
+          </a>
+        </Button>
+      </div>
+
+      {guide.status === "READY" && data?.rows.length ? (
+        <div className="themed-scrollbar mt-4 overflow-x-auto rounded-xl border border-border">
+          <table className="w-full min-w-max text-left text-sm">
+            <thead className="bg-muted/50 text-xs text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 font-medium">Beden</th>
+                {data.headers.map((header) => (
+                  <th key={header} className="px-4 py-3 font-medium">
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {data.rows.map((row) => (
+                <tr key={row.label} className="bg-card">
+                  <th className="px-4 py-3 font-semibold text-foreground">
+                    {row.label}
+                  </th>
+                  {data.headers.map((header) => (
+                    <td
+                      key={`${row.label}-${header}`}
+                      className="px-4 py-3 text-muted-foreground"
+                    >
+                      {row.measurements.find(
+                        (measurement) => measurement.name === header
+                      )?.value ?? "—"}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="mt-4 rounded-xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+          {guide.status === "FAILED"
+            ? "Beden tablosu otomatik olarak okunamadı. Orijinal tabloyu kontrol edebilirsiniz."
+            : "Beden tablosu arka planda hazırlanıyor. Analiz tamamlandığında ölçüler burada görünecek."}
+        </p>
+      )}
+    </section>
+  )
+}
+
 function ProductGallery({ product }: { product: CatalogProduct }) {
   const [failedImages, setFailedImages] = useState<Set<string>>(() => new Set())
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null)
@@ -203,7 +287,7 @@ function ProductGallery({ product }: { product: CatalogProduct }) {
               alt={`${product.title} - ${selectedImageIndex + 1}. görsel`}
               fill
               sizes="(max-width: 767px) 100vw, 240px"
-              className="object-cover rounded-xl"
+              className="rounded-xl object-cover"
               onError={() =>
                 setFailedImages((current) =>
                   new Set(current).add(primaryImage.id)
@@ -221,7 +305,11 @@ function ProductGallery({ product }: { product: CatalogProduct }) {
                   aria-label="Önceki ürün görseli"
                   onClick={() => showRelativeImage(-1)}
                 >
-                  <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" strokeWidth={2} />
+                  <HugeiconsIcon
+                    icon={ArrowLeft01Icon}
+                    className="size-4"
+                    strokeWidth={2}
+                  />
                 </Button>
                 <Button
                   type="button"
@@ -231,7 +319,11 @@ function ProductGallery({ product }: { product: CatalogProduct }) {
                   aria-label="Sonraki ürün görseli"
                   onClick={() => showRelativeImage(1)}
                 >
-                  <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" strokeWidth={2} />
+                  <HugeiconsIcon
+                    icon={ArrowRight01Icon}
+                    className="size-4"
+                    strokeWidth={2}
+                  />
                 </Button>
                 <span className="absolute right-3 bottom-3 rounded-full border border-border/70 bg-background/85 px-2 py-1 text-[11px] font-medium text-foreground tabular-nums shadow-sm backdrop-blur-sm">
                   {selectedImageIndex + 1} / {availableImages.length}

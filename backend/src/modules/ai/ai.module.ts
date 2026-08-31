@@ -9,6 +9,6 @@ import { GeminiDraftService } from './gemini-draft.service';
     GeminiDraftService,
     { provide: AiDraftGenerator, useExisting: GeminiDraftService },
   ],
-  exports: [AiDraftGenerator],
+  exports: [AiDraftGenerator, GeminiClientService],
 })
 export class AiModule {}

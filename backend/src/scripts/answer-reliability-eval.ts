@@ -1,6 +1,9 @@
 import 'dotenv/config';
 import { GeminiClientService } from '../modules/ai/gemini-client.service';
-import { GeminiDraftService } from '../modules/ai/gemini-draft.service';
+import {
+  GeminiDraftService,
+  sanitizeDraftAnswer,
+} from '../modules/ai/gemini-draft.service';
 import { MockCatalogConnector } from '../modules/channels/providers/mock-catalog.connector';
 import { MockQuestionConnector } from '../modules/channels/providers/mock-question.connector';
 import type { ConnectorContext } from '../modules/channels/providers/catalog-connector';
@@ -19,6 +22,7 @@ const connectorContext: ConnectorContext = {
 async function run() {
   const contexts = await createEvaluationContexts();
   const deterministic = evaluateContexts(contexts);
+  const regressions = evaluateRegressions();
   const withAi = process.argv.includes('--with-ai');
   const ai = withAi ? await evaluateAiDrafts(contexts) : null;
 
@@ -28,12 +32,103 @@ async function run() {
         ok: true,
         mode: withAi ? 'CONTEXT_AND_GEMINI' : 'CONTEXT_ONLY',
         ...deterministic,
+        regressions,
         ai,
       },
       null,
       2,
     )}\n`,
   );
+}
+
+function evaluateRegressions() {
+  const product: ProductAnswerContext['product'] = {
+    id: 'regression-product',
+    title: 'Sergio Regular Fit Jean Pantolon F9571AX26SP',
+    description: 'Renk: Haki. Yıkama talimatı: 30 derecede yıkayınız.',
+    attributes: [
+      { name: 'Renk', value: 'Haki' },
+      { name: 'Yıkama Talimatı', value: '30 derecede yıkayınız.' },
+    ],
+    variants: [
+      {
+        title: 'Haki / 30',
+        sku: 'F9571AX26SP-30',
+        color: 'Haki',
+        size: '30',
+        price: 539.99,
+        currency: 'TRY',
+        stock: 14,
+        status: 'ACTIVE',
+      },
+    ],
+    sizeGuides: [
+      {
+        id: 'guide-1',
+        sourceUrl: 'https://cdn.dsmcdn.com/size-guide.jpg',
+        normalizedText: [
+          'Erkek jean beden tablosu',
+          'Ölçü birimi: CM',
+          'Beden 30 · Bel: 80-82 cm · Basen: 98-100 cm · Boy: 104 cm',
+          'Beden 32 · Bel: 84-86 cm · Basen: 102-104 cm · Boy: 105 cm',
+        ].join('\n'),
+        confidence: 0.96,
+      },
+    ],
+  };
+  const colorFade = analyzeProductQuestion({
+    questionId: 'regression-color-fade',
+    question: 'Haki rengin yıkamada solma ihtimali var mı?',
+    product,
+  });
+  if (
+    colorFade.requestedFacts.includes('STOCK') ||
+    colorFade.requestedFacts.includes('COLOR') ||
+    !colorFade.requestedFacts.includes('DURABILITY')
+  ) {
+    throw new Error('Renk solması sorusu yanlış niyetle sınıflandırıldı.');
+  }
+  const sanitized = sanitizeDraftAnswer(
+    'Haki rengi stoklarımızda mevcuttur. Yıkamada solma ihtimali ürün özelliklerinde belirtilmediği için bu konuda kesin bir şey söyleyemiyoruz.',
+    colorFade.requestedFacts,
+  );
+  if (/stok|mevcut/i.test(sanitized)) {
+    throw new Error('Sorulmayan stok cümlesi taslaktan temizlenemedi.');
+  }
+
+  const productCode = analyzeProductQuestion({
+    questionId: 'regression-product-code',
+    question: 'Ürün kodunu öğrenebilir miyim?',
+    product,
+  });
+  if (
+    !productCode.requestedFacts.includes('PRODUCT_CODE') ||
+    productCode.evidence[0]?.value !== 'F9571AX26SP'
+  ) {
+    throw new Error('Ürün kodu başlıktan kanıta dönüştürülemedi.');
+  }
+
+  const sizeGuide = analyzeProductQuestion({
+    questionId: 'regression-size-guide',
+    question: '30 bedenin bel ölçüsü kaç cm?',
+    product,
+  });
+  const sizeEvidence = sizeGuide.evidence.find(
+    (evidence) => evidence.source === 'SIZE_GUIDE',
+  );
+  if (
+    !sizeGuide.requestedFacts.includes('SIZE') ||
+    !sizeEvidence?.value.includes('Bel: 80-82 cm') ||
+    sizeEvidence.value.includes('Beden 32')
+  ) {
+    throw new Error('İlgili beden tablosu satırı kanıta dönüştürülemedi.');
+  }
+
+  return {
+    unsolicitedStockRemoved: true,
+    productCodeEvidenceCreated: true,
+    relevantSizeGuideRowSelected: true,
+  };
 }
 
 async function createEvaluationContexts() {

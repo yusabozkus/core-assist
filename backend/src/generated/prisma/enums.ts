@@ -71,6 +71,16 @@ export const ProductVariantStatus = {
 export type ProductVariantStatus = (typeof ProductVariantStatus)[keyof typeof ProductVariantStatus]
 
 
+export const SizeGuideStatus = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  READY: 'READY',
+  FAILED: 'FAILED'
+} as const
+
+export type SizeGuideStatus = (typeof SizeGuideStatus)[keyof typeof SizeGuideStatus]
+
+
 export const ExternalEntityStatus = {
   ACTIVE: 'ACTIVE',
   ARCHIVED: 'ARCHIVED',

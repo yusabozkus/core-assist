@@ -154,6 +154,9 @@ function createMockProduct(
     category: seed.category,
     attributes,
     images: seed.source?.images ?? [TEST_PRODUCT_IMAGE_URL],
+    sizeGuide: seed.source?.sizeChartUrl
+      ? { sourceUrl: seed.source.sizeChartUrl }
+      : undefined,
     variants: variants.map((variant, index) => {
       const generatedSku = `${seed.code}-${seed.id}-${String(index + 1).padStart(2, '0')}`;
       const generatedBarcode = `869${provider === 'trendyol' ? '1' : '2'}${String(seed.id).padStart(4, '0')}${String(index + 1).padStart(5, '0')}`;

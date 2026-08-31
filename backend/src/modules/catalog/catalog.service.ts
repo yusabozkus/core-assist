@@ -44,6 +44,19 @@ const PRODUCT_DETAIL_SELECT = {
     orderBy: { position: 'asc' },
     select: { id: true, url: true, position: true },
   },
+  sizeGuides: {
+    orderBy: { updatedAt: 'desc' },
+    select: {
+      id: true,
+      sourceUrl: true,
+      status: true,
+      normalizedText: true,
+      structuredData: true,
+      confidence: true,
+      failureReason: true,
+      analyzedAt: true,
+    },
+  },
   externalProducts: {
     select: {
       externalId: true,

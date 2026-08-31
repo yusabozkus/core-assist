@@ -15,6 +15,22 @@ export type NormalizedProductVariant = {
   sourceUpdatedAt?: Date;
 };
 
+export type NormalizedSizeGuide = {
+  sourceUrl: string;
+  rawText?: string;
+  structuredData?: {
+    title?: string;
+    unit: 'CM' | 'INCH' | 'MIXED' | 'UNKNOWN';
+    headers: string[];
+    rows: Array<{
+      label: string;
+      measurements: Array<{ name: string; value: string }>;
+    }>;
+    notes: string[];
+    confidence: number;
+  };
+};
+
 export type NormalizedProduct = {
   externalId: string;
   externalUrl?: string;
@@ -24,6 +40,7 @@ export type NormalizedProduct = {
   category?: string;
   attributes: Array<{ name: string; value: string }>;
   images: string[];
+  sizeGuide?: NormalizedSizeGuide;
   variants: NormalizedProductVariant[];
   sourceUpdatedAt?: Date;
   rawPayload: Record<string, unknown>;

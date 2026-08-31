@@ -7,6 +7,7 @@ import {
   ProductQuestionStatus,
   ProductVariantStatus,
   QuestionAnswerStatus,
+  SizeGuideStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import type {
@@ -46,6 +47,10 @@ const SIZE_PATTERNS = [
   'gogus',
   'bel olc',
   'beden tablosu',
+  'kac cm',
+  'olcu',
+  'olcusu',
+  'ic bacak',
 ];
 const COLOR_PATTERNS = [
   'hangi renk',
@@ -165,6 +170,19 @@ export class ProductAnswerContextService {
                 status: true,
               },
             },
+            sizeGuides: {
+              where: {
+                status: SizeGuideStatus.READY,
+                normalizedText: { not: null },
+              },
+              orderBy: { analyzedAt: 'desc' },
+              select: {
+                id: true,
+                sourceUrl: true,
+                normalizedText: true,
+                confidence: true,
+              },
+            },
           },
         },
       },
@@ -218,6 +236,11 @@ export class ProductAnswerContextService {
         description: question.product.description,
         attributes: question.product.attributes,
         variants,
+        sizeGuides: question.product.sizeGuides.flatMap((guide) =>
+          guide.normalizedText
+            ? [{ ...guide, normalizedText: guide.normalizedText }]
+            : [],
+        ),
       },
     });
   }
@@ -274,6 +297,8 @@ export function analyzeProductQuestion(input: {
     requestedSize,
     matchedColor,
     matchedSize,
+    sizeGuides: input.product.sizeGuides ?? [],
+    normalizedQuestion,
   });
 
   return {
@@ -457,6 +482,8 @@ function createEvidence(input: {
   requestedSize: string | null;
   matchedColor: string | null;
   matchedSize: string | null;
+  sizeGuides: NonNullable<ProductAnswerContext['product']['sizeGuides']>;
+  normalizedQuestion: string;
 }): ProductAnswerEvidence[] {
   const evidence: ProductAnswerEvidence[] = [];
 
@@ -572,6 +599,21 @@ function createEvidence(input: {
         .join(' '),
       source: 'VARIANT',
     });
+
+    for (const guide of input.sizeGuides.slice(0, 2)) {
+      evidence.push({
+        id: `size-guide-${guide.id}`,
+        fact: 'SIZE',
+        label: 'Beden ve ölçü tablosu',
+        value: selectSizeGuideEvidence(
+          guide.normalizedText,
+          input.normalizedQuestion,
+          input.requestedSize,
+        ),
+        source: 'SIZE_GUIDE',
+        confidence: guide.confidence ?? undefined,
+      });
+    }
   }
 
   if (input.requestedFacts.includes('COLOR')) {
@@ -595,6 +637,47 @@ function createEvidence(input: {
   }
 
   return [...new Map(evidence.map((item) => [item.id, item])).values()];
+}
+
+function selectSizeGuideEvidence(
+  text: string,
+  normalizedQuestion: string,
+  requestedSize: string | null,
+) {
+  const lines = text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const measurementTokens = [
+    'bel',
+    'basen',
+    'gogus',
+    'boy',
+    'uzunluk',
+    'ic bacak',
+    'paca',
+    'omuz',
+    'kol',
+    'kilo',
+  ].filter((token) => normalizedQuestion.includes(token));
+  const normalizedSize = requestedSize
+    ? normalizeSearchValue(requestedSize)
+    : null;
+  const matchingRows = lines.filter((line) => {
+    const normalizedLine = normalizeSearchValue(line);
+    const sizeMatches = normalizedSize
+      ? normalizedLine.includes(`beden ${normalizedSize}`)
+      : true;
+    const measurementMatches = measurementTokens.length
+      ? measurementTokens.some((token) => normalizedLine.includes(token))
+      : true;
+    return sizeMatches && measurementMatches;
+  });
+  const selected = matchingRows.length
+    ? [...lines.slice(0, 2), ...matchingRows]
+    : lines;
+
+  return [...new Set(selected)].join('\n').slice(0, 6_000);
 }
 
 export function extractProductCode(title: string) {
@@ -626,9 +709,10 @@ function findGenericSizeMention(normalizedQuestion: string) {
 
   if (letterSize) return letterSize.toLocaleUpperCase('tr-TR');
 
-  const numericSize = normalizedQuestion.match(
-    /(?:^| )(\d{2,3})(?: cm)?(?: |$)/,
-  )?.[1];
+  const numericSizeMatch = normalizedQuestion.match(
+    /(?:^| )(?:beden|numara) (\d{2,3})(?: |$)|(?:^| )(\d{2,3}) (?:beden|numara)(?: |$)/,
+  );
+  const numericSize = numericSizeMatch?.[1] ?? numericSizeMatch?.[2];
   const value = numericSize ? Number(numericSize) : null;
 
   return value !== null && value >= 24 && value <= 120

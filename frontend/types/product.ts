@@ -13,6 +13,30 @@ export type CatalogProductVariant = {
   lastSyncedAt: string | null
 }
 
+export type CatalogSizeGuideData = {
+  title: string
+  unit: "CM" | "INCH" | "MIXED" | "UNKNOWN"
+  headers: string[]
+  rows: Array<{
+    label: string
+    measurements: Array<{ name: string; value: string }>
+  }>
+  notes: string[]
+  rawText: string
+  confidence: number
+}
+
+export type CatalogSizeGuide = {
+  id: string
+  sourceUrl: string
+  status: "PENDING" | "PROCESSING" | "READY" | "FAILED"
+  normalizedText: string | null
+  structuredData: CatalogSizeGuideData | null
+  confidence: number | null
+  failureReason: string | null
+  analyzedAt: string | null
+}
+
 export type CatalogProduct = {
   id: string
   title: string
@@ -24,6 +48,7 @@ export type CatalogProduct = {
   variants: CatalogProductVariant[]
   attributes: Array<{ id: string; name: string; value: string }>
   images: Array<{ id: string; url: string; position: number }>
+  sizeGuides: CatalogSizeGuide[]
   externalProducts: Array<{
     externalId: string
     externalUrl: string | null
