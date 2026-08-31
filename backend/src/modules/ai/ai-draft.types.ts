@@ -1,6 +1,7 @@
 import type {
   ProductAnswerContext,
   ProductAnswerFact,
+  ProductAnswerRisk,
 } from '../questions/product-answer-context.types';
 
 export type AiDraftDecision = 'DRAFT' | 'NEEDS_REVIEW';
@@ -11,12 +12,21 @@ export type AiDraftResult = {
   decision: AiDraftDecision;
   confidence: number;
   usedFacts: ProductAnswerFact[];
+  usedEvidenceIds: string[];
   missingInformation: string[];
+  risks: ProductAnswerRisk[];
   source: AiDraftSource;
   model: string;
 };
 
-export type GeminiDraftPayload = Omit<AiDraftResult, 'source' | 'model'>;
+export type GeminiDraftPayload = Pick<
+  AiDraftResult,
+  | 'answer'
+  | 'decision'
+  | 'confidence'
+  | 'usedEvidenceIds'
+  | 'missingInformation'
+>;
 
 export type GeminiGenerationRequest = {
   model: string;

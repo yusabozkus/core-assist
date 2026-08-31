@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import {
+  AlertCircleIcon,
   CheckmarkCircle01Icon,
   MagicWand01Icon,
   RefreshIcon,
@@ -11,13 +12,17 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { ApiError } from "@/lib/api/client"
 import {
   answerProductQuestion,
   generateProductQuestionDraft,
 } from "@/lib/api/questions"
-import type { ProductQuestion } from "@/types/question"
+import type {
+  DraftQuestionAnswerResult,
+  ProductQuestion,
+} from "@/types/question"
 
 const MAX_ANSWER_LENGTH = 2000
 
@@ -46,6 +51,9 @@ export function QuestionAnswerComposer({
   const [isSubmitting, startSubmitTransition] = useTransition()
   const [isDrafting, startDraftTransition] = useTransition()
   const [draftRetrySeconds, setDraftRetrySeconds] = useState(0)
+  const [draftContext, setDraftContext] = useState<
+    DraftQuestionAnswerResult["context"] | null
+  >(null)
   const isQueued =
     (optimisticQueuedAt !== null &&
       delivery?.queuedAt !== optimisticQueuedAt) ||
@@ -122,6 +130,7 @@ export function QuestionAnswerComposer({
       try {
         const result = await generateProductQuestionDraft(storeId, question.id)
         setAnswer(result.answer)
+        setDraftContext(result.context)
         router.refresh()
       } catch (caughtError) {
         if (
@@ -165,6 +174,9 @@ export function QuestionAnswerComposer({
           className="mt-2.5 min-h-24 resize-y bg-card"
           aria-invalid={Boolean(error || delivery?.lastError)}
         />
+        {draftContext ? (
+          <DraftReliabilityNotice context={draftContext} />
+        ) : null}
         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-h-5 text-xs" aria-live="polite">
             {error ? <p className="text-destructive">{error}</p> : null}
@@ -234,6 +246,52 @@ export function QuestionAnswerComposer({
           </div>
         </div>
       </form>
+    </div>
+  )
+}
+
+function DraftReliabilityNotice({
+  context,
+}: {
+  context: DraftQuestionAnswerResult["context"]
+}) {
+  const needsReview = context.decision === "NEEDS_REVIEW"
+
+  return (
+    <div
+      className={`mt-3 rounded-lg border px-3.5 py-3 text-xs ${
+        needsReview
+          ? "border-amber-500/25 bg-amber-500/10 text-amber-950 dark:text-amber-100"
+          : "border-emerald-500/20 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100"
+      }`}
+      aria-live="polite"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <HugeiconsIcon
+          icon={needsReview ? AlertCircleIcon : CheckmarkCircle01Icon}
+          className="size-4 shrink-0"
+        />
+        <span className="font-semibold">
+          {needsReview
+            ? "Göndermeden önce inceleyin"
+            : "Katalog verileriyle desteklendi"}
+        </span>
+        <Badge variant={needsReview ? "warning" : "success"}>
+          %{Math.round(context.confidence * 100)} güven
+        </Badge>
+        <span className="text-muted-foreground">
+          {context.usedEvidenceIds.length} kanıt kullanıldı
+        </span>
+      </div>
+      {context.missingInformation.length > 0 ? (
+        <p className="mt-2 leading-5">
+          Eksik bilgi: {context.missingInformation.join(", ")}.
+        </p>
+      ) : needsReview ? (
+        <p className="mt-2 leading-5">
+          Taslak riskli veya yeterince desteklenmeyen bir ifade içerebilir.
+        </p>
+      ) : null}
     </div>
   )
 }

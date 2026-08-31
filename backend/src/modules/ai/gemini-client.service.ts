@@ -9,26 +9,16 @@ const DRAFT_RESPONSE_SCHEMA = {
     'answer',
     'decision',
     'confidence',
-    'usedFacts',
+    'usedEvidenceIds',
     'missingInformation',
   ],
   properties: {
     answer: { type: 'string', minLength: 2, maxLength: 2000 },
     decision: { type: 'string', enum: ['DRAFT', 'NEEDS_REVIEW'] },
     confidence: { type: 'number', minimum: 0, maximum: 1 },
-    usedFacts: {
+    usedEvidenceIds: {
       type: 'array',
-      items: {
-        type: 'string',
-        enum: [
-          'STOCK',
-          'PRICE',
-          'MATERIAL',
-          'DURABILITY',
-          'SHIPPING',
-          'PRODUCT_INFO',
-        ],
-      },
+      items: { type: 'string' },
     },
     missingInformation: {
       type: 'array',

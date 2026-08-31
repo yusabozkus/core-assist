@@ -12,7 +12,8 @@ async function run() {
       'Aşağıdaki doğrulanmış ürün bilgisine dayanarak kısa bir Türkçe taslak oluştur.',
       'Soru: Siyah M beden stokta var mı?',
       'Doğrulanmış bilgi: Siyah M varyantı aktif ve stok miktarı 4.',
-      'decision DRAFT, usedFacts STOCK ve missingInformation boş olmalı.',
+      'Kanıt kimliği: variant-stock.',
+      'decision DRAFT, usedEvidenceIds ["variant-stock"] ve missingInformation boş olmalı.',
     ].join('\n'),
   });
   const response = JSON.parse(raw) as Record<string, unknown>;

@@ -22,6 +22,8 @@
     "smoke:question-sync": "npm run build && node dist/src/scripts/question-sync-smoke.js",
     "smoke:question-flow": "npm run build && node dist/src/scripts/question-sync-smoke.js",
     "smoke:gemini": "npm run build && node dist/src/scripts/gemini-smoke.js",
+    "eval:answer-context": "npm run build && node dist/src/scripts/answer-reliability-eval.js",
+    "eval:ai-drafts": "npm run build && node dist/src/scripts/answer-reliability-eval.js --with-ai",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio --port 5556"

@@ -1,5 +1,34 @@
 export type ProductAnswerFact =
-  'STOCK' | 'PRICE' | 'MATERIAL' | 'DURABILITY' | 'SHIPPING' | 'PRODUCT_INFO';
+  | 'STOCK'
+  | 'PRICE'
+  | 'MATERIAL'
+  | 'DURABILITY'
+  | 'SHIPPING'
+  | 'SIZE'
+  | 'COLOR'
+  | 'FIT'
+  | 'CARE'
+  | 'PRODUCT_CODE'
+  | 'PRODUCT_INFO';
+
+export type ProductAnswerEvidenceSource =
+  'ATTRIBUTE' | 'DESCRIPTION' | 'VARIANT' | 'TITLE';
+
+export type ProductAnswerEvidence = {
+  id: string;
+  fact: ProductAnswerFact;
+  label: string;
+  value: string;
+  source: ProductAnswerEvidenceSource;
+};
+
+export type ProductAnswerRisk =
+  | 'MISSING_INFORMATION'
+  | 'UNSUPPORTED_CLAIM'
+  | 'STOCK_CONTRADICTION'
+  | 'PRICE_CONTRADICTION'
+  | 'LOW_CONFIDENCE'
+  | 'HIGH_RISK_INTENT';
 
 export type ProductAnswerVariantContext = {
   title: string | null;
@@ -29,6 +58,8 @@ export type ProductAnswerContext = {
   };
   matchingVariants: ProductAnswerVariantContext[];
   relevantAttributes: Array<{ name: string; value: string }>;
+  relevantDescription: string | null;
+  evidence: ProductAnswerEvidence[];
 };
 
 export type DraftQuestionAnswer = {
@@ -44,5 +75,7 @@ export type DraftQuestionAnswer = {
     decision: 'DRAFT' | 'NEEDS_REVIEW';
     confidence: number;
     missingInformation: string[];
+    usedEvidenceIds: string[];
+    risks: ProductAnswerRisk[];
   };
 };

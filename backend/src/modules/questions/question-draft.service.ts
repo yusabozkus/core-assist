@@ -87,6 +87,8 @@ export class QuestionDraftService {
         decision: aiDraft.decision,
         confidence: aiDraft.confidence,
         missingInformation: aiDraft.missingInformation,
+        usedEvidenceIds: aiDraft.usedEvidenceIds,
+        risks: aiDraft.risks,
       },
     };
   }

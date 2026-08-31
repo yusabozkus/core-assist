@@ -56,6 +56,11 @@ export type DraftQuestionAnswerResult = {
       | "MATERIAL"
       | "DURABILITY"
       | "SHIPPING"
+      | "SIZE"
+      | "COLOR"
+      | "FIT"
+      | "CARE"
+      | "PRODUCT_CODE"
       | "PRODUCT_INFO"
     >
     matchedColor: string | null
@@ -66,5 +71,14 @@ export type DraftQuestionAnswerResult = {
     decision: "DRAFT" | "NEEDS_REVIEW"
     confidence: number
     missingInformation: string[]
+    usedEvidenceIds: string[]
+    risks: Array<
+      | "MISSING_INFORMATION"
+      | "UNSUPPORTED_CLAIM"
+      | "STOCK_CONTRADICTION"
+      | "PRICE_CONTRADICTION"
+      | "LOW_CONFIDENCE"
+      | "HIGH_RISK_INTENT"
+    >
   }
 }
