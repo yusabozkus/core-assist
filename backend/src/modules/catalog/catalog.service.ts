@@ -1,7 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '../../generated/prisma/client';
-import { StoreStatus } from '../../generated/prisma/enums';
+import {
+  ProductVariantStatus,
+  StoreStatus,
+} from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import {
+  type CatalogInventoryQueryDto,
+  InventoryStockFilter,
+} from './catalog-inventory-query.dto';
 import type { CatalogProductsQueryDto } from './catalog-products-query.dto';
 
 const PRODUCT_DETAIL_SELECT = {
@@ -209,6 +216,254 @@ export class CatalogService {
         price: Number(variant.price),
       })),
     };
+  }
+
+  async findInventory(
+    storeId: string,
+    userId: string,
+    options: CatalogInventoryQueryDto,
+  ) {
+    await this.assertStoreMembership(storeId, userId);
+
+    const query = options.query?.trim();
+    const provider = options.provider?.trim();
+    const baseWhere = {
+      product: { storeId, status: 'ACTIVE' },
+      status: { not: ProductVariantStatus.ARCHIVED },
+    } satisfies Prisma.ProductVariantWhereInput;
+    const filters: Prisma.ProductVariantWhereInput[] = [baseWhere];
+
+    if (query) {
+      filters.push({
+        OR: [
+          { sku: { contains: query, mode: 'insensitive' } },
+          { barcode: { contains: query, mode: 'insensitive' } },
+          { title: { contains: query, mode: 'insensitive' } },
+          { color: { contains: query, mode: 'insensitive' } },
+          { size: { contains: query, mode: 'insensitive' } },
+          { product: { title: { contains: query, mode: 'insensitive' } } },
+          { product: { brand: { contains: query, mode: 'insensitive' } } },
+          { product: { category: { contains: query, mode: 'insensitive' } } },
+        ],
+      });
+    }
+
+    if (provider) {
+      filters.push({
+        externalVariants: {
+          some: {
+            externalProduct: {
+              connection: { providerKey: provider },
+            },
+          },
+        },
+      });
+    }
+
+    const stockFilter = this.getInventoryStockFilter(
+      options.status,
+      options.lowStockThreshold,
+    );
+    if (stockFilter) filters.push(stockFilter);
+
+    const where: Prisma.ProductVariantWhereInput = { AND: filters };
+    const healthyWhere: Prisma.ProductVariantWhereInput = {
+      ...baseWhere,
+      status: ProductVariantStatus.ACTIVE,
+      stock: { gt: options.lowStockThreshold },
+    };
+    const lowStockWhere: Prisma.ProductVariantWhereInput = {
+      ...baseWhere,
+      status: ProductVariantStatus.ACTIVE,
+      stock: { gt: 0, lte: options.lowStockThreshold },
+    };
+    const outOfStockWhere: Prisma.ProductVariantWhereInput = {
+      AND: [
+        baseWhere,
+        {
+          OR: [
+            {
+              stock: { lte: 0 },
+              status: ProductVariantStatus.ACTIVE,
+            },
+            { status: ProductVariantStatus.OUT_OF_STOCK },
+          ],
+        },
+      ],
+    };
+
+    const productWhere = {
+      storeId,
+      status: 'ACTIVE',
+      variants: { some: where },
+    } satisfies Prisma.ProductWhereInput;
+
+    const [
+      products,
+      filteredProductTotal,
+      filteredVariantTotal,
+      variantCount,
+      healthyVariants,
+      lowStockVariants,
+      outOfStockVariants,
+      unavailableVariants,
+      stock,
+      freshness,
+      providerConnections,
+    ] = await Promise.all([
+      this.prisma.product.findMany({
+        where: productWhere,
+        orderBy: [{ title: 'asc' }, { id: 'asc' }],
+        take: options.limit + 1,
+        ...(options.cursor ? { cursor: { id: options.cursor }, skip: 1 } : {}),
+        select: {
+          id: true,
+          title: true,
+          brand: true,
+          category: true,
+          images: {
+            orderBy: { position: 'asc' },
+            take: 1,
+            select: { url: true },
+          },
+          variants: {
+            where: baseWhere,
+            orderBy: [{ stock: 'asc' }, { id: 'asc' }],
+            select: {
+              id: true,
+              title: true,
+              sku: true,
+              barcode: true,
+              color: true,
+              size: true,
+              price: true,
+              currency: true,
+              stock: true,
+              status: true,
+              sourceUpdatedAt: true,
+              lastSyncedAt: true,
+              externalVariants: {
+                select: {
+                  externalProduct: {
+                    select: {
+                      connection: { select: { providerKey: true } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.product.count({ where: productWhere }),
+      this.prisma.productVariant.count({ where }),
+      this.prisma.productVariant.count({ where: baseWhere }),
+      this.prisma.productVariant.count({ where: healthyWhere }),
+      this.prisma.productVariant.count({ where: lowStockWhere }),
+      this.prisma.productVariant.count({ where: outOfStockWhere }),
+      this.prisma.productVariant.count({
+        where: { ...baseWhere, status: ProductVariantStatus.UNAVAILABLE },
+      }),
+      this.prisma.productVariant.aggregate({
+        where: { ...baseWhere, status: ProductVariantStatus.ACTIVE },
+        _sum: { stock: true },
+      }),
+      this.prisma.productVariant.aggregate({
+        where: baseWhere,
+        _max: { lastSyncedAt: true },
+      }),
+      this.prisma.channelConnection.findMany({
+        where: { storeId, type: 'COMMERCE' },
+        distinct: ['providerKey'],
+        orderBy: { providerKey: 'asc' },
+        select: { providerKey: true },
+      }),
+    ]);
+
+    const hasNextPage = products.length > options.limit;
+    const visibleProducts = hasNextPage
+      ? products.slice(0, options.limit)
+      : products;
+
+    return {
+      items: visibleProducts.flatMap((product) =>
+        product.variants.map((variant) => ({
+          id: variant.id,
+          productId: product.id,
+          productTitle: product.title,
+          productBrand: product.brand,
+          productCategory: product.category,
+          imageUrl: product.images[0]?.url ?? null,
+          title: variant.title,
+          sku: variant.sku,
+          barcode: variant.barcode,
+          color: variant.color,
+          size: variant.size,
+          price: Number(variant.price),
+          currency: variant.currency,
+          stock: variant.stock,
+          status: variant.status,
+          sourceUpdatedAt: variant.sourceUpdatedAt,
+          lastSyncedAt: variant.lastSyncedAt,
+          providers: [
+            ...new Set(
+              variant.externalVariants.map(
+                (externalVariant) =>
+                  externalVariant.externalProduct.connection.providerKey,
+              ),
+            ),
+          ],
+        })),
+      ),
+      nextCursor: hasNextPage ? (visibleProducts.at(-1)?.id ?? null) : null,
+      total: filteredProductTotal,
+      variantTotal: filteredVariantTotal,
+      lowStockThreshold: options.lowStockThreshold,
+      providers: providerConnections.map(
+        (connection) => connection.providerKey,
+      ),
+      summary: {
+        variants: variantCount,
+        healthy: healthyVariants,
+        lowStock: lowStockVariants,
+        outOfStock: outOfStockVariants,
+        unavailable: unavailableVariants,
+        totalStock: stock._sum.stock ?? 0,
+        lastSyncedAt: freshness._max.lastSyncedAt,
+      },
+    };
+  }
+
+  private getInventoryStockFilter(
+    status: InventoryStockFilter,
+    lowStockThreshold: number,
+  ): Prisma.ProductVariantWhereInput | null {
+    switch (status) {
+      case InventoryStockFilter.IN_STOCK:
+        return {
+          stock: { gt: 0 },
+          status: ProductVariantStatus.ACTIVE,
+        };
+      case InventoryStockFilter.LOW_STOCK:
+        return {
+          stock: { gt: 0, lte: lowStockThreshold },
+          status: ProductVariantStatus.ACTIVE,
+        };
+      case InventoryStockFilter.OUT_OF_STOCK:
+        return {
+          OR: [
+            {
+              stock: { lte: 0 },
+              status: ProductVariantStatus.ACTIVE,
+            },
+            { status: ProductVariantStatus.OUT_OF_STOCK },
+          ],
+        };
+      case InventoryStockFilter.UNAVAILABLE:
+        return { status: ProductVariantStatus.UNAVAILABLE };
+      case InventoryStockFilter.ALL:
+        return null;
+    }
   }
 
   private async assertStoreMembership(storeId: string, userId: string) {

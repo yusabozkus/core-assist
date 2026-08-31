@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  CatalogSyncStatus,
   ChannelConnectionStatus,
   IncomingEventProcessingStatus,
   IncomingEventType,
@@ -63,6 +64,7 @@ export class QuestionSyncWorkerService {
     let questionsProcessed = 0;
 
     do {
+      let batchQuestionsProcessed = 0;
       const batch = await this.providers.fetchProductQuestions(
         syncConnection.providerKey,
         {
@@ -78,25 +80,44 @@ export class QuestionSyncWorkerService {
       for (const question of batch.questions) {
         if (await this.persistQuestion(syncConnection, question)) {
           questionsProcessed += 1;
+          batchQuestionsProcessed += 1;
         }
       }
 
       cursor = batch.nextCursor;
       batchCount += 1;
 
+      await this.prisma.catalogSyncRun.updateMany({
+        where: { id: data.syncRunId, connectionId: syncConnection.id },
+        data: {
+          questionsProcessed: { increment: batchQuestionsProcessed },
+        },
+      });
+
       if (batchCount >= QUESTION_SYNC_MAX_BATCHES && cursor) {
         throw new Error('Question sync exceeded the maximum batch count.');
       }
     } while (cursor);
 
-    await this.prisma.channelConnection.updateMany({
-      where: { id: syncConnection.id, storeId: syncConnection.storeId },
-      data: {
-        questionSyncStartedAt: null,
-        lastQuestionSyncAt: new Date(),
-        questionSyncFailureReason: null,
-      },
-    });
+    const completedAt = new Date();
+    await this.prisma.$transaction([
+      this.prisma.catalogSyncRun.updateMany({
+        where: { id: data.syncRunId, connectionId: syncConnection.id },
+        data: {
+          status: CatalogSyncStatus.COMPLETED,
+          errorMessage: null,
+          completedAt,
+        },
+      }),
+      this.prisma.channelConnection.updateMany({
+        where: { id: syncConnection.id, storeId: syncConnection.storeId },
+        data: {
+          questionSyncStartedAt: null,
+          lastQuestionSyncAt: completedAt,
+          questionSyncFailureReason: null,
+        },
+      }),
+    ]);
 
     return { questionsProcessed };
   }
@@ -107,13 +128,23 @@ export class QuestionSyncWorkerService {
         ? error.message
         : 'Soru senkronizasyonu tamamlanamadı.';
 
-    await this.prisma.channelConnection.updateMany({
-      where: { id: data.connectionId, storeId: data.storeId },
-      data: {
-        questionSyncStartedAt: null,
-        questionSyncFailureReason: message,
-      },
-    });
+    await this.prisma.$transaction([
+      this.prisma.catalogSyncRun.updateMany({
+        where: { id: data.syncRunId, connectionId: data.connectionId },
+        data: {
+          status: CatalogSyncStatus.FAILED,
+          errorMessage: message,
+          completedAt: new Date(),
+        },
+      }),
+      this.prisma.channelConnection.updateMany({
+        where: { id: data.connectionId, storeId: data.storeId },
+        data: {
+          questionSyncStartedAt: null,
+          questionSyncFailureReason: message,
+        },
+      }),
+    ]);
   }
 
   private async persistQuestion(

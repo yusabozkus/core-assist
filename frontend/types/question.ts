@@ -37,6 +37,7 @@ export type QuestionSyncResult = {
   status: "RUNNING"
   queued: number
   skipped: number
+  syncRunIds: string[]
 }
 
 export type QueueQuestionAnswerResult = {

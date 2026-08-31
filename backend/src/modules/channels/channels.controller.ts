@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
@@ -18,6 +19,7 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { ChannelsService } from './channels.service';
 import { CreateChannelConnectionDto } from './dto/create-channel-connection.dto';
 import { ConfigureChannelConnectionDto } from './dto/configure-channel-connection.dto';
+import { SyncHistoryQueryDto } from './dto/sync-history-query.dto';
 
 @Controller('stores/:storeId/channels')
 @UseGuards(AuthGuard)
@@ -30,6 +32,15 @@ export class ChannelsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.channelsService.findAvailableProviders(storeId, user.id);
+  }
+
+  @Get('sync-runs')
+  findSyncHistory(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: SyncHistoryQueryDto,
+  ) {
+    return this.channelsService.findSyncHistory(storeId, user.id, query);
   }
 
   @Get()

@@ -4,6 +4,7 @@ import { headers } from "next/headers"
 import { cache } from "react"
 
 import type { ChannelConnection, IntegrationProvider } from "@/types/channel"
+import type { SyncHistoryPage } from "@/types/sync-history"
 
 const CHANNELS_REQUEST_TIMEOUT_MS = 8_000
 
@@ -69,3 +70,46 @@ export const getServerIntegrationProviders = cache(
     return (await response.json()) as IntegrationProvider[]
   }
 )
+
+export const getServerChannelSyncHistory = cache(
+  async (storeId: string): Promise<SyncHistoryPage> => {
+    const cookie = (await headers()).get("cookie")
+
+    if (!cookie) return emptySyncHistoryPage()
+
+    const response = await fetch(
+      `${apiUrl}/stores/${storeId}/channels/sync-runs?limit=20`,
+      {
+        cache: "no-store",
+        headers: {
+          Accept: "application/json",
+          cookie,
+        },
+        signal: AbortSignal.timeout(CHANNELS_REQUEST_TIMEOUT_MS),
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(
+        `Channel sync history request failed with status ${response.status}.`
+      )
+    }
+
+    return (await response.json()) as SyncHistoryPage
+  }
+)
+
+function emptySyncHistoryPage(): SyncHistoryPage {
+  return {
+    items: [],
+    nextCursor: null,
+    total: 0,
+    providers: [],
+    summary: {
+      total: 0,
+      running: 0,
+      completed: 0,
+      failed: 0,
+    },
+  }
+}

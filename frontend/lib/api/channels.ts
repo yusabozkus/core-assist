@@ -4,6 +4,46 @@ import type {
   ChannelConnection,
   IntegrationEnvironment,
 } from "@/types/channel"
+import type {
+  SyncHistoryKindFilter,
+  SyncHistoryPage,
+  SyncHistoryStatusFilter,
+} from "@/types/sync-history"
+
+type SyncHistoryOptions = {
+  cursor?: string | null
+  status?: SyncHistoryStatusFilter
+  kind?: SyncHistoryKindFilter
+  provider?: string
+  limit?: number
+  signal?: AbortSignal
+}
+
+export function getChannelSyncHistory(
+  storeId: string,
+  {
+    cursor,
+    status = "ALL",
+    kind = "ALL",
+    provider,
+    limit = 20,
+    signal,
+  }: SyncHistoryOptions = {}
+) {
+  const searchParams = new URLSearchParams({
+    limit: String(limit),
+    status,
+    kind,
+  })
+
+  if (cursor) searchParams.set("cursor", cursor)
+  if (provider && provider !== "ALL") searchParams.set("provider", provider)
+
+  return apiFetch<SyncHistoryPage>(
+    `/stores/${storeId}/channels/sync-runs?${searchParams.toString()}`,
+    { signal }
+  )
+}
 
 export function createChannelConnection(
   storeId: string,

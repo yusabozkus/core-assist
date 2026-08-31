@@ -1,9 +1,11 @@
 export type QuestionSyncJobData = {
   storeId: string;
   connectionId: string;
+  syncRunId: string;
 };
 
 export type QueuedQuestionSync = {
+  syncRunId: string;
   connectionId: string;
   status: 'RUNNING';
   queuedAt: Date;

@@ -84,7 +84,7 @@ export function AppSidebar({
                         pathname === settingsItem.url ? "page" : undefined
                       }
                     >
-                      <HugeiconsIcon icon={settingsItem.icon} />
+                      <HugeiconsIcon strokeWidth={2} icon={settingsItem.icon} />
                       <span>{settingsItem.title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -158,7 +158,7 @@ export function AppSidebar({
                             href={item.url}
                             aria-current={isActive ? "page" : undefined}
                           >
-                            <HugeiconsIcon icon={item.icon} />
+                            <HugeiconsIcon strokeWidth={2} icon={item.icon} />
                             <span>{item.title}</span>
                           </Link>
                         </SidebarMenuButton>
@@ -219,9 +219,10 @@ function CollapsibleNavigationItem({
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip={item.title} isActive={isActive}>
-            <HugeiconsIcon icon={item.icon} />
+            <HugeiconsIcon strokeWidth={2} icon={item.icon} />
             <span>{item.title}</span>
             <HugeiconsIcon
+              strokeWidth={2}
               icon={ChevronRightIcon}
               className="ml-auto transition-transform duration-200 group-data-[collapsible=icon]:hidden group-data-[state=open]/collapsible:rotate-90"
             />

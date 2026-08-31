@@ -2100,6 +2100,7 @@ export const CatalogSyncRunScalarFieldEnum = {
   status: 'status',
   productsProcessed: 'productsProcessed',
   variantsProcessed: 'variantsProcessed',
+  questionsProcessed: 'questionsProcessed',
   productsArchived: 'productsArchived',
   cursor: 'cursor',
   errorMessage: 'errorMessage',

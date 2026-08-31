@@ -165,6 +165,9 @@ export class QuestionsService {
       status: 'RUNNING' as const,
       queued: results.filter((result) => result.status === 'fulfilled').length,
       skipped: results.filter((result) => result.status === 'rejected').length,
+      syncRunIds: results.flatMap((result) =>
+        result.status === 'fulfilled' ? [result.value.syncRunId] : [],
+      ),
     };
   }
 

@@ -29,12 +29,14 @@ export type AggregateCatalogSyncRun = {
 export type CatalogSyncRunAvgAggregateOutputType = {
   productsProcessed: number | null
   variantsProcessed: number | null
+  questionsProcessed: number | null
   productsArchived: number | null
 }
 
 export type CatalogSyncRunSumAggregateOutputType = {
   productsProcessed: number | null
   variantsProcessed: number | null
+  questionsProcessed: number | null
   productsArchived: number | null
 }
 
@@ -45,6 +47,7 @@ export type CatalogSyncRunMinAggregateOutputType = {
   status: $Enums.CatalogSyncStatus | null
   productsProcessed: number | null
   variantsProcessed: number | null
+  questionsProcessed: number | null
   productsArchived: number | null
   cursor: string | null
   errorMessage: string | null
@@ -61,6 +64,7 @@ export type CatalogSyncRunMaxAggregateOutputType = {
   status: $Enums.CatalogSyncStatus | null
   productsProcessed: number | null
   variantsProcessed: number | null
+  questionsProcessed: number | null
   productsArchived: number | null
   cursor: string | null
   errorMessage: string | null
@@ -77,6 +81,7 @@ export type CatalogSyncRunCountAggregateOutputType = {
   status: number
   productsProcessed: number
   variantsProcessed: number
+  questionsProcessed: number
   productsArchived: number
   cursor: number
   errorMessage: number
@@ -91,12 +96,14 @@ export type CatalogSyncRunCountAggregateOutputType = {
 export type CatalogSyncRunAvgAggregateInputType = {
   productsProcessed?: true
   variantsProcessed?: true
+  questionsProcessed?: true
   productsArchived?: true
 }
 
 export type CatalogSyncRunSumAggregateInputType = {
   productsProcessed?: true
   variantsProcessed?: true
+  questionsProcessed?: true
   productsArchived?: true
 }
 
@@ -107,6 +114,7 @@ export type CatalogSyncRunMinAggregateInputType = {
   status?: true
   productsProcessed?: true
   variantsProcessed?: true
+  questionsProcessed?: true
   productsArchived?: true
   cursor?: true
   errorMessage?: true
@@ -123,6 +131,7 @@ export type CatalogSyncRunMaxAggregateInputType = {
   status?: true
   productsProcessed?: true
   variantsProcessed?: true
+  questionsProcessed?: true
   productsArchived?: true
   cursor?: true
   errorMessage?: true
@@ -139,6 +148,7 @@ export type CatalogSyncRunCountAggregateInputType = {
   status?: true
   productsProcessed?: true
   variantsProcessed?: true
+  questionsProcessed?: true
   productsArchived?: true
   cursor?: true
   errorMessage?: true
@@ -242,6 +252,7 @@ export type CatalogSyncRunGroupByOutputType = {
   status: $Enums.CatalogSyncStatus
   productsProcessed: number
   variantsProcessed: number
+  questionsProcessed: number
   productsArchived: number
   cursor: string | null
   errorMessage: string | null
@@ -281,6 +292,7 @@ export type CatalogSyncRunWhereInput = {
   status?: Prisma.EnumCatalogSyncStatusFilter<"CatalogSyncRun"> | $Enums.CatalogSyncStatus
   productsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  questionsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsArchived?: Prisma.IntFilter<"CatalogSyncRun"> | number
   cursor?: Prisma.StringNullableFilter<"CatalogSyncRun"> | string | null
   errorMessage?: Prisma.StringNullableFilter<"CatalogSyncRun"> | string | null
@@ -298,6 +310,7 @@ export type CatalogSyncRunOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   productsProcessed?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
+  questionsProcessed?: Prisma.SortOrder
   productsArchived?: Prisma.SortOrder
   cursor?: Prisma.SortOrderInput | Prisma.SortOrder
   errorMessage?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -318,6 +331,7 @@ export type CatalogSyncRunWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.EnumCatalogSyncStatusFilter<"CatalogSyncRun"> | $Enums.CatalogSyncStatus
   productsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  questionsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsArchived?: Prisma.IntFilter<"CatalogSyncRun"> | number
   cursor?: Prisma.StringNullableFilter<"CatalogSyncRun"> | string | null
   errorMessage?: Prisma.StringNullableFilter<"CatalogSyncRun"> | string | null
@@ -335,6 +349,7 @@ export type CatalogSyncRunOrderByWithAggregationInput = {
   status?: Prisma.SortOrder
   productsProcessed?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
+  questionsProcessed?: Prisma.SortOrder
   productsArchived?: Prisma.SortOrder
   cursor?: Prisma.SortOrderInput | Prisma.SortOrder
   errorMessage?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -359,6 +374,7 @@ export type CatalogSyncRunScalarWhereWithAggregatesInput = {
   status?: Prisma.EnumCatalogSyncStatusWithAggregatesFilter<"CatalogSyncRun"> | $Enums.CatalogSyncStatus
   productsProcessed?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
   variantsProcessed?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
+  questionsProcessed?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
   productsArchived?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
   cursor?: Prisma.StringNullableWithAggregatesFilter<"CatalogSyncRun"> | string | null
   errorMessage?: Prisma.StringNullableWithAggregatesFilter<"CatalogSyncRun"> | string | null
@@ -374,6 +390,7 @@ export type CatalogSyncRunCreateInput = {
   status?: $Enums.CatalogSyncStatus
   productsProcessed?: number
   variantsProcessed?: number
+  questionsProcessed?: number
   productsArchived?: number
   cursor?: string | null
   errorMessage?: string | null
@@ -391,6 +408,7 @@ export type CatalogSyncRunUncheckedCreateInput = {
   status?: $Enums.CatalogSyncStatus
   productsProcessed?: number
   variantsProcessed?: number
+  questionsProcessed?: number
   productsArchived?: number
   cursor?: string | null
   errorMessage?: string | null
@@ -406,6 +424,7 @@ export type CatalogSyncRunUpdateInput = {
   status?: Prisma.EnumCatalogSyncStatusFieldUpdateOperationsInput | $Enums.CatalogSyncStatus
   productsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
+  questionsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   productsArchived?: Prisma.IntFieldUpdateOperationsInput | number
   cursor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -423,6 +442,7 @@ export type CatalogSyncRunUncheckedUpdateInput = {
   status?: Prisma.EnumCatalogSyncStatusFieldUpdateOperationsInput | $Enums.CatalogSyncStatus
   productsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
+  questionsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   productsArchived?: Prisma.IntFieldUpdateOperationsInput | number
   cursor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -439,6 +459,7 @@ export type CatalogSyncRunCreateManyInput = {
   status?: $Enums.CatalogSyncStatus
   productsProcessed?: number
   variantsProcessed?: number
+  questionsProcessed?: number
   productsArchived?: number
   cursor?: string | null
   errorMessage?: string | null
@@ -454,6 +475,7 @@ export type CatalogSyncRunUpdateManyMutationInput = {
   status?: Prisma.EnumCatalogSyncStatusFieldUpdateOperationsInput | $Enums.CatalogSyncStatus
   productsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
+  questionsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   productsArchived?: Prisma.IntFieldUpdateOperationsInput | number
   cursor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -470,6 +492,7 @@ export type CatalogSyncRunUncheckedUpdateManyInput = {
   status?: Prisma.EnumCatalogSyncStatusFieldUpdateOperationsInput | $Enums.CatalogSyncStatus
   productsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
+  questionsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   productsArchived?: Prisma.IntFieldUpdateOperationsInput | number
   cursor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -496,6 +519,7 @@ export type CatalogSyncRunCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   productsProcessed?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
+  questionsProcessed?: Prisma.SortOrder
   productsArchived?: Prisma.SortOrder
   cursor?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrder
@@ -508,6 +532,7 @@ export type CatalogSyncRunCountOrderByAggregateInput = {
 export type CatalogSyncRunAvgOrderByAggregateInput = {
   productsProcessed?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
+  questionsProcessed?: Prisma.SortOrder
   productsArchived?: Prisma.SortOrder
 }
 
@@ -518,6 +543,7 @@ export type CatalogSyncRunMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   productsProcessed?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
+  questionsProcessed?: Prisma.SortOrder
   productsArchived?: Prisma.SortOrder
   cursor?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrder
@@ -534,6 +560,7 @@ export type CatalogSyncRunMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   productsProcessed?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
+  questionsProcessed?: Prisma.SortOrder
   productsArchived?: Prisma.SortOrder
   cursor?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrder
@@ -546,6 +573,7 @@ export type CatalogSyncRunMinOrderByAggregateInput = {
 export type CatalogSyncRunSumOrderByAggregateInput = {
   productsProcessed?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
+  questionsProcessed?: Prisma.SortOrder
   productsArchived?: Prisma.SortOrder
 }
 
@@ -605,6 +633,7 @@ export type CatalogSyncRunCreateWithoutConnectionInput = {
   status?: $Enums.CatalogSyncStatus
   productsProcessed?: number
   variantsProcessed?: number
+  questionsProcessed?: number
   productsArchived?: number
   cursor?: string | null
   errorMessage?: string | null
@@ -620,6 +649,7 @@ export type CatalogSyncRunUncheckedCreateWithoutConnectionInput = {
   status?: $Enums.CatalogSyncStatus
   productsProcessed?: number
   variantsProcessed?: number
+  questionsProcessed?: number
   productsArchived?: number
   cursor?: string | null
   errorMessage?: string | null
@@ -665,6 +695,7 @@ export type CatalogSyncRunScalarWhereInput = {
   status?: Prisma.EnumCatalogSyncStatusFilter<"CatalogSyncRun"> | $Enums.CatalogSyncStatus
   productsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  questionsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsArchived?: Prisma.IntFilter<"CatalogSyncRun"> | number
   cursor?: Prisma.StringNullableFilter<"CatalogSyncRun"> | string | null
   errorMessage?: Prisma.StringNullableFilter<"CatalogSyncRun"> | string | null
@@ -680,6 +711,7 @@ export type CatalogSyncRunCreateManyConnectionInput = {
   status?: $Enums.CatalogSyncStatus
   productsProcessed?: number
   variantsProcessed?: number
+  questionsProcessed?: number
   productsArchived?: number
   cursor?: string | null
   errorMessage?: string | null
@@ -695,6 +727,7 @@ export type CatalogSyncRunUpdateWithoutConnectionInput = {
   status?: Prisma.EnumCatalogSyncStatusFieldUpdateOperationsInput | $Enums.CatalogSyncStatus
   productsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
+  questionsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   productsArchived?: Prisma.IntFieldUpdateOperationsInput | number
   cursor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -710,6 +743,7 @@ export type CatalogSyncRunUncheckedUpdateWithoutConnectionInput = {
   status?: Prisma.EnumCatalogSyncStatusFieldUpdateOperationsInput | $Enums.CatalogSyncStatus
   productsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
+  questionsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   productsArchived?: Prisma.IntFieldUpdateOperationsInput | number
   cursor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -725,6 +759,7 @@ export type CatalogSyncRunUncheckedUpdateManyWithoutConnectionInput = {
   status?: Prisma.EnumCatalogSyncStatusFieldUpdateOperationsInput | $Enums.CatalogSyncStatus
   productsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
+  questionsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   productsArchived?: Prisma.IntFieldUpdateOperationsInput | number
   cursor?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -743,6 +778,7 @@ export type CatalogSyncRunSelect<ExtArgs extends runtime.Types.Extensions.Intern
   status?: boolean
   productsProcessed?: boolean
   variantsProcessed?: boolean
+  questionsProcessed?: boolean
   productsArchived?: boolean
   cursor?: boolean
   errorMessage?: boolean
@@ -760,6 +796,7 @@ export type CatalogSyncRunSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   status?: boolean
   productsProcessed?: boolean
   variantsProcessed?: boolean
+  questionsProcessed?: boolean
   productsArchived?: boolean
   cursor?: boolean
   errorMessage?: boolean
@@ -777,6 +814,7 @@ export type CatalogSyncRunSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   status?: boolean
   productsProcessed?: boolean
   variantsProcessed?: boolean
+  questionsProcessed?: boolean
   productsArchived?: boolean
   cursor?: boolean
   errorMessage?: boolean
@@ -794,6 +832,7 @@ export type CatalogSyncRunSelectScalar = {
   status?: boolean
   productsProcessed?: boolean
   variantsProcessed?: boolean
+  questionsProcessed?: boolean
   productsArchived?: boolean
   cursor?: boolean
   errorMessage?: boolean
@@ -803,7 +842,7 @@ export type CatalogSyncRunSelectScalar = {
   updatedAt?: boolean
 }
 
-export type CatalogSyncRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "connectionId" | "kind" | "status" | "productsProcessed" | "variantsProcessed" | "productsArchived" | "cursor" | "errorMessage" | "startedAt" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["catalogSyncRun"]>
+export type CatalogSyncRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "connectionId" | "kind" | "status" | "productsProcessed" | "variantsProcessed" | "questionsProcessed" | "productsArchived" | "cursor" | "errorMessage" | "startedAt" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["catalogSyncRun"]>
 export type CatalogSyncRunInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   connection?: boolean | Prisma.ChannelConnectionDefaultArgs<ExtArgs>
 }
@@ -826,6 +865,7 @@ export type $CatalogSyncRunPayload<ExtArgs extends runtime.Types.Extensions.Inte
     status: $Enums.CatalogSyncStatus
     productsProcessed: number
     variantsProcessed: number
+    questionsProcessed: number
     productsArchived: number
     cursor: string | null
     errorMessage: string | null
@@ -1263,6 +1303,7 @@ export interface CatalogSyncRunFieldRefs {
   readonly status: Prisma.FieldRef<"CatalogSyncRun", 'CatalogSyncStatus'>
   readonly productsProcessed: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
   readonly variantsProcessed: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
+  readonly questionsProcessed: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
   readonly productsArchived: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
   readonly cursor: Prisma.FieldRef<"CatalogSyncRun", 'String'>
   readonly errorMessage: Prisma.FieldRef<"CatalogSyncRun", 'String'>

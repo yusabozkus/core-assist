@@ -91,7 +91,8 @@ export type CatalogSyncStatus = (typeof CatalogSyncStatus)[keyof typeof CatalogS
 
 export const CatalogSyncKind = {
   FULL: 'FULL',
-  INVENTORY: 'INVENTORY'
+  INVENTORY: 'INVENTORY',
+  QUESTION: 'QUESTION'
 } as const
 
 export type CatalogSyncKind = (typeof CatalogSyncKind)[keyof typeof CatalogSyncKind]

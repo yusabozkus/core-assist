@@ -1,0 +1,243 @@
+"use client"
+
+import { useState } from "react"
+import Image from "next/image"
+import { ChevronRightIcon, Package01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import { cn } from "@/lib/utils"
+import type { InventoryItem } from "@/types/inventory"
+
+export type InventoryProductGroup = {
+  productId: string
+  productTitle: string
+  productBrand: string | null
+  productCategory: string | null
+  imageUrl: string | null
+  variants: InventoryItem[]
+}
+
+type InventoryProductRowProps = {
+  product: InventoryProductGroup
+  lowStockThreshold: number
+  onSelect: (productId: string) => void
+}
+
+export function InventoryProductRow({
+  product,
+  lowStockThreshold,
+  onSelect,
+}: InventoryProductRowProps) {
+  const [open, setOpen] = useState(false)
+  const totalStock = product.variants.reduce(
+    (total, variant) => total + Math.max(variant.stock, 0),
+    0
+  )
+  const availability = getProductAvailability(
+    product.variants,
+    lowStockThreshold
+  )
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-3 py-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_8.5rem_5rem] sm:px-4 lg:px-5">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <CollapsibleTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label={open ? "Varyantları kapat" : "Varyantları göster"}
+              className="shrink-0 text-muted-foreground"
+            >
+              <HugeiconsIcon
+                icon={ChevronRightIcon}
+                className={cn(
+                  "size-4 transition-transform duration-200",
+                  open && "rotate-90"
+                )}
+              />
+            </Button>
+          </CollapsibleTrigger>
+
+          <InventoryThumbnail
+            title={product.productTitle}
+            imageUrl={product.imageUrl}
+          />
+
+          <button
+            type="button"
+            onClick={() => onSelect(product.productId)}
+            className="min-w-0 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span className="line-clamp-2 text-sm leading-5 font-semibold text-foreground">
+              {product.productTitle}
+            </span>
+            <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+              {[product.productBrand, product.productCategory]
+                .filter(Boolean)
+                .join(" · ") || "Kategori bilgisi bulunmuyor"}
+            </span>
+            <span className="mt-1 block text-[11px] text-muted-foreground sm:hidden">
+              {product.variants.length} varyant
+            </span>
+          </button>
+        </div>
+
+        <div className="justify-self-end sm:justify-self-start">
+          <StockStatusBadge availability={availability} />
+        </div>
+
+        <div className="col-span-2 flex items-center justify-between pl-11 text-xs sm:col-span-1 sm:block sm:pl-0 sm:text-sm">
+          <span className="text-muted-foreground sm:hidden">Toplam stok</span>
+          <span className="font-semibold text-foreground tabular-nums">
+            {totalStock.toLocaleString("tr-TR")}
+          </span>
+        </div>
+      </div>
+
+      <CollapsibleContent>
+        <div className="border-b border-border bg-muted/20 px-3 py-1.5 sm:px-4 lg:px-5">
+          {product.variants.map((variant, index) => {
+            const variantAvailability = getVariantAvailability(
+              variant,
+              lowStockThreshold
+            )
+            const structuredDetails = [variant.color, variant.size].filter(
+              Boolean
+            )
+            const variantLabel =
+              structuredDetails.length > 0
+                ? structuredDetails.join(" / ")
+                : variant.title || `Varyant ${index + 1}`
+
+            return (
+              <div
+                key={variant.id}
+                className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 py-2.5 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_8.5rem_5rem]"
+              >
+                <div className="flex min-w-0 items-center gap-3 pl-11 sm:pl-12">
+                  <span
+                    className="h-px w-3 shrink-0 bg-border"
+                    aria-hidden="true"
+                  />
+                  <span className="min-w-0">
+                    <span className="block truncate text-xs font-medium text-foreground">
+                      {variantLabel}
+                    </span>
+                    <span className="mt-0.5 block truncate font-mono text-[10px] text-muted-foreground">
+                      {variant.sku}
+                    </span>
+                  </span>
+                </div>
+
+                <div className="justify-self-end sm:justify-self-start">
+                  <StockStatusBadge availability={variantAvailability} />
+                </div>
+
+                <div className="col-span-2 flex items-center justify-between pl-11 text-xs sm:col-span-1 sm:block sm:pl-0 sm:text-sm">
+                  <span className="text-muted-foreground sm:hidden">Stok</span>
+                  <span className="font-medium text-foreground tabular-nums">
+                    {Math.max(variant.stock, 0).toLocaleString("tr-TR")}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  )
+}
+
+type StockAvailability = "AVAILABLE" | "LOW" | "OUT"
+
+function StockStatusBadge({
+  availability,
+}: {
+  availability: StockAvailability
+}) {
+  if (availability === "OUT") {
+    return (
+      <Badge className="border-rose-500/25 bg-rose-500/10 text-rose-600 hover:bg-rose-500/10 dark:text-rose-400">
+        Tükendi
+      </Badge>
+    )
+  }
+
+  if (availability === "LOW") {
+    return <Badge variant="warning">Azalıyor</Badge>
+  }
+
+  return <Badge variant="success">Stok var</Badge>
+}
+
+function getProductAvailability(
+  variants: InventoryItem[],
+  lowStockThreshold: number
+): StockAvailability {
+  const totalStock = variants.reduce(
+    (total, variant) => total + Math.max(variant.stock, 0),
+    0
+  )
+
+  if (totalStock === 0) return "OUT"
+
+  const hasCriticalVariant = variants.some(
+    (variant) =>
+      variant.stock <= lowStockThreshold || variant.status !== "ACTIVE"
+  )
+
+  return hasCriticalVariant ? "LOW" : "AVAILABLE"
+}
+
+function getVariantAvailability(
+  variant: InventoryItem,
+  lowStockThreshold: number
+): StockAvailability {
+  if (variant.stock <= 0 || variant.status === "OUT_OF_STOCK") return "OUT"
+
+  if (variant.stock <= lowStockThreshold || variant.status !== "ACTIVE") {
+    return "LOW"
+  }
+
+  return "AVAILABLE"
+}
+
+function InventoryThumbnail({
+  title,
+  imageUrl,
+}: {
+  title: string
+  imageUrl: string | null
+}) {
+  const [failed, setFailed] = useState(false)
+  const supportedImageUrl =
+    imageUrl?.startsWith("/") || imageUrl?.startsWith("https://")
+
+  return (
+    <span className="relative flex size-11 shrink-0 overflow-hidden rounded-lg border border-border bg-muted sm:size-12">
+      {imageUrl && supportedImageUrl && !failed ? (
+        <Image
+          src={imageUrl}
+          alt={title}
+          fill
+          sizes="48px"
+          className="object-cover"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <span className="flex size-full items-center justify-center text-muted-foreground">
+          <HugeiconsIcon icon={Package01Icon} className="size-5" />
+        </span>
+      )}
+    </span>
+  )
+}

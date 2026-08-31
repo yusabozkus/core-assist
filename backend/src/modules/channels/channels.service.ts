@@ -7,10 +7,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  CatalogSyncStatus,
   ChannelConnectionStatus,
   StoreRole,
   StoreStatus,
 } from '../../generated/prisma/enums';
+import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { PRODUCT_SYNC_DISPATCHER } from '../product-sync/product-sync.constants';
 import type { ProductSyncDispatcher } from '../product-sync/product-sync.types';
@@ -18,6 +20,11 @@ import { channelConnectionSelect } from './channel.constants';
 import { CredentialsEncryptionService } from './credentials-encryption.service';
 import { ConfigureChannelConnectionDto } from './dto/configure-channel-connection.dto';
 import { CreateChannelConnectionDto } from './dto/create-channel-connection.dto';
+import {
+  type SyncHistoryQueryDto,
+  SyncHistoryKindFilter,
+  SyncHistoryStatusFilter,
+} from './dto/sync-history-query.dto';
 import { ProviderRegistryService } from './providers/provider-registry.service';
 
 @Injectable()
@@ -43,6 +50,107 @@ export class ChannelsService {
       orderBy: { createdAt: 'asc' },
       select: channelConnectionSelect,
     });
+  }
+
+  async findSyncHistory(
+    storeId: string,
+    userId: string,
+    query: SyncHistoryQueryDto,
+  ) {
+    await this.requireStoreMembership(storeId, userId);
+
+    const provider = query.provider?.trim();
+    const where = {
+      connection: {
+        storeId,
+        ...(provider ? { providerKey: provider } : {}),
+      },
+      ...(query.status !== SyncHistoryStatusFilter.ALL
+        ? { status: query.status }
+        : {}),
+      ...(query.kind !== SyncHistoryKindFilter.ALL ? { kind: query.kind } : {}),
+    } satisfies Prisma.CatalogSyncRunWhereInput;
+    const storeWhere = {
+      connection: { storeId },
+    } satisfies Prisma.CatalogSyncRunWhereInput;
+
+    const [runs, filteredTotal, statusGroups, providerConnections] =
+      await Promise.all([
+        this.prisma.catalogSyncRun.findMany({
+          where,
+          orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
+          take: query.limit + 1,
+          ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
+          select: {
+            id: true,
+            kind: true,
+            status: true,
+            productsProcessed: true,
+            variantsProcessed: true,
+            questionsProcessed: true,
+            productsArchived: true,
+            errorMessage: true,
+            startedAt: true,
+            completedAt: true,
+            connection: {
+              select: {
+                id: true,
+                providerKey: true,
+                environment: true,
+              },
+            },
+          },
+        }),
+        this.prisma.catalogSyncRun.count({ where }),
+        this.prisma.catalogSyncRun.groupBy({
+          by: ['status'],
+          where: storeWhere,
+          _count: { _all: true },
+        }),
+        this.prisma.channelConnection.findMany({
+          where: { storeId, syncRuns: { some: {} } },
+          distinct: ['providerKey'],
+          orderBy: { providerKey: 'asc' },
+          select: { providerKey: true },
+        }),
+      ]);
+
+    const hasNextPage = runs.length > query.limit;
+    const items = hasNextPage ? runs.slice(0, query.limit) : runs;
+    const statusCount = (status: CatalogSyncStatus) =>
+      statusGroups.find((group) => group.status === status)?._count._all ?? 0;
+
+    return {
+      items: items.map((run) => ({
+        id: run.id,
+        kind: run.kind,
+        status: run.status,
+        productsProcessed: run.productsProcessed,
+        variantsProcessed: run.variantsProcessed,
+        questionsProcessed: run.questionsProcessed,
+        productsArchived: run.productsArchived,
+        errorMessage: run.errorMessage,
+        startedAt: run.startedAt,
+        completedAt: run.completedAt,
+        connectionId: run.connection.id,
+        providerKey: run.connection.providerKey,
+        environment: run.connection.environment,
+      })),
+      nextCursor: hasNextPage ? (items.at(-1)?.id ?? null) : null,
+      total: filteredTotal,
+      providers: providerConnections.map(
+        (connection) => connection.providerKey,
+      ),
+      summary: {
+        total: statusGroups.reduce(
+          (total, group) => total + group._count._all,
+          0,
+        ),
+        running: statusCount(CatalogSyncStatus.RUNNING),
+        completed: statusCount(CatalogSyncStatus.COMPLETED),
+        failed: statusCount(CatalogSyncStatus.FAILED),
+      },
+    };
   }
 
   async create(

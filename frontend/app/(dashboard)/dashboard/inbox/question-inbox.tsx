@@ -261,7 +261,7 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
   )
 
   return (
-    <div className="h-full min-h-0 w-full bg-background">
+    <div className="h-full min-h-0 w-full bg-background px-0 lg:px-6">
       {isDesktop ? (
         <ResizablePanelGroup
           id="question-inbox-layout"
@@ -270,7 +270,7 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
         >
           <ResizablePanel
             id="question-list"
-            defaultSize="23.5rem"
+            defaultSize="26rem"
             minSize="19rem"
             maxSize="32rem"
             groupResizeBehavior="preserve-pixel-size"

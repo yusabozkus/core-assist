@@ -32,7 +32,6 @@ export const APP_ROUTES = {
     customers: "/dashboard/customers",
     channels: {
       root: "/dashboard/channels",
-      integrations: "/dashboard/channels/integrations",
       sync: "/dashboard/channels/sync",
     },
     automations: "/dashboard/automations",
@@ -147,11 +146,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
               exact: true,
             },
             {
-              title: "Entegrasyonlar",
-              url: APP_ROUTES.dashboard.channels.integrations,
-            },
-            {
-              title: "Senkronizasyon",
+              title: "Senkron Geçmişi",
               url: APP_ROUTES.dashboard.channels.sync,
             },
           ],

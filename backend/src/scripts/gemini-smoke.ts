@@ -4,7 +4,7 @@ import { GeminiClientService } from '../modules/ai/gemini-client.service';
 async function run() {
   const models = [
     process.env.GEMINI_FAST_MODEL?.trim() || 'gemini-3.5-flash-lite',
-    process.env.GEMINI_SMART_MODEL?.trim() || 'gemini-3.7-flash',
+    process.env.GEMINI_SMART_MODEL?.trim() || 'gemini-3.5-flash',
   ];
   const client = new GeminiClientService();
   const results: Array<{

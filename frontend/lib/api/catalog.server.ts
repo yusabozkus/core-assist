@@ -4,6 +4,7 @@ import { headers } from "next/headers"
 import { cache } from "react"
 
 import type { CatalogProductPage } from "@/types/product"
+import type { InventoryPage } from "@/types/inventory"
 
 const CATALOG_REQUEST_TIMEOUT_MS = 8_000
 
@@ -47,3 +48,53 @@ export const getServerCatalogProducts = cache(
     return (await response.json()) as CatalogProductPage
   }
 )
+
+export const getServerCatalogInventory = cache(
+  async (storeId: string): Promise<InventoryPage> => {
+    const cookie = (await headers()).get("cookie")
+
+    if (!cookie) {
+      return emptyInventoryPage()
+    }
+
+    const response = await fetch(
+      `${apiUrl}/stores/${storeId}/catalog/inventory?limit=20`,
+      {
+        cache: "no-store",
+        headers: {
+          Accept: "application/json",
+          cookie,
+        },
+        signal: AbortSignal.timeout(CATALOG_REQUEST_TIMEOUT_MS),
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(
+        `Catalog inventory request failed with status ${response.status}.`
+      )
+    }
+
+    return (await response.json()) as InventoryPage
+  }
+)
+
+function emptyInventoryPage(): InventoryPage {
+  return {
+    items: [],
+    nextCursor: null,
+    total: 0,
+    variantTotal: 0,
+    lowStockThreshold: 5,
+    providers: [],
+    summary: {
+      variants: 0,
+      healthy: 0,
+      lowStock: 0,
+      outOfStock: 0,
+      unavailable: 0,
+      totalStock: 0,
+      lastSyncedAt: null,
+    },
+  }
+}

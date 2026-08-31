@@ -6,6 +6,8 @@ import {
 import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
 import {
+  CatalogSyncKind,
+  CatalogSyncStatus,
   ChannelConnectionStatus,
   StoreStatus,
 } from '../../generated/prisma/enums';
@@ -61,10 +63,21 @@ export class QuestionSyncQueueService implements QuestionSyncDispatcher {
       );
     }
 
+    let syncRunId: string | undefined;
+
     try {
+      const syncRun = await this.prisma.catalogSyncRun.create({
+        data: {
+          connectionId,
+          kind: CatalogSyncKind.QUESTION,
+        },
+        select: { id: true },
+      });
+      syncRunId = syncRun.id;
+
       await this.queue.add(
         SYNC_STORE_QUESTIONS_JOB,
-        { storeId, connectionId },
+        { storeId, connectionId, syncRunId },
         {
           jobId: `question-sync-${connectionId}-${queuedAt.getTime()}`,
           attempts: 3,
@@ -74,19 +87,40 @@ export class QuestionSyncQueueService implements QuestionSyncDispatcher {
         },
       );
 
-      return { connectionId, status: 'RUNNING', queuedAt };
+      return { syncRunId, connectionId, status: 'RUNNING', queuedAt };
     } catch (error) {
-      await this.prisma.channelConnection.updateMany({
-        where: { id: connectionId },
-        data: {
-          questionSyncStartedAt: null,
-          questionSyncFailureReason: 'Soru senkronizasyonu kuyruğa eklenemedi.',
-        },
-      });
+      await this.releaseFailedEnqueue(connectionId, syncRunId);
       throw new ServiceUnavailableException(
         'Soru senkronizasyonu kuyruğuna şu anda ulaşılamıyor.',
         { cause: error },
       );
     }
+  }
+
+  private async releaseFailedEnqueue(connectionId: string, syncRunId?: string) {
+    const operations = [
+      this.prisma.channelConnection.updateMany({
+        where: { id: connectionId },
+        data: {
+          questionSyncStartedAt: null,
+          questionSyncFailureReason: 'Soru senkronizasyonu kuyruğa eklenemedi.',
+        },
+      }),
+    ];
+
+    if (syncRunId) {
+      operations.push(
+        this.prisma.catalogSyncRun.updateMany({
+          where: { id: syncRunId },
+          data: {
+            status: CatalogSyncStatus.FAILED,
+            errorMessage: 'Soru senkronizasyonu işi kuyruğa eklenemedi.',
+            completedAt: new Date(),
+          },
+        }),
+      );
+    }
+
+    await this.prisma.$transaction(operations);
   }
 }

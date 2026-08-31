@@ -329,22 +329,24 @@ enum CatalogSyncStatus {
 enum CatalogSyncKind {
   FULL
   INVENTORY
+  QUESTION
 }
 
 model CatalogSyncRun {
-  id                String            @id @default(uuid())
-  connectionId      String
-  kind              CatalogSyncKind   @default(FULL)
-  status            CatalogSyncStatus @default(RUNNING)
-  productsProcessed Int               @default(0)
-  variantsProcessed Int               @default(0)
-  productsArchived  Int               @default(0)
-  cursor            String?
-  errorMessage      String?
-  startedAt         DateTime          @default(now())
-  completedAt       DateTime?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  id                 String            @id @default(uuid())
+  connectionId       String
+  kind               CatalogSyncKind   @default(FULL)
+  status             CatalogSyncStatus @default(RUNNING)
+  productsProcessed  Int               @default(0)
+  variantsProcessed  Int               @default(0)
+  questionsProcessed Int               @default(0)
+  productsArchived   Int               @default(0)
+  cursor             String?
+  errorMessage       String?
+  startedAt          DateTime          @default(now())
+  completedAt        DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   connection ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
 

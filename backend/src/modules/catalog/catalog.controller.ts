@@ -10,6 +10,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CatalogService } from './catalog.service';
+import { CatalogInventoryQueryDto } from './catalog-inventory-query.dto';
 import { CatalogProductsQueryDto } from './catalog-products-query.dto';
 
 @Controller('stores/:storeId/catalog')
@@ -24,6 +25,15 @@ export class CatalogController {
     @Query() query: CatalogProductsQueryDto,
   ) {
     return this.catalogService.findProducts(storeId, user.id, query);
+  }
+
+  @Get('inventory')
+  findInventory(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: CatalogInventoryQueryDto,
+  ) {
+    return this.catalogService.findInventory(storeId, user.id, query);
   }
 
   @Get('products/:productId')

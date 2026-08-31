@@ -95,7 +95,10 @@ async function run() {
     const queuedCatalog = await productSync.enqueue(store.id, connection.id);
     await waitForCatalogSync(prisma, queuedCatalog.syncRunId);
 
-    await questionSync.enqueue(store.id, connection.id);
+    const firstQuestionSync = await questionSync.enqueue(
+      store.id,
+      connection.id,
+    );
     await waitForQuestionSync(prisma, connection.id);
 
     const questionToAnswer = await prisma.productQuestion.findFirstOrThrow({
@@ -127,7 +130,10 @@ async function run() {
     } catch {
       duplicateAnswerPrevented = true;
     }
-    await questionSync.enqueue(store.id, connection.id);
+    const secondQuestionSync = await questionSync.enqueue(
+      store.id,
+      connection.id,
+    );
     await waitForQuestionSync(prisma, connection.id);
 
     const [
@@ -137,6 +143,7 @@ async function run() {
       questions,
       matchedQuestions,
       sentAnswers,
+      questionSyncRuns,
     ] = await Promise.all([
       prisma.product.count({ where: { storeId: store.id } }),
       prisma.incomingEvent.count({ where: { connectionId: connection.id } }),
@@ -152,6 +159,20 @@ async function run() {
       prisma.questionAnswer.count({
         where: { connectionId: connection.id, status: 'SENT' },
       }),
+      prisma.catalogSyncRun.findMany({
+        where: {
+          id: {
+            in: [firstQuestionSync.syncRunId, secondQuestionSync.syncRunId],
+          },
+        },
+        orderBy: { startedAt: 'asc' },
+        select: {
+          kind: true,
+          status: true,
+          questionsProcessed: true,
+          completedAt: true,
+        },
+      }),
     ]);
 
     if (
@@ -164,7 +185,16 @@ async function run() {
       sentAnswers !== 1 ||
       generatedDraft.status !== 'DRAFTED' ||
       generatedDraft.context.source !== 'CATALOG' ||
-      !duplicateAnswerPrevented
+      !duplicateAnswerPrevented ||
+      questionSyncRuns.length !== 2 ||
+      questionSyncRuns.some(
+        (run) =>
+          run.kind !== 'QUESTION' ||
+          run.status !== 'COMPLETED' ||
+          run.completedAt === null,
+      ) ||
+      questionSyncRuns[0]?.questionsProcessed !== MOCK_QUESTIONS_PER_PROVIDER ||
+      questionSyncRuns[1]?.questionsProcessed !== 0
     ) {
       throw new Error(
         `Unexpected question flow: ${products} products, ${events} events, ${ignoredEvents} ignored, ${questions} questions, ${matchedQuestions} matched, ${sentAnswers} answers.`,
@@ -172,7 +202,7 @@ async function run() {
     }
 
     process.stdout.write(
-      `${JSON.stringify({ syncs: 2, products, events, ignoredEvents, questions, matchedQuestions, draftedAnswers: 1, sentAnswers, duplicateSafe: true, duplicateAnswerPrevented })}\n`,
+      `${JSON.stringify({ syncs: 2, questionSyncHistory: questionSyncRuns.map((run) => ({ kind: run.kind, status: run.status, questionsProcessed: run.questionsProcessed })), products, events, ignoredEvents, questions, matchedQuestions, draftedAnswers: 1, sentAnswers, duplicateSafe: true, duplicateAnswerPrevented })}\n`,
     );
   } finally {
     if (storeId) await prisma.store.deleteMany({ where: { id: storeId } });

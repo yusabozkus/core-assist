@@ -9,7 +9,7 @@ import {
 import { GeminiClientService } from './gemini-client.service';
 
 const DEFAULT_FAST_MODEL = 'gemini-3.5-flash-lite';
-const DEFAULT_SMART_MODEL = 'gemini-3.7-flash';
+const DEFAULT_SMART_MODEL = 'gemini-3.5-flash';
 const FAST_CONFIDENCE_THRESHOLD = 0.78;
 
 @Injectable()
