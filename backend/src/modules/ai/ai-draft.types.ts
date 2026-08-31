@@ -4,7 +4,7 @@ import type {
 } from '../questions/product-answer-context.types';
 
 export type AiDraftDecision = 'DRAFT' | 'NEEDS_REVIEW';
-export type AiDraftSource = 'GEMINI_FAST' | 'GEMINI_SMART';
+export type AiDraftSource = 'GEMINI';
 
 export type AiDraftResult = {
   answer: string;
@@ -23,6 +23,13 @@ export type GeminiGenerationRequest = {
   prompt: string;
   thinkingLevel: 'minimal' | 'low' | 'medium';
 };
+
+export class AiDraftRateLimitError extends Error {
+  constructor(readonly retryAfterSeconds: number | null) {
+    super('AI draft rate limit exceeded.');
+    this.name = 'AiDraftRateLimitError';
+  }
+}
 
 export abstract class AiDraftGenerator {
   abstract generate(

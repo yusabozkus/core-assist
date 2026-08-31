@@ -29,6 +29,21 @@ const DURABILITY_PATTERNS = [
   'su gecir',
 ];
 const SHIPPING_PATTERNS = ['kargo', 'teslim', 'gonderim', 'ne zaman gelir'];
+const PRODUCT_INFO_PATTERNS = [
+  'kalip',
+  'astar',
+  'ic goster',
+  'olcu',
+  'boyu',
+  'uzunluk',
+  'hacim',
+  'cep',
+  'aski',
+  'cikaril',
+  'paket',
+  'kutu',
+  'ayarlan',
+];
 const COMMON_COLORS = [
   'Siyah',
   'Beyaz',
@@ -171,11 +186,7 @@ export class ProductAnswerContextService {
         (!matchedSize || sameValue(variant.size, matchedSize))
       );
     });
-    const requestedFacts = detectRequestedFacts(
-      normalizedQuestion,
-      requestedColor,
-      requestedSize,
-    );
+    const requestedFacts = detectRequestedFacts(normalizedQuestion);
     const relevantAttributes = findRelevantAttributes(
       normalizedQuestion,
       question.product.attributes,
@@ -202,18 +213,10 @@ export class ProductAnswerContextService {
   }
 }
 
-function detectRequestedFacts(
-  normalizedQuestion: string,
-  requestedColor: string | null,
-  requestedSize: string | null,
-): ProductAnswerFact[] {
+function detectRequestedFacts(normalizedQuestion: string): ProductAnswerFact[] {
   const facts: ProductAnswerFact[] = [];
 
-  if (
-    requestedColor ||
-    requestedSize ||
-    includesAny(normalizedQuestion, STOCK_PATTERNS)
-  ) {
+  if (includesAny(normalizedQuestion, STOCK_PATTERNS)) {
     facts.push('STOCK');
   }
   if (includesAny(normalizedQuestion, PRICE_PATTERNS)) facts.push('PRICE');
@@ -225,6 +228,9 @@ function detectRequestedFacts(
   }
   if (includesAny(normalizedQuestion, SHIPPING_PATTERNS)) {
     facts.push('SHIPPING');
+  }
+  if (includesAny(normalizedQuestion, PRODUCT_INFO_PATTERNS)) {
+    facts.push('PRODUCT_INFO');
   }
   if (facts.length === 0) facts.push('PRODUCT_INFO');
 

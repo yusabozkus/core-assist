@@ -19,15 +19,13 @@ import type { QuestionAnswerDispatcher } from '../modules/question-answer/questi
 import { MOCK_PRODUCTS_PER_PROVIDER } from '../modules/channels/providers/mock-catalog.connector';
 import {
   MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER,
-  MOCK_QUESTIONS_PER_PROVIDER,
+  MOCK_TRENDYOL_QUESTIONS,
 } from '../modules/channels/providers/mock-question.connector';
-import { QuestionDraftService } from '../modules/questions/question-draft.service';
 
 const POLL_INTERVAL_MS = 100;
 const TIMEOUT_MS = 10_000;
 
 async function run() {
-  process.env.AI_DRAFT_MODE = 'deterministic';
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: false,
   });
@@ -40,7 +38,6 @@ async function run() {
   const questionAnswers = app.get<QuestionAnswerDispatcher>(
     QUESTION_ANSWER_DISPATCHER,
   );
-  const questionDrafts = app.get(QuestionDraftService);
   let userId: string | undefined;
   let workspaceId: string | undefined;
   let storeId: string | undefined;
@@ -106,15 +103,11 @@ async function run() {
       orderBy: { externalCreatedAt: 'asc' },
       select: { id: true },
     });
-    const generatedDraft = await questionDrafts.generate(
-      store.id,
-      questionToAnswer.id,
-    );
     const queuedAnswer = await questionAnswers.enqueue({
       storeId: store.id,
       questionId: questionToAnswer.id,
       requestedByUserId: user.id,
-      answer: generatedDraft.answer,
+      answer: 'Smoke testi için doğrulanmış yanıt.',
     });
     await waitForQuestionAnswer(prisma, queuedAnswer.id);
 
@@ -178,13 +171,11 @@ async function run() {
     if (
       products !== MOCK_PRODUCTS_PER_PROVIDER ||
       events !==
-        MOCK_QUESTIONS_PER_PROVIDER + MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER ||
+        MOCK_TRENDYOL_QUESTIONS + MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER ||
       ignoredEvents !== MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER ||
-      questions !== MOCK_QUESTIONS_PER_PROVIDER ||
-      matchedQuestions !== MOCK_QUESTIONS_PER_PROVIDER ||
+      questions !== MOCK_TRENDYOL_QUESTIONS ||
+      matchedQuestions !== MOCK_TRENDYOL_QUESTIONS ||
       sentAnswers !== 1 ||
-      generatedDraft.status !== 'DRAFTED' ||
-      generatedDraft.context.source !== 'CATALOG' ||
       !duplicateAnswerPrevented ||
       questionSyncRuns.length !== 2 ||
       questionSyncRuns.some(
@@ -193,7 +184,7 @@ async function run() {
           run.status !== 'COMPLETED' ||
           run.completedAt === null,
       ) ||
-      questionSyncRuns[0]?.questionsProcessed !== MOCK_QUESTIONS_PER_PROVIDER ||
+      questionSyncRuns[0]?.questionsProcessed !== MOCK_TRENDYOL_QUESTIONS ||
       questionSyncRuns[1]?.questionsProcessed !== 0
     ) {
       throw new Error(
@@ -202,7 +193,7 @@ async function run() {
     }
 
     process.stdout.write(
-      `${JSON.stringify({ syncs: 2, questionSyncHistory: questionSyncRuns.map((run) => ({ kind: run.kind, status: run.status, questionsProcessed: run.questionsProcessed })), products, events, ignoredEvents, questions, matchedQuestions, draftedAnswers: 1, sentAnswers, duplicateSafe: true, duplicateAnswerPrevented })}\n`,
+      `${JSON.stringify({ syncs: 2, questionSyncHistory: questionSyncRuns.map((run) => ({ kind: run.kind, status: run.status, questionsProcessed: run.questionsProcessed })), products, events, ignoredEvents, questions, matchedQuestions, sentAnswers, duplicateSafe: true, duplicateAnswerPrevented })}\n`,
     );
   } finally {
     if (storeId) await prisma.store.deleteMany({ where: { id: storeId } });

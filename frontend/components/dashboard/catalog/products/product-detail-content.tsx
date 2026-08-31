@@ -2,7 +2,12 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { LinkSquare02Icon, Package01Icon } from "@hugeicons/core-free-icons"
+import {
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  LinkSquare02Icon,
+  Package01Icon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import {
@@ -168,26 +173,72 @@ export function ProductDetailContent({ product }: { product: CatalogProduct }) {
 
 function ProductGallery({ product }: { product: CatalogProduct }) {
   const [failedImages, setFailedImages] = useState<Set<string>>(() => new Set())
-  const primaryImage = product.images.find(
+  const [selectedImageId, setSelectedImageId] = useState<string | null>(null)
+  const availableImages = product.images.filter(
     (image) => !failedImages.has(image.id)
   )
+  const primaryImage =
+    availableImages.find((image) => image.id === selectedImageId) ??
+    availableImages[0]
+  const selectedImageIndex = primaryImage
+    ? availableImages.findIndex((image) => image.id === primaryImage.id)
+    : -1
+
+  function showRelativeImage(direction: -1 | 1) {
+    if (availableImages.length < 2) return
+
+    const nextIndex =
+      (selectedImageIndex + direction + availableImages.length) %
+      availableImages.length
+    setSelectedImageId(availableImages[nextIndex].id)
+  }
 
   return (
     <div>
-      <div className="relative aspect-[4/5] overflow-hidden rounded-xl border border-border bg-muted">
+      <div className="relative aspect-[4/5] rounded-xl border border-border bg-muted">
         {primaryImage ? (
-          <Image
-            src={primaryImage.url}
-            alt={product.title}
-            fill
-            sizes="(max-width: 767px) 100vw, 240px"
-            className="object-cover"
-            onError={() =>
-              setFailedImages((current) =>
-                new Set(current).add(primaryImage.id)
-              )
-            }
-          />
+          <>
+            <Image
+              src={primaryImage.url}
+              alt={`${product.title} - ${selectedImageIndex + 1}. görsel`}
+              fill
+              sizes="(max-width: 767px) 100vw, 240px"
+              className="object-cover rounded-xl"
+              onError={() =>
+                setFailedImages((current) =>
+                  new Set(current).add(primaryImage.id)
+                )
+              }
+            />
+
+            {availableImages.length > 1 ? (
+              <>
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="secondary"
+                  className="absolute top-1/2 -left-5 hidden size-9 -translate-y-1/2 rounded-full border border-border/80 bg-background/90 shadow-sm backdrop-blur-sm hover:bg-background md:flex"
+                  aria-label="Önceki ürün görseli"
+                  onClick={() => showRelativeImage(-1)}
+                >
+                  <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" strokeWidth={2} />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="secondary"
+                  className="absolute top-1/2 -right-5 hidden size-9 -translate-y-1/2 rounded-full border border-border/80 bg-background/90 shadow-sm backdrop-blur-sm hover:bg-background md:flex"
+                  aria-label="Sonraki ürün görseli"
+                  onClick={() => showRelativeImage(1)}
+                >
+                  <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" strokeWidth={2} />
+                </Button>
+                <span className="absolute right-3 bottom-3 rounded-full border border-border/70 bg-background/85 px-2 py-1 text-[11px] font-medium text-foreground tabular-nums shadow-sm backdrop-blur-sm">
+                  {selectedImageIndex + 1} / {availableImages.length}
+                </span>
+              </>
+            ) : null}
+          </>
         ) : (
           <div className="flex size-full flex-col items-center justify-center gap-3 text-muted-foreground">
             <HugeiconsIcon icon={Package01Icon} className="size-9" />
@@ -195,10 +246,34 @@ function ProductGallery({ product }: { product: CatalogProduct }) {
           </div>
         )}
       </div>
-      {product.images.length > 1 ? (
-        <p className="mt-2 text-center text-xs text-muted-foreground">
-          {product.images.length} ürün görseli
-        </p>
+      {availableImages.length > 1 ? (
+        <div
+          className="themed-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1"
+          aria-label="Ürün görselleri"
+        >
+          {availableImages.map((image, index) => (
+            <button
+              key={image.id}
+              type="button"
+              className="relative size-14 shrink-0 overflow-hidden rounded-lg border border-border bg-muted transition-colors hover:border-foreground/40 data-[active=true]:border-primary data-[active=true]:ring-2 data-[active=true]:ring-primary/20"
+              data-active={image.id === primaryImage?.id}
+              aria-label={`${index + 1}. ürün görselini göster`}
+              aria-pressed={image.id === primaryImage?.id}
+              onClick={() => setSelectedImageId(image.id)}
+            >
+              <Image
+                src={image.url}
+                alt=""
+                fill
+                sizes="56px"
+                className="object-cover"
+                onError={() =>
+                  setFailedImages((current) => new Set(current).add(image.id))
+                }
+              />
+            </button>
+          ))}
+        </div>
       ) : null}
     </div>
   )

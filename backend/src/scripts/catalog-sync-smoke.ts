@@ -99,6 +99,10 @@ async function run() {
       limit: 10,
       cursor: firstPage.nextCursor ?? undefined,
     });
+    const thirdPage = await catalog.findProducts(store.id, user.id, {
+      limit: 10,
+      cursor: secondPage.nextCursor ?? undefined,
+    });
     const productDetail = await catalog.findProduct(
       store.id,
       firstPage.items[0].id,
@@ -142,8 +146,10 @@ async function run() {
       firstPage.items.length !== 10 ||
       !firstPage.nextCursor ||
       firstPage.total !== MOCK_PRODUCTS_PER_PROVIDER ||
-      secondPage.items.length !== MOCK_PRODUCTS_PER_PROVIDER - 10 ||
-      secondPage.nextCursor !== null ||
+      secondPage.items.length !== 10 ||
+      !secondPage.nextCursor ||
+      thirdPage.items.length !== MOCK_PRODUCTS_PER_PROVIDER - 20 ||
+      thirdPage.nextCursor !== null ||
       !productDetail.description?.includes('Yıkama ve Kullanma Talimatları') ||
       productDetail.attributes.length < 6
     ) {
@@ -158,7 +164,7 @@ async function run() {
     }
 
     process.stdout.write(
-      `${JSON.stringify({ status: syncRun.status, syncs: 3, products, variants, externalVariants, firstPage: firstPage.items.length, secondPage: secondPage.items.length, richProductDetail: true, stableVariantIds: true })}\n`,
+      `${JSON.stringify({ status: syncRun.status, syncs: 3, products, variants, externalVariants, firstPage: firstPage.items.length, secondPage: secondPage.items.length, thirdPage: thirdPage.items.length, richProductDetail: true, stableVariantIds: true })}\n`,
     );
   } finally {
     if (storeId) {

@@ -49,9 +49,7 @@ export class GeminiClientService {
   }
 
   isEnabled() {
-    return (
-      process.env.AI_DRAFT_MODE !== 'deterministic' && this.client !== null
-    );
+    return this.client !== null;
   }
 
   async generate(request: GeminiGenerationRequest): Promise<string> {

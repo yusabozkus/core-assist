@@ -12,6 +12,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { ApiError } from "@/lib/api/client"
 import {
   answerProductQuestion,
   generateProductQuestionDraft,
@@ -44,6 +45,7 @@ export function QuestionAnswerComposer({
   )
   const [isSubmitting, startSubmitTransition] = useTransition()
   const [isDrafting, startDraftTransition] = useTransition()
+  const [draftRetrySeconds, setDraftRetrySeconds] = useState(0)
   const isQueued =
     (optimisticQueuedAt !== null &&
       delivery?.queuedAt !== optimisticQueuedAt) ||
@@ -56,6 +58,16 @@ export function QuestionAnswerComposer({
     const intervalId = window.setInterval(() => router.refresh(), 1_500)
     return () => window.clearInterval(intervalId)
   }, [isQueued, router])
+
+  useEffect(() => {
+    if (draftRetrySeconds <= 0) return
+
+    const timeoutId = window.setTimeout(
+      () => setDraftRetrySeconds((seconds) => Math.max(0, seconds - 1)),
+      1_000
+    )
+    return () => window.clearTimeout(timeoutId)
+  }, [draftRetrySeconds])
 
   if (question.status === "ANSWERED" || delivery?.status === "SENT") {
     return (
@@ -112,6 +124,13 @@ export function QuestionAnswerComposer({
         setAnswer(result.answer)
         router.refresh()
       } catch (caughtError) {
+        if (
+          caughtError instanceof ApiError &&
+          caughtError.status === 429 &&
+          caughtError.retryAfterSeconds
+        ) {
+          setDraftRetrySeconds(caughtError.retryAfterSeconds)
+        }
         setError(
           caughtError instanceof Error
             ? caughtError.message
@@ -168,7 +187,11 @@ export function QuestionAnswerComposer({
               variant="outline"
               onClick={generateDraft}
               disabled={
-                isDrafting || isSubmitting || isQueued || !question.product
+                isDrafting ||
+                isSubmitting ||
+                isQueued ||
+                !question.product ||
+                draftRetrySeconds > 0
               }
               title={
                 question.product
@@ -182,9 +205,11 @@ export function QuestionAnswerComposer({
               />
               {isDrafting
                 ? "Hazırlanıyor..."
-                : question.status === "DRAFTED"
-                  ? "Taslağı yenile"
-                  : "Taslak oluştur"}
+                : draftRetrySeconds > 0
+                  ? `${draftRetrySeconds} sn sonra dene`
+                  : question.status === "DRAFTED"
+                    ? "Taslağı yenile"
+                    : "Taslak oluştur"}
             </Button>
             <Button
               type="submit"

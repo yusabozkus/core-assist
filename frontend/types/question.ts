@@ -61,10 +61,10 @@ export type DraftQuestionAnswerResult = {
     matchedColor: string | null
     matchedSize: string | null
     matchingVariantCount: number
-    source: "CATALOG" | "GEMINI_FAST" | "GEMINI_SMART"
-    model: string | null
+    source: "GEMINI"
+    model: string
     decision: "DRAFT" | "NEEDS_REVIEW"
-    confidence: number | null
+    confidence: number
     missingInformation: string[]
   }
 }

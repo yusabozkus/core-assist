@@ -4,12 +4,14 @@ type ApiErrorPayload = {
   code?: string
   field?: string
   message?: string | string[]
+  retryAfterSeconds?: number
 }
 
 export class ApiError extends Error {
   readonly status: number
   readonly code?: string
   readonly field?: string
+  readonly retryAfterSeconds?: number
 
   constructor(status: number, payload?: ApiErrorPayload) {
     super(getErrorMessage(payload, status))
@@ -17,6 +19,7 @@ export class ApiError extends Error {
     this.status = status
     this.code = payload?.code
     this.field = payload?.field
+    this.retryAfterSeconds = payload?.retryAfterSeconds
   }
 }
 
