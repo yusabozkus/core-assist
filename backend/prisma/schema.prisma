@@ -143,6 +143,12 @@ enum AiResponseLength {
   DETAILED
 }
 
+enum AiEmojiPolicy {
+  NEVER
+  WHEN_APPROPRIATE
+  ALWAYS
+}
+
 model StoreKnowledgeProfile {
   storeId               String           @id
   brandDescription      String?
@@ -155,6 +161,9 @@ model StoreKnowledgeProfile {
   responseLength        AiResponseLength @default(BALANCED)
   greetingEnabled       Boolean          @default(true)
   closingEnabled        Boolean          @default(true)
+  emojiPolicy           AiEmojiPolicy    @default(NEVER)
+  preferredEmoji        String?
+  // Kept temporarily so existing checkbox preferences can be migrated safely.
   emojiEnabled          Boolean          @default(false)
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt

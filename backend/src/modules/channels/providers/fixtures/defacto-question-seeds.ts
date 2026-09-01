@@ -3,9 +3,10 @@ export type DefactoQuestionSeed = {
   targetProvider: 'trendyol' | 'hepsiburada';
   externalProductId: number | string;
   text: string;
-  referenceAnswer: string;
-  referenceSourceUrl: string;
-  referenceSourceProvider: 'trendyol';
+  scenario?: 'PRODUCT' | 'ABUSIVE' | 'IRRELEVANT';
+  referenceAnswer?: string;
+  referenceSourceUrl?: string;
+  referenceSourceProvider?: 'trendyol';
   sourceAskedAt: string;
 };
 
@@ -259,6 +260,142 @@ const trendyolSeeds: DefactoQuestionSeed[] = [
     referenceSourceProvider: 'trendyol',
     sourceAskedAt: '2026-06-21',
   },
+  {
+    id: 'z6475-color-haki',
+    targetProvider: 'trendyol',
+    externalProductId: 817211877,
+    text: 'Pantolonun rengi tam olarak nedir?',
+    referenceAnswer:
+      'Merhabalar, ürün haki renktedir. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: Z6475_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-27',
+  },
+  {
+    id: 'z6475-stretch-ratio',
+    targetProvider: 'trendyol',
+    externalProductId: 817211877,
+    text: 'Kumaşı esniyor mu, elastan var mı?',
+    referenceAnswer:
+      'Merhabalar, ürün %1 elastan içerdiği için hafif esnek bir yapıya sahiptir. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: Z6475_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-28',
+  },
+  {
+    id: 'd0033-slim-fit',
+    targetProvider: 'trendyol',
+    externalProductId: 823811179,
+    text: 'Ürün dar kalıp mı normal kalıp mı?',
+    referenceAnswer:
+      'Merhabalar, ürün slim fit yani dar kesimdir. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: D0033_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-18',
+  },
+  {
+    id: 'd0033-short-sleeve',
+    targetProvider: 'trendyol',
+    externalProductId: 823811179,
+    text: 'Kolları kısa mı dirseğe kadar mı geliyor?',
+    referenceAnswer:
+      'Merhabalar, ürün kısa kolludur. Kolun duruşu kişinin vücut ölçülerine göre değişebilir. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: D0033_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-20',
+  },
+  {
+    id: 'f3269-drawstring-waist',
+    targetProvider: 'trendyol',
+    externalProductId: 960188828,
+    text: 'Bel kısmı lastikli ve bağcıklı mı?',
+    referenceAnswer:
+      'Merhabalar, ürünün beli lastikli ve bağcıklıdır. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: F3269_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-17',
+  },
+  {
+    id: 'z9933-cotton-content',
+    targetProvider: 'trendyol',
+    externalProductId: 680475722,
+    text: 'Kumaşı yüzde yüz pamuk mu?',
+    referenceAnswer:
+      'Merhabalar, ürün %100 pamuk kumaştan üretilmiştir. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: Z9933_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-29',
+  },
+  {
+    id: 'e6885-black-color',
+    targetProvider: 'trendyol',
+    externalProductId: 921656699,
+    text: 'Bu ilandaki tişört siyah mı?',
+    referenceAnswer:
+      'Merhabalar, ilandaki ürün siyah renktedir. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: E6885_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-30',
+  },
+  {
+    id: 'd1902-pocket',
+    targetProvider: 'trendyol',
+    externalProductId: 929169958,
+    text: 'Gömleğin göğüs cebi bulunuyor mu?',
+    referenceAnswer:
+      'Merhabalar, ürün cepsizdir. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: D1902_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-25',
+  },
+  {
+    id: 'ty-abusive-brand',
+    targetProvider: 'trendyol',
+    externalProductId: 817211877,
+    text: 'DeFacto orospu çocuğudur',
+    scenario: 'ABUSIVE',
+    sourceAskedAt: '2026-08-31',
+  },
+  {
+    id: 'ty-abusive-family',
+    targetProvider: 'trendyol',
+    externalProductId: 823811179,
+    text: 'Ananı sikeyim bu nasıl ürün',
+    scenario: 'ABUSIVE',
+    sourceAskedAt: '2026-08-31',
+  },
+  {
+    id: 'ty-abusive-dismissal',
+    targetProvider: 'trendyol',
+    externalProductId: 960188828,
+    text: 'Siktir git, bu ne biçim pantolon',
+    scenario: 'ABUSIVE',
+    sourceAskedAt: '2026-08-31',
+  },
+  {
+    id: 'ty-irrelevant-politics',
+    targetProvider: 'trendyol',
+    externalProductId: 680475722,
+    text: 'Recep Tayyip Erdoğan kimdir?',
+    scenario: 'IRRELEVANT',
+    sourceAskedAt: '2026-08-31',
+  },
+  {
+    id: 'ty-irrelevant-weather',
+    targetProvider: 'trendyol',
+    externalProductId: 921656699,
+    text: 'Bugün İstanbul’da hava nasıl?',
+    scenario: 'IRRELEVANT',
+    sourceAskedAt: '2026-08-31',
+  },
+  {
+    id: 'ty-irrelevant-recipe',
+    targetProvider: 'trendyol',
+    externalProductId: 929169958,
+    text: 'Bana güzel bir makarna tarifi verir misiniz?',
+    scenario: 'IRRELEVANT',
+    sourceAskedAt: '2026-08-31',
+  },
 ];
 
 const hepsiburadaSeeds: DefactoQuestionSeed[] = [
@@ -327,6 +464,145 @@ const hepsiburadaSeeds: DefactoQuestionSeed[] = [
     referenceSourceUrl: D9882_SOURCE,
     referenceSourceProvider: 'trendyol',
     sourceAskedAt: '2026-05-10',
+  },
+  {
+    id: 'hb-f6265-material-content',
+    targetProvider: 'hepsiburada',
+    externalProductId: 'HBCV00009U88OT',
+    text: 'Kumaş içeriği nedir, pamuk oranı kaç?',
+    referenceAnswer:
+      'Merhabalar, ürün %49 pamuk, %50 modal ve %1 elastan içermektedir. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: F6265_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-21',
+  },
+  {
+    id: 'hb-f6265-length-small',
+    targetProvider: 'hepsiburada',
+    externalProductId: 'HBCV00009U88OT',
+    text: 'S beden ürün boyu kaç santim?',
+    referenceAnswer:
+      'Merhabalar, S bedenin ürün uzunluğu 72,5 cm’dir. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: F6265_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-22',
+  },
+  {
+    id: 'hb-f6265-regular-fit',
+    targetProvider: 'hepsiburada',
+    externalProductId: 'HBCV00009U88OT',
+    text: 'Kalıbı dar mı yoksa standart mı?',
+    referenceAnswer:
+      'Merhabalar, ürün regular fit yani standart kalıptır. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: F6265_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-23',
+  },
+  {
+    id: 'hb-f6265-polo-collar',
+    targetProvider: 'hepsiburada',
+    externalProductId: 'HBCV00009U88OT',
+    text: 'Yaka kısmı polo yaka mı?',
+    referenceAnswer:
+      'Merhabalar, ürün polo yakadır. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: F6265_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-24',
+  },
+  {
+    id: 'hb-d9882-linen-content',
+    targetProvider: 'hepsiburada',
+    externalProductId: 'HBCV00009ID3EZ',
+    text: 'Keten oranı kaç, kumaşında viskoz var mı?',
+    referenceAnswer:
+      'Merhabalar, ürün %28 keten ve %72 viskoz içermektedir. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: D9882_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-25',
+  },
+  {
+    id: 'hb-d9882-relax-fit',
+    targetProvider: 'hepsiburada',
+    externalProductId: 'HBCV00009ID3EZ',
+    text: 'Gömlek bol kesim mi?',
+    referenceAnswer:
+      'Merhabalar, ürün relax fit rahat kalıptır. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: D9882_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-26',
+  },
+  {
+    id: 'hb-d9882-length-medium',
+    targetProvider: 'hepsiburada',
+    externalProductId: 'HBCV00009ID3EZ',
+    text: 'M bedenin boy uzunluğu nedir?',
+    referenceAnswer:
+      'Merhabalar, M bedenin ürün uzunluğu 75 cm’dir. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: D9882_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-27',
+  },
+  {
+    id: 'hb-d9882-short-sleeve',
+    targetProvider: 'hepsiburada',
+    externalProductId: 'HBCV00009ID3EZ',
+    text: 'Uzun kollu seçeneği mi geliyor?',
+    referenceAnswer:
+      'Merhabalar, bu ürün kısa kolludur. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: D9882_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-28',
+  },
+  {
+    id: 'hb-d9882-navy-color',
+    targetProvider: 'hepsiburada',
+    externalProductId: 'HBCV00009ID3EZ',
+    text: 'Fotoğraftaki renk siyah mı lacivert mi?',
+    referenceAnswer:
+      'Merhabalar, ilandaki ürün lacivert renktedir. Keyifli alışverişler dileriz.',
+    referenceSourceUrl: D9882_SOURCE,
+    referenceSourceProvider: 'trendyol',
+    sourceAskedAt: '2026-08-29',
+  },
+  {
+    id: 'hb-abusive-targeted',
+    targetProvider: 'hepsiburada',
+    externalProductId: 'HBCV00009U88OT',
+    text: 'Siz şerefsizsiniz, insanları kandırıyorsunuz',
+    scenario: 'ABUSIVE',
+    sourceAskedAt: '2026-08-31',
+  },
+  {
+    id: 'hb-abusive-store',
+    targetProvider: 'hepsiburada',
+    externalProductId: 'HBCV00009ID3EZ',
+    text: 'Bu mağaza dolandırıcı ve piç dolu',
+    scenario: 'ABUSIVE',
+    sourceAskedAt: '2026-08-31',
+  },
+  {
+    id: 'hb-abusive-product',
+    targetProvider: 'hepsiburada',
+    externalProductId: 'HBCV00009U88OT',
+    text: 'Amına koyayım böyle ürünün',
+    scenario: 'ABUSIVE',
+    sourceAskedAt: '2026-08-31',
+  },
+  {
+    id: 'hb-irrelevant-football',
+    targetProvider: 'hepsiburada',
+    externalProductId: 'HBCV00009ID3EZ',
+    text: 'Galatasaray’ın son maçı kaç kaç bitti?',
+    scenario: 'IRRELEVANT',
+    sourceAskedAt: '2026-08-31',
+  },
+  {
+    id: 'hb-irrelevant-programming',
+    targetProvider: 'hepsiburada',
+    externalProductId: 'HBCV00009U88OT',
+    text: 'Python öğrenmeye nereden başlamalıyım?',
+    scenario: 'IRRELEVANT',
+    sourceAskedAt: '2026-08-31',
   },
 ];
 

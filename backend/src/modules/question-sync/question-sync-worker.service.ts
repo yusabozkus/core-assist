@@ -4,6 +4,7 @@ import {
   ChannelConnectionStatus,
   IncomingEventProcessingStatus,
   IncomingEventType,
+  ProductQuestionStatus,
   StoreStatus,
 } from '../../generated/prisma/enums';
 import type { Prisma } from '../../generated/prisma/client';
@@ -11,6 +12,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { CredentialsEncryptionService } from '../channels/credentials-encryption.service';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
 import type { NormalizedProductQuestion } from '../channels/providers/question-connector';
+import { evaluateQuestionResponsePolicy } from '../questions/question-response-policy.service';
 import { QUESTION_SYNC_MAX_BATCHES } from './question-sync.constants';
 import type { QuestionSyncJobData } from './question-sync.types';
 
@@ -211,6 +213,7 @@ export class QuestionSyncWorkerService {
         },
         select: { id: true, productId: true },
       });
+      const responsePolicy = evaluateQuestionResponsePolicy(question.text);
 
       await this.prisma.$transaction([
         this.prisma.productQuestion.create({
@@ -228,6 +231,10 @@ export class QuestionSyncWorkerService {
             referenceAnswer: question.referenceAnswer,
             referenceSourceUrl: question.referenceSourceUrl,
             referenceSourceProvider: question.referenceSourceProvider,
+            status:
+              responsePolicy.action === 'DO_NOT_REPLY'
+                ? ProductQuestionStatus.IGNORED
+                : ProductQuestionStatus.PENDING,
             externalCreatedAt: question.createdAt,
           },
         }),

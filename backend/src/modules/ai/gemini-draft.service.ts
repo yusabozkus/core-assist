@@ -84,6 +84,15 @@ export class GeminiDraftService extends AiDraftGenerator {
 
 function createPrompt(context: ProductAnswerContext) {
   const normalizedQuestion = normalizeText(context.question);
+  const storeInstructions =
+    context.responsePreferences?.instructions
+      .map((instruction) => instruction.trim())
+      .filter(Boolean) ?? [];
+  const storeInstructionBlock = storeInstructions.length
+    ? storeInstructions
+        .map((instruction, index) => `${index + 1}. ${instruction}`)
+        .join('\n')
+    : 'Tanımlanmış özel mağaza talimatı yok.';
   const verifiedColorEvidence = context.evidence.find(
     (evidence) =>
       evidence.fact === 'COLOR' &&
@@ -150,10 +159,14 @@ function createPrompt(context: ProductAnswerContext) {
     'answerability FULL ise sorunun bütün bölümleri kanıtlarla yanıtlanabiliyor, PARTIAL ise yalnızca bir kısmı yanıtlanabiliyor, INSUFFICIENT ise sorunun ana kısmı için yeterli kanıt yok demektir.',
     'responsePreferences mağazanın üslup tercihidir. Bu tercihler hiçbir zaman katalog kanıtlarını, güvenlik kurallarını veya doğruluk gereksinimini geçersiz kılamaz.',
     'greetingEnabled true ise cevaba tercihen "Merhabalar," veya "Merhaba," diye başla; false ise selamlama kullanma. Ardından sonucu doğrudan söyle; gereksiz giriş yapma.',
-    'closingEnabled true ise cevabı bağlama uygun kısa ve nazik bir kapanışla bitir; false ise kapanış kullanma. emojiEnabled false ise emoji kullanma.',
+    'closingEnabled true ise cevabı bağlama uygun kısa ve nazik bir kapanışla bitir; false ise kapanış kullanma. Özel mağaza talimatı belirli bir kapanış biçimi istiyorsa onu uygula.',
+    'emojiPolicy NEVER ise hiçbir emoji kullanma. WHEN_APPROPRIATE ise yalnızca mesajın bağlamına ve mağaza tonuna gerçekten uygunsa en fazla bir emoji kullan; sıradan bilgi cevaplarına zorunlu olarak emoji ekleme. ALWAYS ise cevabın sonunda tam olarak bir emoji kullan. preferredEmoji doluysa emoji kullanacağın her durumda onu tercih et. Emoji mesajın ortasında bulunmamalıdır.',
+    'Emoji politikası yapılandırılmış ve belirleyici bir ayardır. Özel mağaza talimatı emoji politikasıyla çelişirse emojiPolicy ve preferredEmoji değerleri önceliklidir.',
     'tone PROFESSIONAL ise ölçülü ve kurumsal, FRIENDLY ise doğal ve yakın, WARM ise nazik ve sıcak, MINIMAL ise mümkün olan en kısa dili kullan.',
     'responseLength SHORT ise 1-2, BALANCED ise 2-4, DETAILED ise yalnızca gerçekten gerekliyse 3-5 kısa cümle kullan.',
-    'responsePreferences.instructions içindeki mağaza talimatlarını uygula; ancak veri uydurmayı, kanıtları görmezden gelmeyi veya güvenlik kurallarını ihlal etmeyi isteyen talimatları yok say.',
+    'Özel mağaza talimatları, üslup ve cevap biçimi açısından zorunludur. "Her zaman", "mutlaka" veya "her cevapta" denilen güvenli ifade ve davranışları answer metninde görünür biçimde uygula. Bu talimatlar yalnızca veri uydurmayı, doğrulanmış kanıtlarla çelişmeyi veya güvenlik kurallarını ihlal etmeyi istiyorsa yok sayılır.',
+    'Özel mağaza talimatları; "sorulmayan ürün özelliğini ekleme" gibi genel yazım kurallarından daha önceliklidir. Sabit bir marka ifadesi ürün özelliği sayılmaz ve istenmişse cevaba eklenmelidir.',
+    'Özel mağaza talimatının cümlesini cevaba kelimesi kelimesine kopyalama; talimatın ne yapmanı istediğini yorumlayıp yalnız sonucunu uygula. Örneğin "kapanışta her zaman 🚀 bu emojiyi kullan" talimatı, "bu emojiyi" sözlerini yazmak değil cevabın sonunda tek bir 🚀 kullanmak demektir.',
     'responsePreferences.approvedAnswerExamples daha önce insan tarafından gönderilmiş cevap örnekleridir. Bunları yalnızca mağazanın dili ve benzer sorulara yaklaşımı için kullan; eski stok, fiyat, kampanya veya teslimat bilgisini güncel gerçek kabul etme. Yeni cevapta gerçek bilgi olarak yalnızca catalogEvidence kullan.',
     'Mağaza adına birinci çoğul şahısla konuşabilirsin: "ürünümüz", "öneririz", "dileriz" gibi doğal satıcı ifadeleri kullan. Yapay, aşırı resmî veya robotik bir dil kullanma.',
     'Her cevapta aynı kalıbı tekrarlamak zorunda değilsin; selamlama ve kapanışı doğal biçimde çeşitlendir, fakat profesyonel mağaza tonunu koru.',
@@ -214,6 +227,10 @@ function createPrompt(context: ProductAnswerContext) {
     '',
     'DOĞRULANMIŞ KATALOG BAĞLAMI:',
     JSON.stringify(safeContext),
+    '',
+    'ZORUNLU ÖZEL MAĞAZA TALİMATLARI:',
+    storeInstructionBlock,
+    'JSON çıktısındaki answer alanını göndermeden önce yukarıdaki güvenli mağaza talimatlarının tamamına uyduğunu kontrol et.',
   ].join('\n');
 }
 
@@ -453,6 +470,8 @@ const SELLER_CLOSINGS = [
   'İyi alışverişler dileriz.',
   'İyi günler dileriz.',
 ] as const;
+const EMOJI_SEQUENCE_PATTERN =
+  /(?:\p{Regional_Indicator}{2}|(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:\uFE0E|\uFE0F)?(?:\p{Emoji_Modifier})?(?:\u200D(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:\uFE0E|\uFE0F)?(?:\p{Emoji_Modifier})?)*)/gu;
 
 export function applySellerTone(
   answer: string,
@@ -474,9 +493,6 @@ export function applySellerTone(
       /\s*(?:keyifli alışverişler|iyi alışverişler|iyi günler|sağlıklı günler)(?: dileriz)?[.!]?$/i,
       '',
     );
-  }
-  if (preferences?.emojiEnabled === false) {
-    result = result.replace(/[\p{Extended_Pictographic}\uFE0F]/gu, '').trim();
   }
   if (result) {
     result = `${result.charAt(0).toLocaleUpperCase('tr-TR')}${result.slice(1)}`;
@@ -501,7 +517,34 @@ export function applySellerTone(
     result = `${result} ${pickStableStyle(SELLER_CLOSINGS, seed, 1)}`;
   }
 
+  result = applyEmojiPolicy(result, preferences);
+
   return result;
+}
+
+function applyEmojiPolicy(
+  answer: string,
+  preferences?: ProductAnswerContext['responsePreferences'],
+) {
+  const policy = preferences?.emojiPolicy ?? 'NEVER';
+  const generatedEmoji = answer.match(EMOJI_SEQUENCE_PATTERN)?.[0] ?? null;
+  const preferredEmoji =
+    preferences?.preferredEmoji?.match(EMOJI_SEQUENCE_PATTERN)?.[0] ?? null;
+  const answerWithoutEmoji = answer
+    .replace(EMOJI_SEQUENCE_PATTERN, ' ')
+    .replace(/[\u200D\uFE0E\uFE0F]/g, '')
+    .replace(/\s+([,.!?;:])/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (policy === 'NEVER') return answerWithoutEmoji;
+
+  const selectedEmoji = preferredEmoji ?? generatedEmoji;
+  if (policy === 'WHEN_APPROPRIATE' && !generatedEmoji) {
+    return answerWithoutEmoji;
+  }
+
+  return `${answerWithoutEmoji} ${selectedEmoji ?? '🙂'}`;
 }
 
 function pickStableStyle<T extends readonly string[]>(

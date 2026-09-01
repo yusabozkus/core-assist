@@ -1,7 +1,11 @@
 "use client"
 
-import type { ReactNode } from "react"
-import { Delete02Icon, PlusSignIcon } from "@hugeicons/core-free-icons"
+import { useState, type ReactNode } from "react"
+import {
+  Delete02Icon,
+  PlusSignIcon,
+  RefreshIcon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type { IconSvgElement } from "@hugeicons/react"
 
@@ -9,6 +13,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
@@ -191,11 +200,10 @@ export function FeedbackBanner({ feedback }: { feedback: SaveFeedback }) {
 
   return (
     <div
-      className={`rounded-lg border px-3.5 py-2.5 text-sm ${
-        feedback.type === "success"
+      className={`rounded-lg border px-3.5 py-2.5 text-sm ${feedback.type === "success"
           ? "border-emerald-500/25 bg-emerald-500/8 text-emerald-700 dark:text-emerald-300"
           : "border-destructive/30 bg-destructive/8 text-destructive"
-      }`}
+        }`}
     >
       {feedback.message}
     </div>
@@ -251,11 +259,13 @@ export function CollectionItem({
   description,
   onRemove,
   isRemoving,
+  removeConfirmation,
 }: {
   title: string
   description: string
-  onRemove: () => void
+  onRemove: () => void | Promise<void>
   isRemoving?: boolean
+  removeConfirmation?: RemoveConfirmation
 }) {
   return (
     <div className="flex items-start gap-4 py-4">
@@ -265,16 +275,118 @@ export function CollectionItem({
           {description}
         </p>
       </div>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        onClick={onRemove}
-        disabled={isRemoving}
-        aria-label="Kaldır"
-        className="text-muted-foreground hover:text-destructive"
-      >
-        <HugeiconsIcon icon={Delete02Icon} className="size-4" />
-      </Button>
+      {removeConfirmation ? (
+        <RemoveConfirmationPopover
+          confirmation={removeConfirmation}
+          onRemove={onRemove}
+          isRemoving={isRemoving}
+        />
+      ) : (
+        <RemoveButton onClick={onRemove} disabled={isRemoving} />
+      )}
     </div>
+  )
+}
+
+type RemoveConfirmation = {
+  title: string
+  description: string
+  cancelLabel?: string
+  confirmLabel?: string
+}
+
+function RemoveButton({
+  onClick,
+  disabled,
+}: {
+  onClick?: () => void | Promise<void>
+  disabled?: boolean
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label="Kaldır"
+      className="text-muted-foreground hover:text-destructive"
+    >
+      <HugeiconsIcon icon={Delete02Icon} className="size-4" />
+    </Button>
+  )
+}
+
+function RemoveConfirmationPopover({
+  confirmation,
+  onRemove,
+  isRemoving,
+}: {
+  confirmation: RemoveConfirmation
+  onRemove: () => void | Promise<void>
+  isRemoving?: boolean
+}) {
+  const [open, setOpen] = useState(false)
+
+  async function confirmRemove() {
+    await onRemove()
+    setOpen(false)
+  }
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!isRemoving) setOpen(nextOpen)
+      }}
+    >
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          disabled={isRemoving}
+          aria-label="Kaldır"
+          className="text-muted-foreground hover:text-destructive"
+        >
+          <HugeiconsIcon icon={Delete02Icon} className="size-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        sideOffset={8}
+      >
+        <div>
+          <p className="text-sm leading-5 font-semibold">
+            {confirmation.title}
+          </p>
+          <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
+            {confirmation.description}
+          </p>
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setOpen(false)}
+            disabled={isRemoving}
+          >
+            {confirmation.cancelLabel ?? "Vazgeç"}
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={confirmRemove}
+            disabled={isRemoving}
+          >
+            {isRemoving ? (
+              <HugeiconsIcon
+                icon={RefreshIcon}
+                className="size-4 animate-spin"
+              />
+            ) : null}
+            {confirmation.confirmLabel ?? "Evet, sil"}
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }

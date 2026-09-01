@@ -13,7 +13,11 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { AiResponseLength, AiTone } from '../../../generated/prisma/enums';
+import {
+  AiEmojiPolicy,
+  AiResponseLength,
+  AiTone,
+} from '../../../generated/prisma/enums';
 
 export class KnowledgeFaqDto {
   @IsString()
@@ -126,8 +130,19 @@ export class UpdateStoreKnowledgeDto {
   closingEnabled?: boolean;
 
   @IsOptional()
-  @IsBoolean()
-  emojiEnabled?: boolean;
+  @IsEnum(AiEmojiPolicy)
+  emojiPolicy?: AiEmojiPolicy;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(16)
+  @Matches(
+    /^(?:\p{Regional_Indicator}{2}|(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:\uFE0E|\uFE0F)?(?:\p{Emoji_Modifier})?(?:\u200D(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:\uFE0E|\uFE0F)?(?:\p{Emoji_Modifier})?)*)$/u,
+    {
+      message: 'Tercih edilen emoji yalnızca tek bir emoji içermelidir.',
+    },
+  )
+  preferredEmoji?: string;
 
   @IsOptional()
   @IsArray()

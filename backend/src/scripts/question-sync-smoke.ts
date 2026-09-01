@@ -19,6 +19,7 @@ import type { QuestionAnswerDispatcher } from '../modules/question-answer/questi
 import { MOCK_PRODUCTS_PER_PROVIDER } from '../modules/channels/providers/mock-catalog.connector';
 import {
   MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER,
+  MOCK_REFERENCED_TRENDYOL_QUESTIONS,
   MOCK_TRENDYOL_QUESTIONS,
 } from '../modules/channels/providers/mock-question.connector';
 
@@ -188,7 +189,7 @@ async function run() {
       ignoredEvents !== MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER ||
       questions !== MOCK_TRENDYOL_QUESTIONS ||
       matchedQuestions !== MOCK_TRENDYOL_QUESTIONS ||
-      referencedQuestions !== MOCK_TRENDYOL_QUESTIONS ||
+      referencedQuestions !== MOCK_REFERENCED_TRENDYOL_QUESTIONS ||
       sentAnswers !== 1 ||
       !duplicateAnswerPrevented ||
       questionSyncRuns.length !== 2 ||

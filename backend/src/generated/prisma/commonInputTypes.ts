@@ -196,6 +196,13 @@ export type EnumAiResponseLengthFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumAiResponseLengthFilter<$PrismaModel> | $Enums.AiResponseLength
 }
 
+export type EnumAiEmojiPolicyFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiEmojiPolicy | Prisma.EnumAiEmojiPolicyFieldRefInput<$PrismaModel>
+  in?: $Enums.AiEmojiPolicy[] | Prisma.ListEnumAiEmojiPolicyFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiEmojiPolicy[] | Prisma.ListEnumAiEmojiPolicyFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiEmojiPolicyFilter<$PrismaModel> | $Enums.AiEmojiPolicy
+}
+
 export type EnumAiToneWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.AiTone | Prisma.EnumAiToneFieldRefInput<$PrismaModel>
   in?: $Enums.AiTone[] | Prisma.ListEnumAiToneFieldRefInput<$PrismaModel>
@@ -214,6 +221,16 @@ export type EnumAiResponseLengthWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumAiResponseLengthFilter<$PrismaModel>
   _max?: Prisma.NestedEnumAiResponseLengthFilter<$PrismaModel>
+}
+
+export type EnumAiEmojiPolicyWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiEmojiPolicy | Prisma.EnumAiEmojiPolicyFieldRefInput<$PrismaModel>
+  in?: $Enums.AiEmojiPolicy[] | Prisma.ListEnumAiEmojiPolicyFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiEmojiPolicy[] | Prisma.ListEnumAiEmojiPolicyFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiEmojiPolicyWithAggregatesFilter<$PrismaModel> | $Enums.AiEmojiPolicy
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumAiEmojiPolicyFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumAiEmojiPolicyFilter<$PrismaModel>
 }
 
 export type IntFilter<$PrismaModel = never> = {
@@ -832,6 +849,13 @@ export type NestedEnumAiResponseLengthFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumAiResponseLengthFilter<$PrismaModel> | $Enums.AiResponseLength
 }
 
+export type NestedEnumAiEmojiPolicyFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiEmojiPolicy | Prisma.EnumAiEmojiPolicyFieldRefInput<$PrismaModel>
+  in?: $Enums.AiEmojiPolicy[] | Prisma.ListEnumAiEmojiPolicyFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiEmojiPolicy[] | Prisma.ListEnumAiEmojiPolicyFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiEmojiPolicyFilter<$PrismaModel> | $Enums.AiEmojiPolicy
+}
+
 export type NestedEnumAiToneWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.AiTone | Prisma.EnumAiToneFieldRefInput<$PrismaModel>
   in?: $Enums.AiTone[] | Prisma.ListEnumAiToneFieldRefInput<$PrismaModel>
@@ -850,6 +874,16 @@ export type NestedEnumAiResponseLengthWithAggregatesFilter<$PrismaModel = never>
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumAiResponseLengthFilter<$PrismaModel>
   _max?: Prisma.NestedEnumAiResponseLengthFilter<$PrismaModel>
+}
+
+export type NestedEnumAiEmojiPolicyWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiEmojiPolicy | Prisma.EnumAiEmojiPolicyFieldRefInput<$PrismaModel>
+  in?: $Enums.AiEmojiPolicy[] | Prisma.ListEnumAiEmojiPolicyFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiEmojiPolicy[] | Prisma.ListEnumAiEmojiPolicyFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiEmojiPolicyWithAggregatesFilter<$PrismaModel> | $Enums.AiEmojiPolicy
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumAiEmojiPolicyFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumAiEmojiPolicyFilter<$PrismaModel>
 }
 
 export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {

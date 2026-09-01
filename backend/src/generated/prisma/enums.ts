@@ -37,6 +37,15 @@ export const AiResponseLength = {
 export type AiResponseLength = (typeof AiResponseLength)[keyof typeof AiResponseLength]
 
 
+export const AiEmojiPolicy = {
+  NEVER: 'NEVER',
+  WHEN_APPROPRIATE: 'WHEN_APPROPRIATE',
+  ALWAYS: 'ALWAYS'
+} as const
+
+export type AiEmojiPolicy = (typeof AiEmojiPolicy)[keyof typeof AiEmojiPolicy]
+
+
 export const StoreStatus = {
   ACTIVE: 'ACTIVE',
   INACTIVE: 'INACTIVE'

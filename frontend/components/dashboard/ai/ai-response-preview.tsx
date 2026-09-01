@@ -72,7 +72,11 @@ function createPreviewAnswer(profile: StoreKnowledge["profile"]) {
       ? "Merhaba, "
       : "Merhabalar, "
     : ""
-  const emoji = profile.emojiEnabled ? " 🙂" : ""
+  const shouldUseEmoji =
+    profile.emojiPolicy === "ALWAYS" ||
+    (profile.emojiPolicy === "WHEN_APPROPRIATE" &&
+      (profile.tone === "FRIENDLY" || profile.tone === "WARM"))
+  const emoji = shouldUseEmoji ? ` ${profile.preferredEmoji || "🙂"}` : ""
   const closing = profile.closingEnabled
     ? profile.tone === "WARM"
       ? " Güzel günlerde kullanmanızı dileriz."
@@ -103,5 +107,5 @@ function createPreviewAnswer(profile: StoreKnowledge["profile"]) {
     ? body
     : `${body.charAt(0).toLocaleUpperCase("tr-TR")}${body.slice(1)}`
 
-  return `${greeting}${resolvedBody}${emoji}${closing}`
+  return `${greeting}${resolvedBody}${closing}${emoji}`
 }

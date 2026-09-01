@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  AiEmojiPolicy,
   AiResponseLength,
   AiTone,
   StoreRole,
@@ -24,6 +25,8 @@ const profileSelect = {
   responseLength: true,
   greetingEnabled: true,
   closingEnabled: true,
+  emojiPolicy: true,
+  preferredEmoji: true,
   emojiEnabled: true,
 } as const;
 
@@ -81,7 +84,12 @@ export class KnowledgeService {
           responseLength: dto.responseLength ?? AiResponseLength.BALANCED,
           greetingEnabled: dto.greetingEnabled ?? true,
           closingEnabled: dto.closingEnabled ?? true,
-          emojiEnabled: dto.emojiEnabled ?? false,
+          emojiPolicy: dto.emojiPolicy ?? AiEmojiPolicy.NEVER,
+          preferredEmoji: clean(dto.preferredEmoji),
+          emojiEnabled:
+            dto.emojiPolicy !== undefined
+              ? dto.emojiPolicy !== AiEmojiPolicy.NEVER
+              : false,
         },
         update: {
           ...(dto.brandDescription !== undefined
@@ -108,7 +116,13 @@ export class KnowledgeService {
           responseLength: dto.responseLength,
           greetingEnabled: dto.greetingEnabled,
           closingEnabled: dto.closingEnabled,
-          emojiEnabled: dto.emojiEnabled,
+          emojiPolicy: dto.emojiPolicy,
+          ...(dto.preferredEmoji !== undefined
+            ? { preferredEmoji: clean(dto.preferredEmoji) }
+            : {}),
+          ...(dto.emojiPolicy !== undefined
+            ? { emojiEnabled: dto.emojiPolicy !== AiEmojiPolicy.NEVER }
+            : {}),
         },
       });
 
@@ -198,20 +212,35 @@ export class KnowledgeService {
         }),
       ]);
 
+    const resolvedProfile = profile
+      ? {
+          ...profile,
+          emojiPolicy:
+            profile.emojiPolicy === AiEmojiPolicy.NEVER && profile.emojiEnabled
+              ? AiEmojiPolicy.ALWAYS
+              : profile.emojiPolicy,
+        }
+      : {
+          brandDescription: null,
+          shippingPolicy: null,
+          returnPolicy: null,
+          exchangePolicy: null,
+          warrantyPolicy: null,
+          additionalInformation: null,
+          tone: AiTone.PROFESSIONAL,
+          responseLength: AiResponseLength.BALANCED,
+          greetingEnabled: true,
+          closingEnabled: true,
+          emojiPolicy: AiEmojiPolicy.NEVER,
+          preferredEmoji: null,
+          emojiEnabled: false,
+        };
+
+    const { emojiEnabled: _legacyEmojiEnabled, ...publicProfile } =
+      resolvedProfile;
+
     return {
-      profile: profile ?? {
-        brandDescription: null,
-        shippingPolicy: null,
-        returnPolicy: null,
-        exchangePolicy: null,
-        warrantyPolicy: null,
-        additionalInformation: null,
-        tone: AiTone.PROFESSIONAL,
-        responseLength: AiResponseLength.BALANCED,
-        greetingEnabled: true,
-        closingEnabled: true,
-        emojiEnabled: false,
-      },
+      profile: publicProfile,
       faqs,
       instructions,
       channelOverrides,

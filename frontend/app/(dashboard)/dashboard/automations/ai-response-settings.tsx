@@ -9,6 +9,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { AiResponsePreview } from "@/components/dashboard/ai/ai-response-preview"
+import { ResponseBehaviorControls } from "@/components/dashboard/ai/response-behavior-controls"
 import {
   CollectionCard,
   CollectionItem,
@@ -17,19 +18,12 @@ import {
   SettingsCard,
   SettingsField,
   SettingsPageHeader,
-  SettingsSelect,
-  SettingsToggle,
 } from "@/components/dashboard/ai/settings-card"
 import { Button } from "@/components/ui/button"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { updateStoreKnowledge } from "@/lib/api/knowledge"
-import type {
-  AiInstruction,
-  AiResponseLength,
-  AiTone,
-  StoreKnowledge,
-} from "@/types/knowledge"
+import type { AiInstruction, StoreKnowledge } from "@/types/knowledge"
 
 type Props = {
   storeId: string
@@ -70,7 +64,8 @@ export function AiResponseSettings({
         responseLength: profile.responseLength,
         greetingEnabled: profile.greetingEnabled,
         closingEnabled: profile.closingEnabled,
-        emojiEnabled: profile.emojiEnabled,
+        emojiPolicy: profile.emojiPolicy,
+        preferredEmoji: profile.preferredEmoji,
       })
       setKnowledge(updated)
       setProfileDraft(updated.profile)
@@ -168,55 +163,10 @@ export function AiResponseSettings({
             }
           >
             <FeedbackBanner feedback={behaviorFeedback} />
-            <div className="grid gap-5 md:grid-cols-2">
-              <SettingsSelect
-                label="Yanıt tonu"
-                description="Cevabın genel karakterini belirler."
-                value={profileDraft.tone}
-                onChange={(value) => updateProfile("tone", value as AiTone)}
-                options={[
-                  ["PROFESSIONAL", "Profesyonel"],
-                  ["FRIENDLY", "Samimi"],
-                  ["WARM", "Sıcak"],
-                  ["MINIMAL", "Kısa ve doğrudan"],
-                ]}
-              />
-              <SettingsSelect
-                label="Yanıt uzunluğu"
-                description="Gereksiz ayrıntı eklemeden hedef uzunluğu ayarlar."
-                value={profileDraft.responseLength}
-                onChange={(value) =>
-                  updateProfile("responseLength", value as AiResponseLength)
-                }
-                options={[
-                  ["SHORT", "Kısa"],
-                  ["BALANCED", "Dengeli"],
-                  ["DETAILED", "Detaylı"],
-                ]}
-              />
-            </div>
-            <div className="grid gap-3 md:grid-cols-3">
-              <SettingsToggle
-                label="Selamlama"
-                description="Cevaba kısa bir selamlama ekler."
-                checked={profileDraft.greetingEnabled}
-                onChange={(checked) =>
-                  updateProfile("greetingEnabled", checked)
-                }
-              />
-              <SettingsToggle
-                label="Kapanış"
-                description="Mesajı nazik bir kapanışla bitirir."
-                checked={profileDraft.closingEnabled}
-                onChange={(checked) => updateProfile("closingEnabled", checked)}
-              />
-              <SettingsToggle
-                label="Emoji"
-                description="Uygun cevaplarda ölçülü emoji kullanır."
-                checked={profileDraft.emojiEnabled}
-                onChange={(checked) => updateProfile("emojiEnabled", checked)}
-              />
-            </div>
+            <ResponseBehaviorControls
+              profile={profileDraft}
+              onChange={updateProfile}
+            />
           </SettingsCard>
 
           <div className="space-y-3">
@@ -239,6 +189,13 @@ export function AiResponseSettings({
                   description={instruction.content}
                   onRemove={() => removeInstruction(index)}
                   isRemoving={removingInstruction === index}
+                  removeConfirmation={{
+                    title: "Talimatı silmek istediğinize emin misiniz?",
+                    description:
+                      "Bu talimat kalıcı olarak silinecek ve yeni AI taslaklarında artık uygulanmayacaktır. Bu işlem geri alınamaz.",
+                    cancelLabel: "Vazgeç",
+                    confirmLabel: "Evet, sil",
+                  }}
                 />
               ))}
             </CollectionCard>

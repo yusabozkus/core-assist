@@ -1,24 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import {
-  ChannelConnectionStatus,
-  ChannelType,
+  AiEmojiPolicy,
+  AiResponseLength,
+  AiTone,
+  IntegrationEnvironment,
   StoreRole,
   WorkspaceRole,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { ChannelsService } from '../channels/channels.service';
 import {
   CompleteOnboardingDto,
   OnboardingChannel,
 } from './dto/complete-onboarding.dto';
+import { createDefaultStoreAiInstructions } from '../knowledge/default-ai-instructions';
 
 const CHANNEL_PROVIDER_KEY: Record<OnboardingChannel, string> = {
   [OnboardingChannel.TRENDYOL]: 'trendyol',
   [OnboardingChannel.HEPSIBURADA]: 'hepsiburada',
-};
-
-const CHANNEL_TYPE: Record<OnboardingChannel, ChannelType> = {
-  [OnboardingChannel.TRENDYOL]: ChannelType.COMMERCE,
-  [OnboardingChannel.HEPSIBURADA]: ChannelType.COMMERCE,
 };
 
 const channelConnectionSelect = {
@@ -30,7 +29,10 @@ const channelConnectionSelect = {
 
 @Injectable()
 export class OnboardingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly channels: ChannelsService,
+  ) {}
 
   async getStatus(userId: string) {
     const workspace = await this.prisma.workspace.findFirst({
@@ -77,7 +79,7 @@ export class OnboardingService {
   }
 
   async complete(userId: string, dto: CompleteOnboardingDto) {
-    return this.prisma.$transaction(async (transaction) => {
+    const setup = await this.prisma.$transaction(async (transaction) => {
       let workspace = await transaction.workspace.findFirst({
         where: { ownerId: userId },
         orderBy: { createdAt: 'asc' },
@@ -145,6 +147,9 @@ export class OnboardingService {
                 role: StoreRole.OWNER,
               },
             },
+            aiInstructions: {
+              create: createDefaultStoreAiInstructions(),
+            },
           },
           include: {
             channelConnections: {
@@ -155,41 +160,105 @@ export class OnboardingService {
         storeCreated = true;
       }
 
-      let channelConnection = store.channelConnections[0] ?? null;
-
-      if (dto.selectedChannel) {
-        const providerKey = CHANNEL_PROVIDER_KEY[dto.selectedChannel];
-
-        channelConnection = await transaction.channelConnection.upsert({
-          where: {
-            storeId_providerKey: {
-              storeId: store.id,
-              providerKey,
-            },
-          },
-          create: {
-            storeId: store.id,
-            providerKey,
-            type: CHANNEL_TYPE[dto.selectedChannel],
-            status: ChannelConnectionStatus.PENDING,
-          },
-          update: {},
-          select: channelConnectionSelect,
-        });
-      }
+      await transaction.storeKnowledgeProfile.upsert({
+        where: { storeId: store.id },
+        create: {
+          storeId: store.id,
+          brandDescription: dto.brandDescription || null,
+          tone: dto.tone ?? AiTone.PROFESSIONAL,
+          responseLength: dto.responseLength ?? AiResponseLength.BALANCED,
+          greetingEnabled: dto.greetingEnabled ?? true,
+          closingEnabled: dto.closingEnabled ?? true,
+          emojiPolicy: dto.emojiPolicy ?? AiEmojiPolicy.NEVER,
+          preferredEmoji: dto.preferredEmoji || null,
+          emojiEnabled:
+            dto.emojiPolicy !== undefined
+              ? dto.emojiPolicy !== AiEmojiPolicy.NEVER
+              : false,
+        },
+        update: {
+          ...(dto.brandDescription !== undefined
+            ? { brandDescription: dto.brandDescription || null }
+            : {}),
+          ...(dto.tone !== undefined ? { tone: dto.tone } : {}),
+          ...(dto.responseLength !== undefined
+            ? { responseLength: dto.responseLength }
+            : {}),
+          ...(dto.greetingEnabled !== undefined
+            ? { greetingEnabled: dto.greetingEnabled }
+            : {}),
+          ...(dto.closingEnabled !== undefined
+            ? { closingEnabled: dto.closingEnabled }
+            : {}),
+          ...(dto.emojiPolicy !== undefined
+            ? {
+                emojiPolicy: dto.emojiPolicy,
+                emojiEnabled: dto.emojiPolicy !== AiEmojiPolicy.NEVER,
+              }
+            : {}),
+          ...(dto.preferredEmoji !== undefined
+            ? { preferredEmoji: dto.preferredEmoji || null }
+            : {}),
+        },
+      });
 
       return {
-        completed: true,
-        created: {
-          store: storeCreated,
-        },
+        storeCreated,
         store: {
           id: store.id,
           name: store.name,
         },
-        channelConnection,
-        nextPath: '/dashboard',
       };
     });
+
+    let channelConnection: Awaited<
+      ReturnType<ChannelsService['create']>
+    > | null = null;
+    let catalogSync: Awaited<
+      ReturnType<ChannelsService['syncCatalog']>
+    > | null = null;
+
+    if (dto.selectedChannel) {
+      const providerKey = CHANNEL_PROVIDER_KEY[dto.selectedChannel];
+      const environment = dto.environment ?? IntegrationEnvironment.PRODUCTION;
+      const credentials = dto.credentials ?? {};
+      const connections = await this.channels.findAll(setup.store.id, userId);
+      const existingConnection = connections.find(
+        (connection) => connection.providerKey === providerKey,
+      );
+
+      const connectedChannel = existingConnection
+        ? await this.channels.configure(
+            setup.store.id,
+            existingConnection.id,
+            userId,
+            { environment, credentials },
+          )
+        : await this.channels.create(setup.store.id, userId, {
+            providerKey,
+            environment,
+            credentials,
+          });
+
+      channelConnection = connectedChannel;
+      catalogSync = await this.channels.syncCatalog(
+        setup.store.id,
+        connectedChannel.id,
+        userId,
+      );
+    }
+
+    return {
+      completed: true,
+      created: {
+        store: setup.storeCreated,
+      },
+      store: setup.store,
+      channelConnection,
+      catalogSync,
+      nextPath: dto.selectedChannel
+        ? '/dashboard/catalog/products'
+        : '/dashboard',
+    };
   }
 }

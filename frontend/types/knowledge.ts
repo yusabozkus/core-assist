@@ -1,5 +1,6 @@
 export type AiTone = "PROFESSIONAL" | "FRIENDLY" | "WARM" | "MINIMAL"
 export type AiResponseLength = "SHORT" | "BALANCED" | "DETAILED"
+export type AiEmojiPolicy = "NEVER" | "WHEN_APPROPRIATE" | "ALWAYS"
 
 export type KnowledgeFaq = {
   question: string
@@ -34,7 +35,8 @@ export type StoreKnowledge = {
     responseLength: AiResponseLength
     greetingEnabled: boolean
     closingEnabled: boolean
-    emojiEnabled: boolean
+    emojiPolicy: AiEmojiPolicy
+    preferredEmoji: string | null
   }
   faqs: KnowledgeFaq[]
   instructions: AiInstruction[]

@@ -2362,6 +2362,8 @@ export const StoreKnowledgeProfileScalarFieldEnum = {
   responseLength: 'responseLength',
   greetingEnabled: 'greetingEnabled',
   closingEnabled: 'closingEnabled',
+  emojiPolicy: 'emojiPolicy',
+  preferredEmoji: 'preferredEmoji',
   emojiEnabled: 'emojiEnabled',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -2792,6 +2794,20 @@ export type EnumAiResponseLengthFieldRefInput<$PrismaModel> = FieldRefInputType<
  */
 export type ListEnumAiResponseLengthFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiResponseLength[]'>
     
+
+
+/**
+ * Reference to a field of type 'AiEmojiPolicy'
+ */
+export type EnumAiEmojiPolicyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiEmojiPolicy'>
+
+
+
+/**
+ * Reference to a field of type 'AiEmojiPolicy[]'
+ */
+export type ListEnumAiEmojiPolicyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiEmojiPolicy[]'>
+
 
 
 /**
@@ -3282,4 +3298,3 @@ export type PrismaAction =
  * `PrismaClient` proxy available in interactive transactions.
  */
 export type TransactionClient = Omit<DefaultPrismaClient, runtime.ITXClientDenyList>
-

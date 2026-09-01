@@ -21,6 +21,7 @@ import type {
   ProductAnswerContext,
   ProductAnswerFact,
 } from '../modules/questions/product-answer-context.types';
+import { evaluateQuestionResponsePolicy } from '../modules/questions/question-response-policy.service';
 import { formatNormalizedSizeGuide } from '../modules/size-guides/size-guide-queue.service';
 
 const PROVIDERS = ['trendyol', 'hepsiburada'] as const;
@@ -150,6 +151,8 @@ async function createTargetedEvaluationContexts() {
 }
 
 function evaluateRegressions() {
+  assertDeterministicResponsePolicy();
+
   const product: ProductAnswerContext['product'] = {
     id: 'regression-product',
     title: 'Sergio Regular Fit Jean Pantolon F9571AX26SP',
@@ -485,6 +488,8 @@ function evaluateRegressions() {
   }
 
   return {
+    abusiveContentDeterministicallyIgnored: true,
+    complaintsAndNonAbusiveQuestionsAllowed: true,
     unsolicitedStockRemoved: true,
     sellerToneAppliedWithoutDuplication: true,
     productCodeEvidenceCreated: true,
@@ -500,6 +505,42 @@ function evaluateRegressions() {
     garmentWidthSeparatedFromBodyMeasurements: true,
     ribbedFabricEvidenceCreated: true,
   };
+}
+
+function assertDeterministicResponsePolicy() {
+  const abusiveQuestions = [
+    'Defacto orospu çocuğudur',
+    'Ananı sikeyim',
+    'Siktir git',
+    'Şerefsiz',
+    'Siz gerçekten gerizekalısınız',
+  ];
+  const allowedQuestions = [
+    'Recep Tayyip Erdoğan kimdir?',
+    "Koton'daki ürün mü daha kaliteli, bu ürün mü?",
+    'Ürün çok kötü, iade etmek istiyorum.',
+    'Satıcıdan şikayetçiyim.',
+    'Bu beden tablosu çok saçma.',
+    'Eksik ürün geldi.',
+    'Klasik kesim mi?',
+  ];
+
+  const missedAbuse = abusiveQuestions.filter(
+    (question) =>
+      evaluateQuestionResponsePolicy(question).action !== 'DO_NOT_REPLY',
+  );
+  const falsePositives = allowedQuestions.filter(
+    (question) => evaluateQuestionResponsePolicy(question).action !== 'ALLOW',
+  );
+
+  if (missedAbuse.length > 0 || falsePositives.length > 0) {
+    throw new Error(
+      `Yanıt politikası regresyonu başarısız: ${JSON.stringify({
+        missedAbuse,
+        falsePositives,
+      })}`,
+    );
+  }
 }
 
 async function createEvaluationContexts() {

@@ -1,8 +1,19 @@
+import type { AiEmojiPolicy, AiResponseLength, AiTone } from "@/types/knowledge"
+
 export type OnboardingChannel = "TRENDYOL" | "HEPSIBURADA"
 
 export type CompleteOnboardingPayload = {
   storeName: string
   selectedChannel?: OnboardingChannel
+  environment?: "SANDBOX" | "PRODUCTION"
+  credentials?: Record<string, string>
+  brandDescription?: string
+  tone?: AiTone
+  responseLength?: AiResponseLength
+  greetingEnabled?: boolean
+  closingEnabled?: boolean
+  emojiPolicy?: AiEmojiPolicy
+  preferredEmoji?: string | null
 }
 
 type OnboardingResource = {
@@ -30,5 +41,11 @@ export type CompleteOnboardingResponse = {
   }
   store: OnboardingResource
   channelConnection: ChannelConnection | null
+  catalogSync: {
+    syncRunId: string
+    status: "RUNNING"
+    queuedAt: string
+    kind: "FULL" | "INVENTORY"
+  } | null
   nextPath: string
 }

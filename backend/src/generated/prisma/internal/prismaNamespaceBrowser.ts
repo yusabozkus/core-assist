@@ -200,6 +200,8 @@ export const StoreKnowledgeProfileScalarFieldEnum = {
   responseLength: 'responseLength',
   greetingEnabled: 'greetingEnabled',
   closingEnabled: 'closingEnabled',
+  emojiPolicy: 'emojiPolicy',
+  preferredEmoji: 'preferredEmoji',
   emojiEnabled: 'emojiEnabled',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

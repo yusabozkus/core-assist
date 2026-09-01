@@ -7,6 +7,7 @@ import { QuestionsController } from './questions.controller';
 import { QuestionsService } from './questions.service';
 import { ProductAnswerContextService } from './product-answer-context.service';
 import { QuestionDraftService } from './question-draft.service';
+import { QuestionResponsePolicyService } from './question-response-policy.service';
 
 @Module({
   imports: [AuthModule, QuestionSyncModule, QuestionAnswerModule, AiModule],
@@ -15,6 +16,7 @@ import { QuestionDraftService } from './question-draft.service';
     QuestionsService,
     ProductAnswerContextService,
     QuestionDraftService,
+    QuestionResponsePolicyService,
   ],
 })
 export class QuestionsModule {}

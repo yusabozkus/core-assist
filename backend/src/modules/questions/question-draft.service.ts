@@ -3,6 +3,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ProductQuestionStatus } from '../../generated/prisma/enums';
@@ -14,6 +15,7 @@ import {
 } from '../ai/ai-draft.types';
 import { ProductAnswerContextService } from './product-answer-context.service';
 import type { DraftQuestionAnswer } from './product-answer-context.types';
+import { QuestionResponsePolicyService } from './question-response-policy.service';
 
 @Injectable()
 export class QuestionDraftService {
@@ -21,12 +23,68 @@ export class QuestionDraftService {
     private readonly prisma: PrismaService,
     private readonly productContext: ProductAnswerContextService,
     private readonly aiDrafts: AiDraftGenerator,
+    private readonly responsePolicy: QuestionResponsePolicyService,
   ) {}
 
   async generate(
     storeId: string,
     questionId: string,
   ): Promise<DraftQuestionAnswer> {
+    const policyQuestion = await this.prisma.productQuestion.findFirst({
+      where: { id: questionId, storeId },
+      select: {
+        question: true,
+        status: true,
+        answerDelivery: { select: { id: true } },
+      },
+    });
+
+    if (!policyQuestion) {
+      throw new NotFoundException('Ürün sorusu bulunamadı.');
+    }
+
+    const policyDecision = this.responsePolicy.evaluate(
+      policyQuestion.question,
+    );
+    if (policyDecision.action === 'DO_NOT_REPLY') {
+      if (policyQuestion.status !== ProductQuestionStatus.IGNORED) {
+        const ignored = await this.prisma.productQuestion.updateMany({
+          where: {
+            id: questionId,
+            storeId,
+            status: {
+              in: [
+                ProductQuestionStatus.PENDING,
+                ProductQuestionStatus.DRAFTED,
+              ],
+            },
+            answerDelivery: { is: null },
+          },
+          data: {
+            answer: null,
+            status: ProductQuestionStatus.IGNORED,
+          },
+        });
+
+        if (ignored.count !== 1) {
+          throw new ConflictException(
+            'Soru yanıtlanmayacak olarak işaretlenirken durumu değişti.',
+          );
+        }
+      }
+
+      return {
+        answer: null,
+        status: 'IGNORED',
+        context: {
+          source: 'POLICY',
+          model: null,
+          decision: 'DO_NOT_REPLY',
+          policyReason: policyDecision.reason,
+        },
+      };
+    }
+
     const context = await this.productContext.build(storeId, questionId);
     let aiDraft: AiDraftResult | null;
 

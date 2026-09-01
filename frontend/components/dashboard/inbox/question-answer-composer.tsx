@@ -25,6 +25,10 @@ import type {
 } from "@/types/question"
 
 const MAX_ANSWER_LENGTH = 2000
+type DraftReliabilityContext = Extract<
+  DraftQuestionAnswerResult,
+  { status: "DRAFTED" }
+>["context"]
 
 type QuestionAnswerComposerProps = {
   storeId: string
@@ -51,9 +55,9 @@ export function QuestionAnswerComposer({
   const [isSubmitting, startSubmitTransition] = useTransition()
   const [isDrafting, startDraftTransition] = useTransition()
   const [draftRetrySeconds, setDraftRetrySeconds] = useState(0)
-  const [draftContext, setDraftContext] = useState<
-    DraftQuestionAnswerResult["context"] | null
-  >(null)
+  const [draftContext, setDraftContext] =
+    useState<DraftReliabilityContext | null>(null)
+  const [policyBlocked, setPolicyBlocked] = useState(false)
   const isQueued =
     (optimisticQueuedAt !== null &&
       delivery?.queuedAt !== optimisticQueuedAt) ||
@@ -76,6 +80,30 @@ export function QuestionAnswerComposer({
     )
     return () => window.clearTimeout(timeoutId)
   }, [draftRetrySeconds])
+
+  if (question.status === "IGNORED" || policyBlocked) {
+    return (
+      <div className="shrink-0 border-t border-border bg-background px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl rounded-xl border border-border bg-card p-4">
+          <div className="flex items-start gap-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+              <HugeiconsIcon icon={AlertCircleIcon} className="size-4" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Yanıt oluşturulmadı
+              </p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Mesaj açık küfür veya doğrudan hakaret içerdiği için
+                yanıtlanmayacak olarak işaretlendi. Bu karar AI tarafından
+                değil, sabit içerik politikasıyla verildi.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (question.status === "ANSWERED" || delivery?.status === "SENT") {
     return (
@@ -129,6 +157,13 @@ export function QuestionAnswerComposer({
 
       try {
         const result = await generateProductQuestionDraft(storeId, question.id)
+        if (result.status === "IGNORED") {
+          setAnswer("")
+          setDraftContext(null)
+          setPolicyBlocked(true)
+          router.refresh()
+          return
+        }
         setAnswer(result.answer)
         setDraftContext(result.context)
         router.refresh()
@@ -253,7 +288,7 @@ export function QuestionAnswerComposer({
 function DraftReliabilityNotice({
   context,
 }: {
-  context: DraftQuestionAnswerResult["context"]
+  context: DraftReliabilityContext
 }) {
   const needsReview = context.decision === "NEEDS_REVIEW"
 

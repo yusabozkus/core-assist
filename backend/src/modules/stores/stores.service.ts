@@ -17,6 +17,7 @@ import {
   STORE_DELETE_CONFIRMATION,
 } from './dto/delete-store.dto';
 import { PrismaService } from '../../database/prisma.service';
+import { createDefaultStoreAiInstructions } from '../knowledge/default-ai-instructions';
 
 @Injectable()
 export class StoresService {
@@ -52,6 +53,9 @@ export class StoresService {
                 ? StoreRole.OWNER
                 : StoreRole.ADMIN,
           },
+        },
+        aiInstructions: {
+          create: createDefaultStoreAiInstructions(),
         },
       },
       select: {

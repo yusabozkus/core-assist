@@ -89,7 +89,8 @@ export type ProductAnswerContext = {
     responseLength: 'SHORT' | 'BALANCED' | 'DETAILED';
     greetingEnabled: boolean;
     closingEnabled: boolean;
-    emojiEnabled: boolean;
+    emojiPolicy: 'NEVER' | 'WHEN_APPROPRIATE' | 'ALWAYS';
+    preferredEmoji: string | null;
     instructions: string[];
     approvedAnswerExamples: Array<{
       question: string;
@@ -98,7 +99,9 @@ export type ProductAnswerContext = {
   };
 };
 
-export type DraftQuestionAnswer = {
+export type DraftQuestionAnswer = DraftedQuestionAnswer | IgnoredQuestionAnswer;
+
+export type DraftedQuestionAnswer = {
   answer: string;
   status: 'DRAFTED';
   context: {
@@ -116,5 +119,16 @@ export type DraftQuestionAnswer = {
     missingInformation: string[];
     usedEvidenceIds: string[];
     risks: ProductAnswerRisk[];
+  };
+};
+
+export type IgnoredQuestionAnswer = {
+  answer: null;
+  status: 'IGNORED';
+  context: {
+    source: 'POLICY';
+    model: null;
+    decision: 'DO_NOT_REPLY';
+    policyReason: 'ABUSIVE_CONTENT';
   };
 };

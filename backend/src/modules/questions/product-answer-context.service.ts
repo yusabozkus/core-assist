@@ -192,6 +192,8 @@ export class ProductAnswerContextService {
                 responseLength: true,
                 greetingEnabled: true,
                 closingEnabled: true,
+                emojiPolicy: true,
+                preferredEmoji: true,
                 emojiEnabled: true,
               },
             },
@@ -356,6 +358,8 @@ type StoreKnowledgeInput = {
     responseLength: 'SHORT' | 'BALANCED' | 'DETAILED';
     greetingEnabled: boolean;
     closingEnabled: boolean;
+    emojiPolicy: 'NEVER' | 'WHEN_APPROPRIATE' | 'ALWAYS';
+    preferredEmoji: string | null;
     emojiEnabled: boolean;
   } | null;
   knowledgeFaqs: Array<{ question: string; answer: string }>;
@@ -462,7 +466,11 @@ function applyStoreKnowledge(
       responseLength: profile?.responseLength ?? 'BALANCED',
       greetingEnabled: profile?.greetingEnabled ?? true,
       closingEnabled: profile?.closingEnabled ?? true,
-      emojiEnabled: profile?.emojiEnabled ?? false,
+      emojiPolicy:
+        profile?.emojiPolicy === 'NEVER' && profile.emojiEnabled
+          ? 'ALWAYS'
+          : (profile?.emojiPolicy ?? 'NEVER'),
+      preferredEmoji: profile?.preferredEmoji ?? null,
       instructions: store.aiInstructions.map((item) => item.content),
       approvedAnswerExamples,
     },

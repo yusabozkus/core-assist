@@ -6,7 +6,8 @@ import { getCurrentUser } from "@/lib/server-auth"
 
 export const metadata: Metadata = {
   title: "İlk Kurulum | CoreAssist",
-  description: "CoreAssist mağazanızı oluşturun ve ilk satış kanalınızı planlayın.",
+  description:
+    "CoreAssist mağazanızı oluşturun, ilk satış kanalınızı seçin ve AI yanıt tercihlerinizi belirleyin.",
 }
 
 export default async function OnboardingPage() {

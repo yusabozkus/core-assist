@@ -8,17 +8,20 @@ import {
   ArrowRight01Icon,
   CheckmarkCircle01Icon,
   ChevronDownIcon,
-  Edit02Icon,
   InformationCircleIcon,
   Layers01Icon,
   LinkSquare02Icon,
   Logout01Icon,
+  Message01Icon,
+  RefreshIcon,
   Rocket01Icon,
   ShieldCheckIcon,
   Store01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { AnimatePresence, motion, MotionConfig } from "motion/react"
+
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -28,31 +31,42 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { Slider } from "@/components/ui/slider"
+import { Textarea } from "@/components/ui/textarea"
 import { APP_ROUTES } from "@/constants/site"
+import { updateStoreKnowledge } from "@/lib/api/knowledge"
 import { completeOnboarding } from "@/lib/api/onboarding"
 import { signOutCurrentUser } from "@/lib/auth-client"
+import { cn } from "@/lib/utils"
 import type { AuthUser } from "@/types/auth"
-import type { OnboardingChannel } from "@/types/onboarding"
+import type {
+  AiResponseLength,
+  AiTone,
+  StoreKnowledge,
+} from "@/types/knowledge"
+import type {
+  CompleteOnboardingResponse,
+  OnboardingChannel,
+} from "@/types/onboarding"
 
 const STEPS = [
   {
     id: 1,
     label: "Mağaza",
-    description: "Satış noktanızı tanımlayın",
+    description: "Mağazanızı ve markanızı tanımlayın",
     icon: Store01Icon,
   },
   {
     id: 2,
     label: "Satış kanalı",
-    description: "İlk entegrasyonu planlayın",
+    description: "Pazaryerinizi bağlayın ve ürünleri alın",
     icon: LinkSquare02Icon,
   },
   {
     id: 3,
-    label: "Son kontrol",
-    description: "Kurulumu gözden geçirin",
-    icon: CheckmarkCircle01Icon,
+    label: "AI yanıtları",
+    description: "Yanıt tonunu ve uzunluğunu belirleyin",
+    icon: Message01Icon,
   },
 ] as const
 
@@ -62,18 +76,108 @@ const CHANNELS = [
     name: "Trendyol",
     type: "Pazaryeri",
     image: "/merchants/trendyol.webp",
-    available: true,
+    credentialFields: [
+      {
+        key: "supplierId",
+        label: "Satıcı ID",
+        type: "text",
+        placeholder: "Örn. 123456",
+      },
+      {
+        key: "apiKey",
+        label: "API Key",
+        type: "password",
+        placeholder: "Trendyol API Key",
+      },
+      {
+        key: "apiSecret",
+        label: "API Secret",
+        type: "password",
+        placeholder: "Trendyol API Secret",
+      },
+    ],
   },
   {
     id: "hepsiburada",
     name: "Hepsiburada",
     type: "Pazaryeri",
     image: "/merchants/hepsiburada.webp",
-    available: true,
+    credentialFields: [
+      {
+        key: "merchantId",
+        label: "Merchant ID",
+        type: "text",
+        placeholder: "Hepsiburada Merchant ID",
+      },
+      {
+        key: "developerUser",
+        label: "Developer User",
+        type: "text",
+        placeholder: "Entegrasyon kullanıcı adı",
+      },
+      {
+        key: "serviceKey",
+        label: "Servis anahtarı",
+        type: "password",
+        placeholder: "Hepsiburada servis anahtarı",
+      },
+    ],
   },
 ] as const
 
+const TONE_OPTIONS: Array<{
+  value: AiTone
+  label: string
+  description: string
+}> = [
+  {
+    value: "PROFESSIONAL",
+    label: "Profesyonel",
+    description: "Kurumsal, net ve ölçülü",
+  },
+  {
+    value: "FRIENDLY",
+    label: "Samimi",
+    description: "Doğal ve yaklaşılabilir",
+  },
+  {
+    value: "WARM",
+    label: "Sıcak",
+    description: "İlgili ve pozitif",
+  },
+  {
+    value: "MINIMAL",
+    label: "Doğrudan",
+    description: "Sade ve sonuç odaklı",
+  },
+]
+
+const RESPONSE_LENGTHS: Array<{
+  value: AiResponseLength
+  label: string
+  detail: string
+}> = [
+  { value: "SHORT", label: "Kısa", detail: "1–2 cümle" },
+  { value: "BALANCED", label: "Dengeli", detail: "2–4 cümle" },
+  { value: "DETAILED", label: "Detaylı", detail: "Gerektiğinde 3–5 cümle" },
+]
+
 type ChannelId = (typeof CHANNELS)[number]["id"]
+
+const INITIAL_AI_PROFILE: StoreKnowledge["profile"] = {
+  brandDescription: null,
+  shippingPolicy: null,
+  returnPolicy: null,
+  exchangePolicy: null,
+  warrantyPolicy: null,
+  additionalInformation: null,
+  tone: "PROFESSIONAL",
+  responseLength: "BALANCED",
+  greetingEnabled: true,
+  closingEnabled: true,
+  emojiPolicy: "NEVER",
+  preferredEmoji: null,
+}
 
 type OnboardingFlowProps = {
   user: AuthUser
@@ -93,41 +197,99 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
   const [currentStep, setCurrentStep] = React.useState(1)
   const [direction, setDirection] = React.useState(1)
   const [furthestStep, setFurthestStep] = React.useState(1)
+  const [isProvisioning, setIsProvisioning] = React.useState(false)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [syncProgress, setSyncProgress] = React.useState(0)
   const [submitError, setSubmitError] = React.useState<string | null>(null)
+  const [onboardingResult, setOnboardingResult] =
+    React.useState<CompleteOnboardingResponse | null>(null)
 
   const [storeName, setStoreName] = React.useState("")
+  const [profileDraft, setProfileDraft] =
+    React.useState<StoreKnowledge["profile"]>(INITIAL_AI_PROFILE)
   const [selectedChannel, setSelectedChannel] =
-    React.useState<ChannelId | null>("trendyol")
+    React.useState<ChannelId | null>(null)
+  const [credentials, setCredentials] = React.useState<Record<string, string>>(
+    {}
+  )
 
   const currentStepData = STEPS[currentStep - 1]
   const progress = (currentStep / STEPS.length) * 100
   const selectedChannelData = CHANNELS.find(
     (channel) => channel.id === selectedChannel
   )
+  const channelCredentialsComplete = Boolean(
+    selectedChannelData?.credentialFields.every((field) =>
+      credentials[field.key]?.trim()
+    )
+  )
+  const canProceed =
+    currentStep === 1
+      ? storeName.trim().length >= 2
+      : currentStep === 2
+        ? Boolean(selectedChannel && channelCredentialsComplete)
+        : Boolean(onboardingResult)
 
-  const canProceed = currentStep !== 1 || storeName.trim().length >= 2
+  React.useEffect(() => {
+    if (!isProvisioning) return
+
+    const interval = window.setInterval(() => {
+      setSyncProgress((current) => Math.min(current + 6, 90))
+    }, 320)
+
+    return () => window.clearInterval(interval)
+  }, [isProvisioning])
+
+  const updateProfile = <Key extends keyof StoreKnowledge["profile"]>(
+    key: Key,
+    value: StoreKnowledge["profile"][Key]
+  ) => {
+    setProfileDraft((current) => ({ ...current, [key]: value }))
+    setSubmitError(null)
+  }
+
+  const selectChannel = (channel: ChannelId) => {
+    if (channel === selectedChannel) return
+    setSelectedChannel(channel)
+    setCredentials({})
+    setSubmitError(null)
+  }
 
   const goToStep = (step: number) => {
-    if (step < 1 || step > STEPS.length || step > furthestStep) return
+    if (
+      step < 1 ||
+      step > STEPS.length ||
+      step > furthestStep ||
+      (onboardingResult && step < 3)
+    ) {
+      return
+    }
 
     setDirection(step > currentStep ? 1 : -1)
     setCurrentStep(step)
     setSubmitError(null)
   }
 
-  const handleNext = () => {
-    if (!canProceed || currentStep >= STEPS.length) return
-
-    const nextStep = currentStep + 1
+  const advanceToStep = (step: number) => {
     setDirection(1)
-    setCurrentStep(nextStep)
-    setFurthestStep((step) => Math.max(step, nextStep))
+    setCurrentStep(step)
+    setFurthestStep((current) => Math.max(current, step))
     setSubmitError(null)
   }
 
+  const handleNext = async () => {
+    if (!canProceed || currentStep >= STEPS.length) return
+
+    if (currentStep === 1) {
+      advanceToStep(2)
+      return
+    }
+
+    await connectChannelAndSyncCatalog()
+  }
+
   const handleBack = () => {
-    if (currentStep <= 1) return
+    if (currentStep <= 1 || onboardingResult) return
 
     setDirection(-1)
     setCurrentStep((step) => step - 1)
@@ -143,25 +305,71 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
     }
   }
 
+  const connectChannelAndSyncCatalog = async () => {
+    if (
+      !selectedChannel ||
+      !selectedChannelData ||
+      !channelCredentialsComplete
+    ) {
+      setSubmitError("Devam etmek için kanal bilgilerini eksiksiz girin.")
+      return
+    }
+
+    setSyncProgress(8)
+    setIsProvisioning(true)
+    setSubmitError(null)
+
+    try {
+      const minimumProgressDuration = new Promise((resolve) =>
+        window.setTimeout(resolve, 4_500)
+      )
+      const onboardingRequest = completeOnboarding({
+        storeName: storeName.trim(),
+        selectedChannel: selectedChannel.toUpperCase() as OnboardingChannel,
+        environment: "PRODUCTION",
+        credentials,
+        brandDescription: profileDraft.brandDescription?.trim() || undefined,
+        tone: profileDraft.tone,
+        responseLength: profileDraft.responseLength,
+      })
+      const [result] = await Promise.all([
+        onboardingRequest,
+        minimumProgressDuration,
+      ])
+
+      setSyncProgress(100)
+      setOnboardingResult(result)
+      await new Promise((resolve) => window.setTimeout(resolve, 300))
+      advanceToStep(3)
+    } catch (error: unknown) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Kanal bağlanamadı. Bilgilerinizi kontrol edip tekrar deneyin."
+      )
+    } finally {
+      setIsProvisioning(false)
+    }
+  }
+
   const handleFinish = async () => {
+    if (!onboardingResult) return
+
     setIsSubmitting(true)
     setSubmitError(null)
 
     try {
-      await completeOnboarding({
-        storeName: storeName.trim(),
-        selectedChannel: selectedChannel
-          ? (selectedChannel.toLocaleUpperCase("en-US") as OnboardingChannel)
-          : undefined,
+      await updateStoreKnowledge(onboardingResult.store.id, {
+        tone: profileDraft.tone,
+        responseLength: profileDraft.responseLength,
       })
-
-      router.replace(APP_ROUTES.dashboard.root)
+      router.replace(onboardingResult.nextPath)
       router.refresh()
     } catch (error: unknown) {
       setSubmitError(
         error instanceof Error
           ? error.message
-          : "Kurulum tamamlanamadı. Lütfen tekrar deneyin."
+          : "AI tercihleri kaydedilemedi. Lütfen tekrar deneyin."
       )
       setIsSubmitting(false)
     }
@@ -187,14 +395,14 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
 
           <div className="mt-14">
             <p className="text-[11px] font-semibold tracking-[0.16em] text-[#9bc5b0] uppercase">
-              Yaklaşık 2 dakika
+              Yaklaşık 3 dakika
             </p>
             <h1 className="mt-4 text-3xl leading-[1.15] font-semibold tracking-[-0.04em]">
               Mağazanızı birlikte hazırlayalım.
             </h1>
             <p className="mt-4 text-sm leading-6 text-[#a9bdb3]">
-              Önce temel yapıyı kuracağız. Entegrasyon ve gelişmiş ayarları daha
-              sonra panelden tamamlayabilirsiniz.
+              Mağazanızı tanımlayacak, ilk pazaryerinizi bağlayacak ve AI’ın
+              müşterilerle nasıl konuşacağını belirleyeceğiz.
             </p>
           </div>
 
@@ -202,7 +410,8 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
             {STEPS.map((step) => {
               const isActive = step.id === currentStep
               const isCompleted = step.id < currentStep
-              const isReachable = step.id <= furthestStep
+              const isReachable =
+                step.id <= furthestStep && (!onboardingResult || step.id === 3)
 
               return (
                 <button
@@ -213,7 +422,7 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
                   aria-current={isActive ? "step" : undefined}
                   className="relative flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left focus-visible:ring-2 focus-visible:ring-[#8bbca4] focus-visible:outline-none disabled:cursor-default"
                 >
-                  {isActive && (
+                  {isActive ? (
                     <motion.span
                       layoutId="active-onboarding-step"
                       className="absolute inset-0 rounded-xl border border-white/10 bg-white/[0.08]"
@@ -223,16 +432,17 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
                         damping: 34,
                       }}
                     />
-                  )}
+                  ) : null}
 
                   <span
-                    className={`relative z-10 flex size-8 shrink-0 items-center justify-center rounded-lg border text-xs font-semibold transition-colors ${
+                    className={cn(
+                      "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-lg border text-xs font-semibold transition-colors",
                       isActive
                         ? "border-[#8bbca4] bg-[#8bbca4] text-[#10251e]"
                         : isCompleted
                           ? "border-[#4d7663] bg-[#315443] text-[#b8d5c7]"
                           : "border-white/10 bg-white/[0.03] text-[#6f8b7d]"
-                    }`}
+                    )}
                   >
                     {isCompleted ? (
                       <HugeiconsIcon
@@ -246,13 +456,14 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
 
                   <span className="relative z-10 min-w-0">
                     <span
-                      className={`block text-xs font-semibold ${
+                      className={cn(
+                        "block text-xs font-semibold",
                         isActive
                           ? "text-white"
                           : isCompleted
                             ? "text-[#cadbd2]"
                             : "text-[#769083]"
-                      }`}
+                      )}
                     >
                       {step.label}
                     </span>
@@ -282,18 +493,40 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
           </div>
         </aside>
 
-        <section className="flex min-h-dvh flex-col">
-          <header className="flex h-[72px] items-center justify-between border-b border-border bg-background/90 px-5 backdrop-blur-xl sm:px-8 lg:justify-end">
-            <div className="flex items-center gap-2.5 lg:hidden">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                <HugeiconsIcon icon={Layers01Icon} className="size-4.5" />
-              </span>
-              <span className="text-sm font-bold tracking-[-0.02em]">
-                CoreAssist
+        <section className="relative isolate flex min-h-dvh flex-col overflow-x-clip">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute top-0 right-0 -z-10 h-[44rem] w-[min(78vw,64rem)] opacity-75 blur-2xl dark:opacity-45"
+            style={{
+              background:
+                "radial-gradient(ellipse at top right, color-mix(in oklab, var(--primary) 15%, transparent), transparent 68%)",
+            }}
+          />
+
+          <header className="relative z-20 grid min-h-[76px] grid-cols-[minmax(0,1fr)_5rem_auto] items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-xl sm:grid-cols-[minmax(0,1fr)_minmax(8rem,12rem)_minmax(0,1fr)] sm:gap-5 sm:px-8">
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold tracking-[0.12em] text-primary uppercase">
+                Adım {currentStep} / {STEPS.length}
+              </p>
+              <p className="mt-1 truncate text-[10px] text-muted-foreground sm:text-xs">
+                {currentStepData.description}
+              </p>
+            </div>
+
+            <div className="flex w-full items-center justify-center gap-2.5">
+              <div className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-border">
+                <motion.div
+                  className="h-full rounded-full bg-primary"
+                  animate={{ width: `${progress}%` }}
+                  transition={{ type: "spring", stiffness: 260, damping: 32 }}
+                />
+              </div>
+              <span className="text-[10px] font-semibold text-muted-foreground tabular-nums">
+                {Math.round(progress)}%
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center justify-end gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -315,7 +548,7 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
                 <DropdownMenuContent
                   align="end"
                   sideOffset={8}
-                  className="w-56 rounded-xl p-1.5"
+                  className="w-56"
                 >
                   <div className="px-3 py-2.5">
                     <p className="text-sm font-semibold">{user.name}</p>
@@ -326,7 +559,7 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
-                    className="cursor-pointer gap-2 rounded-lg p-2.5 text-destructive focus:bg-destructive/10 focus:text-destructive"
+                    className="cursor-pointer gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
                   >
                     <HugeiconsIcon icon={Logout01Icon} className="size-4" />
                     Oturumu kapat
@@ -337,92 +570,66 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
             </div>
           </header>
 
-          <div className="border-b border-border bg-card/45 px-5 py-3 sm:px-8 lg:hidden">
-            <div className="mb-2 flex items-center justify-between text-[10px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
-              <span>{currentStepData.label}</span>
-              <span>
-                {currentStep} / {STEPS.length}
-              </span>
-            </div>
-            <div className="h-1 overflow-hidden rounded-full bg-border">
-              <motion.div
-                className="h-full rounded-full bg-primary"
-                animate={{ width: `${progress}%` }}
-                transition={{ type: "spring", stiffness: 260, damping: 32 }}
-              />
-            </div>
-          </div>
-
-          <main className="flex flex-1 items-center justify-center px-4 py-8 sm:px-8 sm:py-12 xl:py-16">
-            <div className="w-full max-w-[780px]">
-              <div className="mb-6 hidden items-center justify-between lg:flex">
-                <div>
-                  <p className="text-[10px] font-semibold tracking-[0.13em] text-primary uppercase">
-                    Adım {currentStep} / {STEPS.length}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {currentStepData.description}
-                  </p>
-                </div>
-                <div className="flex w-44 items-center gap-3">
-                  <div className="h-1 flex-1 overflow-hidden rounded-full bg-border">
-                    <motion.div
-                      className="h-full rounded-full bg-primary"
-                      animate={{ width: `${progress}%` }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 260,
-                        damping: 32,
-                      }}
-                    />
-                  </div>
-                  <span className="text-[10px] font-semibold text-muted-foreground">
-                    {Math.round(progress)}%
-                  </span>
-                </div>
-              </div>
-
-              <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_18px_55px_-34px_rgba(23,32,29,0.35)]">
-                <div className="min-h-[420px] px-5 py-7 sm:px-8 sm:py-9 lg:px-10">
+          <main className="relative z-10 flex flex-1 items-center justify-center px-5 pt-8 pb-24 sm:px-8 sm:pt-10 sm:pb-24">
+            <div className="w-full max-w-[860px]">
+              <div className="flex flex-col">
+                <div className="py-2 sm:py-4">
                   <AnimatePresence
                     mode="wait"
                     initial={false}
                     custom={direction}
                   >
                     <motion.div
-                      key={currentStep}
+                      key={`${currentStep}-${isProvisioning ? "sync" : "form"}`}
                       custom={direction}
-                      initial={{ opacity: 0, x: direction * 26 }}
+                      initial={{ opacity: 0, x: direction * 24 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: direction * -18 }}
+                      exit={{ opacity: 0, x: direction * -16 }}
                       transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                     >
-                      {currentStep === 1 && (
+                      {isProvisioning ? (
+                        <CatalogSyncProgress
+                          progress={syncProgress}
+                          channelName={selectedChannelData?.name ?? "Pazaryeri"}
+                        />
+                      ) : currentStep === 1 ? (
                         <StoreStep
                           storeName={storeName}
                           setStoreName={setStoreName}
+                          brandDescription={profileDraft.brandDescription ?? ""}
+                          setBrandDescription={(value) =>
+                            updateProfile("brandDescription", value || null)
+                          }
                         />
-                      )}
-                      {currentStep === 2 && (
+                      ) : currentStep === 2 ? (
                         <ChannelStep
                           selectedChannel={selectedChannel}
-                          setSelectedChannel={setSelectedChannel}
+                          onSelectChannel={selectChannel}
+                          credentials={credentials}
+                          onCredentialChange={(key, value) =>
+                            setCredentials((current) => ({
+                              ...current,
+                              [key]: value,
+                            }))
+                          }
                         />
-                      )}
-                      {currentStep === 3 && (
-                        <ReviewStep
-                          storeName={storeName}
-                          channelName={selectedChannelData?.name}
-                          onEdit={goToStep}
+                      ) : (
+                        <AiPreferencesStep
+                          tone={profileDraft.tone}
+                          responseLength={profileDraft.responseLength}
+                          onToneChange={(value) => updateProfile("tone", value)}
+                          onResponseLengthChange={(value) =>
+                            updateProfile("responseLength", value)
+                          }
                         />
                       )}
                     </motion.div>
                   </AnimatePresence>
                 </div>
 
-                {submitError && (
+                {submitError ? (
                   <div
-                    className="mx-5 mb-5 flex items-start gap-2.5 rounded-xl border border-destructive/25 bg-destructive/8 px-4 py-3 text-xs leading-5 text-destructive sm:mx-8 lg:mx-10"
+                    className="mb-4 flex items-start gap-2.5 rounded-lg border border-destructive/25 bg-destructive/8 px-4 py-3 text-xs leading-5 text-destructive"
                     role="alert"
                   >
                     <HugeiconsIcon
@@ -431,15 +638,22 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
                     />
                     <span>{submitError}</span>
                   </div>
-                )}
+                ) : null}
 
-                <div className="flex items-center justify-between gap-3 border-t border-border bg-muted/30 px-5 py-4 sm:px-8 lg:px-10">
+                <div className="mt-8 flex items-center justify-between gap-3 border-t border-border pt-5">
                   <Button
                     type="button"
                     variant="ghost"
                     onClick={handleBack}
-                    disabled={currentStep === 1 || isSubmitting}
-                    className={currentStep === 1 ? "invisible" : ""}
+                    disabled={
+                      currentStep === 1 ||
+                      Boolean(onboardingResult) ||
+                      isProvisioning ||
+                      isSubmitting
+                    }
+                    className={
+                      currentStep === 1 || onboardingResult ? "invisible" : ""
+                    }
                   >
                     <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
                     Geri
@@ -451,18 +665,29 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
                     onClick={
                       currentStep === STEPS.length ? handleFinish : handleNext
                     }
-                    disabled={!canProceed || isSubmitting}
-                    className="min-w-32 rounded-xl px-6 shadow-sm"
+                    disabled={!canProceed || isProvisioning || isSubmitting}
+                    className="min-w-36 px-6 shadow-sm"
                   >
                     {isSubmitting ? (
                       <>
-                        <span className="size-4 animate-spin rounded-full border-2 border-primary-foreground/40 border-t-primary-foreground" />
-                        Hazırlanıyor
+                        <HugeiconsIcon
+                          icon={RefreshIcon}
+                          className="size-4 animate-spin"
+                        />
+                        Kaydediliyor
                       </>
                     ) : currentStep === STEPS.length ? (
                       <>
                         <HugeiconsIcon icon={Rocket01Icon} className="size-4" />
                         Kurulumu tamamla
+                      </>
+                    ) : currentStep === 2 ? (
+                      <>
+                        Bağla ve ürünleri getir
+                        <HugeiconsIcon
+                          icon={ArrowRight01Icon}
+                          className="size-4"
+                        />
                       </>
                     ) : (
                       <>
@@ -476,16 +701,16 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
                   </Button>
                 </div>
               </div>
-
-              <p className="mt-5 flex items-center justify-center gap-2 text-center text-[11px] text-muted-foreground">
-                <HugeiconsIcon
-                  icon={ShieldCheckIcon}
-                  className="size-3.5 text-primary"
-                />
-                Bilgilerinizi daha sonra ayarlar bölümünden değiştirebilirsiniz.
-              </p>
             </div>
           </main>
+
+          <p className="pointer-events-none fixed right-0 bottom-4 left-0 z-20 flex items-center justify-center gap-2 px-4 text-center text-[11px] text-muted-foreground lg:left-[310px] xl:left-[340px]">
+            <HugeiconsIcon
+              icon={ShieldCheckIcon}
+              className="size-3.5 text-primary"
+            />
+            Bilgilerinizi daha sonra ayarlar bölümünden değiştirebilirsiniz.
+          </p>
         </section>
       </div>
     </MotionConfig>
@@ -497,21 +722,30 @@ function StepHeading({
   title,
   description,
 }: {
-  eyebrow: string
+  eyebrow?: string
   title: string
-  description: string
+  description?: string
 }) {
   return (
     <div className="mb-8">
-      <p className="text-[10px] font-semibold tracking-[0.13em] text-primary uppercase">
-        {eyebrow}
-      </p>
-      <h2 className="mt-3 text-2xl leading-tight font-semibold tracking-[-0.035em] text-foreground sm:text-[2rem]">
+      {eyebrow ? (
+        <p className="text-[10px] font-semibold tracking-[0.13em] text-primary uppercase">
+          {eyebrow}
+        </p>
+      ) : null}
+      <h2
+        className={cn(
+          "text-2xl leading-tight font-semibold tracking-[-0.035em] text-foreground sm:text-[2rem]",
+          eyebrow && "mt-3"
+        )}
+      >
         {title}
       </h2>
-      <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-        {description}
-      </p>
+      {description ? (
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+          {description}
+        </p>
+      ) : null}
     </div>
   )
 }
@@ -519,44 +753,70 @@ function StepHeading({
 function StoreStep({
   storeName,
   setStoreName,
+  brandDescription,
+  setBrandDescription,
 }: {
   storeName: string
   setStoreName: (value: string) => void
+  brandDescription: string
+  setBrandDescription: (value: string) => void
 }) {
   return (
     <div>
       <StepHeading
-        eyebrow="İlk satış noktası"
-        title="İlk mağazanızı oluşturun"
-        description="Bağlayacağınız pazaryeri ve mesaj kanalları bu mağaza altında birlikte yönetilecek."
+        eyebrow="Mağaza bilgileri"
+        title="AI hangi mağaza için çalışacak?"
+        description="Mağazanızı adlandırın ve AI'ın marka bağlamını anlayabilmesi için kısa bir açıklama ekleyin."
       />
 
-      <div className="">
-        <label
-          htmlFor="store-name"
-          className="mb-2 block text-xs font-semibold text-foreground"
-        >
-          Mağaza adı
-        </label>
-        <Input
-          id="store-name"
-          value={storeName}
-          onChange={(event) => setStoreName(event.target.value)}
-          placeholder="Örn. North Clothing"
-          autoFocus
-          className="h-13 rounded-xl bg-background px-4 text-sm"
-        />
-      </div>
+      <div className="grid max-w-2xl gap-6">
+        <div>
+          <label
+            htmlFor="store-name"
+            className="mb-2 block text-sm font-medium text-foreground"
+          >
+            Mağaza adı <span className="text-destructive">*</span>
+          </label>
+          <Input
+            id="store-name"
+            value={storeName}
+            onChange={(event) => setStoreName(event.target.value)}
+            placeholder="Örn. North Clothing"
+            autoFocus
+            maxLength={80}
+            className="h-11 border-input bg-card px-4 shadow-xs hover:border-foreground/25 focus-visible:bg-card dark:bg-card"
+          />
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            Pazaryeri mağaza adınızla aynı olabilir. Daha sonra
+            değiştirebilirsiniz.
+          </p>
+        </div>
 
-      <div className="mt-6 rounded-xl border border-primary/15 bg-primary/[0.045] p-4">
-        <p className="flex items-center gap-2 text-xs font-semibold text-foreground">
-          <HugeiconsIcon icon={Store01Icon} className="size-4 text-primary" />
-          Birden fazla mağaza yönetebilirsiniz
-        </p>
-        <p className="mt-1.5 pl-6 text-[11px] leading-5 text-muted-foreground">
-          İlk mağazayı şimdi oluşturun; diğer mağazaları panelden istediğiniz
-          zaman ekleyebilirsiniz.
-        </p>
+        <div>
+          <label
+            htmlFor="brand-description"
+            className="mb-2 block text-sm font-medium text-foreground"
+          >
+            Mağazanızı kısaca tanıtın
+          </label>
+          <Textarea
+            id="brand-description"
+            value={brandDescription}
+            onChange={(event) => setBrandDescription(event.target.value)}
+            placeholder="(Opsiyonel) Örn. Günlük ve klasik erkek giyim ürünleri satan, sade ve ulaşılabilir bir markayız."
+            maxLength={1000}
+            className="min-h-28 resize-none border-input bg-card px-4 py-3 text-sm leading-6 shadow-xs hover:border-foreground/25 focus-visible:bg-card dark:bg-card"
+          />
+          <div className="mt-2 flex items-start justify-between gap-4 text-xs leading-5 text-muted-foreground">
+            <span>
+              Stok ve ürün özellikleri pazaryerinden alınır; burada yalnızca
+              marka bağlamını anlatın.
+            </span>
+            <span className="shrink-0 tabular-nums">
+              {brandDescription.length}/1000
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -564,20 +824,26 @@ function StoreStep({
 
 function ChannelStep({
   selectedChannel,
-  setSelectedChannel,
+  onSelectChannel,
+  credentials,
+  onCredentialChange,
 }: {
   selectedChannel: ChannelId | null
-  setSelectedChannel: (channel: ChannelId | null) => void
+  onSelectChannel: (channel: ChannelId) => void
+  credentials: Record<string, string>
+  onCredentialChange: (key: string, value: string) => void
 }) {
+  const selected = CHANNELS.find((channel) => channel.id === selectedChannel)
+
   return (
     <div>
       <StepHeading
-        eyebrow="Entegrasyon planı"
-        title="Önce hangi kanalı bağlayacaksınız?"
-        description="Seçiminizi kurulumdan sonra entegrasyon ekranında tamamlayabilirsiniz. Bu adım şimdilik yalnızca çalışma sıranızı belirler."
+        eyebrow="Pazaryeri bağlantısı"
+        title="Ürünlerinizi nereden alalım?"
+        description="Pazaryerinizi seçin ve mağazanıza ait entegrasyon bilgilerini girin. Bilgileriniz şifrelenerek saklanır."
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {CHANNELS.map((channel) => {
           const isSelected = selectedChannel === channel.id
 
@@ -585,158 +851,305 @@ function ChannelStep({
             <motion.button
               key={channel.id}
               type="button"
-              whileTap={channel.available ? { scale: 0.985 } : undefined}
-              onClick={() =>
-                channel.available && setSelectedChannel(channel.id)
-              }
-              disabled={!channel.available}
-              className={`relative min-h-40 rounded-xl border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
-                isSelected
-                  ? "border-primary bg-primary/[0.055]"
-                  : channel.available
-                    ? "border-border bg-background hover:border-primary/35 hover:bg-muted/35"
-                    : "cursor-not-allowed border-border/70 bg-muted/30"
-              }`}
-            >
-              {isSelected && (
-                <motion.span
-                  layoutId="selected-channel"
-                  className="absolute inset-0 rounded-xl ring-1 ring-primary"
-                  transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                />
+              whileTap={{ scale: 0.985 }}
+              onClick={() => onSelectChannel(channel.id)}
+              aria-pressed={isSelected}
+              className={cn(
+                "flex items-center gap-4 rounded-xl border border-border p-4 text-left transition-[background-color,box-shadow] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                isSelected ? "bg-primary/[0.11]" : "bg-card hover:bg-muted/45"
               )}
-              <span className="relative flex items-start justify-between">
-                <span className="flex size-12 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-white shadow-xs">
-                  <Image
-                    src={channel.image}
-                    alt={`${channel.name} logosu`}
-                    width={48}
-                    height={48}
-                    className="size-full object-cover"
-                  />
+            >
+              <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-white shadow-xs">
+                <Image
+                  src={channel.image}
+                  alt={`${channel.name} logosu`}
+                  width={48}
+                  height={48}
+                  className="size-full object-cover"
+                />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-foreground">
+                  {channel.name}
                 </span>
-                {isSelected ? (
-                  <HugeiconsIcon
-                    icon={CheckmarkCircle01Icon}
-                    className="size-5 text-primary"
-                  />
-                ) : !channel.available ? (
-                  <span className="rounded-md bg-muted px-2 py-1 text-[8px] font-bold tracking-[0.08em] text-muted-foreground uppercase">
-                    Yakında
-                  </span>
-                ) : null}
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  {channel.type}
+                </span>
               </span>
-              <span className="relative mt-4 block text-xs font-semibold text-foreground">
-                {channel.name}
-              </span>
-              <span className="relative mt-1 block text-[10px] text-muted-foreground">
-                {channel.type}
+              <span
+                className={cn(
+                  "flex size-5 items-center justify-center rounded-full transition-colors",
+                  isSelected
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-transparent"
+                )}
+              >
+                <HugeiconsIcon
+                  icon={CheckmarkCircle01Icon}
+                  className="size-3.5"
+                />
               </span>
             </motion.button>
           )
         })}
       </div>
 
-      <button
-        type="button"
-        onClick={() => setSelectedChannel(null)}
-        className={`mt-4 text-xs font-medium transition-colors ${
-          selectedChannel === null
-            ? "text-primary"
-            : "text-muted-foreground hover:text-foreground"
-        }`}
-      >
-        Şimdilik kanal seçmeden devam et
-      </button>
+      <AnimatePresence mode="wait">
+        {selected ? (
+          <motion.div
+            key={selected.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2 }}
+            className="mt-8 border-t border-border pt-7"
+          >
+            <div className="mb-5">
+              <h3 className="text-base font-semibold text-foreground">
+                {selected.name} bağlantı bilgileri
+              </h3>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Bu bilgileri {selected.name} satıcı veya entegrasyon
+                panelinizden edinebilirsiniz.
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {selected.credentialFields.map((field, index) => (
+                <div
+                  key={field.key}
+                  className={cn(
+                    index === selected.credentialFields.length - 1 &&
+                      selected.credentialFields.length % 2 === 1 &&
+                      "sm:col-span-2"
+                  )}
+                >
+                  <label
+                    htmlFor={`channel-${field.key}`}
+                    className="mb-2 block text-sm font-medium text-foreground"
+                  >
+                    {field.label}
+                  </label>
+                  <Input
+                    id={`channel-${field.key}`}
+                    type={field.type}
+                    value={credentials[field.key] ?? ""}
+                    onChange={(event) =>
+                      onCredentialChange(field.key, event.target.value)
+                    }
+                    placeholder={field.placeholder}
+                    autoComplete="off"
+                    className="h-11 border-input bg-card px-4 shadow-xs hover:border-foreground/25 focus-visible:bg-card dark:bg-card"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
+              <HugeiconsIcon
+                icon={ShieldCheckIcon}
+                className="size-4 text-primary"
+              />
+              Kimlik bilgileriniz yalnızca pazaryeri bağlantısı için kullanılır.
+            </p>
+          </motion.div>
+        ) : (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-6 text-sm text-muted-foreground"
+          >
+            Devam etmek için bir pazaryeri seçin.
+          </motion.p>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
-function ReviewStep({
-  storeName,
+function CatalogSyncProgress({
+  progress,
   channelName,
-  onEdit,
 }: {
-  storeName: string
-  channelName?: string
-  onEdit: (step: number) => void
+  progress: number
+  channelName: string
 }) {
-  const items = [
-    {
-      label: "Mağaza",
-      value: storeName,
-      detail: "Satış ve operasyon merkeziniz",
-      icon: Store01Icon,
-      step: 1,
-    },
-    {
-      label: "İlk kanal",
-      value: channelName ?? "Daha sonra seçilecek",
-      detail: channelName
-        ? "Bağlantı panelde tamamlanacak"
-        : "Kurulumdan sonra eklenebilir",
-      icon: LinkSquare02Icon,
-      step: 2,
-    },
-  ]
+  const status =
+    progress < 28
+      ? "Bağlantı doğrulanıyor"
+      : progress < 68
+        ? "Ürünleriniz çekiliyor"
+        : progress < 100
+          ? "Varyant ve stok bilgileri hazırlanıyor"
+          : "İlk senkronizasyon başlatıldı"
+
+  return (
+    <div className="mx-auto flex min-h-[430px] w-full max-w-xl flex-col items-center justify-center text-center">
+      <span className="relative flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <span className="absolute inset-0 animate-ping rounded-2xl bg-primary/10" />
+        {progress === 100 ? (
+          <HugeiconsIcon
+            icon={CheckmarkCircle01Icon}
+            className="relative size-7"
+          />
+        ) : (
+          <HugeiconsIcon
+            icon={RefreshIcon}
+            className="relative size-7 animate-spin"
+          />
+        )}
+      </span>
+      <p className="mt-6 text-[10px] font-semibold tracking-[0.13em] text-primary uppercase">
+        {channelName}
+      </p>
+      <h2 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-foreground sm:text-3xl">
+        Ürünlerinizi hazırlıyoruz
+      </h2>
+      <p className="mt-3 text-sm text-muted-foreground">{status}</p>
+
+      <div className="mt-8 w-full">
+        <div className="h-2 overflow-hidden rounded-full bg-muted">
+          <motion.div
+            className="h-full rounded-full bg-primary"
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+          />
+        </div>
+        <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+          <span>İlk katalog senkronizasyonu</span>
+          <span className="font-medium text-foreground tabular-nums">
+            %{progress}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AiPreferencesStep({
+  tone,
+  responseLength,
+  onToneChange,
+  onResponseLengthChange,
+}: {
+  tone: AiTone
+  responseLength: AiResponseLength
+  onToneChange: (value: AiTone) => void
+  onResponseLengthChange: (value: AiResponseLength) => void
+}) {
+  const lengthIndex = Math.max(
+    0,
+    RESPONSE_LENGTHS.findIndex((option) => option.value === responseLength)
+  )
+  const selectedLength = RESPONSE_LENGTHS[lengthIndex]
 
   return (
     <div>
       <StepHeading
-        eyebrow="Hazırsınız"
-        title="Kurulumu son kez kontrol edin"
-        description="Mağazanız şimdi oluşturulacak. Entegrasyon bağlantısını panelde güvenle tamamlayabilirsiniz."
+        eyebrow="AI yanıt tercihleri"
+        title="AI müşterilerinizle nasıl konuşsun?"
+        description="Başlangıç için yalnızca iletişim tonunu ve hedef yanıt uzunluğunu seçin. Daha ayrıntılı kuralları panelden ekleyebilirsiniz."
       />
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {items.map((item, index) => (
-          <motion.div
-            key={item.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.06, duration: 0.22 }}
-            className="flex min-h-40 flex-col rounded-xl border border-border bg-background p-4"
+      <div className="max-w-3xl divide-y divide-border">
+        <section className="pb-8">
+          <h3 className="text-sm font-semibold text-foreground">Yanıt tonu</h3>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            Müşteriye verilen yanıtların genel iletişim karakterini belirler.
+          </p>
+          <div
+            role="radiogroup"
+            aria-label="Yanıt tonu"
+            className="mt-4 grid gap-2 sm:grid-cols-2"
           >
-            <div className="flex items-start justify-between">
-              <span className="flex size-9 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
-                <HugeiconsIcon icon={item.icon} className="size-4" />
-              </span>
-              <button
-                type="button"
-                onClick={() => onEdit(item.step)}
-                aria-label={`${item.label} bilgisini düzenle`}
-                className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <HugeiconsIcon icon={Edit02Icon} className="size-3.5" />
-              </button>
-            </div>
-            <p className="mt-5 text-[10px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
-              {item.label}
-            </p>
-            <p className="mt-1 truncate text-sm font-semibold text-foreground">
-              {item.value}
-            </p>
-            <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
-              {item.detail}
-            </p>
-          </motion.div>
-        ))}
-      </div>
+            {TONE_OPTIONS.map((option) => {
+              const selected = tone === option.value
 
-      <div className="mt-5 flex items-start gap-3 rounded-xl border border-primary/15 bg-primary/[0.045] p-4">
-        <HugeiconsIcon
-          icon={CheckmarkCircle01Icon}
-          className="mt-0.5 size-4 shrink-0 text-primary"
-        />
-        <div>
-          <p className="text-xs font-semibold text-foreground">
-            Temel kurulum tamamlanacak
-          </p>
-          <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-            Ekip üyeleri, ek mağazalar ve otomasyon tercihleri dashboard
-            üzerinden daha sonra yapılandırılabilir.
-          </p>
-        </div>
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => onToneChange(option.value)}
+                  className={cn(
+                    "flex items-center justify-between gap-3 rounded-lg border border-border px-4 py-3 text-left transition-[background-color,box-shadow] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                    selected ? "bg-primary/10 shadow-xs" : "hover:bg-muted/45"
+                  )}
+                >
+                  <span>
+                    <span className="block text-sm font-medium text-foreground">
+                      {option.label}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {option.description}
+                    </span>
+                  </span>
+                  <span
+                    className={cn(
+                      "size-2.5 shrink-0 rounded-full",
+                      selected ? "bg-primary" : "bg-border"
+                    )}
+                  />
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="pt-8">
+          <div className="flex items-start justify-between gap-5">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">
+                Yanıt uzunluğu
+              </h3>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                AI, gerekli bilgiyi seçtiğiniz hedef uzunlukta aktarır.
+              </p>
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="text-sm font-semibold text-foreground">
+                {selectedLength.label}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {selectedLength.detail}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-7 px-1">
+            <Slider
+              value={[lengthIndex]}
+              min={0}
+              max={RESPONSE_LENGTHS.length - 1}
+              step={1}
+              onValueChange={([index]) => {
+                const option = RESPONSE_LENGTHS[index]
+                if (option) onResponseLengthChange(option.value)
+              }}
+              aria-label="Yanıt uzunluğu"
+            />
+            <div className="mt-3 grid grid-cols-3 text-xs text-muted-foreground">
+              {RESPONSE_LENGTHS.map((option, index) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => onResponseLengthChange(option.value)}
+                  className={cn(
+                    "rounded-sm py-1 transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                    index === 0 && "text-left",
+                    index === 1 && "text-center",
+                    index === 2 && "text-right",
+                    responseLength === option.value &&
+                      "font-medium text-foreground"
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   )

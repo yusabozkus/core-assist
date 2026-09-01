@@ -65,7 +65,10 @@ export type QueueQuestionAnswerResult = {
   queuedAt: string
 }
 
-export type DraftQuestionAnswerResult = {
+export type DraftQuestionAnswerResult =
+  DraftedQuestionAnswerResult | IgnoredQuestionAnswerResult
+
+export type DraftedQuestionAnswerResult = {
   answer: string
   status: "DRAFTED"
   context: {
@@ -90,5 +93,16 @@ export type DraftQuestionAnswerResult = {
       | "LOW_CONFIDENCE"
       | "HIGH_RISK_INTENT"
     >
+  }
+}
+
+export type IgnoredQuestionAnswerResult = {
+  answer: null
+  status: "IGNORED"
+  context: {
+    source: "POLICY"
+    model: null
+    decision: "DO_NOT_REPLY"
+    policyReason: "ABUSIVE_CONTENT"
   }
 }

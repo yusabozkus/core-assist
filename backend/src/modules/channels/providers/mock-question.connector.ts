@@ -12,6 +12,18 @@ export const MOCK_TRENDYOL_QUESTIONS = DEFACTO_QUESTION_SEEDS.filter(
 export const MOCK_HEPSIBURADA_QUESTIONS = DEFACTO_QUESTION_SEEDS.filter(
   (seed) => seed.targetProvider === 'hepsiburada',
 ).length;
+export const MOCK_REFERENCED_TRENDYOL_QUESTIONS = DEFACTO_QUESTION_SEEDS.filter(
+  (seed) =>
+    seed.targetProvider === 'trendyol' &&
+    seed.referenceAnswer &&
+    seed.referenceSourceUrl,
+).length;
+export const MOCK_ABUSIVE_QUESTIONS = DEFACTO_QUESTION_SEEDS.filter(
+  (seed) => seed.scenario === 'ABUSIVE',
+).length;
+export const MOCK_IRRELEVANT_QUESTIONS = DEFACTO_QUESTION_SEEDS.filter(
+  (seed) => seed.scenario === 'IRRELEVANT',
+).length;
 export const MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER = 1;
 
 @Injectable()
@@ -67,6 +79,7 @@ function createMockQuestions(
     rawPayload: {
       fixture: true,
       fixtureVersion: 1,
+      scenario: seed.scenario ?? 'PRODUCT',
       provider: providerKey,
       sourceAskedAt: seed.sourceAskedAt,
       referenceSourceProvider: seed.referenceSourceProvider,
