@@ -34,7 +34,10 @@ export const APP_ROUTES = {
       root: "/dashboard/channels",
       sync: "/dashboard/channels/sync",
     },
-    automations: "/dashboard/automations",
+    automations: {
+      root: "/dashboard/automations",
+      knowledge: "/dashboard/automations/knowledge",
+    },
     analytics: "/dashboard/analytics",
     team: "/dashboard/team",
     support: "/dashboard/support",
@@ -137,7 +140,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
       ],
     },
     {
-      label: "Kanallar ve Otomasyon",
+      label: "Kanallar ve AI",
       items: [
         {
           title: "Satış Kanalları",
@@ -156,9 +159,20 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
           ],
         },
         {
-          title: "Otomasyonlar",
-          url: APP_ROUTES.dashboard.automations,
+          title: "AI Yönetimi",
+          url: APP_ROUTES.dashboard.automations.root,
           icon: WorkflowSquare01Icon,
+          items: [
+            {
+              title: "Yanıt Ayarları",
+              url: APP_ROUTES.dashboard.automations.root,
+              exact: true,
+            },
+            {
+              title: "Bilgi Tabanı",
+              url: APP_ROUTES.dashboard.automations.knowledge,
+            },
+          ],
         },
       ],
     },

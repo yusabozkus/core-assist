@@ -52,6 +52,9 @@ const DURABILITY_PATTERNS = [
   'su gecir',
 ];
 const SHIPPING_PATTERNS = ['kargo', 'teslim', 'gonderim', 'ne zaman gelir'];
+const RETURN_PATTERNS = ['iade', 'geri gonder', 'geri gönder'];
+const EXCHANGE_PATTERNS = ['degisim', 'değişim', 'degistir', 'değiştir'];
+const WARRANTY_PATTERNS = ['garanti', 'garantili'];
 const SIZE_PATTERNS = [
   'beden',
   'numara',
@@ -175,6 +178,47 @@ export class ProductAnswerContextService {
         connection: {
           select: { providerKey: true },
         },
+        store: {
+          select: {
+            knowledgeProfile: {
+              select: {
+                brandDescription: true,
+                shippingPolicy: true,
+                returnPolicy: true,
+                exchangePolicy: true,
+                warrantyPolicy: true,
+                additionalInformation: true,
+                tone: true,
+                responseLength: true,
+                greetingEnabled: true,
+                closingEnabled: true,
+                emojiEnabled: true,
+              },
+            },
+            knowledgeFaqs: {
+              where: { active: true },
+              orderBy: { position: 'asc' },
+              take: 12,
+              select: { question: true, answer: true },
+            },
+            aiInstructions: {
+              where: { active: true },
+              orderBy: { priority: 'asc' },
+              take: 20,
+              select: { content: true },
+            },
+            channelKnowledge: {
+              select: {
+                providerKey: true,
+                shippingPolicy: true,
+                returnPolicy: true,
+                exchangePolicy: true,
+                warrantyPolicy: true,
+                additionalInformation: true,
+              },
+            },
+          },
+        },
         answerDelivery: {
           select: { status: true },
         },
@@ -214,6 +258,16 @@ export class ProductAnswerContextService {
                 normalizedText: true,
                 confidence: true,
               },
+            },
+            questions: {
+              where: {
+                id: { not: questionId },
+                status: ProductQuestionStatus.ANSWERED,
+                answer: { not: null },
+              },
+              orderBy: { answeredAt: 'desc' },
+              take: 5,
+              select: { question: true, answer: true },
             },
           },
         },
@@ -259,7 +313,7 @@ export class ProductAnswerContextService {
       ...variant,
       price: Number(variant.price),
     }));
-    return analyzeProductQuestion({
+    const context = analyzeProductQuestion({
       questionId: question.id,
       question: question.question,
       providerKey: question.connection.providerKey,
@@ -278,7 +332,141 @@ export class ProductAnswerContextService {
         ),
       },
     });
+
+    return applyStoreKnowledge(
+      context,
+      question.store,
+      question.connection.providerKey,
+      question.product.questions.flatMap((item) =>
+        item.answer ? [{ question: item.question, answer: item.answer }] : [],
+      ),
+    );
   }
+}
+
+type StoreKnowledgeInput = {
+  knowledgeProfile: {
+    brandDescription: string | null;
+    shippingPolicy: string | null;
+    returnPolicy: string | null;
+    exchangePolicy: string | null;
+    warrantyPolicy: string | null;
+    additionalInformation: string | null;
+    tone: 'PROFESSIONAL' | 'FRIENDLY' | 'WARM' | 'MINIMAL';
+    responseLength: 'SHORT' | 'BALANCED' | 'DETAILED';
+    greetingEnabled: boolean;
+    closingEnabled: boolean;
+    emojiEnabled: boolean;
+  } | null;
+  knowledgeFaqs: Array<{ question: string; answer: string }>;
+  aiInstructions: Array<{ content: string }>;
+  channelKnowledge: Array<{
+    providerKey: string;
+    shippingPolicy: string | null;
+    returnPolicy: string | null;
+    exchangePolicy: string | null;
+    warrantyPolicy: string | null;
+    additionalInformation: string | null;
+  }>;
+};
+
+function applyStoreKnowledge(
+  context: ProductAnswerContext,
+  store: StoreKnowledgeInput,
+  providerKey: string,
+  approvedAnswerExamples: Array<{ question: string; answer: string }>,
+): ProductAnswerContext {
+  const profile = store.knowledgeProfile;
+  const override = store.channelKnowledge.find(
+    (item) => item.providerKey === providerKey,
+  );
+  const evidence = [...context.evidence];
+  const add = (
+    id: string,
+    fact: ProductAnswerFact,
+    label: string,
+    value: string | null | undefined,
+    source: 'STORE_KNOWLEDGE' | 'CHANNEL_OVERRIDE',
+  ) => {
+    if (!value?.trim()) return;
+    evidence.push({ id, fact, label, value: value.trim(), source });
+  };
+  const resolved = (
+    key:
+      | 'shippingPolicy'
+      | 'returnPolicy'
+      | 'exchangePolicy'
+      | 'warrantyPolicy'
+      | 'additionalInformation',
+  ) => override?.[key]?.trim() || profile?.[key] || null;
+  const source = (key: Parameters<typeof resolved>[0]) =>
+    override?.[key]?.trim() ? 'CHANNEL_OVERRIDE' : 'STORE_KNOWLEDGE';
+
+  add(
+    'store-brand-description',
+    'PRODUCT_INFO',
+    'Mağaza ve marka bilgisi',
+    profile?.brandDescription,
+    'STORE_KNOWLEDGE',
+  );
+  add(
+    'store-shipping-policy',
+    'SHIPPING',
+    'Kargo ve teslimat politikası',
+    resolved('shippingPolicy'),
+    source('shippingPolicy'),
+  );
+  add(
+    'store-return-policy',
+    'RETURN',
+    'İade politikası',
+    resolved('returnPolicy'),
+    source('returnPolicy'),
+  );
+  add(
+    'store-exchange-policy',
+    'EXCHANGE',
+    'Değişim politikası',
+    resolved('exchangePolicy'),
+    source('exchangePolicy'),
+  );
+  add(
+    'store-warranty-policy',
+    'WARRANTY',
+    'Garanti politikası',
+    resolved('warrantyPolicy'),
+    source('warrantyPolicy'),
+  );
+  add(
+    'store-additional-information',
+    'PRODUCT_INFO',
+    'Mağazanın ek yanıt bilgileri',
+    resolved('additionalInformation'),
+    source('additionalInformation'),
+  );
+  store.knowledgeFaqs.forEach((faq, index) => {
+    evidence.push({
+      id: `store-faq-${index + 1}`,
+      fact: 'PRODUCT_INFO',
+      label: `SSS: ${faq.question}`,
+      value: faq.answer,
+      source: 'FAQ',
+    });
+  });
+
+  return {
+    ...context,
+    evidence,
+    responsePreferences: {
+      tone: profile?.tone ?? 'PROFESSIONAL',
+      responseLength: profile?.responseLength ?? 'BALANCED',
+      greetingEnabled: profile?.greetingEnabled ?? true,
+      closingEnabled: profile?.closingEnabled ?? true,
+      emojiEnabled: profile?.emojiEnabled ?? false,
+      instructions: store.aiInstructions.map((item) => item.content),
+      approvedAnswerExamples,
+    },
+  };
 }
 
 export function analyzeProductQuestion(input: {
@@ -391,6 +579,13 @@ function detectRequestedFacts(normalizedQuestion: string): ProductAnswerFact[] {
   if (includesAny(normalizedQuestion, SHIPPING_PATTERNS)) {
     facts.push('SHIPPING');
   }
+  if (includesAny(normalizedQuestion, RETURN_PATTERNS)) facts.push('RETURN');
+  if (includesAny(normalizedQuestion, EXCHANGE_PATTERNS)) {
+    facts.push('EXCHANGE');
+  }
+  if (includesAny(normalizedQuestion, WARRANTY_PATTERNS)) {
+    facts.push('WARRANTY');
+  }
   if (includesAny(normalizedQuestion, SIZE_PATTERNS)) facts.push('SIZE');
   if (isColorQuestion(normalizedQuestion)) facts.push('COLOR');
   if (includesAny(normalizedQuestion, FIT_PATTERNS)) facts.push('FIT');
@@ -487,6 +682,9 @@ const ATTRIBUTE_PATTERNS_BY_FACT: Record<ProductAnswerFact, string[]> = {
     'ic goster',
   ],
   SHIPPING: ['kargo', 'teslim', 'gonderim'],
+  RETURN: ['iade'],
+  EXCHANGE: ['degisim', 'değişim'],
+  WARRANTY: ['garanti'],
   SIZE: ['beden', 'olcu', 'uzunluk', 'gogus', 'bel', 'basen', 'numara'],
   COLOR: ['renk'],
   FIT: [

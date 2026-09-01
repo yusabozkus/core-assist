@@ -4,6 +4,9 @@ export type ProductAnswerFact =
   | 'MATERIAL'
   | 'DURABILITY'
   | 'SHIPPING'
+  | 'RETURN'
+  | 'EXCHANGE'
+  | 'WARRANTY'
   | 'SIZE'
   | 'COLOR'
   | 'FIT'
@@ -17,7 +20,10 @@ export type ProductAnswerEvidenceSource =
   | 'VARIANT'
   | 'TITLE'
   | 'SIZE_GUIDE'
-  | 'PLATFORM_GUIDANCE';
+  | 'PLATFORM_GUIDANCE'
+  | 'STORE_KNOWLEDGE'
+  | 'CHANNEL_OVERRIDE'
+  | 'FAQ';
 
 export type ProductAnswerEvidence = {
   id: string;
@@ -78,6 +84,18 @@ export type ProductAnswerContext = {
   relevantAttributes: Array<{ name: string; value: string }>;
   relevantDescription: string | null;
   evidence: ProductAnswerEvidence[];
+  responsePreferences?: {
+    tone: 'PROFESSIONAL' | 'FRIENDLY' | 'WARM' | 'MINIMAL';
+    responseLength: 'SHORT' | 'BALANCED' | 'DETAILED';
+    greetingEnabled: boolean;
+    closingEnabled: boolean;
+    emojiEnabled: boolean;
+    instructions: string[];
+    approvedAnswerExamples: Array<{
+      question: string;
+      answer: string;
+    }>;
+  };
 };
 
 export type DraftQuestionAnswer = {

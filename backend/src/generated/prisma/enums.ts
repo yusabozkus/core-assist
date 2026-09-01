@@ -18,6 +18,25 @@ export const WorkspaceRole = {
 export type WorkspaceRole = (typeof WorkspaceRole)[keyof typeof WorkspaceRole]
 
 
+export const AiTone = {
+  PROFESSIONAL: 'PROFESSIONAL',
+  FRIENDLY: 'FRIENDLY',
+  WARM: 'WARM',
+  MINIMAL: 'MINIMAL'
+} as const
+
+export type AiTone = (typeof AiTone)[keyof typeof AiTone]
+
+
+export const AiResponseLength = {
+  SHORT: 'SHORT',
+  BALANCED: 'BALANCED',
+  DETAILED: 'DETAILED'
+} as const
+
+export type AiResponseLength = (typeof AiResponseLength)[keyof typeof AiResponseLength]
+
+
 export const StoreStatus = {
   ACTIVE: 'ACTIVE',
   INACTIVE: 'INACTIVE'

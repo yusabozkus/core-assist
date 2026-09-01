@@ -11,6 +11,7 @@ import { UsersModule } from './modules/users/users.module';
 import { ChannelsModule } from './modules/channels/channels.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { QuestionsModule } from './modules/questions/questions.module';
+import { KnowledgeModule } from './modules/knowledge/knowledge.module';
 import { getRedisConnection } from './infrastructure/queue/redis-connection';
 
 @Module({
@@ -25,6 +26,7 @@ import { getRedisConnection } from './infrastructure/queue/redis-connection';
     ChannelsModule,
     CatalogModule,
     QuestionsModule,
+    KnowledgeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

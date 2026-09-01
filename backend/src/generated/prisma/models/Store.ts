@@ -205,6 +205,10 @@ export type StoreWhereInput = {
   incomingEvents?: Prisma.IncomingEventListRelationFilter
   productQuestions?: Prisma.ProductQuestionListRelationFilter
   questionAnswers?: Prisma.QuestionAnswerListRelationFilter
+  knowledgeProfile?: Prisma.XOR<Prisma.StoreKnowledgeProfileNullableScalarRelationFilter, Prisma.StoreKnowledgeProfileWhereInput> | null
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqListRelationFilter
+  aiInstructions?: Prisma.StoreAiInstructionListRelationFilter
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideListRelationFilter
 }
 
 export type StoreOrderByWithRelationInput = {
@@ -222,6 +226,10 @@ export type StoreOrderByWithRelationInput = {
   incomingEvents?: Prisma.IncomingEventOrderByRelationAggregateInput
   productQuestions?: Prisma.ProductQuestionOrderByRelationAggregateInput
   questionAnswers?: Prisma.QuestionAnswerOrderByRelationAggregateInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileOrderByWithRelationInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqOrderByRelationAggregateInput
+  aiInstructions?: Prisma.StoreAiInstructionOrderByRelationAggregateInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideOrderByRelationAggregateInput
 }
 
 export type StoreWhereUniqueInput = Prisma.AtLeast<{
@@ -242,6 +250,10 @@ export type StoreWhereUniqueInput = Prisma.AtLeast<{
   incomingEvents?: Prisma.IncomingEventListRelationFilter
   productQuestions?: Prisma.ProductQuestionListRelationFilter
   questionAnswers?: Prisma.QuestionAnswerListRelationFilter
+  knowledgeProfile?: Prisma.XOR<Prisma.StoreKnowledgeProfileNullableScalarRelationFilter, Prisma.StoreKnowledgeProfileWhereInput> | null
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqListRelationFilter
+  aiInstructions?: Prisma.StoreAiInstructionListRelationFilter
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideListRelationFilter
 }, "id">
 
 export type StoreOrderByWithAggregationInput = {
@@ -284,6 +296,10 @@ export type StoreCreateInput = {
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateInput = {
@@ -300,6 +316,10 @@ export type StoreUncheckedCreateInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUpdateInput = {
@@ -316,6 +336,10 @@ export type StoreUpdateInput = {
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateInput = {
@@ -332,6 +356,10 @@ export type StoreUncheckedUpdateInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateManyInput = {
@@ -454,6 +482,62 @@ export type EnumStoreStatusFieldUpdateOperationsInput = {
   set?: $Enums.StoreStatus
 }
 
+export type StoreCreateNestedOneWithoutKnowledgeProfileInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutKnowledgeProfileInput, Prisma.StoreUncheckedCreateWithoutKnowledgeProfileInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutKnowledgeProfileInput
+  connect?: Prisma.StoreWhereUniqueInput
+}
+
+export type StoreUpdateOneRequiredWithoutKnowledgeProfileNestedInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutKnowledgeProfileInput, Prisma.StoreUncheckedCreateWithoutKnowledgeProfileInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutKnowledgeProfileInput
+  upsert?: Prisma.StoreUpsertWithoutKnowledgeProfileInput
+  connect?: Prisma.StoreWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutKnowledgeProfileInput, Prisma.StoreUpdateWithoutKnowledgeProfileInput>, Prisma.StoreUncheckedUpdateWithoutKnowledgeProfileInput>
+}
+
+export type StoreCreateNestedOneWithoutKnowledgeFaqsInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutKnowledgeFaqsInput, Prisma.StoreUncheckedCreateWithoutKnowledgeFaqsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutKnowledgeFaqsInput
+  connect?: Prisma.StoreWhereUniqueInput
+}
+
+export type StoreUpdateOneRequiredWithoutKnowledgeFaqsNestedInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutKnowledgeFaqsInput, Prisma.StoreUncheckedCreateWithoutKnowledgeFaqsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutKnowledgeFaqsInput
+  upsert?: Prisma.StoreUpsertWithoutKnowledgeFaqsInput
+  connect?: Prisma.StoreWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutKnowledgeFaqsInput, Prisma.StoreUpdateWithoutKnowledgeFaqsInput>, Prisma.StoreUncheckedUpdateWithoutKnowledgeFaqsInput>
+}
+
+export type StoreCreateNestedOneWithoutAiInstructionsInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutAiInstructionsInput, Prisma.StoreUncheckedCreateWithoutAiInstructionsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutAiInstructionsInput
+  connect?: Prisma.StoreWhereUniqueInput
+}
+
+export type StoreUpdateOneRequiredWithoutAiInstructionsNestedInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutAiInstructionsInput, Prisma.StoreUncheckedCreateWithoutAiInstructionsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutAiInstructionsInput
+  upsert?: Prisma.StoreUpsertWithoutAiInstructionsInput
+  connect?: Prisma.StoreWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutAiInstructionsInput, Prisma.StoreUpdateWithoutAiInstructionsInput>, Prisma.StoreUncheckedUpdateWithoutAiInstructionsInput>
+}
+
+export type StoreCreateNestedOneWithoutChannelKnowledgeInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutChannelKnowledgeInput, Prisma.StoreUncheckedCreateWithoutChannelKnowledgeInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutChannelKnowledgeInput
+  connect?: Prisma.StoreWhereUniqueInput
+}
+
+export type StoreUpdateOneRequiredWithoutChannelKnowledgeNestedInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutChannelKnowledgeInput, Prisma.StoreUncheckedCreateWithoutChannelKnowledgeInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutChannelKnowledgeInput
+  upsert?: Prisma.StoreUpsertWithoutChannelKnowledgeInput
+  connect?: Prisma.StoreWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutChannelKnowledgeInput, Prisma.StoreUpdateWithoutChannelKnowledgeInput>, Prisma.StoreUncheckedUpdateWithoutChannelKnowledgeInput>
+}
+
 export type StoreCreateNestedOneWithoutChannelConnectionsInput = {
   create?: Prisma.XOR<Prisma.StoreCreateWithoutChannelConnectionsInput, Prisma.StoreUncheckedCreateWithoutChannelConnectionsInput>
   connectOrCreate?: Prisma.StoreCreateOrConnectWithoutChannelConnectionsInput
@@ -551,6 +635,10 @@ export type StoreCreateWithoutWorkspaceInput = {
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutWorkspaceInput = {
@@ -566,6 +654,10 @@ export type StoreUncheckedCreateWithoutWorkspaceInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutWorkspaceInput = {
@@ -607,6 +699,374 @@ export type StoreScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Store"> | Date | string
 }
 
+export type StoreCreateWithoutKnowledgeProfileInput = {
+  id?: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
+  members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
+}
+
+export type StoreUncheckedCreateWithoutKnowledgeProfileInput = {
+  id?: string
+  workspaceId: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
+}
+
+export type StoreCreateOrConnectWithoutKnowledgeProfileInput = {
+  where: Prisma.StoreWhereUniqueInput
+  create: Prisma.XOR<Prisma.StoreCreateWithoutKnowledgeProfileInput, Prisma.StoreUncheckedCreateWithoutKnowledgeProfileInput>
+}
+
+export type StoreUpsertWithoutKnowledgeProfileInput = {
+  update: Prisma.XOR<Prisma.StoreUpdateWithoutKnowledgeProfileInput, Prisma.StoreUncheckedUpdateWithoutKnowledgeProfileInput>
+  create: Prisma.XOR<Prisma.StoreCreateWithoutKnowledgeProfileInput, Prisma.StoreUncheckedCreateWithoutKnowledgeProfileInput>
+  where?: Prisma.StoreWhereInput
+}
+
+export type StoreUpdateToOneWithWhereWithoutKnowledgeProfileInput = {
+  where?: Prisma.StoreWhereInput
+  data: Prisma.XOR<Prisma.StoreUpdateWithoutKnowledgeProfileInput, Prisma.StoreUncheckedUpdateWithoutKnowledgeProfileInput>
+}
+
+export type StoreUpdateWithoutKnowledgeProfileInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
+  members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreUncheckedUpdateWithoutKnowledgeProfileInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreCreateWithoutKnowledgeFaqsInput = {
+  id?: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
+  members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
+}
+
+export type StoreUncheckedCreateWithoutKnowledgeFaqsInput = {
+  id?: string
+  workspaceId: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
+}
+
+export type StoreCreateOrConnectWithoutKnowledgeFaqsInput = {
+  where: Prisma.StoreWhereUniqueInput
+  create: Prisma.XOR<Prisma.StoreCreateWithoutKnowledgeFaqsInput, Prisma.StoreUncheckedCreateWithoutKnowledgeFaqsInput>
+}
+
+export type StoreUpsertWithoutKnowledgeFaqsInput = {
+  update: Prisma.XOR<Prisma.StoreUpdateWithoutKnowledgeFaqsInput, Prisma.StoreUncheckedUpdateWithoutKnowledgeFaqsInput>
+  create: Prisma.XOR<Prisma.StoreCreateWithoutKnowledgeFaqsInput, Prisma.StoreUncheckedCreateWithoutKnowledgeFaqsInput>
+  where?: Prisma.StoreWhereInput
+}
+
+export type StoreUpdateToOneWithWhereWithoutKnowledgeFaqsInput = {
+  where?: Prisma.StoreWhereInput
+  data: Prisma.XOR<Prisma.StoreUpdateWithoutKnowledgeFaqsInput, Prisma.StoreUncheckedUpdateWithoutKnowledgeFaqsInput>
+}
+
+export type StoreUpdateWithoutKnowledgeFaqsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
+  members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreUncheckedUpdateWithoutKnowledgeFaqsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreCreateWithoutAiInstructionsInput = {
+  id?: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
+  members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
+}
+
+export type StoreUncheckedCreateWithoutAiInstructionsInput = {
+  id?: string
+  workspaceId: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
+}
+
+export type StoreCreateOrConnectWithoutAiInstructionsInput = {
+  where: Prisma.StoreWhereUniqueInput
+  create: Prisma.XOR<Prisma.StoreCreateWithoutAiInstructionsInput, Prisma.StoreUncheckedCreateWithoutAiInstructionsInput>
+}
+
+export type StoreUpsertWithoutAiInstructionsInput = {
+  update: Prisma.XOR<Prisma.StoreUpdateWithoutAiInstructionsInput, Prisma.StoreUncheckedUpdateWithoutAiInstructionsInput>
+  create: Prisma.XOR<Prisma.StoreCreateWithoutAiInstructionsInput, Prisma.StoreUncheckedCreateWithoutAiInstructionsInput>
+  where?: Prisma.StoreWhereInput
+}
+
+export type StoreUpdateToOneWithWhereWithoutAiInstructionsInput = {
+  where?: Prisma.StoreWhereInput
+  data: Prisma.XOR<Prisma.StoreUpdateWithoutAiInstructionsInput, Prisma.StoreUncheckedUpdateWithoutAiInstructionsInput>
+}
+
+export type StoreUpdateWithoutAiInstructionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
+  members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreUncheckedUpdateWithoutAiInstructionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreCreateWithoutChannelKnowledgeInput = {
+  id?: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
+  members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+}
+
+export type StoreUncheckedCreateWithoutChannelKnowledgeInput = {
+  id?: string
+  workspaceId: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+}
+
+export type StoreCreateOrConnectWithoutChannelKnowledgeInput = {
+  where: Prisma.StoreWhereUniqueInput
+  create: Prisma.XOR<Prisma.StoreCreateWithoutChannelKnowledgeInput, Prisma.StoreUncheckedCreateWithoutChannelKnowledgeInput>
+}
+
+export type StoreUpsertWithoutChannelKnowledgeInput = {
+  update: Prisma.XOR<Prisma.StoreUpdateWithoutChannelKnowledgeInput, Prisma.StoreUncheckedUpdateWithoutChannelKnowledgeInput>
+  create: Prisma.XOR<Prisma.StoreCreateWithoutChannelKnowledgeInput, Prisma.StoreUncheckedCreateWithoutChannelKnowledgeInput>
+  where?: Prisma.StoreWhereInput
+}
+
+export type StoreUpdateToOneWithWhereWithoutChannelKnowledgeInput = {
+  where?: Prisma.StoreWhereInput
+  data: Prisma.XOR<Prisma.StoreUpdateWithoutChannelKnowledgeInput, Prisma.StoreUncheckedUpdateWithoutChannelKnowledgeInput>
+}
+
+export type StoreUpdateWithoutChannelKnowledgeInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
+  members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreUncheckedUpdateWithoutChannelKnowledgeInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+}
+
 export type StoreCreateWithoutChannelConnectionsInput = {
   id?: string
   name: string
@@ -620,6 +1080,10 @@ export type StoreCreateWithoutChannelConnectionsInput = {
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutChannelConnectionsInput = {
@@ -635,6 +1099,10 @@ export type StoreUncheckedCreateWithoutChannelConnectionsInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutChannelConnectionsInput = {
@@ -666,6 +1134,10 @@ export type StoreUpdateWithoutChannelConnectionsInput = {
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutChannelConnectionsInput = {
@@ -681,6 +1153,10 @@ export type StoreUncheckedUpdateWithoutChannelConnectionsInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutProductsInput = {
@@ -696,6 +1172,10 @@ export type StoreCreateWithoutProductsInput = {
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutProductsInput = {
@@ -711,6 +1191,10 @@ export type StoreUncheckedCreateWithoutProductsInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutProductsInput = {
@@ -742,6 +1226,10 @@ export type StoreUpdateWithoutProductsInput = {
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutProductsInput = {
@@ -757,6 +1245,10 @@ export type StoreUncheckedUpdateWithoutProductsInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutIncomingEventsInput = {
@@ -772,6 +1264,10 @@ export type StoreCreateWithoutIncomingEventsInput = {
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutIncomingEventsInput = {
@@ -787,6 +1283,10 @@ export type StoreUncheckedCreateWithoutIncomingEventsInput = {
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutIncomingEventsInput = {
@@ -818,6 +1318,10 @@ export type StoreUpdateWithoutIncomingEventsInput = {
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutIncomingEventsInput = {
@@ -833,6 +1337,10 @@ export type StoreUncheckedUpdateWithoutIncomingEventsInput = {
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutProductQuestionsInput = {
@@ -848,6 +1356,10 @@ export type StoreCreateWithoutProductQuestionsInput = {
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutProductQuestionsInput = {
@@ -863,6 +1375,10 @@ export type StoreUncheckedCreateWithoutProductQuestionsInput = {
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutProductQuestionsInput = {
@@ -894,6 +1410,10 @@ export type StoreUpdateWithoutProductQuestionsInput = {
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutProductQuestionsInput = {
@@ -909,6 +1429,10 @@ export type StoreUncheckedUpdateWithoutProductQuestionsInput = {
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutQuestionAnswersInput = {
@@ -924,6 +1448,10 @@ export type StoreCreateWithoutQuestionAnswersInput = {
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutQuestionAnswersInput = {
@@ -939,6 +1467,10 @@ export type StoreUncheckedCreateWithoutQuestionAnswersInput = {
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutQuestionAnswersInput = {
@@ -970,6 +1502,10 @@ export type StoreUpdateWithoutQuestionAnswersInput = {
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutQuestionAnswersInput = {
@@ -985,6 +1521,10 @@ export type StoreUncheckedUpdateWithoutQuestionAnswersInput = {
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutMembersInput = {
@@ -1000,6 +1540,10 @@ export type StoreCreateWithoutMembersInput = {
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutMembersInput = {
@@ -1015,6 +1559,10 @@ export type StoreUncheckedCreateWithoutMembersInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutMembersInput = {
@@ -1046,6 +1594,10 @@ export type StoreUpdateWithoutMembersInput = {
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutMembersInput = {
@@ -1061,6 +1613,10 @@ export type StoreUncheckedUpdateWithoutMembersInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateManyWorkspaceInput = {
@@ -1085,6 +1641,10 @@ export type StoreUpdateWithoutWorkspaceInput = {
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutWorkspaceInput = {
@@ -1100,6 +1660,10 @@ export type StoreUncheckedUpdateWithoutWorkspaceInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateManyWithoutWorkspaceInput = {
@@ -1123,6 +1687,9 @@ export type StoreCountOutputType = {
   incomingEvents: number
   productQuestions: number
   questionAnswers: number
+  knowledgeFaqs: number
+  aiInstructions: number
+  channelKnowledge: number
 }
 
 export type StoreCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1132,6 +1699,9 @@ export type StoreCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.
   incomingEvents?: boolean | StoreCountOutputTypeCountIncomingEventsArgs
   productQuestions?: boolean | StoreCountOutputTypeCountProductQuestionsArgs
   questionAnswers?: boolean | StoreCountOutputTypeCountQuestionAnswersArgs
+  knowledgeFaqs?: boolean | StoreCountOutputTypeCountKnowledgeFaqsArgs
+  aiInstructions?: boolean | StoreCountOutputTypeCountAiInstructionsArgs
+  channelKnowledge?: boolean | StoreCountOutputTypeCountChannelKnowledgeArgs
 }
 
 /**
@@ -1186,6 +1756,27 @@ export type StoreCountOutputTypeCountQuestionAnswersArgs<ExtArgs extends runtime
   where?: Prisma.QuestionAnswerWhereInput
 }
 
+/**
+ * StoreCountOutputType without action
+ */
+export type StoreCountOutputTypeCountKnowledgeFaqsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.StoreKnowledgeFaqWhereInput
+}
+
+/**
+ * StoreCountOutputType without action
+ */
+export type StoreCountOutputTypeCountAiInstructionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.StoreAiInstructionWhereInput
+}
+
+/**
+ * StoreCountOutputType without action
+ */
+export type StoreCountOutputTypeCountChannelKnowledgeArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ChannelKnowledgeOverrideWhereInput
+}
+
 
 export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1202,6 +1793,10 @@ export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   incomingEvents?: boolean | Prisma.Store$incomingEventsArgs<ExtArgs>
   productQuestions?: boolean | Prisma.Store$productQuestionsArgs<ExtArgs>
   questionAnswers?: boolean | Prisma.Store$questionAnswersArgs<ExtArgs>
+  knowledgeProfile?: boolean | Prisma.Store$knowledgeProfileArgs<ExtArgs>
+  knowledgeFaqs?: boolean | Prisma.Store$knowledgeFaqsArgs<ExtArgs>
+  aiInstructions?: boolean | Prisma.Store$aiInstructionsArgs<ExtArgs>
+  channelKnowledge?: boolean | Prisma.Store$channelKnowledgeArgs<ExtArgs>
   _count?: boolean | Prisma.StoreCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["store"]>
 
@@ -1246,6 +1841,10 @@ export type StoreInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   incomingEvents?: boolean | Prisma.Store$incomingEventsArgs<ExtArgs>
   productQuestions?: boolean | Prisma.Store$productQuestionsArgs<ExtArgs>
   questionAnswers?: boolean | Prisma.Store$questionAnswersArgs<ExtArgs>
+  knowledgeProfile?: boolean | Prisma.Store$knowledgeProfileArgs<ExtArgs>
+  knowledgeFaqs?: boolean | Prisma.Store$knowledgeFaqsArgs<ExtArgs>
+  aiInstructions?: boolean | Prisma.Store$aiInstructionsArgs<ExtArgs>
+  channelKnowledge?: boolean | Prisma.Store$channelKnowledgeArgs<ExtArgs>
   _count?: boolean | Prisma.StoreCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type StoreIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1265,6 +1864,10 @@ export type $StorePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     incomingEvents: Prisma.$IncomingEventPayload<ExtArgs>[]
     productQuestions: Prisma.$ProductQuestionPayload<ExtArgs>[]
     questionAnswers: Prisma.$QuestionAnswerPayload<ExtArgs>[]
+    knowledgeProfile: Prisma.$StoreKnowledgeProfilePayload<ExtArgs> | null
+    knowledgeFaqs: Prisma.$StoreKnowledgeFaqPayload<ExtArgs>[]
+    aiInstructions: Prisma.$StoreAiInstructionPayload<ExtArgs>[]
+    channelKnowledge: Prisma.$ChannelKnowledgeOverridePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1675,6 +2278,10 @@ export interface Prisma__StoreClient<T, Null = never, ExtArgs extends runtime.Ty
   incomingEvents<T extends Prisma.Store$incomingEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$incomingEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$IncomingEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   productQuestions<T extends Prisma.Store$productQuestionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$productQuestionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductQuestionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   questionAnswers<T extends Prisma.Store$questionAnswersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$questionAnswersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$QuestionAnswerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  knowledgeProfile<T extends Prisma.Store$knowledgeProfileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$knowledgeProfileArgs<ExtArgs>>): Prisma.Prisma__StoreKnowledgeProfileClient<runtime.Types.Result.GetResult<Prisma.$StoreKnowledgeProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  knowledgeFaqs<T extends Prisma.Store$knowledgeFaqsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$knowledgeFaqsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StoreKnowledgeFaqPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  aiInstructions<T extends Prisma.Store$aiInstructionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$aiInstructionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StoreAiInstructionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  channelKnowledge<T extends Prisma.Store$channelKnowledgeArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$channelKnowledgeArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChannelKnowledgeOverridePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2253,6 +2860,97 @@ export type Store$questionAnswersArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   distinct?: Prisma.QuestionAnswerScalarFieldEnum | Prisma.QuestionAnswerScalarFieldEnum[]
+}
+
+/**
+ * Store.knowledgeProfile
+ */
+export type Store$knowledgeProfileArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StoreKnowledgeProfile
+   */
+  select?: Prisma.StoreKnowledgeProfileSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the StoreKnowledgeProfile
+   */
+  omit?: Prisma.StoreKnowledgeProfileOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreKnowledgeProfileInclude<ExtArgs> | null
+  where?: Prisma.StoreKnowledgeProfileWhereInput
+}
+
+/**
+ * Store.knowledgeFaqs
+ */
+export type Store$knowledgeFaqsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StoreKnowledgeFaq
+   */
+  select?: Prisma.StoreKnowledgeFaqSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the StoreKnowledgeFaq
+   */
+  omit?: Prisma.StoreKnowledgeFaqOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreKnowledgeFaqInclude<ExtArgs> | null
+  where?: Prisma.StoreKnowledgeFaqWhereInput
+  orderBy?: Prisma.StoreKnowledgeFaqOrderByWithRelationInput | Prisma.StoreKnowledgeFaqOrderByWithRelationInput[]
+  cursor?: Prisma.StoreKnowledgeFaqWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.StoreKnowledgeFaqScalarFieldEnum | Prisma.StoreKnowledgeFaqScalarFieldEnum[]
+}
+
+/**
+ * Store.aiInstructions
+ */
+export type Store$aiInstructionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StoreAiInstruction
+   */
+  select?: Prisma.StoreAiInstructionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the StoreAiInstruction
+   */
+  omit?: Prisma.StoreAiInstructionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreAiInstructionInclude<ExtArgs> | null
+  where?: Prisma.StoreAiInstructionWhereInput
+  orderBy?: Prisma.StoreAiInstructionOrderByWithRelationInput | Prisma.StoreAiInstructionOrderByWithRelationInput[]
+  cursor?: Prisma.StoreAiInstructionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.StoreAiInstructionScalarFieldEnum | Prisma.StoreAiInstructionScalarFieldEnum[]
+}
+
+/**
+ * Store.channelKnowledge
+ */
+export type Store$channelKnowledgeArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ChannelKnowledgeOverride
+   */
+  select?: Prisma.ChannelKnowledgeOverrideSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ChannelKnowledgeOverride
+   */
+  omit?: Prisma.ChannelKnowledgeOverrideOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ChannelKnowledgeOverrideInclude<ExtArgs> | null
+  where?: Prisma.ChannelKnowledgeOverrideWhereInput
+  orderBy?: Prisma.ChannelKnowledgeOverrideOrderByWithRelationInput | Prisma.ChannelKnowledgeOverrideOrderByWithRelationInput[]
+  cursor?: Prisma.ChannelKnowledgeOverrideWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ChannelKnowledgeOverrideScalarFieldEnum | Prisma.ChannelKnowledgeOverrideScalarFieldEnum[]
 }
 
 /**

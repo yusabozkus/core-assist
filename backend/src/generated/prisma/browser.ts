@@ -53,6 +53,26 @@ export type WorkspaceMember = Prisma.WorkspaceMemberModel
  */
 export type Store = Prisma.StoreModel
 /**
+ * Model StoreKnowledgeProfile
+ * 
+ */
+export type StoreKnowledgeProfile = Prisma.StoreKnowledgeProfileModel
+/**
+ * Model StoreKnowledgeFaq
+ * 
+ */
+export type StoreKnowledgeFaq = Prisma.StoreKnowledgeFaqModel
+/**
+ * Model StoreAiInstruction
+ * 
+ */
+export type StoreAiInstruction = Prisma.StoreAiInstructionModel
+/**
+ * Model ChannelKnowledgeOverride
+ * 
+ */
+export type ChannelKnowledgeOverride = Prisma.ChannelKnowledgeOverrideModel
+/**
  * Model ChannelConnection
  * 
  */

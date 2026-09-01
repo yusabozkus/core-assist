@@ -115,15 +115,102 @@ model Store {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  workspace          Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace          Workspace                  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   members            StoreMember[]
   channelConnections ChannelConnection[]
   products           Product[]
   incomingEvents     IncomingEvent[]
   productQuestions   ProductQuestion[]
   questionAnswers    QuestionAnswer[]
+  knowledgeProfile   StoreKnowledgeProfile?
+  knowledgeFaqs      StoreKnowledgeFaq[]
+  aiInstructions     StoreAiInstruction[]
+  channelKnowledge   ChannelKnowledgeOverride[]
 
   @@map("store")
+}
+
+enum AiTone {
+  PROFESSIONAL
+  FRIENDLY
+  WARM
+  MINIMAL
+}
+
+enum AiResponseLength {
+  SHORT
+  BALANCED
+  DETAILED
+}
+
+model StoreKnowledgeProfile {
+  storeId               String           @id
+  brandDescription      String?
+  shippingPolicy        String?
+  returnPolicy          String?
+  exchangePolicy        String?
+  warrantyPolicy        String?
+  additionalInformation String?
+  tone                  AiTone           @default(PROFESSIONAL)
+  responseLength        AiResponseLength @default(BALANCED)
+  greetingEnabled       Boolean          @default(true)
+  closingEnabled        Boolean          @default(true)
+  emojiEnabled          Boolean          @default(false)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@map("store_knowledge_profile")
+}
+
+model StoreKnowledgeFaq {
+  id        String   @id @default(uuid())
+  storeId   String
+  question  String
+  answer    String
+  active    Boolean  @default(true)
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId, active, position])
+  @@map("store_knowledge_faq")
+}
+
+model StoreAiInstruction {
+  id        String   @id @default(uuid())
+  storeId   String
+  content   String
+  priority  Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId, active, priority])
+  @@map("store_ai_instruction")
+}
+
+model ChannelKnowledgeOverride {
+  id                    String   @id @default(uuid())
+  storeId               String
+  providerKey           String
+  shippingPolicy        String?
+  returnPolicy          String?
+  exchangePolicy        String?
+  warrantyPolicy        String?
+  additionalInformation String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, providerKey])
+  @@map("channel_knowledge_override")
 }
 
 enum StoreStatus {

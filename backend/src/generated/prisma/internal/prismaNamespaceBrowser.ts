@@ -58,6 +58,10 @@ export const ModelName = {
   Workspace: 'Workspace',
   WorkspaceMember: 'WorkspaceMember',
   Store: 'Store',
+  StoreKnowledgeProfile: 'StoreKnowledgeProfile',
+  StoreKnowledgeFaq: 'StoreKnowledgeFaq',
+  StoreAiInstruction: 'StoreAiInstruction',
+  ChannelKnowledgeOverride: 'ChannelKnowledgeOverride',
   ChannelConnection: 'ChannelConnection',
   Product: 'Product',
   ProductVariant: 'ProductVariant',
@@ -182,6 +186,69 @@ export const StoreScalarFieldEnum = {
 } as const
 
 export type StoreScalarFieldEnum = (typeof StoreScalarFieldEnum)[keyof typeof StoreScalarFieldEnum]
+
+
+export const StoreKnowledgeProfileScalarFieldEnum = {
+  storeId: 'storeId',
+  brandDescription: 'brandDescription',
+  shippingPolicy: 'shippingPolicy',
+  returnPolicy: 'returnPolicy',
+  exchangePolicy: 'exchangePolicy',
+  warrantyPolicy: 'warrantyPolicy',
+  additionalInformation: 'additionalInformation',
+  tone: 'tone',
+  responseLength: 'responseLength',
+  greetingEnabled: 'greetingEnabled',
+  closingEnabled: 'closingEnabled',
+  emojiEnabled: 'emojiEnabled',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StoreKnowledgeProfileScalarFieldEnum = (typeof StoreKnowledgeProfileScalarFieldEnum)[keyof typeof StoreKnowledgeProfileScalarFieldEnum]
+
+
+export const StoreKnowledgeFaqScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  question: 'question',
+  answer: 'answer',
+  active: 'active',
+  position: 'position',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StoreKnowledgeFaqScalarFieldEnum = (typeof StoreKnowledgeFaqScalarFieldEnum)[keyof typeof StoreKnowledgeFaqScalarFieldEnum]
+
+
+export const StoreAiInstructionScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  content: 'content',
+  priority: 'priority',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StoreAiInstructionScalarFieldEnum = (typeof StoreAiInstructionScalarFieldEnum)[keyof typeof StoreAiInstructionScalarFieldEnum]
+
+
+export const ChannelKnowledgeOverrideScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  providerKey: 'providerKey',
+  shippingPolicy: 'shippingPolicy',
+  returnPolicy: 'returnPolicy',
+  exchangePolicy: 'exchangePolicy',
+  warrantyPolicy: 'warrantyPolicy',
+  additionalInformation: 'additionalInformation',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ChannelKnowledgeOverrideScalarFieldEnum = (typeof ChannelKnowledgeOverrideScalarFieldEnum)[keyof typeof ChannelKnowledgeOverrideScalarFieldEnum]
 
 
 export const ChannelConnectionScalarFieldEnum = {

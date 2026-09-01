@@ -404,6 +404,10 @@ export const ModelName = {
   Workspace: 'Workspace',
   WorkspaceMember: 'WorkspaceMember',
   Store: 'Store',
+  StoreKnowledgeProfile: 'StoreKnowledgeProfile',
+  StoreKnowledgeFaq: 'StoreKnowledgeFaq',
+  StoreAiInstruction: 'StoreAiInstruction',
+  ChannelKnowledgeOverride: 'ChannelKnowledgeOverride',
   ChannelConnection: 'ChannelConnection',
   Product: 'Product',
   ProductVariant: 'ProductVariant',
@@ -432,7 +436,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "store" | "channelConnection" | "product" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "questionAnswer" | "storeMember"
+    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "questionAnswer" | "storeMember"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -951,6 +955,302 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.StoreCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.StoreCountAggregateOutputType> | number
+        }
+      }
+    }
+    StoreKnowledgeProfile: {
+      payload: Prisma.$StoreKnowledgeProfilePayload<ExtArgs>
+      fields: Prisma.StoreKnowledgeProfileFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.StoreKnowledgeProfileFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeProfilePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.StoreKnowledgeProfileFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeProfilePayload>
+        }
+        findFirst: {
+          args: Prisma.StoreKnowledgeProfileFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeProfilePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.StoreKnowledgeProfileFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeProfilePayload>
+        }
+        findMany: {
+          args: Prisma.StoreKnowledgeProfileFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeProfilePayload>[]
+        }
+        create: {
+          args: Prisma.StoreKnowledgeProfileCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeProfilePayload>
+        }
+        createMany: {
+          args: Prisma.StoreKnowledgeProfileCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.StoreKnowledgeProfileCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeProfilePayload>[]
+        }
+        delete: {
+          args: Prisma.StoreKnowledgeProfileDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeProfilePayload>
+        }
+        update: {
+          args: Prisma.StoreKnowledgeProfileUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeProfilePayload>
+        }
+        deleteMany: {
+          args: Prisma.StoreKnowledgeProfileDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.StoreKnowledgeProfileUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.StoreKnowledgeProfileUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeProfilePayload>[]
+        }
+        upsert: {
+          args: Prisma.StoreKnowledgeProfileUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeProfilePayload>
+        }
+        aggregate: {
+          args: Prisma.StoreKnowledgeProfileAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateStoreKnowledgeProfile>
+        }
+        groupBy: {
+          args: Prisma.StoreKnowledgeProfileGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StoreKnowledgeProfileGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.StoreKnowledgeProfileCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StoreKnowledgeProfileCountAggregateOutputType> | number
+        }
+      }
+    }
+    StoreKnowledgeFaq: {
+      payload: Prisma.$StoreKnowledgeFaqPayload<ExtArgs>
+      fields: Prisma.StoreKnowledgeFaqFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.StoreKnowledgeFaqFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeFaqPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.StoreKnowledgeFaqFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeFaqPayload>
+        }
+        findFirst: {
+          args: Prisma.StoreKnowledgeFaqFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeFaqPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.StoreKnowledgeFaqFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeFaqPayload>
+        }
+        findMany: {
+          args: Prisma.StoreKnowledgeFaqFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeFaqPayload>[]
+        }
+        create: {
+          args: Prisma.StoreKnowledgeFaqCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeFaqPayload>
+        }
+        createMany: {
+          args: Prisma.StoreKnowledgeFaqCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.StoreKnowledgeFaqCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeFaqPayload>[]
+        }
+        delete: {
+          args: Prisma.StoreKnowledgeFaqDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeFaqPayload>
+        }
+        update: {
+          args: Prisma.StoreKnowledgeFaqUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeFaqPayload>
+        }
+        deleteMany: {
+          args: Prisma.StoreKnowledgeFaqDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.StoreKnowledgeFaqUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.StoreKnowledgeFaqUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeFaqPayload>[]
+        }
+        upsert: {
+          args: Prisma.StoreKnowledgeFaqUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreKnowledgeFaqPayload>
+        }
+        aggregate: {
+          args: Prisma.StoreKnowledgeFaqAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateStoreKnowledgeFaq>
+        }
+        groupBy: {
+          args: Prisma.StoreKnowledgeFaqGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StoreKnowledgeFaqGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.StoreKnowledgeFaqCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StoreKnowledgeFaqCountAggregateOutputType> | number
+        }
+      }
+    }
+    StoreAiInstruction: {
+      payload: Prisma.$StoreAiInstructionPayload<ExtArgs>
+      fields: Prisma.StoreAiInstructionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.StoreAiInstructionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreAiInstructionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.StoreAiInstructionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreAiInstructionPayload>
+        }
+        findFirst: {
+          args: Prisma.StoreAiInstructionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreAiInstructionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.StoreAiInstructionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreAiInstructionPayload>
+        }
+        findMany: {
+          args: Prisma.StoreAiInstructionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreAiInstructionPayload>[]
+        }
+        create: {
+          args: Prisma.StoreAiInstructionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreAiInstructionPayload>
+        }
+        createMany: {
+          args: Prisma.StoreAiInstructionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.StoreAiInstructionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreAiInstructionPayload>[]
+        }
+        delete: {
+          args: Prisma.StoreAiInstructionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreAiInstructionPayload>
+        }
+        update: {
+          args: Prisma.StoreAiInstructionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreAiInstructionPayload>
+        }
+        deleteMany: {
+          args: Prisma.StoreAiInstructionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.StoreAiInstructionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.StoreAiInstructionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreAiInstructionPayload>[]
+        }
+        upsert: {
+          args: Prisma.StoreAiInstructionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreAiInstructionPayload>
+        }
+        aggregate: {
+          args: Prisma.StoreAiInstructionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateStoreAiInstruction>
+        }
+        groupBy: {
+          args: Prisma.StoreAiInstructionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StoreAiInstructionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.StoreAiInstructionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StoreAiInstructionCountAggregateOutputType> | number
+        }
+      }
+    }
+    ChannelKnowledgeOverride: {
+      payload: Prisma.$ChannelKnowledgeOverridePayload<ExtArgs>
+      fields: Prisma.ChannelKnowledgeOverrideFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ChannelKnowledgeOverrideFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChannelKnowledgeOverridePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ChannelKnowledgeOverrideFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChannelKnowledgeOverridePayload>
+        }
+        findFirst: {
+          args: Prisma.ChannelKnowledgeOverrideFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChannelKnowledgeOverridePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ChannelKnowledgeOverrideFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChannelKnowledgeOverridePayload>
+        }
+        findMany: {
+          args: Prisma.ChannelKnowledgeOverrideFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChannelKnowledgeOverridePayload>[]
+        }
+        create: {
+          args: Prisma.ChannelKnowledgeOverrideCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChannelKnowledgeOverridePayload>
+        }
+        createMany: {
+          args: Prisma.ChannelKnowledgeOverrideCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ChannelKnowledgeOverrideCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChannelKnowledgeOverridePayload>[]
+        }
+        delete: {
+          args: Prisma.ChannelKnowledgeOverrideDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChannelKnowledgeOverridePayload>
+        }
+        update: {
+          args: Prisma.ChannelKnowledgeOverrideUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChannelKnowledgeOverridePayload>
+        }
+        deleteMany: {
+          args: Prisma.ChannelKnowledgeOverrideDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ChannelKnowledgeOverrideUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ChannelKnowledgeOverrideUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChannelKnowledgeOverridePayload>[]
+        }
+        upsert: {
+          args: Prisma.ChannelKnowledgeOverrideUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ChannelKnowledgeOverridePayload>
+        }
+        aggregate: {
+          args: Prisma.ChannelKnowledgeOverrideAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateChannelKnowledgeOverride>
+        }
+        groupBy: {
+          args: Prisma.ChannelKnowledgeOverrideGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ChannelKnowledgeOverrideGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ChannelKnowledgeOverrideCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ChannelKnowledgeOverrideCountAggregateOutputType> | number
         }
       }
     }
@@ -2050,6 +2350,69 @@ export const StoreScalarFieldEnum = {
 export type StoreScalarFieldEnum = (typeof StoreScalarFieldEnum)[keyof typeof StoreScalarFieldEnum]
 
 
+export const StoreKnowledgeProfileScalarFieldEnum = {
+  storeId: 'storeId',
+  brandDescription: 'brandDescription',
+  shippingPolicy: 'shippingPolicy',
+  returnPolicy: 'returnPolicy',
+  exchangePolicy: 'exchangePolicy',
+  warrantyPolicy: 'warrantyPolicy',
+  additionalInformation: 'additionalInformation',
+  tone: 'tone',
+  responseLength: 'responseLength',
+  greetingEnabled: 'greetingEnabled',
+  closingEnabled: 'closingEnabled',
+  emojiEnabled: 'emojiEnabled',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StoreKnowledgeProfileScalarFieldEnum = (typeof StoreKnowledgeProfileScalarFieldEnum)[keyof typeof StoreKnowledgeProfileScalarFieldEnum]
+
+
+export const StoreKnowledgeFaqScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  question: 'question',
+  answer: 'answer',
+  active: 'active',
+  position: 'position',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StoreKnowledgeFaqScalarFieldEnum = (typeof StoreKnowledgeFaqScalarFieldEnum)[keyof typeof StoreKnowledgeFaqScalarFieldEnum]
+
+
+export const StoreAiInstructionScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  content: 'content',
+  priority: 'priority',
+  active: 'active',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StoreAiInstructionScalarFieldEnum = (typeof StoreAiInstructionScalarFieldEnum)[keyof typeof StoreAiInstructionScalarFieldEnum]
+
+
+export const ChannelKnowledgeOverrideScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  providerKey: 'providerKey',
+  shippingPolicy: 'shippingPolicy',
+  returnPolicy: 'returnPolicy',
+  exchangePolicy: 'exchangePolicy',
+  warrantyPolicy: 'warrantyPolicy',
+  additionalInformation: 'additionalInformation',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ChannelKnowledgeOverrideScalarFieldEnum = (typeof ChannelKnowledgeOverrideScalarFieldEnum)[keyof typeof ChannelKnowledgeOverrideScalarFieldEnum]
+
+
 export const ChannelConnectionScalarFieldEnum = {
   id: 'id',
   storeId: 'storeId',
@@ -2404,6 +2767,48 @@ export type ListEnumStoreStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$
 
 
 /**
+ * Reference to a field of type 'AiTone'
+ */
+export type EnumAiToneFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiTone'>
+    
+
+
+/**
+ * Reference to a field of type 'AiTone[]'
+ */
+export type ListEnumAiToneFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiTone[]'>
+    
+
+
+/**
+ * Reference to a field of type 'AiResponseLength'
+ */
+export type EnumAiResponseLengthFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiResponseLength'>
+    
+
+
+/**
+ * Reference to a field of type 'AiResponseLength[]'
+ */
+export type ListEnumAiResponseLengthFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiResponseLength[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Int'
+ */
+export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+/**
+ * Reference to a field of type 'Int[]'
+ */
+export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
  * Reference to a field of type 'ChannelType'
  */
 export type EnumChannelTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ChannelType'>
@@ -2442,20 +2847,6 @@ export type EnumChannelConnectionStatusFieldRefInput<$PrismaModel> = FieldRefInp
  * Reference to a field of type 'ChannelConnectionStatus[]'
  */
 export type ListEnumChannelConnectionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ChannelConnectionStatus[]'>
-    
-
-
-/**
- * Reference to a field of type 'Int'
- */
-export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
-
-
-/**
- * Reference to a field of type 'Int[]'
- */
-export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 
@@ -2812,6 +3203,10 @@ export type GlobalOmitConfig = {
   workspace?: Prisma.WorkspaceOmit
   workspaceMember?: Prisma.WorkspaceMemberOmit
   store?: Prisma.StoreOmit
+  storeKnowledgeProfile?: Prisma.StoreKnowledgeProfileOmit
+  storeKnowledgeFaq?: Prisma.StoreKnowledgeFaqOmit
+  storeAiInstruction?: Prisma.StoreAiInstructionOmit
+  channelKnowledgeOverride?: Prisma.ChannelKnowledgeOverrideOmit
   channelConnection?: Prisma.ChannelConnectionOmit
   product?: Prisma.ProductOmit
   productVariant?: Prisma.ProductVariantOmit
