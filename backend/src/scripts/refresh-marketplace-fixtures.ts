@@ -23,6 +23,19 @@ const HEPSIBURADA_CATEGORY_URLS = [
   'https://www.hepsiburada.com/defacto-erkek-kazak-xc-12087281-b362',
 ] as const;
 
+// Marketplace attributes can lag behind the seller's own product content.
+// Keep narrowly scoped, source-verified corrections here so a refresh cannot
+// overwrite known-good facts with stale marketplace metadata.
+const TRENDYOL_VERIFIED_PRODUCT_CONTENT: Record<
+  string,
+  { description: string }
+> = {
+  F3269AX25AU: {
+    description:
+      'Jogger fit kesimi ve pamuklu kumaşıyla rahatlık sunan pantolon, spor ve günlük kombinlerde şıklığı bir arada sağlar. Beli lastikli tasarımı hareket özgürlüğünü destekler.\nPamuk 88%,Elastan 2%,Poliester 10%\nManken Bilgileri Lacivert-NV86: Göğüs: 93 Boy: 1,85 Basen: 97 Bel: 87\nManken Bedeni Lacivert-NV86: 32\nÜrün Kodu: F3269AX25AU\nManken Bilgileri Haki-KH475: Göğüs: 93 Boy: 1,85 Basen: 97 Bel: 87\nManken Bedeni Haki-KH475: 32',
+  },
+};
+
 type UnknownRecord = Record<string, unknown>;
 
 function asRecord(value: unknown): UnknownRecord {
@@ -130,18 +143,50 @@ function attributeValue(
   )?.value;
 }
 
-function descriptionFromAttributes(
-  title: string,
-  attributes: Array<{ name: string; value: string }>,
-): string {
-  const lines = [title];
-  for (const attribute of attributes) {
-    lines.push(`${attribute.name}: ${attribute.value}`);
-  }
-  return lines.join('\n');
+function trendyolDescription(markdown: string): string {
+  const start = markdown.indexOf('## Ürün Açıklaması');
+  if (start < 0) return '';
+
+  const possibleEnds = [
+    markdown.indexOf('### Ek Bilgiler', start),
+    markdown.indexOf('### DeFacto ', start),
+    markdown.indexOf('## Ürün Değerlendirmeleri', start),
+  ].filter((index) => index > start);
+  const end = possibleEnds.length ? Math.min(...possibleEnds) : markdown.length;
+
+  return markdownPlainText(markdown.slice(start, end))
+    .replace(/^Ürün Açıklaması\s*/i, '')
+    .trim();
 }
 
-function trendyolProductFromUrl(url: string, index: number): MockProductSeed {
+function materialCompositionFromDescription(description: string) {
+  const normalized = description.replace(/\s+/g, ' ');
+  const composition = normalized.match(
+    /(?:(?:pamuk|cotton|polyester|poliester|elastan|viskoz|poliamid)\s*%?\s*\d{1,3}\s*%?\s*[,;]?\s*){2,}/i,
+  )?.[0];
+
+  return composition?.trim().replace(/[,;\s]+$/, '') || null;
+}
+
+function preferDescriptionFacts(
+  attributes: Array<{ name: string; value: string }>,
+  description: string,
+) {
+  const materialComposition = materialCompositionFromDescription(description);
+  if (!materialComposition) return attributes;
+
+  return attributes.map((attribute) =>
+    attribute.name.toLocaleLowerCase('tr-TR') === 'materyal bileşeni'
+      ? { ...attribute, value: materialComposition }
+      : attribute,
+  );
+}
+
+function trendyolProductFromUrl(
+  url: string,
+  markdown: string,
+  index: number,
+): MockProductSeed {
   const html = fetchWithCurl(url);
   const props = asRecord(parseJsonAssignment(html, '__envoy__SHARED_PROPS'));
   const product = asRecord(props.product);
@@ -161,13 +206,17 @@ function trendyolProductFromUrl(url: string, index: number): MockProductSeed {
     throw new Error(`${url} erkek dışı veya yasaklı kategoride.`);
   }
 
-  const attributes = asRecords(product.attributes).flatMap((attribute) => {
+  const rawAttributes = asRecords(product.attributes).flatMap((attribute) => {
     const name = asString(asRecord(attribute.key).name);
     const value = asString(asRecord(attribute.value).name);
     const description = asString(attribute.description);
     if (!name || !value) return [];
     return [{ name, value: description ? `${value} — ${description}` : value }];
   });
+  const description =
+    TRENDYOL_VERIFIED_PRODUCT_CONTENT[code]?.description ??
+    trendyolDescription(markdown);
+  const attributes = preferDescriptionFacts(rawAttributes, description);
   if (!attributes.some((attribute) => attribute.name === 'Cinsiyet')) {
     attributes.unshift({ name: 'Cinsiyet', value: gender });
   }
@@ -221,7 +270,9 @@ function trendyolProductFromUrl(url: string, index: number): MockProductSeed {
     id: 1001 + index,
     code,
     title,
-    description: descriptionFromAttributes(title, attributes),
+    // Never synthesize a description from attributes. An empty description is
+    // safer than presenting generated text as marketplace copy.
+    description,
     brand: asString(asRecord(product.brand).name) || 'DeFacto',
     category: asString(asRecord(product.category).name) || 'Erkek Giyim',
     price,
@@ -410,7 +461,8 @@ async function collectTrendyolProducts(): Promise<MockProductSeed[]> {
     if (products.length === PRODUCT_LIMIT) break;
     const url = `https://www.trendyol.com${path}`;
     try {
-      const product = trendyolProductFromUrl(url, products.length);
+      const markdown = await fetchMarkdown(url);
+      const product = trendyolProductFromUrl(url, markdown, products.length);
       if (usedCodes.has(product.code)) continue;
       usedCodes.add(product.code);
       products.push(product);

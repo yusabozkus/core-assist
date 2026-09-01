@@ -21,6 +21,9 @@ export type ProductQuestion = {
   externalProductId: string
   customerName: string | null
   question: string
+  referenceAnswer: string | null
+  referenceSourceUrl: string | null
+  referenceSourceProvider: string | null
   status: ProductQuestionStatus
   answer: string | null
   answeredAt: string | null

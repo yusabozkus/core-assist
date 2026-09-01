@@ -79,7 +79,7 @@ export type ProductAttribute = Prisma.ProductAttributeModel
 export type ProductImage = Prisma.ProductImageModel
 /**
  * Model ProductSizeGuide
- *
+ * 
  */
 export type ProductSizeGuide = Prisma.ProductSizeGuideModel
 /**

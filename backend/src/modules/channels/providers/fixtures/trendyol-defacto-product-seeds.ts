@@ -1270,7 +1270,7 @@ export const TRENDYOL_DEFACTO_PRODUCT_SEEDS: MockProductSeed[] = [
     title:
       'Jogger Fit Beli Bağcıklı Lastikli Cepli Pamuklu Dokulu Pantolon F3269AX25AU',
     description:
-      'Jogger Fit Beli Bağcıklı Lastikli Cepli Pamuklu Dokulu Pantolon F3269AX25AU\nCinsiyet: Erkek\nMateryal: Pamuklu\nPaça Tipi: Jogger\nKalıp: Jogger — Eşofmana benzer, rahat kesim\nKumaş Tipi: Belirtilmemiş\nBel: Belirtilmemiş\nDesen: Düz\nRenk: Haki\nAstar Durumu: Astarsız\nBoy: Belirtilmemiş\nSiluet: Jogger\nOrtam: Casual/Günlük\nDokuma Tipi: Dokulu\nKemer/Kuşak Durumu: Kuşaklı\nSürdürülebilirlik Detayı: Hayır\nMateryal Bileşeni: 70% Polyester, 30% Pamuk\nYıkama Talimatı: T04 — Maksimum 30 °C sıcaklıkta sadece elde yıkayınız. Ağartıcı kullanmayınız. Tamburlu kurutma yapmayınız. Düşük sıcaklıkta ütüleyiniz. Kuru temizleme yapılabilir\nMenşei: TR\nKutu Durumu: Kutu yok',
+      'Jogger fit kesimi ve pamuklu kumaşıyla rahatlık sunan pantolon, spor ve günlük kombinlerde şıklığı bir arada sağlar. Beli lastikli tasarımı hareket özgürlüğünü destekler.\nPamuk 88%,Elastan 2%,Poliester 10%\nManken Bilgileri Lacivert-NV86: Göğüs: 93 Boy: 1,85 Basen: 97 Bel: 87\nManken Bedeni Lacivert-NV86: 32\nÜrün Kodu: F3269AX25AU\nManken Bilgileri Haki-KH475: Göğüs: 93 Boy: 1,85 Basen: 97 Bel: 87\nManken Bedeni Haki-KH475: 32',
     brand: 'DeFacto',
     category: 'Pantolon',
     price: 699.99,
@@ -1340,7 +1340,7 @@ export const TRENDYOL_DEFACTO_PRODUCT_SEEDS: MockProductSeed[] = [
       },
       {
         name: 'Materyal Bileşeni',
-        value: '70% Polyester, 30% Pamuk',
+        value: 'Pamuk 88%,Elastan 2%,Poliester 10%',
       },
       {
         name: 'Yıkama Talimatı',
@@ -1424,7 +1424,7 @@ export const TRENDYOL_DEFACTO_PRODUCT_SEEDS: MockProductSeed[] = [
     source: {
       productId: 960188828,
       url: 'https://www.trendyol.com/defacto/jogger-fit-beli-bagcikli-lastikli-cepli-pamuklu-dokulu-pantolon-f3269ax25au-p-960188828',
-      capturedAt: '2026-08-31',
+      capturedAt: '2026-09-01',
       images: [
         'https://cdn.dsmcdn.com/ty1801/prod/QC_PREP/20251216/06/2e1c82b2-f629-3035-a6b8-f4049999c15e/1_org_zoom.jpg',
         'https://cdn.dsmcdn.com/ty1800/prod/QC_PREP/20251216/06/5dd8aa58-6aa6-35a1-9a2d-a5f2bfbbc0e6/1_org_zoom.jpg',

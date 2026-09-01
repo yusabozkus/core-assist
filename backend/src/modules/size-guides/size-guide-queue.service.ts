@@ -52,26 +52,27 @@ export class SizeGuideQueueService extends SizeGuideDispatcher {
           : SizeGuideStatus.PENDING,
         analyzedAt: structuredData ? new Date() : null,
       },
-      update: sourceChanged
-        ? {
-            productId: input.productId,
-            sourceUrl: input.sizeGuide.sourceUrl,
-            rawText: input.sizeGuide.rawText,
-            structuredData: structuredData ?? Prisma.DbNull,
-            normalizedText: structuredData
-              ? formatNormalizedSizeGuide(structuredData)
-              : null,
-            confidence: structuredData?.confidence ?? null,
-            status: structuredData
-              ? SizeGuideStatus.READY
-              : SizeGuideStatus.PENDING,
-            failureReason: null,
-            analyzedAt: structuredData ? new Date() : null,
-          }
-        : {
-            productId: input.productId,
-            rawText: input.sizeGuide.rawText,
-          },
+      update:
+        sourceChanged || structuredData
+          ? {
+              productId: input.productId,
+              sourceUrl: input.sizeGuide.sourceUrl,
+              rawText: input.sizeGuide.rawText,
+              structuredData: structuredData ?? Prisma.DbNull,
+              normalizedText: structuredData
+                ? formatNormalizedSizeGuide(structuredData)
+                : null,
+              confidence: structuredData?.confidence ?? null,
+              status: structuredData
+                ? SizeGuideStatus.READY
+                : SizeGuideStatus.PENDING,
+              failureReason: null,
+              analyzedAt: structuredData ? new Date() : null,
+            }
+          : {
+              productId: input.productId,
+              rawText: input.sizeGuide.rawText,
+            },
       select: { id: true, status: true },
     });
 

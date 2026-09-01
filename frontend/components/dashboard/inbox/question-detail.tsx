@@ -4,6 +4,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { ProductContext } from "@/components/dashboard/inbox/product-context"
 import { QuestionAnswerComposer } from "@/components/dashboard/inbox/question-answer-composer"
 import { QuestionStatus } from "@/components/dashboard/inbox/question-status"
+import { ReferenceAnswer } from "@/components/dashboard/inbox/reference-answer"
 import {
   inboxDateFormatter,
   providerName,
@@ -71,6 +72,8 @@ export function QuestionDetail({
               </p>
             </div>
           </section>
+
+          <ReferenceAnswer question={question} />
 
           <ProductContext question={question} />
         </div>

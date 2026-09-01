@@ -6,6 +6,9 @@ export type NormalizedProductQuestion = {
   externalCustomerId?: string;
   customerName?: string;
   text: string;
+  referenceAnswer?: string;
+  referenceSourceUrl?: string;
+  referenceSourceProvider?: string;
   createdAt: Date;
   rawPayload: Record<string, unknown>;
 };

@@ -211,38 +211,47 @@ function SizeGuideSection({ guides = [] }: { guides?: CatalogSizeGuide[] }) {
       </div>
 
       {guide.status === "READY" && data?.rows.length ? (
-        <div className="themed-scrollbar mt-4 overflow-x-auto rounded-xl border border-border">
-          <table className="w-full min-w-max text-left text-sm">
-            <thead className="bg-muted/50 text-xs text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 font-medium">Beden</th>
-                {data.headers.map((header) => (
-                  <th key={header} className="px-4 py-3 font-medium">
-                    {header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {data.rows.map((row) => (
-                <tr key={row.label} className="bg-card">
-                  <th className="px-4 py-3 font-semibold text-foreground">
-                    {row.label}
-                  </th>
+        <div className="mt-4 space-y-3">
+          <div className="themed-scrollbar overflow-x-auto rounded-xl border border-border">
+            <table className="w-full min-w-max text-left text-sm">
+              <thead className="bg-muted/50 text-xs text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Beden</th>
                   {data.headers.map((header) => (
-                    <td
-                      key={`${row.label}-${header}`}
-                      className="px-4 py-3 text-muted-foreground"
-                    >
-                      {row.measurements.find(
-                        (measurement) => measurement.name === header
-                      )?.value ?? "—"}
-                    </td>
+                    <th key={header} className="px-4 py-3 font-medium">
+                      {header}
+                    </th>
                   ))}
                 </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {data.rows.map((row) => (
+                  <tr key={row.label} className="bg-card">
+                    <th className="px-4 py-3 font-semibold text-foreground">
+                      {row.label}
+                    </th>
+                    {data.headers.map((header) => (
+                      <td
+                        key={`${row.label}-${header}`}
+                        className="px-4 py-3 text-muted-foreground"
+                      >
+                        {row.measurements.find(
+                          (measurement) => measurement.name === header
+                        )?.value ?? "—"}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {data.notes.length ? (
+            <ul className="space-y-1 text-xs leading-5 text-muted-foreground">
+              {data.notes.map((note) => (
+                <li key={note}>• {note}</li>
               ))}
-            </tbody>
-          </table>
+            </ul>
+          ) : null}
         </div>
       ) : (
         <p className="mt-4 rounded-xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">

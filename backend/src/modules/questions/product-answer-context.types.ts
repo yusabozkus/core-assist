@@ -12,7 +12,12 @@ export type ProductAnswerFact =
   | 'PRODUCT_INFO';
 
 export type ProductAnswerEvidenceSource =
-  'ATTRIBUTE' | 'DESCRIPTION' | 'VARIANT' | 'TITLE' | 'SIZE_GUIDE';
+  | 'ATTRIBUTE'
+  | 'DESCRIPTION'
+  | 'VARIANT'
+  | 'TITLE'
+  | 'SIZE_GUIDE'
+  | 'PLATFORM_GUIDANCE';
 
 export type ProductAnswerEvidence = {
   id: string;
@@ -52,7 +57,9 @@ export type ProductAnswerSizeGuideContext = {
 export type ProductAnswerContext = {
   questionId: string;
   question: string;
+  providerKey: string;
   requestedFacts: ProductAnswerFact[];
+  mentionedColors: string[];
   requestedColor: string | null;
   requestedSize: string | null;
   matchedColor: string | null;
@@ -61,6 +68,8 @@ export type ProductAnswerContext = {
     id: string;
     title: string;
     description: string | null;
+    brand: string | null;
+    category: string | null;
     attributes: Array<{ name: string; value: string }>;
     variants: ProductAnswerVariantContext[];
     sizeGuides?: ProductAnswerSizeGuideContext[];

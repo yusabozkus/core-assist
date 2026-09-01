@@ -2239,6 +2239,9 @@ export const ProductQuestionScalarFieldEnum = {
   externalCustomerId: 'externalCustomerId',
   customerName: 'customerName',
   question: 'question',
+  referenceAnswer: 'referenceAnswer',
+  referenceSourceUrl: 'referenceSourceUrl',
+  referenceSourceProvider: 'referenceSourceProvider',
   status: 'status',
   answer: 'answer',
   externalCreatedAt: 'externalCreatedAt',
@@ -2502,14 +2505,14 @@ export type ListEnumProductVariantStatusFieldRefInput<$PrismaModel> = FieldRefIn
  * Reference to a field of type 'SizeGuideStatus'
  */
 export type EnumSizeGuideStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SizeGuideStatus'>
-
+    
 
 
 /**
  * Reference to a field of type 'SizeGuideStatus[]'
  */
 export type ListEnumSizeGuideStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SizeGuideStatus[]'>
-
+    
 
 
 /**
@@ -2530,14 +2533,14 @@ export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$Prisma
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-
+    
 
 
 /**
  * Reference to a field of type 'Float[]'
  */
 export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
-
+    
 
 
 /**
@@ -2884,3 +2887,4 @@ export type PrismaAction =
  * `PrismaClient` proxy available in interactive transactions.
  */
 export type TransactionClient = Omit<DefaultPrismaClient, runtime.ITXClientDenyList>
+

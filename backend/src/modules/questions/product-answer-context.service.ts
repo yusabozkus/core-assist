@@ -25,7 +25,21 @@ const STOCK_PATTERNS = [
   'satista mi',
 ];
 const PRICE_PATTERNS = ['fiyat', 'ne kadar', 'kac tl', 'ucret'];
-const MATERIAL_PATTERNS = ['materyal', 'malzeme', 'kumas', 'deri mi', 'pamuk'];
+const MATERIAL_PATTERNS = [
+  'materyal',
+  'malzeme',
+  'kumas',
+  'deri mi',
+  'pamuk',
+  'ribana',
+  'ribanali',
+  'rikla',
+  'riklali',
+  'likra',
+  'likrali',
+  'elastan',
+  'esnek',
+];
 const DURABILITY_PATTERNS = [
   'kararma',
   'kararir',
@@ -47,6 +61,7 @@ const SIZE_PATTERNS = [
   'gogus',
   'bel olc',
   'beden tablosu',
+  'b den tablo',
   'kac cm',
   'olcu',
   'olcusu',
@@ -54,6 +69,9 @@ const SIZE_PATTERNS = [
 ];
 const COLOR_PATTERNS = [
   'hangi renk',
+  'urun rengi',
+  'rengi nedir',
+  'renk nedir',
   'renk secenegi',
   'renkleri neler',
   'baska renk',
@@ -61,6 +79,8 @@ const COLOR_PATTERNS = [
 ];
 const FIT_PATTERNS = [
   'kalip',
+  'kalib',
+  'kesim',
   'slim',
   'regular',
   'oversize',
@@ -68,6 +88,13 @@ const FIT_PATTERNS = [
   'relax',
   'bol dur',
   'dar dur',
+  'bol mu',
+  'dar mi',
+  'genis mi',
+  'standart kesim',
+  'normal kesim',
+  'rahat kesim',
+  'vucuda otur',
 ];
 const CARE_PATTERNS = [
   'yikama',
@@ -145,6 +172,9 @@ export class ProductAnswerContextService {
         id: true,
         question: true,
         status: true,
+        connection: {
+          select: { providerKey: true },
+        },
         answerDelivery: {
           select: { status: true },
         },
@@ -153,6 +183,8 @@ export class ProductAnswerContextService {
             id: true,
             title: true,
             description: true,
+            brand: true,
+            category: true,
             attributes: {
               orderBy: { name: 'asc' },
               select: { name: true, value: true },
@@ -230,10 +262,13 @@ export class ProductAnswerContextService {
     return analyzeProductQuestion({
       questionId: question.id,
       question: question.question,
+      providerKey: question.connection.providerKey,
       product: {
         id: question.product.id,
         title: question.product.title,
         description: question.product.description,
+        brand: question.product.brand,
+        category: question.product.category,
         attributes: question.product.attributes,
         variants,
         sizeGuides: question.product.sizeGuides.flatMap((guide) =>
@@ -249,6 +284,7 @@ export class ProductAnswerContextService {
 export function analyzeProductQuestion(input: {
   questionId: string;
   question: string;
+  providerKey?: string;
   product: ProductAnswerContext['product'];
 }): ProductAnswerContext {
   const normalizedQuestion = normalizeSearchValue(input.question);
@@ -257,10 +293,19 @@ export function analyzeProductQuestion(input: {
     variants.map((variant) => variant.color),
   );
   const availableSizes = uniqueValues(variants.map((variant) => variant.size));
-  const requestedColor = findMention(
+  const mentionedColors = findMentions(
     normalizedQuestion,
     uniqueValues([...availableColors, ...COMMON_COLORS]),
   );
+  const colorIdentityQuestion = isColorQuestion(normalizedQuestion);
+  const matchedMentionedColor = mentionedColors.find((color) =>
+    Boolean(findEquivalentValue(color, availableColors)),
+  );
+  const requestedColor =
+    matchedMentionedColor ??
+    (!colorIdentityQuestion || isStockQuestion(normalizedQuestion)
+      ? (mentionedColors[0] ?? null)
+      : null);
   const requestedSize =
     findMention(normalizedQuestion, availableSizes) ??
     findGenericSizeMention(normalizedQuestion);
@@ -276,11 +321,17 @@ export function analyzeProductQuestion(input: {
     );
   });
   const requestedFacts = detectRequestedFacts(normalizedQuestion);
-  const relevantAttributes = findRelevantAttributes(
+  const matchedAttributes = findRelevantAttributes(
     normalizedQuestion,
     requestedFacts,
     input.product.attributes,
   );
+  const relevantAttributes =
+    matchedAttributes.length > 0
+      ? matchedAttributes
+      : requestedFacts.length === 1 && requestedFacts[0] === 'PRODUCT_INFO'
+        ? selectCoreProductAttributes(input.product.attributes)
+        : matchedAttributes;
   const relevantDescription = findRelevantDescription(
     input.product.description,
     normalizedQuestion,
@@ -288,6 +339,10 @@ export function analyzeProductQuestion(input: {
   );
   const evidence = createEvidence({
     productTitle: input.product.title,
+    productDescription: input.product.description,
+    productBrand: input.product.brand,
+    productCategory: input.product.category,
+    providerKey: input.providerKey ?? 'unknown',
     requestedFacts,
     relevantAttributes,
     relevantDescription,
@@ -304,7 +359,9 @@ export function analyzeProductQuestion(input: {
   return {
     questionId: input.questionId,
     question: input.question,
+    providerKey: input.providerKey ?? 'unknown',
     requestedFacts,
+    mentionedColors,
     requestedColor,
     requestedSize,
     matchedColor,
@@ -350,6 +407,9 @@ function detectRequestedFacts(normalizedQuestion: string): ProductAnswerFact[] {
 
 function isColorQuestion(normalizedQuestion: string) {
   if (includesAny(normalizedQuestion, COLOR_PATTERNS)) return true;
+  if (/\b(?:renk|rengi)\b.*\b(?:mi|mu)\b/.test(normalizedQuestion)) {
+    return true;
+  }
 
   return COMMON_COLORS.some((color) => {
     const normalizedColor = normalizeSearchValue(color);
@@ -404,7 +464,17 @@ function findRelevantAttributes(
 const ATTRIBUTE_PATTERNS_BY_FACT: Record<ProductAnswerFact, string[]> = {
   STOCK: ['stok', 'adet'],
   PRICE: ['fiyat', 'tl', 'ucret'],
-  MATERIAL: ['materyal', 'kumas', 'dokuma', 'deri', 'pamuk', 'polyester'],
+  MATERIAL: [
+    'materyal',
+    'kumas',
+    'dokuma',
+    'deri',
+    'pamuk',
+    'polyester',
+    'elastan',
+    'likra',
+    'ribana',
+  ],
   DURABILITY: [
     'kararma',
     'solma',
@@ -418,7 +488,18 @@ const ATTRIBUTE_PATTERNS_BY_FACT: Record<ProductAnswerFact, string[]> = {
   SHIPPING: ['kargo', 'teslim', 'gonderim'],
   SIZE: ['beden', 'olcu', 'uzunluk', 'gogus', 'bel', 'basen', 'numara'],
   COLOR: ['renk'],
-  FIT: ['kalip', 'siluet', 'slim', 'regular', 'oversize', 'boxy', 'relax'],
+  FIT: [
+    'kalip',
+    'kalib',
+    'kesim',
+    'fit',
+    'siluet',
+    'slim',
+    'regular',
+    'oversize',
+    'boxy',
+    'relax',
+  ],
   CARE: ['yikama', 'bakim', 'kurut', 'utu', 'temizle'],
   PRODUCT_CODE: ['urun kod', 'model kod', 'stok kod'],
   PRODUCT_INFO: [
@@ -435,6 +516,59 @@ const ATTRIBUTE_PATTERNS_BY_FACT: Record<ProductAnswerFact, string[]> = {
 
 function attributePatternsForFact(fact: ProductAnswerFact) {
   return ATTRIBUTE_PATTERNS_BY_FACT[fact];
+}
+
+function selectCoreProductAttributes(
+  attributes: Array<{ name: string; value: string }>,
+) {
+  const priorityPatterns = [
+    'urun tipi',
+    'kalip',
+    'siluet',
+    'materyal bileseni',
+    'materyal',
+    'kumas tipi',
+    'dokuma tipi',
+    'renk',
+    'boy',
+    'kol boyu',
+    'kol tipi',
+    'yaka',
+    'desen',
+    'cep',
+    'astar',
+    'kapama',
+  ];
+  const ignoredPatterns = [
+    'mensei',
+    'kutu durumu',
+    'surdurulebilirlik',
+    'yurt disi satis',
+    'stok adedi',
+    'stok kodu',
+  ];
+
+  return [...attributes]
+    .filter((attribute) => {
+      const name = normalizeSearchValue(attribute.name);
+      return !ignoredPatterns.some((pattern) => name.includes(pattern));
+    })
+    .sort((left, right) => {
+      const leftName = normalizeSearchValue(left.name);
+      const rightName = normalizeSearchValue(right.name);
+      const leftPriority = priorityPatterns.findIndex((pattern) =>
+        leftName.includes(pattern),
+      );
+      const rightPriority = priorityPatterns.findIndex((pattern) =>
+        rightName.includes(pattern),
+      );
+      const normalizedLeftPriority =
+        leftPriority === -1 ? priorityPatterns.length : leftPriority;
+      const normalizedRightPriority =
+        rightPriority === -1 ? priorityPatterns.length : rightPriority;
+      return normalizedLeftPriority - normalizedRightPriority;
+    })
+    .slice(0, 12);
 }
 
 function findRelevantDescription(
@@ -473,6 +607,10 @@ function findRelevantDescription(
 
 function createEvidence(input: {
   productTitle: string;
+  productDescription: string | null;
+  productBrand: string | null;
+  productCategory: string | null;
+  providerKey: string;
   requestedFacts: ProductAnswerFact[];
   relevantAttributes: Array<{ name: string; value: string }>;
   relevantDescription: string | null;
@@ -486,6 +624,31 @@ function createEvidence(input: {
   normalizedQuestion: string;
 }): ProductAnswerEvidence[] {
   const evidence: ProductAnswerEvidence[] = [];
+
+  if (input.requestedFacts.includes('PRODUCT_INFO')) {
+    evidence.push({
+      id: 'product-identity',
+      fact: 'PRODUCT_INFO',
+      label: 'Ürün kimliği',
+      value: [
+        input.productTitle,
+        input.productBrand ? `Marka: ${input.productBrand}` : null,
+        input.productCategory ? `Kategori: ${input.productCategory}` : null,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      source: 'TITLE',
+      confidence: 1,
+    });
+
+    const packageScope = inferSingleProductPackageScope({
+      title: input.productTitle,
+      description: input.productDescription,
+      category: input.productCategory,
+      normalizedQuestion: input.normalizedQuestion,
+    });
+    if (packageScope) evidence.push(packageScope);
+  }
 
   if (input.requestedFacts.includes('PRODUCT_CODE')) {
     const productCode = extractProductCode(input.productTitle);
@@ -527,6 +690,7 @@ function createEvidence(input: {
       (candidate) => candidate !== 'STOCK' && candidate !== 'PRICE',
     )) {
       if (
+        fact === 'PRODUCT_INFO' ||
         attributePatternsForFact(fact).some((pattern) =>
           normalizeSearchValue(input.relevantDescription ?? '').includes(
             pattern,
@@ -600,7 +764,28 @@ function createEvidence(input: {
       source: 'VARIANT',
     });
 
+    if (
+      isSizeGuideLocationQuestion(input.normalizedQuestion) ||
+      isHeightWeightSizeQuestion(input.normalizedQuestion)
+    ) {
+      evidence.push({
+        id: 'platform-size-guide-location',
+        fact: 'SIZE',
+        label: 'Beden tablosunun konumu',
+        value: sizeGuideLocationForProvider(input.providerKey),
+        source: 'PLATFORM_GUIDANCE',
+        confidence: 1,
+      });
+    }
+
     for (const guide of input.sizeGuides.slice(0, 2)) {
+      if (
+        isProductWidthQuestion(input.normalizedQuestion) &&
+        !containsProductWidthMeasurement(guide.normalizedText)
+      ) {
+        continue;
+      }
+
       evidence.push({
         id: `size-guide-${guide.id}`,
         fact: 'SIZE',
@@ -621,22 +806,79 @@ function createEvidence(input: {
     evidence.push({
       id: 'variant-colors',
       fact: 'COLOR',
-      label: 'Renk seçenekleri',
-      value: [
-        colors.length > 0 ? colors.join(', ') : 'Renk seçeneği belirtilmemiş.',
-        input.requestedColor
-          ? input.matchedColor
-            ? `İstenen renk eşleşti: ${input.matchedColor}.`
-            : `İstenen renk eşleşmedi: ${input.requestedColor}.`
-          : null,
-      ]
-        .filter(Boolean)
-        .join(' '),
+      label: 'Ürünün katalog rengi',
+      value:
+        colors.length > 0
+          ? colors.join(', ')
+          : 'Ürünün katalog rengi belirtilmemiş.',
       source: 'VARIANT',
     });
   }
 
   return [...new Map(evidence.map((item) => [item.id, item])).values()];
+}
+
+function inferSingleProductPackageScope(input: {
+  title: string;
+  description: string | null;
+  category: string | null;
+  normalizedQuestion: string;
+}): ProductAnswerEvidence | null {
+  if (
+    !/(?:geliyor mu|geliyormu|dahil mi|birlikte mi|yaninda mi|icinden mi|takim mi|set mi)/.test(
+      input.normalizedQuestion,
+    )
+  ) {
+    return null;
+  }
+
+  const requestedItem = [
+    'şort',
+    'sort',
+    'kemer',
+    'çanta',
+    'canta',
+    'pantolon',
+    'tişört',
+    'tisort',
+    'gömlek',
+    'gomlek',
+    'ceket',
+    'etek',
+    'aksesuar',
+  ].find((item) =>
+    input.normalizedQuestion.includes(normalizeSearchValue(item)),
+  );
+  if (!requestedItem) return null;
+
+  const listing = normalizeSearchValue(
+    [input.title, input.description, input.category].filter(Boolean).join(' '),
+  );
+  const normalizedItem = normalizeSearchValue(requestedItem);
+  const titleContainsRequestedItem = normalizeSearchValue(input.title).includes(
+    normalizedItem,
+  );
+  const descriptionContainsRequestedItem = normalizeSearchValue(
+    input.description ?? '',
+  ).includes(normalizedItem);
+  const explicitlyBundled = /\b(?:set|takim|ikili|2 li|kombin)\b/.test(listing);
+
+  if (
+    titleContainsRequestedItem ||
+    descriptionContainsRequestedItem ||
+    explicitlyBundled
+  ) {
+    return null;
+  }
+
+  return {
+    id: 'product-package-scope',
+    fact: 'PRODUCT_INFO',
+    label: 'Paket kapsamı',
+    value: `İlan tek ürün olarak "${input.title}" adıyla listeleniyor. Başlıkta ve ürün açıklamasında ${requestedItem} ya da set/takım içeriği belirtilmiyor.`,
+    source: 'TITLE',
+    confidence: 0.95,
+  };
 }
 
 function selectSizeGuideEvidence(
@@ -678,6 +920,40 @@ function selectSizeGuideEvidence(
     : lines;
 
   return [...new Set(selected)].join('\n').slice(0, 6_000);
+}
+
+function isSizeGuideLocationQuestion(normalizedQuestion: string) {
+  return (
+    /(?:beden|b den) tablo/.test(normalizedQuestion) &&
+    /nerede|nerden|nereden|nasil|bak|bul|ac|ulas/.test(normalizedQuestion)
+  );
+}
+
+function isHeightWeightSizeQuestion(normalizedQuestion: string) {
+  return /\b(?:boy|boyum|kilo|kiloyum|kg)\b/.test(normalizedQuestion);
+}
+
+function sizeGuideLocationForProvider(providerKey: string) {
+  if (providerKey === 'trendyol') {
+    return 'Trendyol ürün sayfasında beden seçenekleri bölümündeki Beden Tablosu bağlantısından açılır.';
+  }
+
+  if (providerKey === 'hepsiburada') {
+    return 'Hepsiburada ürün sayfasındaki Beden Tablosu bağlantısına basıldığında sağ taraftaki panelde açılır.';
+  }
+
+  return 'Ürün sayfasındaki beden seçenekleri bölümünde yer alan Beden Tablosu bağlantısından açılır.';
+}
+
+function isProductWidthQuestion(normalizedQuestion: string) {
+  return /(?:^| )(?:en|eni|genislik|genisligi)(?: |$)/.test(normalizedQuestion);
+}
+
+function containsProductWidthMeasurement(normalizedText: string) {
+  const normalized = normalizeSearchValue(normalizedText);
+  return /(?:^| )(?:urun eni|beden eni|en olcusu|genislik)(?: |$)/.test(
+    normalized,
+  );
 }
 
 export function extractProductCode(title: string) {
@@ -728,6 +1004,14 @@ function findMention(normalizedQuestion: string, values: string[]) {
         ` ${normalizedQuestion} `.includes(` ${normalizeSearchValue(value)} `),
       ) ?? null
   );
+}
+
+function findMentions(normalizedQuestion: string, values: string[]) {
+  return [...values]
+    .sort((left, right) => right.length - left.length)
+    .filter((value) =>
+      ` ${normalizedQuestion} `.includes(` ${normalizeSearchValue(value)} `),
+    );
 }
 
 function findEquivalentValue(value: string | null, availableValues: string[]) {

@@ -449,6 +449,9 @@ model ProductQuestion {
   externalCustomerId      String?
   customerName            String?
   question                String
+  referenceAnswer         String?
+  referenceSourceUrl      String?
+  referenceSourceProvider String?
   status                  ProductQuestionStatus @default(PENDING)
   answer                  String?
   externalCreatedAt       DateTime

@@ -1,17 +1,27 @@
 import 'dotenv/config';
 import { GeminiClientService } from '../modules/ai/gemini-client.service';
 import {
+  applySellerTone,
   GeminiDraftService,
   sanitizeDraftAnswer,
 } from '../modules/ai/gemini-draft.service';
+import type { AiDraftResult } from '../modules/ai/ai-draft.types';
 import { MockCatalogConnector } from '../modules/channels/providers/mock-catalog.connector';
-import { MockQuestionConnector } from '../modules/channels/providers/mock-question.connector';
-import type { ConnectorContext } from '../modules/channels/providers/catalog-connector';
+import {
+  MOCK_HEPSIBURADA_QUESTIONS,
+  MOCK_TRENDYOL_QUESTIONS,
+  MockQuestionConnector,
+} from '../modules/channels/providers/mock-question.connector';
+import type {
+  ConnectorContext,
+  NormalizedProduct,
+} from '../modules/channels/providers/catalog-connector';
 import { analyzeProductQuestion } from '../modules/questions/product-answer-context.service';
 import type {
   ProductAnswerContext,
   ProductAnswerFact,
 } from '../modules/questions/product-answer-context.types';
+import { formatNormalizedSizeGuide } from '../modules/size-guides/size-guide-queue.service';
 
 const PROVIDERS = ['trendyol', 'hepsiburada'] as const;
 const connectorContext: ConnectorContext = {
@@ -20,7 +30,12 @@ const connectorContext: ConnectorContext = {
 };
 
 async function run() {
-  const contexts = await createEvaluationContexts();
+  const targetedOnly =
+    process.argv.includes('--targeted-only') ||
+    process.argv.includes('--fit-only');
+  const contexts = targetedOnly
+    ? await createTargetedEvaluationContexts()
+    : await createEvaluationContexts();
   const deterministic = evaluateContexts(contexts);
   const regressions = evaluateRegressions();
   const withAi = process.argv.includes('--with-ai');
@@ -30,7 +45,13 @@ async function run() {
     `${JSON.stringify(
       {
         ok: true,
-        mode: withAi ? 'CONTEXT_AND_GEMINI' : 'CONTEXT_ONLY',
+        mode: targetedOnly
+          ? withAi
+            ? 'TARGETED_REGRESSION_WITH_GEMINI'
+            : 'TARGETED_REGRESSION_CONTEXT_ONLY'
+          : withAi
+            ? 'CONTEXT_AND_GEMINI'
+            : 'CONTEXT_ONLY',
         ...deterministic,
         regressions,
         ai,
@@ -41,11 +62,75 @@ async function run() {
   );
 }
 
+async function createTargetedEvaluationContexts() {
+  const catalog = new MockCatalogConnector();
+  const productBatch = await catalog.fetchProducts(
+    'trendyol',
+    connectorContext,
+  );
+  assertNoLegacySyntheticDescriptions(productBatch.products);
+  const cases = [
+    {
+      productCode: 'D1902AX25SM',
+      questionId: 'regression-loose-fit-ai',
+      question: 'bol kesim mi bunlar',
+    },
+    {
+      productCode: 'Z9933AZ23SP',
+      questionId: 'regression-inflected-jogger-fit-ai',
+      question: 'Kalıbı nasıl ?',
+    },
+    {
+      productCode: 'F3269AX25AU',
+      questionId: 'regression-stretch-ai',
+      question: 'Merhaba. Esnek bir kumaş mı?',
+    },
+  ];
+
+  return cases.map((testCase) => {
+    const product = productBatch.products.find((candidate) =>
+      candidate.title.includes(testCase.productCode),
+    );
+    if (!product) {
+      throw new Error(
+        `${testCase.productCode} hedefli AI regresyon ürünü katalogda bulunamadı.`,
+      );
+    }
+
+    return analyzeProductQuestion({
+      questionId: testCase.questionId,
+      question: testCase.question,
+      providerKey: 'trendyol',
+      product: {
+        id: product.externalId,
+        title: product.title,
+        description: product.description ?? null,
+        brand: product.brand ?? null,
+        category: product.category ?? null,
+        attributes: product.attributes,
+        variants: product.variants.map((variant) => ({
+          title: variant.title ?? null,
+          sku: variant.sku,
+          color: variant.color ?? null,
+          size: variant.size ?? null,
+          price: variant.price,
+          currency: variant.currency,
+          stock: variant.stock,
+          status: variant.stock > 0 ? 'ACTIVE' : 'OUT_OF_STOCK',
+        })),
+        sizeGuides: [],
+      },
+    });
+  });
+}
+
 function evaluateRegressions() {
   const product: ProductAnswerContext['product'] = {
     id: 'regression-product',
     title: 'Sergio Regular Fit Jean Pantolon F9571AX26SP',
     description: 'Renk: Haki. Yıkama talimatı: 30 derecede yıkayınız.',
+    brand: 'DeFacto',
+    category: 'Jean',
     attributes: [
       { name: 'Renk', value: 'Haki' },
       { name: 'Yıkama Talimatı', value: '30 derecede yıkayınız.' },
@@ -96,6 +181,24 @@ function evaluateRegressions() {
     throw new Error('Sorulmayan stok cümlesi taslaktan temizlenemedi.');
   }
 
+  const sellerTone = applySellerTone(
+    'Ürün regular, yani standart kesimdir.',
+    'regression-seller-tone',
+  );
+  const sellerToneRepeated = applySellerTone(
+    'Merhabalar, ürün regular, yani standart kesimdir. Keyifli alışverişler dileriz.',
+    'regression-seller-tone',
+  );
+  if (
+    !/^Merhaba(?:lar)?,/.test(sellerTone) ||
+    !/(?:alışverişler|günler) dileriz\.$/.test(sellerTone) ||
+    (sellerToneRepeated.match(/Merhabalar/g) ?? []).length !== 1 ||
+    (sellerToneRepeated.match(/Keyifli alışverişler dileriz\./g) ?? [])
+      .length !== 1
+  ) {
+    throw new Error('Satıcı selamlama ve kapanış üslubu uygulanamadı.');
+  }
+
   const productCode = analyzeProductQuestion({
     questionId: 'regression-product-code',
     question: 'Ürün kodunu öğrenebilir miyim?',
@@ -124,10 +227,249 @@ function evaluateRegressions() {
     throw new Error('İlgili beden tablosu satırı kanıta dönüştürülemedi.');
   }
 
+  const colorChoice = analyzeProductQuestion({
+    questionId: 'regression-color-choice',
+    question: 'Renk gri mi yeşil mi?',
+    providerKey: 'trendyol',
+    product: {
+      ...product,
+      attributes: [{ name: 'Renk', value: 'Yeşil' }],
+      variants: product.variants.map((variant) => ({
+        ...variant,
+        color: 'Yeşil',
+      })),
+    },
+  });
+  if (
+    colorChoice.matchedColor !== 'Yeşil' ||
+    !colorChoice.evidence.some(
+      (evidence) =>
+        evidence.fact === 'COLOR' && evidence.value.includes('Yeşil'),
+    )
+  ) {
+    throw new Error(
+      'Seçenekli renk sorusu mevcut ürün rengiyle eşleştirilemedi.',
+    );
+  }
+
+  const differentColorChoice = analyzeProductQuestion({
+    questionId: 'regression-different-color-choice',
+    question: 'Merhaba, renk gri mi yeşil mi?',
+    providerKey: 'hepsiburada',
+    product: {
+      ...product,
+      attributes: [{ name: 'Renk', value: 'Siyah' }],
+      variants: product.variants.map((variant) => ({
+        ...variant,
+        color: 'Siyah',
+      })),
+    },
+  });
+  if (
+    differentColorChoice.requestedColor !== null ||
+    !differentColorChoice.evidence.some(
+      (evidence) =>
+        evidence.fact === 'COLOR' && evidence.value.includes('Siyah'),
+    )
+  ) {
+    throw new Error(
+      'Ürünün gerçek rengi sorudaki iki renkten farklıyken doğru renk kanıtı üretilemedi.',
+    );
+  }
+
+  const directColorQuestion = analyzeProductQuestion({
+    questionId: 'regression-direct-color-question',
+    question: 'Merhaba ürün rengi nedir?',
+    providerKey: 'hepsiburada',
+    product: {
+      ...product,
+      attributes: [],
+      variants: product.variants.map((variant) => ({
+        ...variant,
+        color: 'Yeşil-GN654',
+      })),
+    },
+  });
+  if (
+    !directColorQuestion.requestedFacts.includes('COLOR') ||
+    !directColorQuestion.evidence.some(
+      (evidence) =>
+        evidence.fact === 'COLOR' && evidence.value.includes('Yeşil-GN654'),
+    )
+  ) {
+    throw new Error('Doğrudan ürün rengi sorusu varyant rengini bulamadı.');
+  }
+
+  const packageScope = analyzeProductQuestion({
+    questionId: 'regression-package-scope',
+    question: 'şort geliyormu',
+    providerKey: 'trendyol',
+    product: {
+      ...product,
+      title:
+        'Relax Fit Polo Yaka Keten Karışımlı Kısa Kollu Gömlek D9882AX25AU',
+      category: 'Gömlek',
+      description:
+        'Keten karışımlı kısa kollu gömlek, günlük kullanım için tasarlanmıştır.',
+      attributes: [{ name: 'Ürün Tipi', value: 'Gömlek' }],
+    },
+  });
+  if (
+    !packageScope.evidence.some(
+      (evidence) => evidence.id === 'product-package-scope',
+    )
+  ) {
+    throw new Error('Tek ürün ilanından paket kapsamı kanıtı üretilemedi.');
+  }
+
+  const looseFitQuestion = analyzeProductQuestion({
+    questionId: 'regression-loose-fit-question',
+    question: 'bol kesim mi bunlar',
+    providerKey: 'trendyol',
+    product: {
+      ...product,
+      title: 'Regular Fit Yazlık Pamuklu Kısa Kollu Beyaz Gömlek D1902AX25SM',
+      category: 'Gömlek',
+      description:
+        'Regular Fit Yazlık Pamuklu Kısa Kollu Beyaz Gömlek. Kalıp: Regular.',
+      attributes: [
+        { name: 'Kalıp', value: 'Regular' },
+        { name: 'Siluet', value: 'Regular' },
+      ],
+    },
+  });
+  if (
+    !looseFitQuestion.requestedFacts.includes('FIT') ||
+    looseFitQuestion.requestedFacts.includes('PRODUCT_INFO') ||
+    !looseFitQuestion.evidence.some(
+      (evidence) => evidence.fact === 'FIT' && evidence.value === 'Regular',
+    )
+  ) {
+    throw new Error(
+      'Bol kesim sorusu regular kalıp kanıtıyla ilişkilendirilemedi.',
+    );
+  }
+
+  const inflectedJoggerFitQuestion = analyzeProductQuestion({
+    questionId: 'regression-inflected-jogger-fit-question',
+    question: 'Kalıbı nasıl ?',
+    providerKey: 'trendyol',
+    product: {
+      ...product,
+      title:
+        '%100 Pamuk Yazlık Jogger Chino Pantolon Beli Bağcıklı Cepli Düz Paça Z9933AZ23SP',
+      category: 'Pantolon',
+      description:
+        'Kalıp: Jogger — Eşofmana benzer, rahat kesim. Siluet: Jogger.',
+      attributes: [
+        {
+          name: 'Kalıp',
+          value: 'Jogger — Eşofmana benzer, rahat kesim',
+        },
+        { name: 'Siluet', value: 'Jogger' },
+      ],
+    },
+  });
+  if (
+    !inflectedJoggerFitQuestion.requestedFacts.includes('FIT') ||
+    inflectedJoggerFitQuestion.requestedFacts.includes('PRODUCT_INFO') ||
+    !inflectedJoggerFitQuestion.evidence.some(
+      (evidence) =>
+        evidence.fact === 'FIT' &&
+        evidence.value.includes('Eşofmana benzer, rahat kesim'),
+    )
+  ) {
+    throw new Error(
+      'Çekimli "kalıbı" sorusu Jogger kalıp kanıtıyla ilişkilendirilemedi.',
+    );
+  }
+
+  const semanticFallback = analyzeProductQuestion({
+    questionId: 'regression-semantic-fallback',
+    question: 'Bu model günlük kullanım için nasıl tasarlanmış?',
+    product: {
+      ...product,
+      attributes: [
+        { name: 'Kalıp', value: 'Regular' },
+        { name: 'Ortam', value: 'Günlük' },
+        { name: 'Renk', value: 'Beyaz' },
+      ],
+    },
+  });
+  if (
+    semanticFallback.relevantAttributes.length === 0 ||
+    !semanticFallback.evidence.some(
+      (evidence) => evidence.source === 'ATTRIBUTE',
+    )
+  ) {
+    throw new Error(
+      'Birebir eşleşmeyen genel ürün sorusuna temel katalog bağlamı eklenemedi.',
+    );
+  }
+
+  const sizeGuideLocation = analyzeProductQuestion({
+    questionId: 'regression-size-guide-location',
+    question: 'b den tablosuna nereden bakılıyor',
+    providerKey: 'trendyol',
+    product,
+  });
+  if (
+    !sizeGuideLocation.requestedFacts.includes('SIZE') ||
+    !sizeGuideLocation.evidence.some(
+      (evidence) => evidence.source === 'PLATFORM_GUIDANCE',
+    )
+  ) {
+    throw new Error(
+      'Beden tablosu konum sorusu platform yönlendirmesi üretmedi.',
+    );
+  }
+
+  const garmentWidth = analyzeProductQuestion({
+    questionId: 'regression-garment-width',
+    question: 'XL bedenin eni kaç cm?',
+    providerKey: 'hepsiburada',
+    product,
+  });
+  if (
+    garmentWidth.evidence.some((evidence) => evidence.source === 'SIZE_GUIDE')
+  ) {
+    throw new Error('Vücut çevresi tablosu ürün eni kanıtı olarak kullanıldı.');
+  }
+
+  const ribbedFabric = analyzeProductQuestion({
+    questionId: 'regression-ribbed-fabric',
+    question: 'Kumaşı riklalı mı?',
+    product: {
+      ...product,
+      description: 'Dokuma Tipi: Düz Dokuma. Materyal Bileşeni: %100 Pamuk.',
+      attributes: [
+        { name: 'Dokuma Tipi', value: 'Düz Dokuma' },
+        { name: 'Materyal Bileşeni', value: '%100 Pamuk' },
+      ],
+    },
+  });
+  if (
+    !ribbedFabric.requestedFacts.includes('MATERIAL') ||
+    !ribbedFabric.evidence.some((evidence) => evidence.value === 'Düz Dokuma')
+  ) {
+    throw new Error('Ribana sorusu düz dokuma kanıtıyla eşleştirilemedi.');
+  }
+
   return {
     unsolicitedStockRemoved: true,
+    sellerToneAppliedWithoutDuplication: true,
     productCodeEvidenceCreated: true,
     relevantSizeGuideRowSelected: true,
+    colorChoiceMatched: true,
+    differentColorChoiceResolved: true,
+    directColorQuestionResolved: true,
+    singleProductPackageScopeCreated: true,
+    looseFitMappedToRegularEvidence: true,
+    inflectedFitMappedToJoggerEvidence: true,
+    semanticCatalogFallbackCreated: true,
+    sizeGuideLocationGuidanceCreated: true,
+    garmentWidthSeparatedFromBodyMeasurements: true,
+    ribbedFabricEvidenceCreated: true,
   };
 }
 
@@ -146,6 +488,7 @@ async function createEvaluationContexts() {
     const productsByExternalId = new Map(
       productBatch.products.map((product) => [product.externalId, product]),
     );
+    assertNoLegacySyntheticDescriptions(productBatch.products);
 
     for (const question of questionBatch.questions.filter(
       (candidate) => candidate.rawPayload.historical !== true,
@@ -161,10 +504,13 @@ async function createEvaluationContexts() {
         analyzeProductQuestion({
           questionId: question.externalId,
           question: question.text,
+          providerKey: provider,
           product: {
             id: product.externalId,
             title: product.title,
             description: product.description ?? null,
+            brand: product.brand ?? null,
+            category: product.category ?? null,
             attributes: product.attributes,
             variants: product.variants.map((variant) => ({
               title: variant.title ?? null,
@@ -176,18 +522,56 @@ async function createEvaluationContexts() {
               stock: variant.stock,
               status: variant.stock > 0 ? 'ACTIVE' : 'OUT_OF_STOCK',
             })),
+            sizeGuides: product.sizeGuide?.structuredData
+              ? [
+                  {
+                    id: `${product.externalId}-size-guide`,
+                    sourceUrl: product.sizeGuide.sourceUrl,
+                    normalizedText: formatNormalizedSizeGuide(
+                      product.sizeGuide.structuredData,
+                    ),
+                    confidence:
+                      product.sizeGuide.structuredData.confidence ?? null,
+                  },
+                ]
+              : [],
           },
         }),
       );
     }
   }
 
-  if (contexts.length !== 60) {
+  const expectedContexts = MOCK_TRENDYOL_QUESTIONS + MOCK_HEPSIBURADA_QUESTIONS;
+  if (contexts.length !== expectedContexts) {
     throw new Error(
-      `60 yerine ${contexts.length} değerlendirme bağlamı oluştu.`,
+      `${expectedContexts} yerine ${contexts.length} değerlendirme bağlamı oluştu.`,
     );
   }
   return contexts;
+}
+
+function assertNoLegacySyntheticDescriptions(products: NormalizedProduct[]) {
+  for (const product of products) {
+    const lines = (product.description ?? '')
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (lines[0] !== product.title || lines.length < 4) continue;
+
+    const attributeRows = new Set(
+      product.attributes.map((attribute) =>
+        `${attribute.name}: ${attribute.value}`.trim(),
+      ),
+    );
+    const matchingRows = lines
+      .slice(1)
+      .filter((line) => attributeRows.has(line)).length;
+    if (matchingRows >= Math.min(3, product.attributes.length)) {
+      throw new Error(
+        `${product.externalId}: eski sentetik ürün açıklaması dışarı açıldı.`,
+      );
+    }
+  }
 }
 
 function evaluateContexts(contexts: ProductAnswerContext[]) {
@@ -235,6 +619,49 @@ function evaluateContexts(contexts: ProductAnswerContext[]) {
     );
   }
 
+  const stretchContext = contexts.find(
+    (context) =>
+      context.questionId === 'real-defacto-question-v1-f3269-stretch' ||
+      context.questionId === 'regression-stretch-ai',
+  );
+  if (stretchContext) {
+    const materialEvidence = stretchContext.evidence.filter(
+      (evidence) => evidence.fact === 'MATERIAL',
+    );
+    const exactCompositionFound = materialEvidence.some((evidence) => {
+      const value = normalizeEvaluationText(evidence.value);
+      return (
+        /(?:elastan 2|2 elastan)/.test(value) &&
+        /(?:pamuk 88|88 pamuk)/.test(value) &&
+        /(?:poliester 10|polyester 10|10 poliester|10 polyester)/.test(value)
+      );
+    });
+    const staleCompositionFound = stretchContext.evidence.some((evidence) => {
+      const value = normalizeEvaluationText(evidence.value);
+      return /70 polyester/.test(value) && /30 pamuk/.test(value);
+    });
+    const sourceDescription = normalizeEvaluationText(
+      stretchContext.product.description ?? '',
+    );
+    const exactDescriptionFound =
+      sourceDescription.includes(
+        'jogger fit kesimi ve pamuklu kumasiyla rahatlik sunan pantolon',
+      ) &&
+      sourceDescription.includes('manken bedeni haki kh475 32') &&
+      sourceDescription.includes('urun kodu f3269ax25au');
+
+    if (
+      !stretchContext.requestedFacts.includes('MATERIAL') ||
+      !exactCompositionFound ||
+      staleCompositionFound ||
+      !exactDescriptionFound
+    ) {
+      throw new Error(
+        'F3269 esneklik sorusu gerçek açıklama ve %2 Elastan bileşimiyle kanıtlanamadı.',
+      );
+    }
+  }
+
   return {
     questions: contexts.length,
     matchedProducts: contexts.length,
@@ -242,6 +669,7 @@ function evaluateContexts(contexts: ProductAnswerContext[]) {
     contextsWithoutEvidence,
     payloadReductionPercent: Math.round(payloadReduction * 100),
     intentCounts: Object.fromEntries(intentCounts),
+    exactStretchCompositionVerified: Boolean(stretchContext),
   };
 }
 
@@ -250,6 +678,9 @@ async function evaluateAiDrafts(contexts: ProductAnswerContext[]) {
   let drafted = 0;
   let needsReview = 0;
   let unsupported = 0;
+  let looseFitRegressionAnswer: string | null = null;
+  let joggerFitRegressionAnswer: string | null = null;
+  let stretchRegressionAnswer: string | null = null;
 
   for (const [index, context] of contexts.entries()) {
     const result = await generator.generate(context);
@@ -259,10 +690,135 @@ async function evaluateAiDrafts(contexts: ProductAnswerContext[]) {
     drafted += 1;
     if (result.decision === 'NEEDS_REVIEW') needsReview += 1;
     if (result.risks.includes('UNSUPPORTED_CLAIM')) unsupported += 1;
+    if (context.questionId === 'regression-loose-fit-ai') {
+      assertLooseFitAiResult(result);
+      looseFitRegressionAnswer = result.answer;
+    }
+    if (context.questionId === 'regression-inflected-jogger-fit-ai') {
+      assertJoggerFitAiResult(result);
+      joggerFitRegressionAnswer = result.answer;
+    }
+    if (context.questionId === 'regression-stretch-ai') {
+      assertStretchAiResult(result);
+      stretchRegressionAnswer = result.answer;
+    }
     process.stderr.write(`AI değerlendirme ${index + 1}/${contexts.length}\n`);
   }
 
-  return { drafted, needsReview, unsupported };
+  return {
+    drafted,
+    needsReview,
+    unsupported,
+    looseFitRegressionAnswer,
+    joggerFitRegressionAnswer,
+    stretchRegressionAnswer,
+  };
+}
+
+function assertLooseFitAiResult(result: AiDraftResult) {
+  const answer = normalizeEvaluationText(result.answer);
+  const identifiesRegularFit = /\b(?:regular|standart|normal)\b/.test(answer);
+  const hasSellerOpening = /^(?:merhaba|merhabalar)\b/.test(answer);
+  const hasSellerClosing =
+    /(?:keyifli alisverisler|iyi alisverisler|iyi gunler)(?: dileriz)?$/.test(
+      answer,
+    );
+  const rejectsLooseFit =
+    /\bbol\b.{0,30}\bdegil/.test(answer) ||
+    /\bdegil\w*.{0,30}\bbol\b/.test(answer) ||
+    /\boversize\b.{0,30}\bdegil/.test(answer);
+
+  if (
+    result.decision !== 'DRAFT' ||
+    result.missingInformation.length > 0 ||
+    !result.usedFacts.includes('FIT') ||
+    !hasSellerOpening ||
+    !hasSellerClosing ||
+    !identifiesRegularFit ||
+    !rejectsLooseFit
+  ) {
+    throw new Error(
+      `Regular/bol kesim AI regresyonu başarısız: ${JSON.stringify({
+        answer: result.answer,
+        decision: result.decision,
+        missingInformation: result.missingInformation,
+        usedFacts: result.usedFacts,
+      })}`,
+    );
+  }
+}
+
+function assertJoggerFitAiResult(result: AiDraftResult) {
+  const answer = normalizeEvaluationText(result.answer);
+  const identifiesJoggerFit = /\bjogger\b/.test(answer);
+  const explainsFit = /\b(?:rahat|esofman)\b/.test(answer);
+  const hasSellerOpening = /^(?:merhaba|merhabalar)\b/.test(answer);
+  const hasSellerClosing =
+    /(?:keyifli alisverisler|iyi alisverisler|iyi gunler)(?: dileriz)?$/.test(
+      answer,
+    );
+
+  if (
+    result.decision !== 'DRAFT' ||
+    result.missingInformation.length > 0 ||
+    !result.usedFacts.includes('FIT') ||
+    !hasSellerOpening ||
+    !hasSellerClosing ||
+    !identifiesJoggerFit ||
+    !explainsFit
+  ) {
+    throw new Error(
+      `Jogger kalıp AI regresyonu başarısız: ${JSON.stringify({
+        answer: result.answer,
+        decision: result.decision,
+        missingInformation: result.missingInformation,
+        usedFacts: result.usedFacts,
+      })}`,
+    );
+  }
+}
+
+function assertStretchAiResult(result: AiDraftResult) {
+  const answer = normalizeEvaluationText(result.answer);
+  const hasExactElastane = /(?:2 elastan|elastan 2)/.test(answer);
+  const explainsStretch = /esnek|esneklik/.test(answer);
+  const hasSellerOpening = /^(?:merhaba|merhabalar)\b/.test(answer);
+  const hasSellerClosing =
+    /(?:keyifli alisverisler|iyi alisverisler|iyi gunler)(?: dileriz)?$/.test(
+      answer,
+    );
+  const repeatsStaleComposition =
+    /70 polyester/.test(answer) || /30 pamuk/.test(answer);
+
+  if (
+    result.decision !== 'DRAFT' ||
+    result.missingInformation.length > 0 ||
+    !result.usedFacts.includes('MATERIAL') ||
+    !hasSellerOpening ||
+    !hasSellerClosing ||
+    !hasExactElastane ||
+    !explainsStretch ||
+    repeatsStaleComposition
+  ) {
+    throw new Error(
+      `Esneklik AI regresyonu başarısız: ${JSON.stringify({
+        answer: result.answer,
+        decision: result.decision,
+        missingInformation: result.missingInformation,
+        usedFacts: result.usedFacts,
+      })}`,
+    );
+  }
+}
+
+function normalizeEvaluationText(value: string) {
+  return value
+    .toLocaleLowerCase('tr-TR')
+    .replaceAll('ı', 'i')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
 }
 
 void run().catch((error: unknown) => {

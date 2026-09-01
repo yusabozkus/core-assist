@@ -8,6 +8,7 @@ import type {
 } from './catalog-connector';
 import { TRENDYOL_DEFACTO_PRODUCT_SEEDS } from './fixtures/trendyol-defacto-product-seeds';
 import { HEPSIBURADA_DEFACTO_PRODUCT_SEEDS } from './fixtures/hepsiburada-defacto-product-seeds';
+import { createHepsiburadaMenSizeGuide } from './hepsiburada-men-size-guide';
 
 const TEST_PRODUCT_IMAGE_URL =
   'https://cdn.dsmcdn.com/mnresize/420/620/ty1000441/product/media/images/prod/PIM/20260820/13/c81dfbf2-a9fa-48b2-8445-c0d16249ea71/1_org_zoom.jpg';
@@ -156,7 +157,9 @@ function createMockProduct(
     images: seed.source?.images ?? [TEST_PRODUCT_IMAGE_URL],
     sizeGuide: seed.source?.sizeChartUrl
       ? { sourceUrl: seed.source.sizeChartUrl }
-      : undefined,
+      : provider === 'hepsiburada'
+        ? createHepsiburadaMenSizeGuide(seed.category)
+        : undefined,
     variants: variants.map((variant, index) => {
       const generatedSku = `${seed.code}-${seed.id}-${String(index + 1).padStart(2, '0')}`;
       const generatedBarcode = `869${provider === 'trendyol' ? '1' : '2'}${String(seed.id).padStart(4, '0')}${String(index + 1).padStart(5, '0')}`;
@@ -234,9 +237,14 @@ function createMockProduct(
 }
 
 function createMarketplaceDescription(seed: MockProductSeed) {
-  // For real marketplace snapshots, descriptions are edited/paraphrased from
-  // public PDP facts instead of duplicating long seller marketing copy.
-  if (seed.source) return seed.description;
+  // Real marketplace snapshots must remain source-faithful. Never enrich or
+  // paraphrase them here; the fixture refresh process owns their exact content.
+  if (seed.source) {
+    // Fixtures captured before source descriptions were supported stored a
+    // title followed by copied attribute rows as if it were marketplace copy.
+    // Do not expose that legacy synthetic text to the UI or the AI.
+    return looksLikeLegacySyntheticDescription(seed) ? '' : seed.description;
+  }
 
   const careInstructions = createCareInstructions(seed);
   const sizeInformation = seed.sizes?.length
@@ -253,6 +261,25 @@ function createMarketplaceDescription(seed: MockProductSeed) {
     'Yıkama ve Kullanma Talimatları',
     careInstructions,
   ].join('\n\n');
+}
+
+function looksLikeLegacySyntheticDescription(seed: MockProductSeed) {
+  const lines = seed.description
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (lines[0] !== seed.title || lines.length < 4) return false;
+
+  const attributeRows = new Set(
+    seed.attributes.map((attribute) =>
+      `${attribute.name}: ${attribute.value}`.trim(),
+    ),
+  );
+  const matchingRows = lines
+    .slice(1)
+    .filter((line) => attributeRows.has(line)).length;
+
+  return matchingRows >= Math.min(3, seed.attributes.length);
 }
 
 function createMarketplaceAttributes(seed: MockProductSeed) {

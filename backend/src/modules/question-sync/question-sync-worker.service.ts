@@ -59,6 +59,11 @@ export class QuestionSyncWorkerService {
     const credentials = this.encryption.decrypt(
       syncConnection.credentialsEncrypted,
     );
+
+    if (syncConnection.environment === 'SANDBOX') {
+      await this.removeLegacyMockQuestions(syncConnection);
+    }
+
     let cursor: string | undefined;
     let batchCount = 0;
     let questionsProcessed = 0;
@@ -147,6 +152,20 @@ export class QuestionSyncWorkerService {
     ]);
   }
 
+  private async removeLegacyMockQuestions(connection: QuestionSyncConnection) {
+    const legacyPrefix =
+      connection.providerKey === 'hepsiburada'
+        ? 'hb-question-'
+        : 'ty-question-';
+
+    await this.prisma.incomingEvent.deleteMany({
+      where: {
+        connectionId: connection.id,
+        externalEventId: { startsWith: legacyPrefix },
+      },
+    });
+  }
+
   private async persistQuestion(
     connection: QuestionSyncConnection,
     question: NormalizedProductQuestion,
@@ -206,6 +225,9 @@ export class QuestionSyncWorkerService {
             externalCustomerId: question.externalCustomerId,
             customerName: question.customerName,
             question: question.text,
+            referenceAnswer: question.referenceAnswer,
+            referenceSourceUrl: question.referenceSourceUrl,
+            referenceSourceProvider: question.referenceSourceProvider,
             externalCreatedAt: question.createdAt,
           },
         }),

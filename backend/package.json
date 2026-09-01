@@ -24,6 +24,8 @@
     "smoke:gemini": "npm run build && node dist/src/scripts/gemini-smoke.js",
     "eval:answer-context": "npm run build && node dist/src/scripts/answer-reliability-eval.js",
     "eval:ai-drafts": "npm run build && node dist/src/scripts/answer-reliability-eval.js --with-ai",
+    "eval:ai-fit": "npm run build && node dist/src/scripts/answer-reliability-eval.js --with-ai --targeted-only",
+    "eval:ai-targeted": "npm run build && node dist/src/scripts/answer-reliability-eval.js --with-ai --targeted-only",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio --port 5556"
