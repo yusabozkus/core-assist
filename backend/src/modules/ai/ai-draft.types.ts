@@ -6,9 +6,13 @@ import type {
 
 export type AiDraftDecision = 'DRAFT' | 'NEEDS_REVIEW';
 export type AiDraftSource = 'GEMINI';
+export type AiDraftAnswerability = 'FULL' | 'PARTIAL' | 'INSUFFICIENT';
 
 export type AiDraftResult = {
   answer: string;
+  interpretation: string;
+  detectedFacts: ProductAnswerFact[];
+  answerability: AiDraftAnswerability;
   decision: AiDraftDecision;
   confidence: number;
   usedFacts: ProductAnswerFact[];
@@ -22,6 +26,9 @@ export type AiDraftResult = {
 export type GeminiDraftPayload = Pick<
   AiDraftResult,
   | 'answer'
+  | 'interpretation'
+  | 'detectedFacts'
+  | 'answerability'
   | 'decision'
   | 'confidence'
   | 'usedEvidenceIds'

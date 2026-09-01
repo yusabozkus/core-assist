@@ -342,9 +342,10 @@ export function analyzeProductQuestion(input: {
     productDescription: input.product.description,
     productBrand: input.product.brand,
     productCategory: input.product.category,
+    productAttributes: input.product.attributes,
     providerKey: input.providerKey ?? 'unknown',
     requestedFacts,
-    relevantAttributes,
+    relevantAttributes: matchedAttributes,
     relevantDescription,
     matchingVariants,
     variants,
@@ -610,6 +611,7 @@ function createEvidence(input: {
   productDescription: string | null;
   productBrand: string | null;
   productCategory: string | null;
+  productAttributes: Array<{ name: string; value: string }>;
   providerKey: string;
   requestedFacts: ProductAnswerFact[];
   relevantAttributes: Array<{ name: string; value: string }>;
@@ -625,22 +627,22 @@ function createEvidence(input: {
 }): ProductAnswerEvidence[] {
   const evidence: ProductAnswerEvidence[] = [];
 
-  if (input.requestedFacts.includes('PRODUCT_INFO')) {
-    evidence.push({
-      id: 'product-identity',
-      fact: 'PRODUCT_INFO',
-      label: 'Ürün kimliği',
-      value: [
-        input.productTitle,
-        input.productBrand ? `Marka: ${input.productBrand}` : null,
-        input.productCategory ? `Kategori: ${input.productCategory}` : null,
-      ]
-        .filter(Boolean)
-        .join(' · '),
-      source: 'TITLE',
-      confidence: 1,
-    });
+  evidence.push({
+    id: 'product-identity',
+    fact: 'PRODUCT_INFO',
+    label: 'Ürün kimliği',
+    value: [
+      input.productTitle,
+      input.productBrand ? `Marka: ${input.productBrand}` : null,
+      input.productCategory ? `Kategori: ${input.productCategory}` : null,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    source: 'TITLE',
+    confidence: 1,
+  });
 
+  if (input.requestedFacts.includes('PRODUCT_INFO')) {
     const packageScope = inferSingleProductPackageScope({
       title: input.productTitle,
       description: input.productDescription,
@@ -650,24 +652,39 @@ function createEvidence(input: {
     if (packageScope) evidence.push(packageScope);
   }
 
-  if (input.requestedFacts.includes('PRODUCT_CODE')) {
-    const productCode = extractProductCode(input.productTitle);
-    if (productCode) {
-      evidence.push({
-        id: 'title-product-code',
-        fact: 'PRODUCT_CODE',
-        label: 'Ürün kodu',
-        value: productCode,
-        source: 'TITLE',
-      });
-    }
+  const productCode = extractProductCode(input.productTitle);
+  if (productCode) {
+    evidence.push({
+      id: 'title-product-code',
+      fact: 'PRODUCT_CODE',
+      label: 'Ürün kodu',
+      value: productCode,
+      source: 'TITLE',
+    });
   }
 
-  input.relevantAttributes.forEach((attribute, index) => {
+  const semanticAttributes = selectSemanticProductAttributes(
+    input.productAttributes,
+  );
+  if (semanticAttributes.length > 0) {
+    evidence.push({
+      id: 'catalog-attributes',
+      fact: 'PRODUCT_INFO',
+      label: 'Ürün özellikleri',
+      value: semanticAttributes
+        .map((attribute) => `${attribute.name}: ${attribute.value}`)
+        .join('\n'),
+      source: 'ATTRIBUTE',
+    });
+  }
+
+  input.relevantAttributes.slice(0, 2).forEach((attribute, index) => {
     const normalizedAttribute = normalizeSearchValue(
       `${attribute.name} ${attribute.value}`,
     );
-    const matchingFacts = input.requestedFacts.filter((fact) =>
+    const matchingFacts = (
+      Object.keys(ATTRIBUTE_PATTERNS_BY_FACT) as ProductAnswerFact[]
+    ).filter((fact) =>
       attributePatternsForFact(fact).some((pattern) =>
         normalizedAttribute.includes(pattern),
       ),
@@ -676,7 +693,7 @@ function createEvidence(input: {
       matchingFacts.length > 0 ? matchingFacts : ['PRODUCT_INFO'];
     for (const fact of facts) {
       evidence.push({
-        id: `attribute-${index + 1}-${fact.toLocaleLowerCase('tr-TR')}`,
+        id: `relevant-attribute-${index + 1}-${fact.toLocaleLowerCase('tr-TR')}`,
         fact,
         label: attribute.name,
         value: attribute.value,
@@ -685,31 +702,33 @@ function createEvidence(input: {
     }
   });
 
-  if (input.relevantDescription) {
-    for (const fact of input.requestedFacts.filter(
-      (candidate) => candidate !== 'STOCK' && candidate !== 'PRICE',
-    )) {
-      if (
-        fact === 'PRODUCT_INFO' ||
+  const descriptionEvidence =
+    input.relevantDescription ??
+    selectSemanticDescription(input.productDescription);
+  if (descriptionEvidence) {
+    const matchingDescriptionFact = input.requestedFacts.find(
+      (fact) =>
+        fact !== 'STOCK' &&
+        fact !== 'PRICE' &&
         attributePatternsForFact(fact).some((pattern) =>
-          normalizeSearchValue(input.relevantDescription ?? '').includes(
-            pattern,
-          ),
-        )
-      ) {
-        evidence.push({
-          id: `description-${fact.toLocaleLowerCase('tr-TR')}`,
-          fact,
-          label: 'Ürün açıklaması',
-          value: input.relevantDescription,
-          source: 'DESCRIPTION',
-        });
-      }
-    }
+          normalizeSearchValue(descriptionEvidence).includes(pattern),
+        ),
+    );
+    const fact = matchingDescriptionFact ?? 'PRODUCT_INFO';
+    evidence.push({
+      id: `catalog-description-${fact.toLocaleLowerCase('tr-TR')}`,
+      fact,
+      label: 'Ürün açıklaması',
+      value: descriptionEvidence,
+      source: 'DESCRIPTION',
+    });
   }
 
   if (input.requestedFacts.includes('STOCK')) {
-    const variants = input.matchingVariants;
+    const variants =
+      input.matchingVariants.length > 0
+        ? input.matchingVariants
+        : input.variants;
     evidence.push({
       id: 'variant-stock',
       fact: 'STOCK',
@@ -745,7 +764,7 @@ function createEvidence(input: {
     });
   }
 
-  if (input.requestedFacts.includes('SIZE')) {
+  {
     const sizes = uniqueValues(input.variants.map((variant) => variant.size));
     evidence.push({
       id: 'variant-sizes',
@@ -765,8 +784,9 @@ function createEvidence(input: {
     });
 
     if (
-      isSizeGuideLocationQuestion(input.normalizedQuestion) ||
-      isHeightWeightSizeQuestion(input.normalizedQuestion)
+      input.requestedFacts.includes('SIZE') &&
+      (isSizeGuideLocationQuestion(input.normalizedQuestion) ||
+        isHeightWeightSizeQuestion(input.normalizedQuestion))
     ) {
       evidence.push({
         id: 'platform-size-guide-location',
@@ -778,7 +798,9 @@ function createEvidence(input: {
       });
     }
 
-    for (const guide of input.sizeGuides.slice(0, 2)) {
+    for (const guide of input.requestedFacts.includes('SIZE')
+      ? input.sizeGuides.slice(0, 2)
+      : []) {
       if (
         isProductWidthQuestion(input.normalizedQuestion) &&
         !containsProductWidthMeasurement(guide.normalizedText)
@@ -801,7 +823,7 @@ function createEvidence(input: {
     }
   }
 
-  if (input.requestedFacts.includes('COLOR')) {
+  {
     const colors = uniqueValues(input.variants.map((variant) => variant.color));
     evidence.push({
       id: 'variant-colors',
@@ -816,6 +838,31 @@ function createEvidence(input: {
   }
 
   return [...new Map(evidence.map((item) => [item.id, item])).values()];
+}
+
+function selectSemanticProductAttributes(
+  attributes: Array<{ name: string; value: string }>,
+) {
+  const unique = new Map<string, { name: string; value: string }>();
+
+  for (const attribute of attributes) {
+    const name = attribute.name.trim();
+    const value = attribute.value.trim();
+    if (!name || !value) continue;
+    unique.set(`${normalizeSearchValue(name)}:${normalizeSearchValue(value)}`, {
+      name,
+      value,
+    });
+  }
+
+  return [...unique.values()].slice(0, 32);
+}
+
+function selectSemanticDescription(description: string | null) {
+  if (!description) return null;
+
+  const normalized = description.replace(/\s+/g, ' ').trim();
+  return normalized ? normalized.slice(0, 3_200) : null;
 }
 
 function inferSingleProductPackageScope(input: {

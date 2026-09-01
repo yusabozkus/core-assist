@@ -11,6 +11,9 @@ const DRAFT_RESPONSE_SCHEMA = {
   additionalProperties: false,
   required: [
     'answer',
+    'interpretation',
+    'detectedFacts',
+    'answerability',
     'decision',
     'confidence',
     'usedEvidenceIds',
@@ -18,6 +21,32 @@ const DRAFT_RESPONSE_SCHEMA = {
   ],
   properties: {
     answer: { type: 'string', minLength: 2, maxLength: 2000 },
+    interpretation: { type: 'string', minLength: 2, maxLength: 300 },
+    detectedFacts: {
+      type: 'array',
+      minItems: 1,
+      uniqueItems: true,
+      items: {
+        type: 'string',
+        enum: [
+          'STOCK',
+          'PRICE',
+          'MATERIAL',
+          'DURABILITY',
+          'SHIPPING',
+          'SIZE',
+          'COLOR',
+          'FIT',
+          'CARE',
+          'PRODUCT_CODE',
+          'PRODUCT_INFO',
+        ],
+      },
+    },
+    answerability: {
+      type: 'string',
+      enum: ['FULL', 'PARTIAL', 'INSUFFICIENT'],
+    },
     decision: { type: 'string', enum: ['DRAFT', 'NEEDS_REVIEW'] },
     confidence: { type: 'number', minimum: 0, maximum: 1 },
     usedEvidenceIds: {

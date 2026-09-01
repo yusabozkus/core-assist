@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { ProductAnswerContext } from '../questions/product-answer-context.types';
+import type {
+  ProductAnswerContext,
+  ProductAnswerFact,
+} from '../questions/product-answer-context.types';
 import {
   AiDraftRateLimitError,
   AiDraftGenerator,
@@ -8,6 +11,25 @@ import {
 import { GeminiClientService } from './gemini-client.service';
 
 const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
+const PRODUCT_ANSWER_FACTS: ProductAnswerFact[] = [
+  'STOCK',
+  'PRICE',
+  'MATERIAL',
+  'DURABILITY',
+  'SHIPPING',
+  'SIZE',
+  'COLOR',
+  'FIT',
+  'CARE',
+  'PRODUCT_CODE',
+  'PRODUCT_INFO',
+];
+const GUARDED_RULE_FACTS = new Set<ProductAnswerFact>([
+  'STOCK',
+  'PRICE',
+  'DURABILITY',
+  'SHIPPING',
+]);
 
 @Injectable()
 export class GeminiDraftService extends AiDraftGenerator {
@@ -70,7 +92,8 @@ function createPrompt(context: ProductAnswerContext) {
   const safeContext = {
     question: context.question,
     platform: context.providerKey,
-    intents: context.requestedFacts,
+    ruleHints: context.requestedFacts,
+    availableFactTypes: PRODUCT_ANSWER_FACTS,
     mentionedColors: context.mentionedColors,
     questionSignals: {
       asksSizeGuideLocation: isSizeGuideLocationQuestion(normalizedQuestion),
@@ -108,13 +131,16 @@ function createPrompt(context: ProductAnswerContext) {
       brand: context.product.brand,
       category: context.product.category,
     },
-    evidence: context.evidence,
+    catalogEvidence: context.evidence,
   };
 
   return [
     'Sen doğrudan e-ticaret mağazası adına konuşan deneyimli bir Türkçe satış danışmanısın.',
     'Görevin, müşterinin ürün sorusuna mağazanın satıcısı yazmış gibi sıcak, güven veren, kısa ve doğal bir cevap taslağı hazırlamaktır.',
     'Sorudaki yazım hatalarını, günlük ifadeleri ve örtük niyeti anlamlandır; yalnızca birebir kelime eşleşmesi arama. Müşterinin asıl öğrenmek istediği noktayı cevapla.',
+    'ruleHints yalnızca sunucu tarafındaki kaba ve eksik olabilecek sinyallerdir; nihai niyet kararı değildir. Soruyu bağımsız biçimde yorumla ve gerçek niyetleri detectedFacts alanında belirt.',
+    'Önce sorunun kısa ve açık anlamını interpretation alanına yaz. Ardından katalogdaki bütün catalogEvidence kayıtlarını birlikte değerlendir; yalnızca sorudaki kelimeyle aynı etikete sahip kaydı arama.',
+    'answerability FULL ise sorunun bütün bölümleri kanıtlarla yanıtlanabiliyor, PARTIAL ise yalnızca bir kısmı yanıtlanabiliyor, INSUFFICIENT ise sorunun ana kısmı için yeterli kanıt yok demektir.',
     'Cevaba tercihen "Merhabalar," veya "Merhaba," diye başla. Ardından sonucu doğrudan söyle; gereksiz giriş yapma.',
     'Cevabı bağlama uygun olarak "Keyifli alışverişler dileriz.", "İyi alışverişler dileriz." veya "İyi günler dileriz." gibi nazik bir kapanışla bitir.',
     'Mağaza adına birinci çoğul şahısla konuşabilirsin: "ürünümüz", "öneririz", "dileriz" gibi doğal satıcı ifadeleri kullan. Yapay, aşırı resmî veya robotik bir dil kullanma.',
@@ -157,6 +183,8 @@ function createPrompt(context: ProductAnswerContext) {
     'Cevap selamlama ve kapanış dahil genellikle 2-4 kısa cümle olsun. Markdown, emoji ve ünlem yığını kullanma.',
     'Eksik bilgi varsa bunu müşteriye doğal biçimde belirt, missingInformation alanına yaz ve decision alanını NEEDS_REVIEW yap.',
     'Yeterli doğrulanmış bilgi varsa decision alanını DRAFT yap.',
+    'detectedFacts en az bir değer içermeli ve yalnızca availableFactTypes değerlerinden oluşmalıdır.',
+    'FULL cevapta missingInformation boş olmalıdır. PARTIAL veya INSUFFICIENT cevapta yalnızca gerçekten eksik olan bilgileri yaz.',
     'usedEvidenceIds yalnızca cevapta gerçekten kullandığın evidence kayıtlarının id değerlerini içersin.',
     'Örnek 1 — Soru: "Şampanya renginde iç gösterme yapar mı?" Cevap: "Ürünün iç gösterme durumu ürün özelliklerinde belirtilmediği için bu konuda kesin bir şey söyleyemiyoruz."',
     'Örnek 2 — Soru: "Kemer hakiki deri mi, tokasında kararma olur mu?" Cevap: "Kemer %100 hakiki manda derisinden üretilmiştir. Tokanın kararmaya karşı dayanıklılığı ürün özelliklerinde belirtilmediği için bu konuda garanti veremiyoruz."',
@@ -193,10 +221,18 @@ function parseAndValidate(
   }
 
   const rawAnswer = typeof value.answer === 'string' ? value.answer.trim() : '';
-  const sanitizedAnswer = sanitizeDraftAnswer(
-    rawAnswer,
-    context.requestedFacts,
-  );
+  const interpretation =
+    typeof value.interpretation === 'string' ? value.interpretation.trim() : '';
+  const rawDetectedFacts = value.detectedFacts;
+  const answerability = value.answerability;
+  const detectedFacts = normalizeDetectedFacts(rawDetectedFacts);
+  const effectiveFacts = [
+    ...new Set([
+      ...detectedFacts,
+      ...context.requestedFacts.filter((fact) => GUARDED_RULE_FACTS.has(fact)),
+    ]),
+  ];
+  const sanitizedAnswer = sanitizeDraftAnswer(rawAnswer, effectiveFacts);
   const answer = applySellerTone(sanitizedAnswer, context.questionId);
   const decision = value.decision;
   const confidence = value.confidence;
@@ -205,6 +241,19 @@ function parseAndValidate(
 
   if (answer.length < 2 || answer.length > 2000) {
     throw new DraftValidationError('Cevap uzunluğu geçersiz.');
+  }
+  if (interpretation.length < 2 || interpretation.length > 300) {
+    throw new DraftValidationError('Soru yorumu geçersiz.');
+  }
+  if (detectedFacts.length === 0) {
+    throw new DraftValidationError('Semantik niyet listesi geçersiz.');
+  }
+  if (
+    answerability !== 'FULL' &&
+    answerability !== 'PARTIAL' &&
+    answerability !== 'INSUFFICIENT'
+  ) {
+    throw new DraftValidationError('Cevaplanabilirlik durumu geçersiz.');
   }
   if (decision !== 'DRAFT' && decision !== 'NEEDS_REVIEW') {
     throw new DraftValidationError('Taslak kararı geçersiz.');
@@ -231,7 +280,10 @@ function parseAndValidate(
     .map((item) => item.trim())
     .filter(Boolean)
     .filter((item) => !isResolvedMissingInformation(item, context));
-  const inferredMissingInformation = inferMissingInformation(context);
+  const inferredMissingInformation = inferMissingInformation(
+    context,
+    effectiveFacts,
+  );
   const completeMissingInformation = [
     ...new Set([
       ...normalizedMissingInformation,
@@ -276,8 +328,8 @@ function parseAndValidate(
   const risks = new Set<AiDraftResult['risks'][number]>();
   if (unknownEvidenceIds.length > 0) risks.add('UNSUPPORTED_CLAIM');
   if (
-    context.requestedFacts.includes('SHIPPING') ||
-    context.requestedFacts.includes('DURABILITY')
+    effectiveFacts.includes('SHIPPING') ||
+    effectiveFacts.includes('DURABILITY')
   ) {
     risks.add('HIGH_RISK_INTENT');
   }
@@ -286,14 +338,14 @@ function parseAndValidate(
     .filter((variant) => variant.status === 'ACTIVE')
     .reduce((total, variant) => total + variant.stock, 0);
   if (
-    context.requestedFacts.includes('STOCK') &&
+    effectiveFacts.includes('STOCK') &&
     sellableMatchingStock <= 0 &&
     /stokta\s+(mevcut|var)|satın\s+alabilirsiniz/i.test(answer)
   ) {
     risks.add('STOCK_CONTRADICTION');
   }
 
-  if (hasPriceContradiction(answer, context)) {
+  if (hasPriceContradiction(answer, context, effectiveFacts)) {
     risks.add('PRICE_CONTRADICTION');
   }
   if (hasUnsupportedClaim(answer, context)) {
@@ -330,11 +382,14 @@ function parseAndValidate(
 
   const requiresReview =
     risks.size > 0 ||
-    (context.requestedFacts.includes('PRICE') &&
-      context.product.variants.length === 0);
+    answerability !== 'FULL' ||
+    (effectiveFacts.includes('PRICE') && context.product.variants.length === 0);
 
   return {
     answer,
+    interpretation,
+    detectedFacts,
+    answerability,
     decision: requiresReview ? 'NEEDS_REVIEW' : decision,
     confidence: validatedConfidence,
     usedFacts,
@@ -411,7 +466,10 @@ function pickStableStyle<T extends readonly string[]>(
   return options[hash % options.length];
 }
 
-function inferMissingInformation(context: ProductAnswerContext) {
+function inferMissingInformation(
+  context: ProductAnswerContext,
+  requestedFacts: ProductAnswerFact[],
+) {
   const question = normalizeText(context.question);
   const catalog = normalizeText(
     context.evidence
@@ -434,17 +492,14 @@ function inferMissingInformation(context: ProductAnswerContext) {
     PRODUCT_INFO: 'Sorulan ürün özelliği',
   };
 
-  for (const fact of context.requestedFacts) {
-    if (
-      !context.evidence.some((evidence) => evidence.fact === fact) &&
-      missingLabels[fact]
-    ) {
+  for (const fact of requestedFacts) {
+    if (!hasCatalogEvidenceForFact(context, fact) && missingLabels[fact]) {
       missing.push(missingLabels[fact]);
     }
   }
 
   if (
-    context.requestedFacts.includes('SIZE') &&
+    requestedFacts.includes('SIZE') &&
     /\b(?:boy|kilo|kiloyum|boyum)\b/.test(question) &&
     !hasExplicitHeightWeightSizeMapping(catalog)
   ) {
@@ -452,7 +507,7 @@ function inferMissingInformation(context: ProductAnswerContext) {
   }
 
   if (
-    context.requestedFacts.includes('SIZE') &&
+    requestedFacts.includes('SIZE') &&
     isGarmentWidthQuestion(question) &&
     !/(?:urun eni|beden eni|en olcusu|genislik)/.test(catalog)
   ) {
@@ -524,17 +579,18 @@ function isResolvedMissingInformation(
     /kalip|kesim|fit|bol|dar|oversize|regular|slim|relax/.test(
       normalizedItem,
     ) &&
-    context.evidence.some((evidence) => evidence.fact === 'FIT')
+    hasCatalogEvidenceForFact(context, 'FIT')
   ) {
     return true;
   }
 
   if (
     /esnek|esneklik|likra|elastan/.test(normalizedItem) &&
-    context.evidence.some(
-      (evidence) =>
-        evidence.fact === 'MATERIAL' &&
-        /elastan|likra|esnek/.test(normalizeText(evidence.value)),
+    hasCatalogEvidenceForFact(context, 'MATERIAL') &&
+    /elastan|likra|esnek/.test(
+      normalizeText(
+        context.evidence.map((evidence) => evidence.value).join(' '),
+      ),
     )
   ) {
     return true;
@@ -564,6 +620,56 @@ function isResolvedMissingInformation(
   return false;
 }
 
+function hasCatalogEvidenceForFact(
+  context: ProductAnswerContext,
+  fact: ProductAnswerFact,
+) {
+  if (context.evidence.some((evidence) => evidence.fact === fact)) return true;
+
+  const attributes = normalizeText(
+    context.product.attributes
+      .map((attribute) => `${attribute.name} ${attribute.value}`)
+      .join(' '),
+  );
+  const titleAndDescription = normalizeText(
+    `${context.product.title} ${context.product.description ?? ''}`,
+  );
+
+  switch (fact) {
+    case 'FIT':
+      return /kalip|kesim|siluet|slim|regular|oversize|boxy|relax|jogger/.test(
+        `${attributes} ${titleAndDescription}`,
+      );
+    case 'MATERIAL':
+      return /materyal|kumas|dokuma|pamuk|polyester|elastan|likra|deri|keten|viskoz|modal/.test(
+        `${attributes} ${titleAndDescription}`,
+      );
+    case 'COLOR':
+      return (
+        context.product.variants.some((variant) => Boolean(variant.color)) ||
+        /renk/.test(attributes)
+      );
+    case 'SIZE':
+      return (
+        context.product.variants.some((variant) => Boolean(variant.size)) ||
+        Boolean(context.product.sizeGuides?.length) ||
+        /beden|olcu|uzunluk|gogus|bel|basen/.test(attributes)
+      );
+    case 'CARE':
+      return /yikama|bakim|kurut|utu|temizle/.test(
+        `${attributes} ${titleAndDescription}`,
+      );
+    case 'PRODUCT_CODE':
+      return context.evidence.some(
+        (evidence) => evidence.id === 'title-product-code',
+      );
+    case 'PRODUCT_INFO':
+      return true;
+    default:
+      return false;
+  }
+}
+
 function isSizeGuideLocationQuestion(question: string) {
   return (
     /(?:beden|b den) tablo/.test(question) &&
@@ -583,8 +689,12 @@ function hasExplicitHeightWeightSizeMapping(catalog: string) {
   );
 }
 
-function hasPriceContradiction(answer: string, context: ProductAnswerContext) {
-  if (!context.requestedFacts.includes('PRICE')) return false;
+function hasPriceContradiction(
+  answer: string,
+  context: ProductAnswerContext,
+  requestedFacts: ProductAnswerFact[],
+) {
+  if (!requestedFacts.includes('PRICE')) return false;
 
   const claimedPrices = [
     ...answer.matchAll(/(\d[\d.]*(?:,\d{1,2})?)\s*(?:tl|₺)/gi),
@@ -646,6 +756,22 @@ function normalizeText(value: string) {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
+}
+
+function normalizeDetectedFacts(value: unknown): ProductAnswerFact[] {
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    !value.every(
+      (item): item is ProductAnswerFact =>
+        typeof item === 'string' &&
+        PRODUCT_ANSWER_FACTS.includes(item as ProductAnswerFact),
+    )
+  ) {
+    return [];
+  }
+
+  return [...new Set(value)];
 }
 
 class DraftValidationError extends Error {

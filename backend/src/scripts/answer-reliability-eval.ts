@@ -64,33 +64,58 @@ async function run() {
 
 async function createTargetedEvaluationContexts() {
   const catalog = new MockCatalogConnector();
-  const productBatch = await catalog.fetchProducts(
-    'trendyol',
-    connectorContext,
+  const productBatches = new Map(
+    await Promise.all(
+      PROVIDERS.map(async (provider) => {
+        const batch = await catalog.fetchProducts(provider, connectorContext);
+        assertNoLegacySyntheticDescriptions(batch.products);
+        return [provider, batch.products] as const;
+      }),
+    ),
   );
-  assertNoLegacySyntheticDescriptions(productBatch.products);
   const cases = [
     {
+      provider: 'trendyol' as const,
       productCode: 'D1902AX25SM',
       questionId: 'regression-loose-fit-ai',
       question: 'bol kesim mi bunlar',
     },
     {
+      provider: 'trendyol' as const,
       productCode: 'Z9933AZ23SP',
       questionId: 'regression-inflected-jogger-fit-ai',
       question: 'Kalıbı nasıl ?',
     },
     {
+      provider: 'trendyol' as const,
       productCode: 'F3269AX25AU',
       questionId: 'regression-stretch-ai',
       question: 'Merhaba. Esnek bir kumaş mı?',
     },
+    {
+      provider: 'hepsiburada' as const,
+      productCode: 'F6265AX25SM',
+      questionId: 'regression-color-identity-ai',
+      question: 'Merhaba ürün rengi nedir?',
+    },
+    {
+      provider: 'hepsiburada' as const,
+      productCode: 'E6885AXNS',
+      questionId: 'regression-alternative-color-ai',
+      question: 'Merhaba, renk gri mi yeşil mi?',
+    },
+    {
+      provider: 'hepsiburada' as const,
+      productCode: 'D9882AX25AU',
+      questionId: 'regression-package-scope-ai',
+      question: 'şort geliyormu',
+    },
   ];
 
   return cases.map((testCase) => {
-    const product = productBatch.products.find((candidate) =>
-      candidate.title.includes(testCase.productCode),
-    );
+    const product = productBatches
+      .get(testCase.provider)
+      ?.find((candidate) => candidate.title.includes(testCase.productCode));
     if (!product) {
       throw new Error(
         `${testCase.productCode} hedefli AI regresyon ürünü katalogda bulunamadı.`,
@@ -100,7 +125,7 @@ async function createTargetedEvaluationContexts() {
     return analyzeProductQuestion({
       questionId: testCase.questionId,
       question: testCase.question,
-      providerKey: 'trendyol',
+      providerKey: testCase.provider,
       product: {
         id: product.externalId,
         title: product.title,
@@ -206,7 +231,11 @@ function evaluateRegressions() {
   });
   if (
     !productCode.requestedFacts.includes('PRODUCT_CODE') ||
-    productCode.evidence[0]?.value !== 'F9571AX26SP'
+    !productCode.evidence.some(
+      (evidence) =>
+        evidence.id === 'title-product-code' &&
+        evidence.value === 'F9571AX26SP',
+    )
   ) {
     throw new Error('Ürün kodu başlıktan kanıta dönüştürülemedi.');
   }
@@ -681,6 +710,9 @@ async function evaluateAiDrafts(contexts: ProductAnswerContext[]) {
   let looseFitRegressionAnswer: string | null = null;
   let joggerFitRegressionAnswer: string | null = null;
   let stretchRegressionAnswer: string | null = null;
+  let colorIdentityRegressionAnswer: string | null = null;
+  let alternativeColorRegressionAnswer: string | null = null;
+  let packageScopeRegressionAnswer: string | null = null;
 
   for (const [index, context] of contexts.entries()) {
     const result = await generator.generate(context);
@@ -702,6 +734,18 @@ async function evaluateAiDrafts(contexts: ProductAnswerContext[]) {
       assertStretchAiResult(result);
       stretchRegressionAnswer = result.answer;
     }
+    if (context.questionId === 'regression-color-identity-ai') {
+      assertColorIdentityAiResult(result, 'yesil');
+      colorIdentityRegressionAnswer = result.answer;
+    }
+    if (context.questionId === 'regression-alternative-color-ai') {
+      assertColorIdentityAiResult(result, 'siyah');
+      alternativeColorRegressionAnswer = result.answer;
+    }
+    if (context.questionId === 'regression-package-scope-ai') {
+      assertPackageScopeAiResult(result);
+      packageScopeRegressionAnswer = result.answer;
+    }
     process.stderr.write(`AI değerlendirme ${index + 1}/${contexts.length}\n`);
   }
 
@@ -712,10 +756,14 @@ async function evaluateAiDrafts(contexts: ProductAnswerContext[]) {
     looseFitRegressionAnswer,
     joggerFitRegressionAnswer,
     stretchRegressionAnswer,
+    colorIdentityRegressionAnswer,
+    alternativeColorRegressionAnswer,
+    packageScopeRegressionAnswer,
   };
 }
 
 function assertLooseFitAiResult(result: AiDraftResult) {
+  assertSemanticMetadata(result, 'FIT');
   const answer = normalizeEvaluationText(result.answer);
   const identifiesRegularFit = /\b(?:regular|standart|normal)\b/.test(answer);
   const hasSellerOpening = /^(?:merhaba|merhabalar)\b/.test(answer);
@@ -749,6 +797,7 @@ function assertLooseFitAiResult(result: AiDraftResult) {
 }
 
 function assertJoggerFitAiResult(result: AiDraftResult) {
+  assertSemanticMetadata(result, 'FIT');
   const answer = normalizeEvaluationText(result.answer);
   const identifiesJoggerFit = /\bjogger\b/.test(answer);
   const explainsFit = /\b(?:rahat|esofman)\b/.test(answer);
@@ -779,6 +828,7 @@ function assertJoggerFitAiResult(result: AiDraftResult) {
 }
 
 function assertStretchAiResult(result: AiDraftResult) {
+  assertSemanticMetadata(result, 'MATERIAL');
   const answer = normalizeEvaluationText(result.answer);
   const hasExactElastane = /(?:2 elastan|elastan 2)/.test(answer);
   const explainsStretch = /esnek|esneklik/.test(answer);
@@ -806,6 +856,66 @@ function assertStretchAiResult(result: AiDraftResult) {
         decision: result.decision,
         missingInformation: result.missingInformation,
         usedFacts: result.usedFacts,
+      })}`,
+    );
+  }
+}
+
+function assertColorIdentityAiResult(
+  result: AiDraftResult,
+  expectedColor: string,
+) {
+  assertSemanticMetadata(result, 'COLOR');
+  const answer = normalizeEvaluationText(result.answer);
+  if (!answer.includes(expectedColor)) {
+    throw new Error(
+      `Renk AI regresyonu beklenen ${expectedColor} rengini söylemedi: ${JSON.stringify(
+        {
+          answer: result.answer,
+          detectedFacts: result.detectedFacts,
+          usedEvidenceIds: result.usedEvidenceIds,
+        },
+      )}`,
+    );
+  }
+}
+
+function assertPackageScopeAiResult(result: AiDraftResult) {
+  assertSemanticMetadata(result, 'PRODUCT_INFO');
+  const answer = normalizeEvaluationText(result.answer);
+  const rejectsShorts =
+    /sort.{0,35}(?:dahil degil|bulunmuyor|gelmiyor|gonderilmez)/.test(answer) ||
+    /yalnizca.{0,35}gomlek/.test(answer);
+  if (!rejectsShorts) {
+    throw new Error(
+      `Paket kapsamı AI regresyonu şortun dahil olmadığını söylemedi: ${JSON.stringify(
+        {
+          answer: result.answer,
+          detectedFacts: result.detectedFacts,
+          usedEvidenceIds: result.usedEvidenceIds,
+        },
+      )}`,
+    );
+  }
+}
+
+function assertSemanticMetadata(
+  result: AiDraftResult,
+  expectedFact: ProductAnswerFact,
+) {
+  if (
+    !result.detectedFacts.includes(expectedFact) ||
+    result.interpretation.trim().length < 2 ||
+    result.answerability !== 'FULL' ||
+    result.missingInformation.length > 0
+  ) {
+    throw new Error(
+      `Semantik AI çıktısı beklenen yapıda değil: ${JSON.stringify({
+        expectedFact,
+        interpretation: result.interpretation,
+        detectedFacts: result.detectedFacts,
+        answerability: result.answerability,
+        missingInformation: result.missingInformation,
       })}`,
     );
   }

@@ -81,13 +81,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
     url: APP_ROUTES.dashboard.root,
     icon: DashboardSquare01Icon,
   },
-  primaryItems: [
-    {
-      title: "Stok Yönetimi",
-      url: APP_ROUTES.dashboard.catalog.inventory,
-      icon: Package01Icon,
-    },
-  ],
+  primaryItems: [],
   footerItems: [
     {
       title: "Yardım Merkezi",
@@ -105,6 +99,21 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
           icon: InboxIcon,
         },
         {
+          title: "Ürün Yönetimi",
+          url: APP_ROUTES.dashboard.catalog.root,
+          icon: Package01Icon,
+          items: [
+            {
+              title: "Stok Yönetimi",
+              url: APP_ROUTES.dashboard.catalog.inventory,
+            },
+            {
+              title: "Ürünler",
+              url: APP_ROUTES.dashboard.catalog.products,
+            },
+          ],
+        },
+        {
           title: "Siparişler & İadeler",
           url: APP_ROUTES.dashboard.orders.root,
           icon: ShoppingBag01Icon,
@@ -119,11 +128,6 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
               url: APP_ROUTES.dashboard.orders.returns,
             },
           ],
-        },
-        {
-          title: "Ürünler",
-          url: APP_ROUTES.dashboard.catalog.products,
-          icon: Package01Icon,
         },
         {
           title: "Müşteriler",

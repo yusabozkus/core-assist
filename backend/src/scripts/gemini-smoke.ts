@@ -13,7 +13,7 @@ async function run() {
       'Soru: Siyah M beden stokta var mı?',
       'Doğrulanmış bilgi: Siyah M varyantı aktif ve stok miktarı 4.',
       'Kanıt kimliği: variant-stock.',
-      'decision DRAFT, usedEvidenceIds ["variant-stock"] ve missingInformation boş olmalı.',
+      'interpretation "Siyah M beden stok durumu", detectedFacts ["STOCK"], answerability FULL, decision DRAFT, usedEvidenceIds ["variant-stock"] ve missingInformation boş olmalı.',
     ].join('\n'),
   });
   const response = JSON.parse(raw) as Record<string, unknown>;

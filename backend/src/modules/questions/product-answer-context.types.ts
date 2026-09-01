@@ -90,6 +90,9 @@ export type DraftQuestionAnswer = {
     matchingVariantCount: number;
     source: 'GEMINI';
     model: string;
+    interpretation: string;
+    detectedFacts: ProductAnswerFact[];
+    answerability: 'FULL' | 'PARTIAL' | 'INSUFFICIENT';
     decision: 'DRAFT' | 'NEEDS_REVIEW';
     confidence: number;
     missingInformation: string[];
