@@ -54,8 +54,26 @@ export type ProductQuestion = {
   answerDelivery: QuestionAnswerDelivery | null
 }
 
+export type ProductQuestionListItem = {
+  id: string
+  externalProductId: string
+  customerName: string | null
+  question: string
+  status: ProductQuestionStatus
+  externalCreatedAt: string
+  connection: {
+    providerKey: string
+  }
+  product: {
+    id: string
+    title: string
+    imageUrl: string | null
+  } | null
+  answerDelivery: Pick<QuestionAnswerDelivery, "status"> | null
+}
+
 export type ProductQuestionPage = {
-  items: ProductQuestion[]
+  items: ProductQuestionListItem[]
   nextCursor: string | null
   total: number
   summary: {

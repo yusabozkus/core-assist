@@ -24,6 +24,122 @@ import {
   QuestionListStatusFilter,
 } from './dto/question-list-query.dto';
 
+const QUESTION_LIST_SELECT = {
+  id: true,
+  externalProductId: true,
+  customerName: true,
+  question: true,
+  status: true,
+  externalCreatedAt: true,
+  connection: {
+    select: { providerKey: true },
+  },
+  product: {
+    select: {
+      id: true,
+      title: true,
+      images: {
+        orderBy: { position: 'asc' },
+        take: 1,
+        select: { url: true },
+      },
+    },
+  },
+  answerDelivery: {
+    select: { status: true },
+  },
+} satisfies Prisma.ProductQuestionSelect;
+
+const QUESTION_DETAIL_SELECT = {
+  id: true,
+  externalQuestionId: true,
+  externalProductId: true,
+  customerName: true,
+  question: true,
+  referenceAnswer: true,
+  referenceSourceUrl: true,
+  referenceSourceProvider: true,
+  status: true,
+  externalCreatedAt: true,
+  createdAt: true,
+  answer: true,
+  answeredAt: true,
+  connection: {
+    select: { providerKey: true },
+  },
+  product: {
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      brand: true,
+      category: true,
+      status: true,
+      updatedAt: true,
+      variants: {
+        orderBy: { createdAt: 'asc' },
+        select: {
+          id: true,
+          title: true,
+          sku: true,
+          barcode: true,
+          color: true,
+          size: true,
+          price: true,
+          currency: true,
+          stock: true,
+          status: true,
+          sourceUpdatedAt: true,
+          lastSyncedAt: true,
+        },
+      },
+      attributes: {
+        orderBy: { name: 'asc' },
+        select: { id: true, name: true, value: true },
+      },
+      images: {
+        orderBy: { position: 'asc' },
+        select: { id: true, url: true, position: true },
+      },
+      sizeGuides: {
+        orderBy: { updatedAt: 'desc' },
+        select: {
+          id: true,
+          sourceUrl: true,
+          status: true,
+          normalizedText: true,
+          structuredData: true,
+          confidence: true,
+          failureReason: true,
+          analyzedAt: true,
+        },
+      },
+      externalProducts: {
+        select: {
+          externalId: true,
+          externalUrl: true,
+          status: true,
+          lastSyncedAt: true,
+          connection: {
+            select: { providerKey: true },
+          },
+        },
+      },
+    },
+  },
+  answerDelivery: {
+    select: {
+      id: true,
+      answer: true,
+      status: true,
+      attempts: true,
+      lastError: true,
+      queuedAt: true,
+      sentAt: true,
+    },
+  },
+} satisfies Prisma.ProductQuestionSelect;
+
 @Injectable()
 export class QuestionsService {
   constructor(
@@ -81,95 +197,7 @@ export class QuestionsService {
         orderBy: [{ externalCreatedAt: 'desc' }, { id: 'desc' }],
         take: query.limit + 1,
         ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
-        select: {
-          id: true,
-          externalQuestionId: true,
-          externalProductId: true,
-          customerName: true,
-          question: true,
-          referenceAnswer: true,
-          referenceSourceUrl: true,
-          referenceSourceProvider: true,
-          status: true,
-          externalCreatedAt: true,
-          createdAt: true,
-          answer: true,
-          answeredAt: true,
-          connection: {
-            select: { providerKey: true },
-          },
-          product: {
-            select: {
-              id: true,
-              title: true,
-              description: true,
-              brand: true,
-              category: true,
-              status: true,
-              updatedAt: true,
-              variants: {
-                orderBy: { createdAt: 'asc' },
-                select: {
-                  id: true,
-                  title: true,
-                  sku: true,
-                  barcode: true,
-                  color: true,
-                  size: true,
-                  price: true,
-                  currency: true,
-                  stock: true,
-                  status: true,
-                  sourceUpdatedAt: true,
-                  lastSyncedAt: true,
-                },
-              },
-              attributes: {
-                orderBy: { name: 'asc' },
-                select: { id: true, name: true, value: true },
-              },
-              images: {
-                orderBy: { position: 'asc' },
-                select: { id: true, url: true, position: true },
-              },
-              sizeGuides: {
-                orderBy: { updatedAt: 'desc' },
-                select: {
-                  id: true,
-                  sourceUrl: true,
-                  status: true,
-                  normalizedText: true,
-                  structuredData: true,
-                  confidence: true,
-                  failureReason: true,
-                  analyzedAt: true,
-                },
-              },
-              externalProducts: {
-                select: {
-                  externalId: true,
-                  externalUrl: true,
-                  status: true,
-                  lastSyncedAt: true,
-                  connection: {
-                    select: { providerKey: true },
-                  },
-                },
-              },
-            },
-          },
-          answerDelivery: {
-            select: {
-              id: true,
-              answer: true,
-              status: true,
-              attempts: true,
-              lastError: true,
-              queuedAt: true,
-              sentAt: true,
-            },
-          },
-        },
+        select: QUESTION_LIST_SELECT,
       }),
       this.prisma.productQuestion.count({ where }),
       this.prisma.productQuestion.count({ where: baseWhere }),
@@ -195,11 +223,9 @@ export class QuestionsService {
         ...question,
         product: question.product
           ? {
-              ...question.product,
-              variants: question.product.variants.map((variant) => ({
-                ...variant,
-                price: Number(variant.price),
-              })),
+              id: question.product.id,
+              title: question.product.title,
+              imageUrl: question.product.images[0]?.url ?? null,
             }
           : null,
       })),
@@ -211,6 +237,32 @@ export class QuestionsService {
         answered: answeredCount,
         ignored: ignoredCount,
       },
+    };
+  }
+
+  async findOne(storeId: string, questionId: string, userId: string) {
+    await this.requireStoreMembership(storeId, userId);
+
+    const question = await this.prisma.productQuestion.findFirst({
+      where: { id: questionId, storeId },
+      select: QUESTION_DETAIL_SELECT,
+    });
+
+    if (!question) {
+      throw new NotFoundException('Soru bulunamadı veya erişiminiz yok.');
+    }
+
+    return {
+      ...question,
+      product: question.product
+        ? {
+            ...question.product,
+            variants: question.product.variants.map((variant) => ({
+              ...variant,
+              price: Number(variant.price),
+            })),
+          }
+        : null,
     };
   }
 

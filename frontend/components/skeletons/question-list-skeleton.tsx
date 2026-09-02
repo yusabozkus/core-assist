@@ -60,3 +60,66 @@ export function QuestionInboxLayoutSkeleton() {
     </div>
   )
 }
+
+export function QuestionDetailSkeleton({
+  showHeader = true,
+}: {
+  showHeader?: boolean
+}) {
+  return (
+    <section
+      className="flex min-w-0 flex-col bg-background lg:h-full lg:min-h-0"
+      aria-label="Soru detayları yükleniyor"
+      aria-busy="true"
+    >
+      {showHeader ? (
+        <header className="flex shrink-0 items-center justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3.5">
+            <Skeleton className="size-10 shrink-0 rounded-full" />
+            <div>
+              <Skeleton className="h-4 w-32 rounded-md" />
+              <Skeleton className="mt-2 h-2.5 w-24 rounded-md" />
+            </div>
+          </div>
+          <Skeleton className="h-5 w-20 rounded-full" />
+        </header>
+      ) : null}
+
+      <div className="min-h-0 flex-1 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+        <div className="mx-auto w-full max-w-4xl space-y-5">
+          <div>
+            <Skeleton className="h-2.5 w-24 rounded-md" />
+            <div className="mt-3 rounded-xl border border-border bg-card p-5">
+              <Skeleton className="h-3 w-full rounded-md" />
+              <Skeleton className="mt-2.5 h-3 w-4/5 rounded-md" />
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center gap-4">
+              <Skeleton className="size-16 shrink-0 rounded-lg" />
+              <div className="min-w-0 flex-1">
+                <Skeleton className="h-3.5 w-2/3 rounded-md" />
+                <Skeleton className="mt-2.5 h-2.5 w-32 rounded-md" />
+                <Skeleton className="mt-3 h-3 w-24 rounded-md" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="shrink-0 border-t border-border px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-4xl">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-3.5 w-20 rounded-md" />
+            <Skeleton className="h-2.5 w-14 rounded-md" />
+          </div>
+          <Skeleton className="mt-2.5 h-24 w-full rounded-xl" />
+          <div className="mt-3 flex justify-end gap-2">
+            <Skeleton className="h-9 w-28 rounded-lg" />
+            <Skeleton className="h-9 w-28 rounded-lg" />
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}

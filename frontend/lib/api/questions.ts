@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/api/client"
 import type {
   DraftQuestionAnswerResult,
+  ProductQuestion,
   ProductQuestionFilter,
   ProductQuestionPage,
   QuestionSyncResult,
@@ -35,6 +36,17 @@ export function getProductQuestions(
 
   return apiFetch<ProductQuestionPage>(
     `/stores/${storeId}/questions?${searchParams.toString()}`,
+    { signal }
+  )
+}
+
+export function getProductQuestion(
+  storeId: string,
+  questionId: string,
+  signal?: AbortSignal
+) {
+  return apiFetch<ProductQuestion>(
+    `/stores/${storeId}/questions/${questionId}`,
     { signal }
   )
 }

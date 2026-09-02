@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
 import {
   AlertCircleIcon,
   CheckmarkCircle01Icon,
@@ -33,13 +32,14 @@ type DraftReliabilityContext = Extract<
 type QuestionAnswerComposerProps = {
   storeId: string
   question: ProductQuestion
+  onQuestionUpdated?: () => void | Promise<void>
 }
 
 export function QuestionAnswerComposer({
   storeId,
   question,
+  onQuestionUpdated,
 }: QuestionAnswerComposerProps) {
-  const router = useRouter()
   const delivery = question.answerDelivery
   const [answer, setAnswer] = useState(
     delivery?.status === "FAILED"
@@ -65,11 +65,11 @@ export function QuestionAnswerComposer({
     delivery?.status === "PROCESSING"
 
   useEffect(() => {
-    if (!isQueued) return
+    if (!isQueued || !onQuestionUpdated) return
 
-    const intervalId = window.setInterval(() => router.refresh(), 1_500)
+    const intervalId = window.setInterval(() => void onQuestionUpdated(), 1_500)
     return () => window.clearInterval(intervalId)
-  }, [isQueued, router])
+  }, [isQueued, onQuestionUpdated])
 
   useEffect(() => {
     if (draftRetrySeconds <= 0) return
@@ -140,7 +140,7 @@ export function QuestionAnswerComposer({
           normalizedAnswer
         )
         setOptimisticQueuedAt(result.queuedAt)
-        window.setTimeout(() => router.refresh(), 500)
+        window.setTimeout(() => void onQuestionUpdated?.(), 500)
       } catch (caughtError) {
         setError(
           caughtError instanceof Error
@@ -161,12 +161,12 @@ export function QuestionAnswerComposer({
           setAnswer("")
           setDraftContext(null)
           setPolicyBlocked(true)
-          router.refresh()
+          void onQuestionUpdated?.()
           return
         }
         setAnswer(result.answer)
         setDraftContext(result.context)
-        router.refresh()
+        void onQuestionUpdated?.()
       } catch (caughtError) {
         if (
           caughtError instanceof ApiError &&

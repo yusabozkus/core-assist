@@ -11,15 +11,18 @@ import {
 } from "@/components/dashboard/inbox/question-inbox-utils"
 import { Badge } from "@/components/ui/badge"
 import type { ProductQuestion } from "@/types/question"
+import { ProviderLogo } from "../channels/provider-logo"
 
 export function QuestionDetail({
   storeId,
   question,
   showHeader = true,
+  onQuestionUpdated,
 }: {
   storeId: string
   question: ProductQuestion
   showHeader?: boolean
+  onQuestionUpdated?: () => void | Promise<void>
 }) {
   const customerName = question.customerName ?? "Pazaryeri müşterisi"
   const customerInitial = customerName
@@ -36,14 +39,9 @@ export function QuestionDetail({
               {customerInitial}
             </span>
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="truncate font-semibold text-foreground">
-                  {customerName}
-                </h2>
-                <Badge variant="outline" className="bg-card font-medium">
-                  {providerName(question.connection.providerKey)}
-                </Badge>
-              </div>
+              <h2 className="truncate font-semibold text-foreground">
+                {customerName}
+              </h2>
               <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <HugeiconsIcon icon={Clock01Icon} className="size-3.5" />
                 {inboxDateFormatter.format(
@@ -52,10 +50,18 @@ export function QuestionDetail({
               </p>
             </div>
           </div>
-          <QuestionStatus
-            status={question.status}
-            deliveryStatus={question.answerDelivery?.status}
-          />
+          <div className="flex flex-col gap-1 items-start">
+            <QuestionStatus
+              status={question.status}
+              deliveryStatus={question.answerDelivery?.status}
+            />
+            <Badge variant="outline" className="bg-card font-medium">
+              {providerName(question.connection.providerKey)}
+              <ProviderLogo
+                provider={question.connection.providerKey}
+                className="size-4!" />
+            </Badge>
+          </div>
         </header>
       ) : null}
 
@@ -83,6 +89,7 @@ export function QuestionDetail({
         key={question.id}
         storeId={storeId}
         question={question}
+        onQuestionUpdated={onQuestionUpdated}
       />
     </section>
   )

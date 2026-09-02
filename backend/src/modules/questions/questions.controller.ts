@@ -31,6 +31,15 @@ export class QuestionsController {
     return this.questionsService.findAll(storeId, user.id, query);
   }
 
+  @Get(':questionId')
+  findOne(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
+    @Param('questionId', new ParseUUIDPipe()) questionId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.questionsService.findOne(storeId, questionId, user.id);
+  }
+
   @Post('sync')
   @HttpCode(HttpStatus.ACCEPTED)
   sync(

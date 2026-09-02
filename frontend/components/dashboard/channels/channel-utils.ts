@@ -9,7 +9,7 @@ export function getProvider(
       key: providerKey,
       name: providerKey,
       type: "COMMERCE",
-      image: "/merchants/trendyol.webp",
+      image: "",
       description: "Pazaryeri katalog bağlantısı",
       capabilities: ["CATALOG_READ", "INVENTORY_READ"],
       environments: ["SANDBOX", "PRODUCTION"],

@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft01Icon,
@@ -21,6 +20,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { AnimatePresence, motion, MotionConfig } from "motion/react"
 
+import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import {
@@ -75,7 +75,6 @@ const CHANNELS = [
     id: "trendyol",
     name: "Trendyol",
     type: "Pazaryeri",
-    image: "/merchants/trendyol.webp",
     credentialFields: [
       {
         key: "supplierId",
@@ -101,7 +100,6 @@ const CHANNELS = [
     id: "hepsiburada",
     name: "Hepsiburada",
     type: "Pazaryeri",
-    image: "/merchants/hepsiburada.webp",
     credentialFields: [
       {
         key: "merchantId",
@@ -859,15 +857,7 @@ function ChannelStep({
                 isSelected ? "bg-primary/[0.11]" : "bg-card hover:bg-muted/45"
               )}
             >
-              <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-white shadow-xs">
-                <Image
-                  src={channel.image}
-                  alt={`${channel.name} logosu`}
-                  width={48}
-                  height={48}
-                  className="size-full object-cover"
-                />
-              </span>
+              <ProviderLogo provider={channel.id} />
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold text-foreground">
                   {channel.name}

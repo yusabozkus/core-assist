@@ -9,5 +9,11 @@ export default async function InboxPage() {
 
   const initialPage = await getServerProductQuestions(activeStore.id)
 
-  return <QuestionInbox storeId={activeStore.id} initialPage={initialPage} />
+  return (
+    <QuestionInbox
+      key={activeStore.id}
+      storeId={activeStore.id}
+      initialPage={initialPage}
+    />
+  )
 }

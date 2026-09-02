@@ -1,6 +1,5 @@
-import Image from "next/image"
-
 import { getProviderName } from "@/components/dashboard/catalog/products/product-catalog-utils"
+import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import { Badge } from "@/components/ui/badge"
 import type { SyncHistoryItem, SyncHistoryStatus } from "@/types/sync-history"
 
@@ -34,7 +33,11 @@ export function SyncHistoryRow({ run }: { run: SyncHistoryItem }) {
 
         <HistoryCell label="Kanal">
           <span className="flex min-w-0 items-center gap-2">
-            <ProviderMark providerKey={run.providerKey} />
+            <ProviderLogo
+              provider={run.providerKey}
+              className="size-8 rounded-lg shadow-none"
+              sizes="32px"
+            />
             <span className="min-w-0">
               <span className="block truncate text-sm font-medium text-foreground">
                 {getProviderName(run.providerKey)}
@@ -130,27 +133,6 @@ function SyncStatusBadge({ status }: { status: SyncHistoryStatus }) {
   }
 
   return <Badge variant="success">Tamamlandı</Badge>
-}
-
-function ProviderMark({ providerKey }: { providerKey: string }) {
-  const image =
-    providerKey === "hepsiburada"
-      ? "/merchants/hepsiburada.webp"
-      : providerKey === "trendyol"
-        ? "/merchants/trendyol.webp"
-        : null
-
-  return (
-    <span className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-white">
-      {image ? (
-        <Image src={image} alt="" fill sizes="32px" className="object-cover" />
-      ) : (
-        <span className="text-[10px] font-semibold text-slate-700 uppercase">
-          {providerKey.slice(0, 2)}
-        </span>
-      )}
-    </span>
-  )
 }
 
 function formatDuration(milliseconds: number) {

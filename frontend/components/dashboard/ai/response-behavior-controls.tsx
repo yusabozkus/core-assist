@@ -179,7 +179,7 @@ export function ResponseBehaviorControls({
               placeholder="🙂"
               inputMode="text"
               maxLength={16}
-              className="mt-2.5 h-10 max-w-48 rounded-lg bg-background text-base"
+              className="mt-2.5 h-10 rounded-lg bg-background text-base"
               aria-label="Tercih edilen emoji"
             />
           </div>

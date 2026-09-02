@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import {
+  AlertCircleIcon,
   CheckmarkCircle01Icon,
   InboxIcon,
   RefreshIcon,
@@ -18,6 +19,7 @@ import {
   providerName,
 } from "@/components/dashboard/inbox/question-inbox-utils"
 import {
+  QuestionDetailSkeleton,
   QuestionInboxLayoutSkeleton,
   QuestionListItemsSkeleton,
 } from "@/components/skeletons/question-list-skeleton"
@@ -35,10 +37,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useIsDesktop } from "@/hooks/use-desktop"
-import { getProductQuestions, syncStoreQuestions } from "@/lib/api/questions"
+import {
+  getProductQuestion,
+  getProductQuestions,
+  syncStoreQuestions,
+} from "@/lib/api/questions"
 import type {
   ProductQuestion,
   ProductQuestionFilter,
+  ProductQuestionListItem,
   ProductQuestionPage,
 } from "@/types/question"
 
@@ -49,6 +56,12 @@ export type QuestionInboxProps = {
 
 const PAGE_SIZE = 30
 const SEARCH_DEBOUNCE_MS = 300
+const DETAIL_CACHE_TTL_MS = 60_000
+
+type DetailCacheEntry = {
+  question: ProductQuestion
+  cachedAt: number
+}
 
 const inboxFilters: Array<{
   value: ProductQuestionFilter
@@ -65,8 +78,15 @@ export function QuestionInbox({ storeId, initialPage }: QuestionInboxProps) {
   const [questions, setQuestions] = useState(initialPage.items)
   const [nextCursor, setNextCursor] = useState(initialPage.nextCursor)
   const [summary, setSummary] = useState(initialPage.summary)
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
+    null
+  )
+  const [selectedQuestionSummary, setSelectedQuestionSummary] =
+    useState<ProductQuestionListItem | null>(null)
   const [selectedQuestion, setSelectedQuestion] =
     useState<ProductQuestion | null>(null)
+  const [isDetailLoading, setIsDetailLoading] = useState(false)
+  const [detailError, setDetailError] = useState<string | null>(null)
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false)
   const [filter, setFilter] = useState<ProductQuestionFilter>("ALL")
   const [query, setQuery] = useState("")
@@ -80,12 +100,105 @@ export function QuestionInbox({ storeId, initialPage }: QuestionInboxProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const listRequestIdRef = useRef(0)
   const lastListRequestKeyRef = useRef(`${storeId}|ALL|`)
+  const detailRequestIdRef = useRef(0)
+  const detailAbortControllerRef = useRef<AbortController | null>(null)
+  const detailCacheRef = useRef(new Map<string, DetailCacheEntry>())
+  const detailRefreshInFlightRef = useRef(false)
 
   const applyFirstPage = useCallback((page: ProductQuestionPage) => {
     setQuestions(page.items)
     setNextCursor(page.nextCursor)
     setSummary(page.summary)
   }, [])
+
+  const loadQuestionDetail = useCallback(
+    async (questionId: string, force = false) => {
+      detailAbortControllerRef.current?.abort()
+      const requestId = ++detailRequestIdRef.current
+      const cached = detailCacheRef.current.get(questionId)
+
+      if (
+        !force &&
+        cached &&
+        Date.now() - cached.cachedAt < DETAIL_CACHE_TTL_MS
+      ) {
+        setSelectedQuestion(cached.question)
+        setDetailError(null)
+        setIsDetailLoading(false)
+        return cached.question
+      }
+
+      const controller = new AbortController()
+      detailAbortControllerRef.current = controller
+
+      if (!force) {
+        setSelectedQuestion(null)
+        setIsDetailLoading(true)
+      }
+      setDetailError(null)
+
+      try {
+        const question = await getProductQuestion(
+          storeId,
+          questionId,
+          controller.signal
+        )
+
+        if (requestId !== detailRequestIdRef.current) return null
+
+        detailCacheRef.current.set(questionId, {
+          question,
+          cachedAt: Date.now(),
+        })
+        setSelectedQuestion(question)
+        setQuestions((currentQuestions) =>
+          currentQuestions.map((currentQuestion) =>
+            currentQuestion.id === question.id
+              ? listItemFromDetail(currentQuestion, question)
+              : currentQuestion
+          )
+        )
+        setSelectedQuestionSummary((currentQuestion) =>
+          currentQuestion?.id === question.id
+            ? listItemFromDetail(currentQuestion, question)
+            : currentQuestion
+        )
+        return question
+      } catch (caughtError) {
+        if (
+          requestId === detailRequestIdRef.current &&
+          !isAbortError(caughtError)
+        ) {
+          setDetailError(
+            caughtError instanceof Error
+              ? caughtError.message
+              : "Soru detayları yüklenemedi."
+          )
+        }
+        return null
+      } finally {
+        if (requestId === detailRequestIdRef.current) {
+          setIsDetailLoading(false)
+        }
+      }
+    },
+    [storeId]
+  )
+
+  useEffect(() => {
+    return () => detailAbortControllerRef.current?.abort()
+  }, [])
+
+  const refreshSelectedQuestion = useCallback(async () => {
+    if (!selectedQuestionId || detailRefreshInFlightRef.current) return
+
+    detailRefreshInFlightRef.current = true
+    try {
+      await loadQuestionDetail(selectedQuestionId, true)
+    } finally {
+      detailRefreshInFlightRef.current = false
+    }
+  }, [loadQuestionDetail, selectedQuestionId])
 
   useEffect(() => {
     const normalizedQuery = query.trim()
@@ -183,8 +296,10 @@ export function QuestionInbox({ storeId, initialPage }: QuestionInboxProps) {
     return () => observer.disconnect()
   }, [isDesktop, isListLoading, loadMore, nextCursor])
 
-  function selectQuestion(question: ProductQuestion) {
-    setSelectedQuestion(question)
+  function selectQuestion(question: ProductQuestionListItem) {
+    setSelectedQuestionId(question.id)
+    setSelectedQuestionSummary(question)
+    void loadQuestionDetail(question.id)
 
     if (isDesktop === false) {
       setIsMobileDetailOpen(true)
@@ -200,7 +315,7 @@ export function QuestionInbox({ storeId, initialPage }: QuestionInboxProps) {
       })
 
       applyFirstPage(page)
-      setSelectedQuestion((currentQuestion) => {
+      setSelectedQuestionSummary((currentQuestion) => {
         if (!currentQuestion) return null
 
         return (
@@ -315,7 +430,7 @@ export function QuestionInbox({ storeId, initialPage }: QuestionInboxProps) {
               <QuestionListItem
                 key={question.id}
                 question={question}
-                selected={question.id === selectedQuestion?.id}
+                selected={question.id === selectedQuestionId}
                 onSelect={() => selectQuestion(question)}
               />
             ))}
@@ -361,8 +476,54 @@ export function QuestionInbox({ storeId, initialPage }: QuestionInboxProps) {
       </Tooltip>
     </aside>
   )
-  const questionDetailPanel = selectedQuestion ? (
-    <QuestionDetail storeId={storeId} question={selectedQuestion} />
+  function renderQuestionDetail(showHeader: boolean) {
+    if (isDetailLoading) {
+      return <QuestionDetailSkeleton showHeader={showHeader} />
+    }
+
+    if (selectedQuestion) {
+      return (
+        <QuestionDetail
+          storeId={storeId}
+          question={selectedQuestion}
+          showHeader={showHeader}
+          onQuestionUpdated={refreshSelectedQuestion}
+        />
+      )
+    }
+
+    return (
+      <div className="flex h-full min-h-96 items-center justify-center bg-background px-8 text-center">
+        <div className="max-w-sm">
+          <span className="mx-auto flex size-12 items-center justify-center rounded-xl border border-destructive/20 bg-destructive/10 text-destructive">
+            <HugeiconsIcon icon={AlertCircleIcon} className="size-5" />
+          </span>
+          <p className="mt-5 text-sm font-semibold text-foreground">
+            Soru detayları yüklenemedi
+          </p>
+          <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+            {detailError ??
+              "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin."}
+          </p>
+          {selectedQuestionId ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="mt-4"
+              onClick={() => void loadQuestionDetail(selectedQuestionId)}
+            >
+              <HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
+              Tekrar dene
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    )
+  }
+
+  const questionDetailPanel = selectedQuestionId ? (
+    renderQuestionDetail(true)
   ) : (
     <div className="hidden h-full min-h-96 items-center justify-center bg-background px-8 text-center lg:flex">
       <div className="max-w-sm">
@@ -408,33 +569,32 @@ export function QuestionInbox({ storeId, initialPage }: QuestionInboxProps) {
       ) : (
         <div className="h-full min-h-0 bg-background">
           {questionListPanel}
-          {selectedQuestion ? (
+          {selectedQuestionSummary ? (
             <ResponsiveDialog
               open={isMobileDetailOpen}
               onOpenChange={setIsMobileDetailOpen}
               title={
                 <span className="flex min-w-0 items-center gap-2">
                   <span className="truncate">
-                    {selectedQuestion.customerName ?? "Pazaryeri müşterisi"}
+                    {selectedQuestionSummary.customerName ??
+                      "Pazaryeri müşterisi"}
                   </span>
                   <QuestionStatus
-                    status={selectedQuestion.status}
-                    deliveryStatus={selectedQuestion.answerDelivery?.status}
+                    status={selectedQuestionSummary.status}
+                    deliveryStatus={
+                      selectedQuestionSummary.answerDelivery?.status
+                    }
                   />
                 </span>
               }
               description={`${providerName(
-                selectedQuestion.connection.providerKey
+                selectedQuestionSummary.connection.providerKey
               )} · ${inboxDateFormatter.format(
-                new Date(selectedQuestion.externalCreatedAt)
+                new Date(selectedQuestionSummary.externalCreatedAt)
               )}`}
               bodyClassName="px-0 py-0"
             >
-              <QuestionDetail
-                storeId={storeId}
-                question={selectedQuestion}
-                showHeader={false}
-              />
+              {renderQuestionDetail(false)}
             </ResponsiveDialog>
           ) : null}
         </div>
@@ -444,8 +604,8 @@ export function QuestionInbox({ storeId, initialPage }: QuestionInboxProps) {
 }
 
 function appendUniqueQuestions(
-  currentQuestions: ProductQuestion[],
-  nextQuestions: ProductQuestion[]
+  currentQuestions: ProductQuestionListItem[],
+  nextQuestions: ProductQuestionListItem[]
 ) {
   const questionIds = new Set(currentQuestions.map((question) => question.id))
 
@@ -453,6 +613,30 @@ function appendUniqueQuestions(
     ...currentQuestions,
     ...nextQuestions.filter((question) => !questionIds.has(question.id)),
   ]
+}
+
+function listItemFromDetail(
+  currentQuestion: ProductQuestionListItem,
+  question: ProductQuestion
+): ProductQuestionListItem {
+  return {
+    ...currentQuestion,
+    customerName: question.customerName,
+    question: question.question,
+    status: question.status,
+    externalCreatedAt: question.externalCreatedAt,
+    connection: question.connection,
+    product: question.product
+      ? {
+          id: question.product.id,
+          title: question.product.title,
+          imageUrl: question.product.images[0]?.url ?? null,
+        }
+      : null,
+    answerDelivery: question.answerDelivery
+      ? { status: question.answerDelivery.status }
+      : null,
+  }
 }
 
 function filterCount(
