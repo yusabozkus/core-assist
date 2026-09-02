@@ -3,9 +3,21 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Button } from "@/components/ui/button"
 
-type NoSearchResultsProps = { query: string; onClear: () => void }
+type NoSearchResultsProps = {
+  query: string
+  providerName?: string
+  onClear: () => void
+}
 
-export function NoSearchResults({ query, onClear }: NoSearchResultsProps) {
+export function NoSearchResults({
+  query,
+  providerName,
+  onClear,
+}: NoSearchResultsProps) {
+  const description = query
+    ? `“${query}” ile eşleşen ürün, varyant veya özellik yok.`
+    : `${providerName ?? "Seçilen pazaryeri"} kanalında gösterilecek ürün bulunamadı.`
+
   return (
     <section className="flex min-h-56 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 text-center">
       <HugeiconsIcon
@@ -13,9 +25,7 @@ export function NoSearchResults({ query, onClear }: NoSearchResultsProps) {
         className="size-6 text-muted-foreground"
       />
       <h2 className="mt-4 font-semibold text-foreground">Ürün bulunamadı</h2>
-      <p className="mt-1.5 text-sm text-muted-foreground">
-        “{query}” ile eşleşen ürün, varyant veya özellik yok.
-      </p>
+      <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
       <Button
         type="button"
         size="sm"
@@ -23,7 +33,7 @@ export function NoSearchResults({ query, onClear }: NoSearchResultsProps) {
         onClick={onClear}
         className="mt-4"
       >
-        Aramayı temizle
+        Filtreleri temizle
       </Button>
     </section>
   )

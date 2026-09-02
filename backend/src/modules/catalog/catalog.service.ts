@@ -82,9 +82,19 @@ export class CatalogService {
     await this.assertStoreMembership(storeId, userId);
 
     const query = options.query?.trim();
+    const provider = options.provider?.trim();
     const baseWhere = {
       storeId,
       status: 'ACTIVE',
+      ...(provider
+        ? {
+            externalProducts: {
+              some: {
+                connection: { storeId, providerKey: provider },
+              },
+            },
+          }
+        : {}),
     } satisfies Prisma.ProductWhereInput;
     const where: Prisma.ProductWhereInput = query
       ? {

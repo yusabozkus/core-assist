@@ -3,6 +3,8 @@ import type { CatalogProduct } from "@/types/product"
 export type ProductQuestionStatus =
   "PENDING" | "DRAFTED" | "ANSWERED" | "IGNORED"
 
+export type ProductQuestionFilter = "ALL" | "PENDING" | "ANSWERED" | "IGNORED"
+
 export type QuestionAnswerStatus = "QUEUED" | "PROCESSING" | "SENT" | "FAILED"
 
 export type ProductAnswerFact =
@@ -50,6 +52,18 @@ export type ProductQuestion = {
   }
   product: CatalogProduct | null
   answerDelivery: QuestionAnswerDelivery | null
+}
+
+export type ProductQuestionPage = {
+  items: ProductQuestion[]
+  nextCursor: string | null
+  total: number
+  summary: {
+    total: number
+    pending: number
+    answered: number
+    ignored: number
+  }
 }
 
 export type QuestionSyncResult = {

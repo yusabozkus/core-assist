@@ -1,7 +1,6 @@
 "use client"
 
-import { useMemo, useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
+import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import {
   CheckmarkCircle01Icon,
   InboxIcon,
@@ -18,6 +17,10 @@ import {
   inboxDateFormatter,
   providerName,
 } from "@/components/dashboard/inbox/question-inbox-utils"
+import {
+  QuestionInboxLayoutSkeleton,
+  QuestionListItemsSkeleton,
+} from "@/components/skeletons/question-list-skeleton"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -26,76 +29,187 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { useIsDesktop } from "@/hooks/use-desktop"
-import { syncStoreQuestions } from "@/lib/api/questions"
-import type { ProductQuestion } from "@/types/question"
+import { getProductQuestions, syncStoreQuestions } from "@/lib/api/questions"
+import type {
+  ProductQuestion,
+  ProductQuestionFilter,
+  ProductQuestionPage,
+} from "@/types/question"
 
 export type QuestionInboxProps = {
   storeId: string
-  questions: ProductQuestion[]
+  initialPage: ProductQuestionPage
 }
 
-type InboxFilter = "ALL" | "PENDING" | "ANSWERED"
+const PAGE_SIZE = 30
+const SEARCH_DEBOUNCE_MS = 300
 
-const inboxFilters: Array<{ value: InboxFilter; label: string }> = [
+const inboxFilters: Array<{
+  value: ProductQuestionFilter
+  label: string
+}> = [
   { value: "ALL", label: "Tümü" },
   { value: "PENDING", label: "Bekleyen" },
   { value: "ANSWERED", label: "Yanıtlanan" },
+  { value: "IGNORED", label: "Engellenen" },
 ]
 
-export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
-  const router = useRouter()
+export function QuestionInbox({ storeId, initialPage }: QuestionInboxProps) {
   const isDesktop = useIsDesktop()
-  const [selectedQuestionId, setSelectedQuestionId] = useState(
-    questions[0]?.id ?? null
-  )
+  const [questions, setQuestions] = useState(initialPage.items)
+  const [nextCursor, setNextCursor] = useState(initialPage.nextCursor)
+  const [summary, setSummary] = useState(initialPage.summary)
+  const [selectedQuestion, setSelectedQuestion] =
+    useState<ProductQuestion | null>(null)
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false)
-  const [filter, setFilter] = useState<InboxFilter>("ALL")
+  const [filter, setFilter] = useState<ProductQuestionFilter>("ALL")
   const [query, setQuery] = useState("")
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [listError, setListError] = useState<string | null>(null)
+  const [isListLoading, setIsListLoading] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [isSyncing, startSyncTransition] = useTransition()
-  const pendingCount = questions.filter(
-    (question) =>
-      question.status !== "ANSWERED" && question.status !== "IGNORED"
-  ).length
-  const answeredCount = questions.filter(
-    (question) => question.status === "ANSWERED"
-  ).length
-  const filteredQuestions = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase("tr-TR")
+  const listRef = useRef<HTMLDivElement>(null)
+  const loadMoreRef = useRef<HTMLDivElement>(null)
+  const listRequestIdRef = useRef(0)
+  const lastListRequestKeyRef = useRef(`${storeId}|ALL|`)
 
-    return questions.filter((question) => {
-      const matchesFilter =
-        filter === "ALL" ||
-        (filter === "PENDING" &&
-          question.status !== "ANSWERED" &&
-          question.status !== "IGNORED") ||
-        (filter === "ANSWERED" && question.status === "ANSWERED")
+  const applyFirstPage = useCallback((page: ProductQuestionPage) => {
+    setQuestions(page.items)
+    setNextCursor(page.nextCursor)
+    setSummary(page.summary)
+  }, [])
 
-      if (!matchesFilter) return false
-      if (!normalizedQuery) return true
+  useEffect(() => {
+    const normalizedQuery = query.trim()
+    const requestKey = `${storeId}|${filter}|${normalizedQuery}`
 
-      return [
-        question.customerName,
-        question.question,
-        question.product?.title,
-        question.connection.providerKey,
-      ].some((value) =>
-        value?.toLocaleLowerCase("tr-TR").includes(normalizedQuery)
+    if (requestKey === lastListRequestKeyRef.current) return
+
+    const requestId = ++listRequestIdRef.current
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(async () => {
+      lastListRequestKeyRef.current = requestKey
+      setIsListLoading(true)
+      setListError(null)
+
+      try {
+        const page = await getProductQuestions(storeId, {
+          limit: PAGE_SIZE,
+          status: filter,
+          query: normalizedQuery,
+          signal: controller.signal,
+        })
+
+        if (requestId === listRequestIdRef.current) {
+          applyFirstPage(page)
+          listRef.current?.scrollTo({ top: 0 })
+        }
+      } catch (caughtError) {
+        if (
+          requestId === listRequestIdRef.current &&
+          !isAbortError(caughtError)
+        ) {
+          setListError(
+            caughtError instanceof Error
+              ? caughtError.message
+              : "Sorular yüklenemedi."
+          )
+        }
+      } finally {
+        if (requestId === listRequestIdRef.current) {
+          setIsListLoading(false)
+        }
+      }
+    }, SEARCH_DEBOUNCE_MS)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+      controller.abort()
+    }
+  }, [applyFirstPage, filter, query, storeId])
+
+  const loadMore = useCallback(async () => {
+    if (!nextCursor || isListLoading || isLoadingMore) return
+
+    setIsLoadingMore(true)
+    setListError(null)
+
+    try {
+      const page = await getProductQuestions(storeId, {
+        cursor: nextCursor,
+        limit: PAGE_SIZE,
+        status: filter,
+        query,
+      })
+
+      setQuestions((currentQuestions) =>
+        appendUniqueQuestions(currentQuestions, page.items)
       )
-    })
-  }, [filter, query, questions])
-  const selectedQuestion =
-    filteredQuestions.find((question) => question.id === selectedQuestionId) ??
-    filteredQuestions[0] ??
-    null
+      setNextCursor(page.nextCursor)
+      setSummary(page.summary)
+    } catch (caughtError) {
+      setListError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Diğer sorular yüklenemedi."
+      )
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }, [filter, isListLoading, isLoadingMore, nextCursor, query, storeId])
 
-  function selectQuestion(questionId: string) {
-    setSelectedQuestionId(questionId)
+  useEffect(() => {
+    const root = listRef.current
+    const target = loadMoreRef.current
 
-    if (!isDesktop) {
+    if (!root || !target || !nextCursor || isListLoading) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) void loadMore()
+      },
+      { root, rootMargin: "180px 0px" }
+    )
+
+    observer.observe(target)
+    return () => observer.disconnect()
+  }, [isDesktop, isListLoading, loadMore, nextCursor])
+
+  function selectQuestion(question: ProductQuestion) {
+    setSelectedQuestion(question)
+
+    if (isDesktop === false) {
       setIsMobileDetailOpen(true)
+    }
+  }
+
+  async function refreshCurrentList() {
+    try {
+      const page = await getProductQuestions(storeId, {
+        limit: PAGE_SIZE,
+        status: filter,
+        query,
+      })
+
+      applyFirstPage(page)
+      setSelectedQuestion((currentQuestion) => {
+        if (!currentQuestion) return null
+
+        return (
+          page.items.find((question) => question.id === currentQuestion.id) ??
+          currentQuestion
+        )
+      })
+    } catch {
+      // Senkronizasyon arka planda sürerken mevcut liste korunur.
     }
   }
 
@@ -111,8 +225,8 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
             ? `${result.queued} kanal için soru kontrolü başlatıldı.`
             : "Soru kontrolü zaten çalışıyor veya bağlı kanal bulunmuyor."
         )
-        window.setTimeout(() => router.refresh(), 1_500)
-        window.setTimeout(() => router.refresh(), 3_500)
+        window.setTimeout(() => void refreshCurrentList(), 1_500)
+        window.setTimeout(() => void refreshCurrentList(), 3_500)
       } catch (caughtError) {
         setError(
           caughtError instanceof Error
@@ -123,7 +237,7 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
     })
   }
 
-  if (questions.length === 0) {
+  if (initialPage.summary.total === 0 && summary.total === 0) {
     return (
       <div className="h-full min-h-0 w-full">
         <EmptyInbox onSync={syncQuestions} isSyncing={isSyncing} />
@@ -131,56 +245,27 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
     )
   }
 
-  const questionListPanel = (
-    <aside className="flex h-full min-h-0 flex-col border-b border-border bg-background lg:border-b-0">
-      <div className="shrink-0 border-b border-border bg-background p-3.5">
-        <div className="flex items-center justify-between gap-3 px-0.5">
-          <div>
-            <p className="text-sm font-semibold text-foreground">
-              Ürün soruları
-            </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {filteredQuestions.length.toLocaleString("tr-TR")} kayıt
-            </p>
-          </div>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={syncQuestions}
-            disabled={isSyncing}
-            className="bg-card!"
-          >
-            <HugeiconsIcon
-              icon={RefreshIcon}
-              className={`size-3.5 ${isSyncing ? "animate-spin" : ""}`}
-            />
-            {isSyncing ? "Kontrol ediliyor" : "Güncelle"}
-          </Button>
-        </div>
+  if (isDesktop === null) {
+    return <QuestionInboxLayoutSkeleton />
+  }
 
-        <div className="relative mt-3">
-          <HugeiconsIcon
-            icon={Search01Icon}
-            className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground"
-          />
+  const questionListPanel = (
+    <aside className="relative flex h-full min-h-0 flex-col border-b border-border bg-background lg:border-b-0">
+      <div className="shrink-0 border-b border-border bg-background p-3.5">
+        <div>
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Müşteri, ürün veya soru ara"
             aria-label="Gelen kutusunda ara"
-            className="h-9! bg-card pl-9"
+            icon={<HugeiconsIcon icon={Search01Icon} className="size-4" />}
+            className="h-9! bg-card"
           />
         </div>
 
-        <div className="mt-2.5 grid grid-cols-3 rounded-lg bg-muted border border-border p-1">
+        <div className="mt-2.5 grid grid-cols-4 rounded-lg border border-border bg-muted p-1">
           {inboxFilters.map((item) => {
-            const count =
-              item.value === "ALL"
-                ? questions.length
-                : item.value === "PENDING"
-                  ? pendingCount
-                  : answeredCount
+            const count = filterCount(item.value, summary)
 
             return (
               <button
@@ -200,9 +285,11 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
           })}
         </div>
 
-        {error || message ? (
+        {error || message || listError ? (
           <div className="mt-3 text-xs leading-5" aria-live="polite">
-            {error ? <p className="text-destructive">{error}</p> : null}
+            {error || listError ? (
+              <p className="text-destructive">{error ?? listError}</p>
+            ) : null}
             {message ? (
               <p className="flex items-start gap-1.5 text-emerald-600 dark:text-emerald-400">
                 <HugeiconsIcon
@@ -216,16 +303,26 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
         ) : null}
       </div>
 
-      <div className="subtle-scrollbar min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
-        {filteredQuestions.length > 0 ? (
-          filteredQuestions.map((question) => (
-            <QuestionListItem
-              key={question.id}
-              question={question}
-              selected={question.id === selectedQuestion?.id}
-              onSelect={() => selectQuestion(question.id)}
-            />
-          ))
+      <div
+        ref={listRef}
+        className="subtle-scrollbar min-h-0 flex-1 overflow-y-auto p-2 pb-14"
+      >
+        {isListLoading ? (
+          <QuestionListItemsSkeleton />
+        ) : questions.length > 0 ? (
+          <div className="space-y-1">
+            {questions.map((question) => (
+              <QuestionListItem
+                key={question.id}
+                question={question}
+                selected={question.id === selectedQuestion?.id}
+                onSelect={() => selectQuestion(question)}
+              />
+            ))}
+
+            <div ref={loadMoreRef} className="min-h-px" aria-hidden="true" />
+            {isLoadingMore ? <QuestionListItemsSkeleton count={2} /> : null}
+          </div>
         ) : (
           <div className="flex min-h-48 flex-col items-center justify-center px-6 text-center">
             <span className="flex size-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
@@ -240,21 +337,44 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
           </div>
         )}
       </div>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            size="icon-sm"
+            variant="outline"
+            onClick={syncQuestions}
+            disabled={isSyncing}
+            aria-label="Soruları güncelle"
+            className="absolute bottom-3 left-3 z-10 bg-card! shadow-md"
+          >
+            <HugeiconsIcon
+              icon={RefreshIcon}
+              className={`size-3.5 ${isSyncing ? "animate-spin" : ""}`}
+            />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top" sideOffset={6}>
+          Soruları güncelle
+        </TooltipContent>
+      </Tooltip>
     </aside>
   )
   const questionDetailPanel = selectedQuestion ? (
     <QuestionDetail storeId={storeId} question={selectedQuestion} />
   ) : (
     <div className="hidden h-full min-h-96 items-center justify-center bg-background px-8 text-center lg:flex">
-      <div>
-        <span className="mx-auto flex size-11 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+      <div className="max-w-sm">
+        <span className="mx-auto flex size-12 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground shadow-xs">
           <HugeiconsIcon icon={InboxIcon} className="size-5" />
         </span>
-        <p className="mt-4 text-sm font-medium text-foreground">
-          Görüntülenecek soru yok
+        <p className="mt-5 text-sm font-semibold text-foreground">
+          Yanıtlamak için bir soru seçin
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Farklı bir filtre seçerek tekrar deneyin.
+        <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+          Müşteri sorusunu, ilgili ürün bilgilerini ve yanıt araçlarını görmek
+          için soldaki listeden bir kayıt seçin.
         </p>
       </div>
     </div>
@@ -321,4 +441,36 @@ export function QuestionInbox({ storeId, questions }: QuestionInboxProps) {
       )}
     </div>
   )
+}
+
+function appendUniqueQuestions(
+  currentQuestions: ProductQuestion[],
+  nextQuestions: ProductQuestion[]
+) {
+  const questionIds = new Set(currentQuestions.map((question) => question.id))
+
+  return [
+    ...currentQuestions,
+    ...nextQuestions.filter((question) => !questionIds.has(question.id)),
+  ]
+}
+
+function filterCount(
+  filter: ProductQuestionFilter,
+  summary: ProductQuestionPage["summary"]
+) {
+  switch (filter) {
+    case "PENDING":
+      return summary.pending
+    case "ANSWERED":
+      return summary.answered
+    case "IGNORED":
+      return summary.ignored
+    default:
+      return summary.total
+  }
+}
+
+function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === "AbortError"
 }

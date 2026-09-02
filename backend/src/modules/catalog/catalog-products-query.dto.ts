@@ -25,4 +25,9 @@ export class CatalogProductsQueryDto {
   @IsString()
   @MaxLength(100)
   query?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  provider?: string;
 }

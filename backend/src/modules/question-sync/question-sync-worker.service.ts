@@ -187,7 +187,22 @@ export class QuestionSyncWorkerService {
         select: { id: true },
       });
     } catch (error) {
-      if (isUniqueConstraintError(error)) return false;
+      if (isUniqueConstraintError(error)) {
+        if (connection.environment === 'SANDBOX') {
+          await this.prisma.productQuestion.updateMany({
+            where: {
+              connectionId: connection.id,
+              externalQuestionId: question.externalId,
+            },
+            data: {
+              externalCustomerId: question.externalCustomerId,
+              customerName: question.customerName,
+            },
+          });
+        }
+
+        return false;
+      }
       throw error;
     }
 

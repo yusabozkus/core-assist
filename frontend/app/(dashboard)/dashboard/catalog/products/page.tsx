@@ -4,6 +4,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { ProductCatalog } from "./product-catalog"
 import { CatalogBadge } from "@/components/dashboard/catalog/products/catalog-badge"
 import { CatalogFreshness } from "@/components/dashboard/catalog/products/catalog-freshness"
+import { getProviderName } from "@/components/dashboard/catalog/products/product-catalog-utils"
 import { Button } from "@/components/ui/button"
 import { getServerCatalogProducts } from "@/lib/api/catalog.server"
 import { getServerChannelConnections } from "@/lib/api/channels.server"
@@ -18,6 +19,16 @@ export default async function ProductsPage() {
     getServerCatalogProducts(activeStore.id),
     getServerChannelConnections(activeStore.id),
   ])
+  const connectedProviders = Array.from(
+    new Set(
+      connections
+        .filter(
+          (connection) =>
+            connection.type === "COMMERCE" && connection.status === "CONNECTED"
+        )
+        .map((connection) => connection.providerKey)
+    )
+  ).map((key) => ({ key, name: getProviderName(key) }))
 
   return (
     <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
@@ -52,7 +63,11 @@ export default async function ProductsPage() {
         </div>
       </div>
 
-      <ProductCatalog storeId={activeStore.id} initialPage={catalogPage} />
+      <ProductCatalog
+        storeId={activeStore.id}
+        initialPage={catalogPage}
+        providers={connectedProviders}
+      />
     </div>
   )
 }

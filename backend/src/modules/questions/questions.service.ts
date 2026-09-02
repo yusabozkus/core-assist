@@ -8,15 +8,21 @@ import {
 import {
   ChannelConnectionStatus,
   ChannelType,
+  ProductQuestionStatus,
   StoreRole,
   StoreStatus,
 } from '../../generated/prisma/enums';
+import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { QUESTION_SYNC_DISPATCHER } from '../question-sync/question-sync.constants';
 import type { QuestionSyncDispatcher } from '../question-sync/question-sync.types';
 import { QUESTION_ANSWER_DISPATCHER } from '../question-answer/question-answer.constants';
 import type { QuestionAnswerDispatcher } from '../question-answer/question-answer.types';
 import { QuestionDraftService } from './question-draft.service';
+import {
+  QuestionListQueryDto,
+  QuestionListStatusFilter,
+} from './dto/question-list-query.dto';
 
 @Injectable()
 export class QuestionsService {
@@ -29,116 +35,183 @@ export class QuestionsService {
     private readonly questionDrafts: QuestionDraftService,
   ) {}
 
-  async findAll(storeId: string, userId: string) {
+  async findAll(storeId: string, userId: string, query: QuestionListQueryDto) {
     await this.requireStoreMembership(storeId, userId);
 
-    const questions = await this.prisma.productQuestion.findMany({
-      where: { storeId },
-      orderBy: { externalCreatedAt: 'desc' },
-      take: 100,
-      select: {
-        id: true,
-        externalQuestionId: true,
-        externalProductId: true,
-        customerName: true,
-        question: true,
-        referenceAnswer: true,
-        referenceSourceUrl: true,
-        referenceSourceProvider: true,
-        status: true,
-        externalCreatedAt: true,
-        createdAt: true,
-        answer: true,
-        answeredAt: true,
-        connection: {
-          select: { providerKey: true },
-        },
-        product: {
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            brand: true,
-            category: true,
-            status: true,
-            updatedAt: true,
-            variants: {
-              orderBy: { createdAt: 'asc' },
-              select: {
-                id: true,
-                title: true,
-                sku: true,
-                barcode: true,
-                color: true,
-                size: true,
-                price: true,
-                currency: true,
-                stock: true,
-                status: true,
-                sourceUpdatedAt: true,
-                lastSyncedAt: true,
+    const search = query.query?.trim();
+    const searchWhere: Prisma.ProductQuestionWhereInput = search
+      ? {
+          OR: [
+            { customerName: { contains: search, mode: 'insensitive' } },
+            { question: { contains: search, mode: 'insensitive' } },
+            { externalProductId: { contains: search, mode: 'insensitive' } },
+            {
+              product: {
+                is: { title: { contains: search, mode: 'insensitive' } },
               },
             },
-            attributes: {
-              orderBy: { name: 'asc' },
-              select: { id: true, name: true, value: true },
-            },
-            images: {
-              orderBy: { position: 'asc' },
-              select: { id: true, url: true, position: true },
-            },
-            sizeGuides: {
-              orderBy: { updatedAt: 'desc' },
-              select: {
-                id: true,
-                sourceUrl: true,
-                status: true,
-                normalizedText: true,
-                structuredData: true,
-                confidence: true,
-                failureReason: true,
-                analyzedAt: true,
+            {
+              connection: {
+                providerKey: { contains: search, mode: 'insensitive' },
               },
             },
-            externalProducts: {
-              select: {
-                externalId: true,
-                externalUrl: true,
-                status: true,
-                lastSyncedAt: true,
-                connection: {
-                  select: { providerKey: true },
+          ],
+        }
+      : {};
+    const baseWhere: Prisma.ProductQuestionWhereInput = {
+      storeId,
+      ...searchWhere,
+    };
+    const where: Prisma.ProductQuestionWhereInput = {
+      ...baseWhere,
+      ...questionStatusWhere(query.status),
+    };
+
+    const [
+      questions,
+      filteredTotal,
+      summaryTotal,
+      pendingCount,
+      draftedCount,
+      answeredCount,
+      ignoredCount,
+    ] = await Promise.all([
+      this.prisma.productQuestion.findMany({
+        where,
+        orderBy: [{ externalCreatedAt: 'desc' }, { id: 'desc' }],
+        take: query.limit + 1,
+        ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
+        select: {
+          id: true,
+          externalQuestionId: true,
+          externalProductId: true,
+          customerName: true,
+          question: true,
+          referenceAnswer: true,
+          referenceSourceUrl: true,
+          referenceSourceProvider: true,
+          status: true,
+          externalCreatedAt: true,
+          createdAt: true,
+          answer: true,
+          answeredAt: true,
+          connection: {
+            select: { providerKey: true },
+          },
+          product: {
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              brand: true,
+              category: true,
+              status: true,
+              updatedAt: true,
+              variants: {
+                orderBy: { createdAt: 'asc' },
+                select: {
+                  id: true,
+                  title: true,
+                  sku: true,
+                  barcode: true,
+                  color: true,
+                  size: true,
+                  price: true,
+                  currency: true,
+                  stock: true,
+                  status: true,
+                  sourceUpdatedAt: true,
+                  lastSyncedAt: true,
+                },
+              },
+              attributes: {
+                orderBy: { name: 'asc' },
+                select: { id: true, name: true, value: true },
+              },
+              images: {
+                orderBy: { position: 'asc' },
+                select: { id: true, url: true, position: true },
+              },
+              sizeGuides: {
+                orderBy: { updatedAt: 'desc' },
+                select: {
+                  id: true,
+                  sourceUrl: true,
+                  status: true,
+                  normalizedText: true,
+                  structuredData: true,
+                  confidence: true,
+                  failureReason: true,
+                  analyzedAt: true,
+                },
+              },
+              externalProducts: {
+                select: {
+                  externalId: true,
+                  externalUrl: true,
+                  status: true,
+                  lastSyncedAt: true,
+                  connection: {
+                    select: { providerKey: true },
+                  },
                 },
               },
             },
           },
-        },
-        answerDelivery: {
-          select: {
-            id: true,
-            answer: true,
-            status: true,
-            attempts: true,
-            lastError: true,
-            queuedAt: true,
-            sentAt: true,
+          answerDelivery: {
+            select: {
+              id: true,
+              answer: true,
+              status: true,
+              attempts: true,
+              lastError: true,
+              queuedAt: true,
+              sentAt: true,
+            },
           },
         },
-      },
-    });
+      }),
+      this.prisma.productQuestion.count({ where }),
+      this.prisma.productQuestion.count({ where: baseWhere }),
+      this.prisma.productQuestion.count({
+        where: { ...baseWhere, status: ProductQuestionStatus.PENDING },
+      }),
+      this.prisma.productQuestion.count({
+        where: { ...baseWhere, status: ProductQuestionStatus.DRAFTED },
+      }),
+      this.prisma.productQuestion.count({
+        where: { ...baseWhere, status: ProductQuestionStatus.ANSWERED },
+      }),
+      this.prisma.productQuestion.count({
+        where: { ...baseWhere, status: ProductQuestionStatus.IGNORED },
+      }),
+    ]);
 
-    return questions.map((question) => ({
-      ...question,
-      product: question.product
-        ? {
-            ...question.product,
-            variants: question.product.variants.map((variant) => ({
-              ...variant,
-              price: Number(variant.price),
-            })),
-          }
-        : null,
-    }));
+    const hasNextPage = questions.length > query.limit;
+    const pageItems = hasNextPage ? questions.slice(0, query.limit) : questions;
+
+    return {
+      items: pageItems.map((question) => ({
+        ...question,
+        product: question.product
+          ? {
+              ...question.product,
+              variants: question.product.variants.map((variant) => ({
+                ...variant,
+                price: Number(variant.price),
+              })),
+            }
+          : null,
+      })),
+      nextCursor: hasNextPage ? (pageItems.at(-1)?.id ?? null) : null,
+      total: filteredTotal,
+      summary: {
+        total: summaryTotal,
+        pending: pendingCount + draftedCount,
+        answered: answeredCount,
+        ignored: ignoredCount,
+      },
+    };
   }
 
   async sync(storeId: string, userId: string) {
@@ -238,5 +311,24 @@ export class QuestionsService {
     }
 
     return membership;
+  }
+}
+
+function questionStatusWhere(
+  status: QuestionListStatusFilter,
+): Prisma.ProductQuestionWhereInput {
+  switch (status) {
+    case QuestionListStatusFilter.PENDING:
+      return {
+        status: {
+          in: [ProductQuestionStatus.PENDING, ProductQuestionStatus.DRAFTED],
+        },
+      };
+    case QuestionListStatusFilter.ANSWERED:
+      return { status: ProductQuestionStatus.ANSWERED };
+    case QuestionListStatusFilter.IGNORED:
+      return { status: ProductQuestionStatus.IGNORED };
+    default:
+      return {};
   }
 }

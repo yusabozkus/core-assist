@@ -3,7 +3,10 @@ import "server-only"
 import { headers } from "next/headers"
 import { cache } from "react"
 
-import type { ProductQuestion } from "@/types/question"
+import type {
+  ProductQuestionFilter,
+  ProductQuestionPage,
+} from "@/types/question"
 
 const QUESTIONS_REQUEST_TIMEOUT_MS = 8_000
 
@@ -14,19 +17,40 @@ const apiUrl = (
 ).replace(/\/$/, "")
 
 export const getServerProductQuestions = cache(
-  async (storeId: string): Promise<ProductQuestion[]> => {
+  async (
+    storeId: string,
+    {
+      limit = 30,
+      status = "ALL",
+      query,
+    }: {
+      limit?: number
+      status?: ProductQuestionFilter
+      query?: string
+    } = {}
+  ): Promise<ProductQuestionPage> => {
     const cookie = (await headers()).get("cookie")
 
-    if (!cookie) return []
+    if (!cookie) return emptyQuestionPage()
 
-    const response = await fetch(`${apiUrl}/stores/${storeId}/questions`, {
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-        cookie,
-      },
-      signal: AbortSignal.timeout(QUESTIONS_REQUEST_TIMEOUT_MS),
+    const searchParams = new URLSearchParams({
+      limit: limit.toString(),
+      status,
     })
+
+    if (query?.trim()) searchParams.set("query", query.trim())
+
+    const response = await fetch(
+      `${apiUrl}/stores/${storeId}/questions?${searchParams.toString()}`,
+      {
+        cache: "no-store",
+        headers: {
+          Accept: "application/json",
+          cookie,
+        },
+        signal: AbortSignal.timeout(QUESTIONS_REQUEST_TIMEOUT_MS),
+      }
+    )
 
     if (!response.ok) {
       throw new Error(
@@ -34,6 +58,15 @@ export const getServerProductQuestions = cache(
       )
     }
 
-    return (await response.json()) as ProductQuestion[]
+    return (await response.json()) as ProductQuestionPage
   }
 )
+
+function emptyQuestionPage(): ProductQuestionPage {
+  return {
+    items: [],
+    nextCursor: null,
+    total: 0,
+    summary: { total: 0, pending: 0, answered: 0, ignored: 0 },
+  }
+}

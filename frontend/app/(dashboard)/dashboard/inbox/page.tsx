@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic"
 export default async function InboxPage() {
   const { activeStore } = await getOperationalStoreContext()
 
-  const questions = await getServerProductQuestions(activeStore.id)
+  const initialPage = await getServerProductQuestions(activeStore.id)
 
-  return <QuestionInbox storeId={activeStore.id} questions={questions} />
+  return <QuestionInbox storeId={activeStore.id} initialPage={initialPage} />
 }

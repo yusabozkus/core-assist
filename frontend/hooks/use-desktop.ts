@@ -17,6 +17,6 @@ export function useIsDesktop() {
   return React.useSyncExternalStore(
     subscribeToDesktopQuery,
     getDesktopSnapshot,
-    () => false
+    () => null
   )
 }

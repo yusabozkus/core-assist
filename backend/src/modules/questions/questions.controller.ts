@@ -7,6 +7,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
@@ -14,6 +15,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { QuestionsService } from './questions.service';
 import { AnswerProductQuestionDto } from './dto/answer-product-question.dto';
+import { QuestionListQueryDto } from './dto/question-list-query.dto';
 
 @Controller('stores/:storeId/questions')
 @UseGuards(AuthGuard)
@@ -24,8 +26,9 @@ export class QuestionsController {
   findAll(
     @Param('storeId', new ParseUUIDPipe()) storeId: string,
     @CurrentUser() user: AuthenticatedUser,
+    @Query() query: QuestionListQueryDto,
   ) {
-    return this.questionsService.findAll(storeId, user.id);
+    return this.questionsService.findAll(storeId, user.id, query);
   }
 
   @Post('sync')

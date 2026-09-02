@@ -5,18 +5,22 @@ import type { CatalogProduct, CatalogProductPage } from "@/types/product"
 type CatalogProductsOptions = {
   cursor?: string | null
   query?: string
+  provider?: string
   limit?: number
   signal?: AbortSignal
 }
 
 export function getCatalogProducts(
   storeId: string,
-  { cursor, query, limit = 12, signal }: CatalogProductsOptions = {}
+  { cursor, query, provider, limit = 12, signal }: CatalogProductsOptions = {}
 ) {
   const searchParams = new URLSearchParams({ limit: String(limit) })
 
   if (cursor) searchParams.set("cursor", cursor)
   if (query?.trim()) searchParams.set("query", query.trim())
+  if (provider && provider !== "ALL") {
+    searchParams.set("provider", provider)
+  }
 
   return apiFetch<CatalogProductPage>(
     `/stores/${storeId}/catalog/products?${searchParams.toString()}`,

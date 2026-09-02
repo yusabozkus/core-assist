@@ -26,6 +26,39 @@ export const MOCK_IRRELEVANT_QUESTIONS = DEFACTO_QUESTION_SEEDS.filter(
 ).length;
 export const MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER = 1;
 
+const MOCK_CUSTOMER_NAMES = [
+  'Ayşe K.',
+  'Mehmet T.',
+  'Emre A.',
+  'Zeynep Y.',
+  'Can D.',
+  'Elif S.',
+  'Burak E.',
+  'Merve Ç.',
+  'Kerem B.',
+  'Selin G.',
+  'Oğuz Ö.',
+  'Derya M.',
+  'Berk C.',
+  'Ece Ş.',
+  'Onur P.',
+  'İrem N.',
+  'Kaan U.',
+  'Ceren R.',
+  'Arda L.',
+  'Seda V.',
+  'Mert H.',
+  'Deniz F.',
+  'Tolga İ.',
+  'Buse O.',
+  'Umut Z.',
+  'Melis K.',
+  'Hakan T.',
+  'Gizem A.',
+  'Yusuf Y.',
+  'Aslı D.',
+] as const;
+
 @Injectable()
 export class MockQuestionConnector {
   fetchProductQuestions(
@@ -67,25 +100,31 @@ function createMockQuestions(
     (seed) => seed.targetProvider === providerKey,
   );
 
-  const currentQuestions = seeds.map((seed, index) => ({
-    externalId: `real-defacto-question-v1-${seed.id}`,
-    externalProductId: `${productPrefix}-${seed.externalProductId}`,
-    customerName: 'Pazaryeri müşterisi',
-    text: seed.text,
-    referenceAnswer: seed.referenceAnswer,
-    referenceSourceUrl: seed.referenceSourceUrl,
-    referenceSourceProvider: seed.referenceSourceProvider,
-    createdAt: afterConnection(createdAfter, index + 1),
-    rawPayload: {
-      fixture: true,
-      fixtureVersion: 1,
-      scenario: seed.scenario ?? 'PRODUCT',
-      provider: providerKey,
-      sourceAskedAt: seed.sourceAskedAt,
-      referenceSourceProvider: seed.referenceSourceProvider,
+  const customerOffset = isHepsiburada ? 13 : 0;
+  const currentQuestions = seeds.map((seed, index) => {
+    const customerIndex = (index + customerOffset) % MOCK_CUSTOMER_NAMES.length;
+
+    return {
+      externalId: `real-defacto-question-v1-${seed.id}`,
+      externalProductId: `${productPrefix}-${seed.externalProductId}`,
+      externalCustomerId: `mock-${providerKey}-customer-${customerIndex + 1}`,
+      customerName: MOCK_CUSTOMER_NAMES[customerIndex],
+      text: seed.text,
+      referenceAnswer: seed.referenceAnswer,
       referenceSourceUrl: seed.referenceSourceUrl,
-    },
-  }));
+      referenceSourceProvider: seed.referenceSourceProvider,
+      createdAt: afterConnection(createdAfter, index + 1),
+      rawPayload: {
+        fixture: true,
+        fixtureVersion: 1,
+        scenario: seed.scenario ?? 'PRODUCT',
+        provider: providerKey,
+        sourceAskedAt: seed.sourceAskedAt,
+        referenceSourceProvider: seed.referenceSourceProvider,
+        referenceSourceUrl: seed.referenceSourceUrl,
+      },
+    };
+  });
 
   return [
     ...currentQuestions,

@@ -11,6 +11,13 @@ import { ProductDetailDialog } from "@/components/dashboard/catalog/products/pro
 import { ProductCardGridSkeleton } from "@/components/skeletons/product-catalog-skeleton"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { getCatalogProducts } from "@/lib/api/catalog"
 import type {
   CatalogProductListItem,
@@ -23,11 +30,18 @@ const SEARCH_DEBOUNCE_MS = 300
 export type ProductCatalogProps = {
   storeId: string
   initialPage: CatalogProductPage
+  providers: Array<{ key: string; name: string }>
 }
 
-export function ProductCatalog({ storeId, initialPage }: ProductCatalogProps) {
+export function ProductCatalog({
+  storeId,
+  initialPage,
+  providers,
+}: ProductCatalogProps) {
   const [query, setQuery] = useState("")
   const [activeQuery, setActiveQuery] = useState("")
+  const [provider, setProvider] = useState("ALL")
+  const [activeProvider, setActiveProvider] = useState("ALL")
   const [products, setProducts] = useState(initialPage.items)
   const [nextCursor, setNextCursor] = useState(initialPage.nextCursor)
   const [total, setTotal] = useState(initialPage.total)
@@ -38,30 +52,32 @@ export function ProductCatalog({ storeId, initialPage }: ProductCatalogProps) {
   )
   const loadMoreMarkerRef = useRef<HTMLDivElement | null>(null)
   const requestSequence = useRef(0)
+  const lastRequestKey = useRef(`${storeId}|ALL|`)
 
   useEffect(() => {
     const normalizedQuery = query.trim()
+    const requestKey = `${storeId}|${provider}|${normalizedQuery}`
 
-    if (!normalizedQuery) {
-      requestSequence.current += 1
-      return
-    }
+    if (requestKey === lastRequestKey.current) return
 
     const controller = new AbortController()
+    const requestId = ++requestSequence.current
     const timeoutId = window.setTimeout(async () => {
-      const requestId = ++requestSequence.current
+      lastRequestKey.current = requestKey
       setIsLoading(true)
       setError(null)
 
       try {
         const page = await getCatalogProducts(storeId, {
           query: normalizedQuery,
+          provider,
           limit: PAGE_SIZE,
           signal: controller.signal,
         })
 
         if (requestId !== requestSequence.current) return
         setActiveQuery(normalizedQuery)
+        setActiveProvider(provider)
         setProducts(page.items)
         setNextCursor(page.nextCursor)
         setTotal(page.total)
@@ -81,10 +97,17 @@ export function ProductCatalog({ storeId, initialPage }: ProductCatalogProps) {
       window.clearTimeout(timeoutId)
       controller.abort()
     }
-  }, [initialPage, query, storeId])
+  }, [provider, query, storeId])
 
   const loadMore = useCallback(async () => {
-    if (!nextCursor || isLoading || query.trim() !== activeQuery) return
+    if (
+      !nextCursor ||
+      isLoading ||
+      query.trim() !== activeQuery ||
+      provider !== activeProvider
+    ) {
+      return
+    }
 
     setIsLoading(true)
     setError(null)
@@ -93,6 +116,7 @@ export function ProductCatalog({ storeId, initialPage }: ProductCatalogProps) {
       const page = await getCatalogProducts(storeId, {
         cursor: nextCursor,
         query: activeQuery,
+        provider: activeProvider,
         limit: PAGE_SIZE,
       })
       setProducts((current) => mergeProducts(current, page.items))
@@ -107,7 +131,15 @@ export function ProductCatalog({ storeId, initialPage }: ProductCatalogProps) {
     } finally {
       setIsLoading(false)
     }
-  }, [activeQuery, isLoading, nextCursor, query, storeId])
+  }, [
+    activeProvider,
+    activeQuery,
+    isLoading,
+    nextCursor,
+    provider,
+    query,
+    storeId,
+  ])
 
   useEffect(() => {
     const marker = loadMoreMarkerRef.current
@@ -126,15 +158,6 @@ export function ProductCatalog({ storeId, initialPage }: ProductCatalogProps) {
 
   function handleQueryChange(value: string) {
     setQuery(value)
-
-    if (value.trim()) return
-
-    setActiveQuery("")
-    setProducts(initialPage.items)
-    setNextCursor(initialPage.nextCursor)
-    setTotal(initialPage.total)
-    setError(null)
-    setIsLoading(false)
   }
 
   if (initialPage.summary.products === 0) {
@@ -142,23 +165,42 @@ export function ProductCatalog({ storeId, initialPage }: ProductCatalogProps) {
   }
 
   const isReplacingResults =
-    isLoading && Boolean(query.trim()) && query.trim() !== activeQuery
+    isLoading && (query.trim() !== activeQuery || provider !== activeProvider)
+  const activeProviderName = providers.find(
+    (item) => item.key === activeProvider
+  )?.name
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-sm">
-          <HugeiconsIcon
-            icon={Search01Icon}
-            className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            value={query}
-            onChange={(event) => handleQueryChange(event.target.value)}
-            placeholder="Ürün, SKU, barkod, renk veya özellik ara"
-            className="h-9! pl-9"
-            aria-label="Katalogda ara"
-          />
+        <div className="flex w-full flex-col gap-2 sm:max-w-xl sm:flex-row">
+          <div className="min-w-0 flex-1">
+            <Input
+              value={query}
+              onChange={(event) => handleQueryChange(event.target.value)}
+              placeholder="Ürün, SKU, barkod, renk veya özellik ara"
+              icon={<HugeiconsIcon icon={Search01Icon} className="size-4" />}
+              className="h-9! border-border bg-card"
+              aria-label="Katalogda ara"
+            />
+          </div>
+          <Select value={provider} onValueChange={setProvider}>
+            <SelectTrigger
+              size="sm"
+              aria-label="Pazaryerine göre filtrele"
+              className="h-9! w-full rounded-xl border-border bg-card sm:w-44"
+            >
+              <SelectValue placeholder="Tüm pazaryerleri" />
+            </SelectTrigger>
+            <SelectContent align="start">
+              <SelectItem value="ALL">Tüm pazaryerleri</SelectItem>
+              {providers.map((item) => (
+                <SelectItem key={item.key} value={item.key}>
+                  {item.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <p className="text-xs text-muted-foreground tabular-nums">
           {products.length.toLocaleString("tr-TR")} /{" "}
@@ -168,10 +210,16 @@ export function ProductCatalog({ storeId, initialPage }: ProductCatalogProps) {
 
       {isReplacingResults ? (
         <ProductCardGridSkeleton />
-      ) : products.length === 0 && activeQuery && !isLoading ? (
+      ) : products.length === 0 &&
+        (activeQuery || activeProvider !== "ALL") &&
+        !isLoading ? (
         <NoSearchResults
           query={activeQuery}
-          onClear={() => handleQueryChange("")}
+          providerName={activeProviderName}
+          onClear={() => {
+            setQuery("")
+            setProvider("ALL")
+          }}
         />
       ) : (
         <>
