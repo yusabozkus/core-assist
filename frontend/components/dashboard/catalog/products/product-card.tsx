@@ -5,6 +5,7 @@ import {
   getProviderName,
 } from "@/components/dashboard/catalog/products/product-catalog-utils"
 import type { CatalogProductListItem } from "@/types/product"
+import { ProviderLogo } from "../../channels/provider-logo"
 
 type ProductCardProps = {
   product: CatalogProductListItem
@@ -12,9 +13,6 @@ type ProductCardProps = {
 }
 
 export function ProductCard({ product, onSelect }: ProductCardProps) {
-  const sourceNames = product.providers
-    .map((source) => getProviderName(source.providerKey))
-    .join(", ")
 
   return (
     <button
@@ -29,14 +27,10 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
           <span className="line-clamp-2 text-sm leading-5 font-semibold text-foreground">
             {product.title}
           </span>
-          {sourceNames ? (
-            <Badge
-              variant="outline"
-              className="max-w-25 shrink-0 truncate bg-background text-[10px]"
-            >
-              {sourceNames}
-            </Badge>
-          ) : null}
+          <ProviderLogo
+            provider={product.providers[0].providerKey}
+            className="size-6!"
+          />
         </span>
         <span className="mt-1 truncate text-xs text-muted-foreground">
           {[product.brand, product.category].filter(Boolean).join(" · ") ||
@@ -57,11 +51,10 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
               {product.variantCount} varyant
             </span>
             <span
-              className={`block font-medium whitespace-nowrap tabular-nums ${
-                product.totalStock > 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-amber-600 dark:text-amber-400"
-              }`}
+              className={`block font-medium whitespace-nowrap tabular-nums ${product.totalStock > 0
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-amber-600 dark:text-amber-400"
+                }`}
             >
               {product.totalStock} stok
             </span>

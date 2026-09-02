@@ -46,6 +46,8 @@ export const APP_ROUTES = {
       profile: "/dashboard/settings/profile",
       notifications: "/dashboard/settings/notifications",
       billing: "/dashboard/settings/billing",
+      plans: "/dashboard/settings/billing/plans",
+      invoices: "/dashboard/settings/billing/invoices",
     },
   },
 } as const
@@ -274,4 +276,6 @@ const DASHBOARD_AUXILIARY_TITLES: Readonly<Record<string, string>> = {
   [APP_ROUTES.dashboard.settings.profile]: "Hesap bilgileri",
   [APP_ROUTES.dashboard.settings.notifications]: "Bildirimler",
   [APP_ROUTES.dashboard.settings.billing]: "Plan ve Faturalama",
+  [APP_ROUTES.dashboard.settings.plans]: "Planlar",
+  [APP_ROUTES.dashboard.settings.invoices]: "Faturalar",
 }
