@@ -7,6 +7,17 @@ export type ProductQuestionFilter = "ALL" | "PENDING" | "ANSWERED" | "IGNORED"
 
 export type QuestionAnswerStatus = "QUEUED" | "PROCESSING" | "SENT" | "FAILED"
 
+export type QuestionReplyDecision =
+  "READY_FOR_SEND" | "NEEDS_REVIEW" | "DO_NOT_REPLY"
+
+export type ProductAnswerRisk =
+  | "MISSING_INFORMATION"
+  | "UNSUPPORTED_CLAIM"
+  | "STOCK_CONTRADICTION"
+  | "PRICE_CONTRADICTION"
+  | "LOW_CONFIDENCE"
+  | "HIGH_RISK_INTENT"
+
 export type ProductAnswerFact =
   | "STOCK"
   | "PRICE"
@@ -44,6 +55,14 @@ export type ProductQuestion = {
   referenceSourceProvider: string | null
   status: ProductQuestionStatus
   answer: string | null
+  draftDecision: QuestionReplyDecision | null
+  draftConfidence: number | null
+  draftAnswerability: "FULL" | "PARTIAL" | "INSUFFICIENT" | null
+  draftRisks: ProductAnswerRisk[] | null
+  draftMissingInformation: string[] | null
+  draftEvidenceIds: string[] | null
+  draftModel: string | null
+  draftedAt: string | null
   answeredAt: string | null
   externalCreatedAt: string
   createdAt: string
@@ -60,6 +79,7 @@ export type ProductQuestionListItem = {
   customerName: string | null
   question: string
   status: ProductQuestionStatus
+  draftDecision: QuestionReplyDecision | null
   externalCreatedAt: string
   connection: {
     providerKey: string
@@ -113,18 +133,11 @@ export type DraftedQuestionAnswerResult = {
     interpretation: string
     detectedFacts: ProductAnswerFact[]
     answerability: "FULL" | "PARTIAL" | "INSUFFICIENT"
-    decision: "DRAFT" | "NEEDS_REVIEW"
+    decision: "READY_FOR_SEND" | "NEEDS_REVIEW"
     confidence: number
     missingInformation: string[]
     usedEvidenceIds: string[]
-    risks: Array<
-      | "MISSING_INFORMATION"
-      | "UNSUPPORTED_CLAIM"
-      | "STOCK_CONTRADICTION"
-      | "PRICE_CONTRADICTION"
-      | "LOW_CONFIDENCE"
-      | "HIGH_RISK_INTENT"
-    >
+    risks: ProductAnswerRisk[]
   }
 }
 

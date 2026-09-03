@@ -56,7 +56,9 @@ export function QuestionAnswerComposer({
   const [isDrafting, startDraftTransition] = useTransition()
   const [draftRetrySeconds, setDraftRetrySeconds] = useState(0)
   const [draftContext, setDraftContext] =
-    useState<DraftReliabilityContext | null>(null)
+    useState<DraftReliabilityContext | null>(() =>
+      createPersistedDraftContext(question)
+    )
   const [policyBlocked, setPolicyBlocked] = useState(false)
   const isQueued =
     (optimisticQueuedAt !== null &&
@@ -201,7 +203,10 @@ export function QuestionAnswerComposer({
         <Textarea
           id={`question-answer-${question.id}`}
           value={answer}
-          onChange={(event) => setAnswer(event.target.value)}
+          onChange={(event) => {
+            setAnswer(event.target.value)
+            setDraftContext(null)
+          }}
           maxLength={MAX_ANSWER_LENGTH}
           rows={4}
           disabled={isSubmitting || isQueued || isDrafting}
@@ -326,7 +331,42 @@ function DraftReliabilityNotice({
         <p className="mt-2 leading-5">
           Taslak riskli veya yeterince desteklenmeyen bir ifade içerebilir.
         </p>
-      ) : null}
+      ) : (
+        <p className="mt-2 leading-5">
+          Güvenlik kontrolleri tamamlandı. Otomatik gönderim kapalı olduğu için
+          son onay size aittir.
+        </p>
+      )}
     </div>
   )
+}
+
+function createPersistedDraftContext(
+  question: ProductQuestion
+): DraftReliabilityContext | null {
+  if (
+    question.status !== "DRAFTED" ||
+    (question.draftDecision !== "READY_FOR_SEND" &&
+      question.draftDecision !== "NEEDS_REVIEW") ||
+    question.draftConfidence === null
+  ) {
+    return null
+  }
+
+  return {
+    requestedFacts: [],
+    matchedColor: null,
+    matchedSize: null,
+    matchingVariantCount: 0,
+    source: "GEMINI",
+    model: question.draftModel ?? "",
+    interpretation: "",
+    detectedFacts: [],
+    answerability: question.draftAnswerability ?? "INSUFFICIENT",
+    decision: question.draftDecision,
+    confidence: question.draftConfidence,
+    missingInformation: question.draftMissingInformation ?? [],
+    usedEvidenceIds: question.draftEvidenceIds ?? [],
+    risks: question.draftRisks ?? [],
+  }
 }

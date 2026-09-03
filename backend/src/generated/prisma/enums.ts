@@ -163,6 +163,15 @@ export const ProductQuestionStatus = {
 export type ProductQuestionStatus = (typeof ProductQuestionStatus)[keyof typeof ProductQuestionStatus]
 
 
+export const QuestionReplyDecision = {
+  READY_FOR_SEND: 'READY_FOR_SEND',
+  NEEDS_REVIEW: 'NEEDS_REVIEW',
+  DO_NOT_REPLY: 'DO_NOT_REPLY'
+} as const
+
+export type QuestionReplyDecision = (typeof QuestionReplyDecision)[keyof typeof QuestionReplyDecision]
+
+
 export const QuestionAnswerStatus = {
   QUEUED: 'QUEUED',
   PROCESSING: 'PROCESSING',

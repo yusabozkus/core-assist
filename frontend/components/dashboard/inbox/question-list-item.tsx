@@ -28,10 +28,11 @@ export function QuestionListItem({
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={`group relative w-full rounded-xl border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${selected
-        ? "border-border bg-card"
-        : "border-transparent hover:border-border hover:bg-card"
-        }`}
+      className={`group relative w-full rounded-xl border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
+        selected
+          ? "border-border bg-card"
+          : "border-transparent hover:border-border hover:bg-card"
+      }`}
     >
       {selected ? (
         <span className="absolute top-3 bottom-3 left-0 w-0.5 rounded-full bg-primary" />
@@ -86,6 +87,8 @@ export function QuestionListItem({
         <QuestionStatus
           status={question.status}
           deliveryStatus={question.answerDelivery?.status}
+          draftDecision={question.draftDecision}
+          compact
         />
       </span>
     </button>

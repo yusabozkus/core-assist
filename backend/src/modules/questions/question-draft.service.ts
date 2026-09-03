@@ -6,7 +6,10 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { ProductQuestionStatus } from '../../generated/prisma/enums';
+import {
+  ProductQuestionStatus,
+  QuestionReplyDecision,
+} from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import {
   AiDraftGenerator,
@@ -16,6 +19,7 @@ import {
 import { ProductAnswerContextService } from './product-answer-context.service';
 import type { DraftQuestionAnswer } from './product-answer-context.types';
 import { QuestionResponsePolicyService } from './question-response-policy.service';
+import { QuestionReplyDecisionService } from './question-reply-decision.service';
 
 @Injectable()
 export class QuestionDraftService {
@@ -24,6 +28,7 @@ export class QuestionDraftService {
     private readonly productContext: ProductAnswerContextService,
     private readonly aiDrafts: AiDraftGenerator,
     private readonly responsePolicy: QuestionResponsePolicyService,
+    private readonly replyDecision: QuestionReplyDecisionService,
   ) {}
 
   async generate(
@@ -63,6 +68,14 @@ export class QuestionDraftService {
           data: {
             answer: null,
             status: ProductQuestionStatus.IGNORED,
+            draftDecision: QuestionReplyDecision.DO_NOT_REPLY,
+            draftConfidence: null,
+            draftAnswerability: null,
+            draftRisks: [],
+            draftMissingInformation: [],
+            draftEvidenceIds: [],
+            draftModel: null,
+            draftedAt: new Date(),
           },
         });
 
@@ -114,6 +127,8 @@ export class QuestionDraftService {
     }
 
     const answer = aiDraft.answer;
+    const replyDecision = this.replyDecision.evaluate(aiDraft);
+    const draftedAt = new Date();
     const updated = await this.prisma.productQuestion.updateMany({
       where: {
         id: questionId,
@@ -125,6 +140,14 @@ export class QuestionDraftService {
       data: {
         answer,
         status: ProductQuestionStatus.DRAFTED,
+        draftDecision: replyDecision,
+        draftConfidence: aiDraft.confidence,
+        draftAnswerability: aiDraft.answerability,
+        draftRisks: aiDraft.risks,
+        draftMissingInformation: aiDraft.missingInformation,
+        draftEvidenceIds: aiDraft.usedEvidenceIds,
+        draftModel: aiDraft.model,
+        draftedAt,
       },
     });
 
@@ -145,7 +168,7 @@ export class QuestionDraftService {
         interpretation: aiDraft.interpretation,
         detectedFacts: aiDraft.detectedFacts,
         answerability: aiDraft.answerability,
-        decision: aiDraft.decision,
+        decision: replyDecision,
         confidence: aiDraft.confidence,
         missingInformation: aiDraft.missingInformation,
         usedEvidenceIds: aiDraft.usedEvidenceIds,

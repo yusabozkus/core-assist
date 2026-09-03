@@ -8,6 +8,7 @@ import { QuestionsService } from './questions.service';
 import { ProductAnswerContextService } from './product-answer-context.service';
 import { QuestionDraftService } from './question-draft.service';
 import { QuestionResponsePolicyService } from './question-response-policy.service';
+import { QuestionReplyDecisionService } from './question-reply-decision.service';
 
 @Module({
   imports: [AuthModule, QuestionSyncModule, QuestionAnswerModule, AiModule],
@@ -17,6 +18,7 @@ import { QuestionResponsePolicyService } from './question-response-policy.servic
     ProductAnswerContextService,
     QuestionDraftService,
     QuestionResponsePolicyService,
+    QuestionReplyDecisionService,
   ],
 })
 export class QuestionsModule {}

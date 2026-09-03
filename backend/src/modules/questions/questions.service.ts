@@ -30,6 +30,7 @@ const QUESTION_LIST_SELECT = {
   customerName: true,
   question: true,
   status: true,
+  draftDecision: true,
   externalCreatedAt: true,
   connection: {
     select: { providerKey: true },
@@ -63,6 +64,14 @@ const QUESTION_DETAIL_SELECT = {
   externalCreatedAt: true,
   createdAt: true,
   answer: true,
+  draftDecision: true,
+  draftConfidence: true,
+  draftAnswerability: true,
+  draftRisks: true,
+  draftMissingInformation: true,
+  draftEvidenceIds: true,
+  draftModel: true,
+  draftedAt: true,
   answeredAt: true,
   connection: {
     select: { providerKey: true },

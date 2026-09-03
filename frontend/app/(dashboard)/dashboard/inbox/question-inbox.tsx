@@ -9,6 +9,7 @@ import {
   Search01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 import { EmptyInbox } from "@/components/dashboard/inbox/empty-inbox"
 import { QuestionDetail } from "@/components/dashboard/inbox/question-detail"
@@ -52,6 +53,7 @@ import type {
 export type QuestionInboxProps = {
   storeId: string
   initialPage: ProductQuestionPage
+  initialFilter: ProductQuestionFilter
 }
 
 const PAGE_SIZE = 30
@@ -73,8 +75,16 @@ const inboxFilters: Array<{
   { value: "IGNORED", label: "Engellenen" },
 ]
 
-export function QuestionInbox({ storeId, initialPage }: QuestionInboxProps) {
+export function QuestionInbox({
+  storeId,
+  initialPage,
+  initialFilter,
+}: QuestionInboxProps) {
   const isDesktop = useIsDesktop()
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const filter = parseQuestionFilter(searchParams.get("status"))
   const [questions, setQuestions] = useState(initialPage.items)
   const [nextCursor, setNextCursor] = useState(initialPage.nextCursor)
   const [summary, setSummary] = useState(initialPage.summary)
@@ -88,7 +98,6 @@ export function QuestionInbox({ storeId, initialPage }: QuestionInboxProps) {
   const [isDetailLoading, setIsDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState<string | null>(null)
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false)
-  const [filter, setFilter] = useState<ProductQuestionFilter>("ALL")
   const [query, setQuery] = useState("")
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -99,7 +108,7 @@ export function QuestionInbox({ storeId, initialPage }: QuestionInboxProps) {
   const listRef = useRef<HTMLDivElement>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const listRequestIdRef = useRef(0)
-  const lastListRequestKeyRef = useRef(`${storeId}|ALL|`)
+  const lastListRequestKeyRef = useRef(`${storeId}|${initialFilter}|`)
   const detailRequestIdRef = useRef(0)
   const detailAbortControllerRef = useRef<AbortController | null>(null)
   const detailCacheRef = useRef(new Map<string, DetailCacheEntry>())
@@ -306,6 +315,20 @@ export function QuestionInbox({ storeId, initialPage }: QuestionInboxProps) {
     }
   }
 
+  function changeFilter(nextFilter: ProductQuestionFilter) {
+    const params = new URLSearchParams(searchParams.toString())
+    if (nextFilter === "ALL") {
+      params.delete("status")
+    } else {
+      params.set("status", nextFilter.toLowerCase())
+    }
+
+    const queryString = params.toString()
+    router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+      scroll: false,
+    })
+  }
+
   async function refreshCurrentList() {
     try {
       const page = await getProductQuestions(storeId, {
@@ -386,7 +409,7 @@ export function QuestionInbox({ storeId, initialPage }: QuestionInboxProps) {
               <button
                 key={item.value}
                 type="button"
-                onClick={() => setFilter(item.value)}
+                onClick={() => changeFilter(item.value)}
                 aria-pressed={filter === item.value}
                 className={`rounded-md px-2 py-1.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
                   filter === item.value
@@ -584,6 +607,7 @@ export function QuestionInbox({ storeId, initialPage }: QuestionInboxProps) {
                     deliveryStatus={
                       selectedQuestionSummary.answerDelivery?.status
                     }
+                    draftDecision={selectedQuestionSummary.draftDecision}
                   />
                 </span>
               }
@@ -624,6 +648,7 @@ function listItemFromDetail(
     customerName: question.customerName,
     question: question.question,
     status: question.status,
+    draftDecision: question.draftDecision,
     externalCreatedAt: question.externalCreatedAt,
     connection: question.connection,
     product: question.product
@@ -657,4 +682,14 @@ function filterCount(
 
 function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === "AbortError"
+}
+
+function parseQuestionFilter(value: string | null): ProductQuestionFilter {
+  const normalized = value?.toUpperCase()
+
+  return normalized === "PENDING" ||
+    normalized === "ANSWERED" ||
+    normalized === "IGNORED"
+    ? normalized
+    : "ALL"
 }

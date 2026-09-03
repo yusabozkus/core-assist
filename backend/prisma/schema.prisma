@@ -526,6 +526,12 @@ enum ProductQuestionStatus {
   IGNORED
 }
 
+enum QuestionReplyDecision {
+  READY_FOR_SEND
+  NEEDS_REVIEW
+  DO_NOT_REPLY
+}
+
 enum QuestionAnswerStatus {
   QUEUED
   PROCESSING
@@ -550,6 +556,14 @@ model ProductQuestion {
   referenceSourceProvider String?
   status                  ProductQuestionStatus @default(PENDING)
   answer                  String?
+  draftDecision           QuestionReplyDecision?
+  draftConfidence         Float?
+  draftAnswerability      String?
+  draftRisks              Json?
+  draftMissingInformation Json?
+  draftEvidenceIds        Json?
+  draftModel              String?
+  draftedAt               DateTime?
   externalCreatedAt       DateTime
   answeredAt              DateTime?
   createdAt               DateTime              @default(now())
@@ -564,6 +578,7 @@ model ProductQuestion {
 
   @@unique([connectionId, externalQuestionId])
   @@index([storeId, status, externalCreatedAt])
+  @@index([storeId, draftDecision])
   @@index([productId])
   @@index([externalProductRecordId])
   @@map("product_question")

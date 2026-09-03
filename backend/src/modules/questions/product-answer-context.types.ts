@@ -42,6 +42,9 @@ export type ProductAnswerRisk =
   | 'LOW_CONFIDENCE'
   | 'HIGH_RISK_INTENT';
 
+export type QuestionReplyDecision =
+  'READY_FOR_SEND' | 'NEEDS_REVIEW' | 'DO_NOT_REPLY';
+
 export type ProductAnswerVariantContext = {
   title: string | null;
   sku: string;
@@ -114,7 +117,7 @@ export type DraftedQuestionAnswer = {
     interpretation: string;
     detectedFacts: ProductAnswerFact[];
     answerability: 'FULL' | 'PARTIAL' | 'INSUFFICIENT';
-    decision: 'DRAFT' | 'NEEDS_REVIEW';
+    decision: Exclude<QuestionReplyDecision, 'DO_NOT_REPLY'>;
     confidence: number;
     missingInformation: string[];
     usedEvidenceIds: string[];

@@ -50,16 +50,18 @@ export function QuestionDetail({
               </p>
             </div>
           </div>
-          <div className="flex flex-col gap-1 items-start">
+          <div className="flex flex-col items-start gap-1">
             <QuestionStatus
               status={question.status}
               deliveryStatus={question.answerDelivery?.status}
+              draftDecision={question.draftDecision}
             />
             <Badge variant="outline" className="bg-card font-medium">
               {providerName(question.connection.providerKey)}
               <ProviderLogo
                 provider={question.connection.providerKey}
-                className="size-4!" />
+                className="size-4!"
+              />
             </Badge>
           </div>
         </header>
