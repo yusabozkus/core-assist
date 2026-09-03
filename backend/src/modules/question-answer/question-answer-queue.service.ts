@@ -12,6 +12,7 @@ import {
   QuestionAnswerStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
 import {
   QUESTION_ANSWER_QUEUE,
   SEND_QUESTION_ANSWER_JOB,
@@ -27,6 +28,7 @@ import type {
 export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly providers: ProviderRegistryService,
     @InjectQueue(QUESTION_ANSWER_QUEUE)
     private readonly queue: Queue<QuestionAnswerJobData>,
   ) {}
@@ -42,6 +44,7 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
         connectionId: true,
         connection: {
           select: {
+            providerKey: true,
             status: true,
             credentialsEncrypted: true,
           },
@@ -67,6 +70,14 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
     ) {
       throw new ConflictException(
         'Soruyu yanıtlamak için pazaryeri bağlantısı aktif olmalıdır.',
+      );
+    }
+
+    if (
+      !this.providers.supportsProductQuestions(question.connection.providerKey)
+    ) {
+      throw new ConflictException(
+        'Bu bağlantı için ürün sorusu yanıtlama desteklenmiyor.',
       );
     }
 

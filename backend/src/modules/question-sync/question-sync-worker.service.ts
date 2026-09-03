@@ -219,15 +219,10 @@ export class QuestionSyncWorkerService {
     }
 
     try {
-      const externalProduct = await this.prisma.externalProduct.findUnique({
-        where: {
-          connectionId_externalId: {
-            connectionId: connection.id,
-            externalId: question.externalProductId,
-          },
-        },
-        select: { id: true, productId: true },
-      });
+      const externalProduct = await this.resolveExternalProduct(
+        connection.id,
+        question.externalProductId,
+      );
       const responsePolicy = evaluateQuestionResponsePolicy(question.text);
 
       await this.prisma.$transaction([
@@ -276,6 +271,39 @@ export class QuestionSyncWorkerService {
       });
       throw error;
     }
+  }
+
+  private async resolveExternalProduct(
+    connectionId: string,
+    externalProductId: string,
+  ) {
+    const exactProduct = await this.prisma.externalProduct.findUnique({
+      where: {
+        connectionId_externalId: {
+          connectionId,
+          externalId: externalProductId,
+        },
+      },
+      select: { id: true, productId: true },
+    });
+
+    if (exactProduct) return exactProduct;
+
+    const matchedVariant = await this.prisma.externalProductVariant.findFirst({
+      where: {
+        externalProduct: { connectionId },
+        OR: [
+          { externalId: externalProductId },
+          { sku: externalProductId },
+          { barcode: externalProductId },
+        ],
+      },
+      select: {
+        externalProduct: { select: { id: true, productId: true } },
+      },
+    });
+
+    return matchedVariant?.externalProduct ?? null;
   }
 }
 

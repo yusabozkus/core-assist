@@ -12,6 +12,7 @@ import {
   StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
 import {
   QUESTION_SYNC_LOCK_TIMEOUT_MS,
   QUESTION_SYNC_QUEUE,
@@ -27,6 +28,7 @@ import type {
 export class QuestionSyncQueueService implements QuestionSyncDispatcher {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly providers: ProviderRegistryService,
     @InjectQueue(QUESTION_SYNC_QUEUE)
     private readonly queue: Queue<QuestionSyncJobData>,
   ) {}
@@ -39,6 +41,26 @@ export class QuestionSyncQueueService implements QuestionSyncDispatcher {
     const staleBefore = new Date(
       queuedAt.getTime() - QUESTION_SYNC_LOCK_TIMEOUT_MS,
     );
+    const connection = await this.prisma.channelConnection.findFirst({
+      where: {
+        id: connectionId,
+        storeId,
+        status: ChannelConnectionStatus.CONNECTED,
+        credentialsEncrypted: { not: null },
+        store: { status: StoreStatus.ACTIVE },
+      },
+      select: { providerKey: true },
+    });
+
+    if (
+      !connection ||
+      !this.providers.supportsProductQuestions(connection.providerKey)
+    ) {
+      throw new ConflictException(
+        'Bu bağlantı için ürün sorusu senkronizasyonu desteklenmiyor.',
+      );
+    }
+
     const lock = await this.prisma.channelConnection.updateMany({
       where: {
         id: connectionId,

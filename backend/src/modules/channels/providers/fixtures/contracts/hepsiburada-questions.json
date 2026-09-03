@@ -1,0 +1,18 @@
+[
+  {
+    "number": "HB-Q-1001",
+    "status": "Open",
+    "text": "M beden stokta mı?",
+    "productSku": "F6265AX25SM-M",
+    "createdDate": "2026-09-04T08:30:00.000Z",
+    "customerId": "HB-C-1",
+    "customerName": "Ayşe K."
+  },
+  {
+    "number": "HB-Q-1002",
+    "status": "Open",
+    "text": "Ürün regular kalıp mı?",
+    "productSku": "HBCV00009U88OT-S",
+    "createdDate": "2026-09-04T08:35:00.000Z"
+  }
+]

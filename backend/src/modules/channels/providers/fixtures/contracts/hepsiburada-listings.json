@@ -1,0 +1,55 @@
+{
+  "totalCount": 2,
+  "limit": 100,
+  "offset": 0,
+  "listings": [
+    {
+      "hepsiburadaSku": "HBCV00009U88OT-S",
+      "merchantSku": "F6265AX25SM-S",
+      "productId": "HBCV00009U88OT",
+      "productName": "Regular Fit Polo Yaka Bubble Kısa Kollu Tişört F6265AX25SM",
+      "brand": "DeFacto",
+      "categoryName": "T-Shirt",
+      "description": "Regular fit kesimli, kısa kollu erkek polo yaka tişört.",
+      "price": { "amount": 210, "currency": "TRY" },
+      "availableStock": 4,
+      "barcode": "8692200100001",
+      "attributes": {
+        "Cinsiyet": "Erkek",
+        "Renk": "Yeşil-GN654",
+        "Beden": "S",
+        "Kalıp": "Regular Fit"
+      },
+      "images": [
+        { "url": "https://productimages.hepsiburada.net/s/777/424-600/110001173018652.jpg" },
+        { "url": "https://productimages.hepsiburada.net/s/777/424-600/110001173018653.jpg" }
+      ],
+      "productUrl": "https://www.hepsiburada.com/defacto-regular-fit-polo-yaka-tisort-p-HBCV00009U88OT",
+      "lastModifiedDate": "2026-09-04T08:00:00.000Z"
+    },
+    {
+      "hepsiburadaSku": "HBCV00009U88OT-M",
+      "merchantSku": "F6265AX25SM-M",
+      "productId": "HBCV00009U88OT",
+      "productName": "Regular Fit Polo Yaka Bubble Kısa Kollu Tişört F6265AX25SM",
+      "brand": "DeFacto",
+      "categoryName": "T-Shirt",
+      "description": "Regular fit kesimli, kısa kollu erkek polo yaka tişört.",
+      "price": { "amount": 219.9, "currency": "TRY" },
+      "availableStock": 2,
+      "barcode": "8692200100002",
+      "attributes": {
+        "Cinsiyet": "Erkek",
+        "Renk": "Yeşil-GN654",
+        "Beden": "M",
+        "Kalıp": "Regular Fit"
+      },
+      "images": [
+        { "url": "https://productimages.hepsiburada.net/s/777/424-600/110001173018652.jpg" },
+        { "url": "https://productimages.hepsiburada.net/s/777/424-600/110001173018654.jpg" }
+      ],
+      "productUrl": "https://www.hepsiburada.com/defacto-regular-fit-polo-yaka-tisort-p-HBCV00009U88OT",
+      "lastModifiedDate": "2026-09-04T08:05:00.000Z"
+    }
+  ]
+}

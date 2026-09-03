@@ -1,0 +1,103 @@
+{
+  "totalElements": 1,
+  "totalPages": 1,
+  "page": 0,
+  "size": 100,
+  "nextPageToken": "approved-products-next-token",
+  "content": [
+    {
+      "contentId": 12715815,
+      "productMainId": "D1902AX25SM",
+      "brand": {
+        "id": 315675,
+        "name": "DeFacto"
+      },
+      "category": {
+        "id": 75,
+        "name": "Gömlek"
+      },
+      "creationDate": 1760531038063,
+      "lastModifiedDate": 1760938781669,
+      "title": "Regular Fit Yazlık Pamuklu Kısa Kollu Beyaz Gömlek D1902AX25SM",
+      "description": "Regular fit, kısa kollu ve pamuklu erkek gömlek.",
+      "images": [
+        {
+          "url": "/ty100/product/media/images/1.jpg"
+        },
+        {
+          "url": "https://cdn.dsmcdn.com/ty100/product/media/images/2.jpg"
+        }
+      ],
+      "attributes": [
+        {
+          "attributeId": 47,
+          "attributeName": "Renk",
+          "attributeValue": "Beyaz"
+        },
+        {
+          "attributeId": 296,
+          "attributeName": "Cinsiyet",
+          "attributeValue": "Erkek"
+        },
+        {
+          "attributeId": 14,
+          "attributeName": "Kalıp",
+          "attributeValue": "Regular"
+        }
+      ],
+      "variants": [
+        {
+          "variantId": 70228905,
+          "supplierId": 123456,
+          "barcode": "8683526124546",
+          "attributes": [
+            {
+              "attributeId": 293,
+              "attributeName": "Beden",
+              "attributeValue": "S"
+            }
+          ],
+          "productUrl": "https://www.trendyol.com/defacto/regular-fit-gomlek-p-12715815",
+          "onSale": true,
+          "stock": {
+            "quantity": 12,
+            "lastModifiedDate": 1774948958844
+          },
+          "price": {
+            "salePrice": 599.99,
+            "listPrice": 799.99,
+            "priceSeenByCustomer": 549.99
+          },
+          "stockCode": "D1902AX25SM",
+          "sellerCreatedDate": 1760534152000,
+          "sellerModifiedDate": 1761041127000
+        },
+        {
+          "variantId": 70229505,
+          "supplierId": 123456,
+          "barcode": "8683526124553",
+          "attributes": [
+            {
+              "attributeId": 293,
+              "attributeName": "Beden",
+              "attributeValue": "M"
+            }
+          ],
+          "productUrl": "https://www.trendyol.com/defacto/regular-fit-gomlek-p-12715815",
+          "onSale": false,
+          "stock": {
+            "quantity": 0,
+            "lastModifiedDate": 1774948959844
+          },
+          "price": {
+            "salePrice": 599.99,
+            "listPrice": 799.99
+          },
+          "stockCode": "D1902AX25SM",
+          "sellerCreatedDate": 1760534320000,
+          "sellerModifiedDate": 1761041128000
+        }
+      ]
+    }
+  ]
+}

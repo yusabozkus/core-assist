@@ -1,0 +1,17 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "..",
+  "testRegex": "test/.*\\.integration-spec\\.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^src/(.*)$": "<rootDir>/src/$1",
+    "^@nestjs/bullmq$": "<rootDir>/test/mocks/nest-bullmq.cjs"
+  },
+  "setupFiles": ["<rootDir>/test/test-database-env.cjs"],
+  "testEnvironment": "node",
+  "testTimeout": 30000,
+  "maxWorkers": 1
+}

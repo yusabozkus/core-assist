@@ -1,4 +1,4 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { IntegrationEnvironment } from '../../../generated/prisma/enums';
 import type {
   CatalogConnector,
@@ -32,20 +32,20 @@ export class HepsiburadaConnector
   readonly providerKey = 'hepsiburada';
 
   async verifyCredentials(context: ConnectorContext): Promise<void> {
-    await this.requestListings(context, '0', 1);
+    await this.requestListings(context, 0, 1);
   }
 
   async fetchProducts(
     context: ConnectorContext,
     cursor = '0',
   ): Promise<ProductBatch> {
-    const payload = await this.requestListings(context, cursor, 100);
+    const offset = parseOffsetCursor(cursor);
+    const payload = await this.requestListings(context, offset, 100);
     const listings = getListings(payload);
-    const offset = Number(cursor);
 
     return {
-      products: listings.map(normalizeHepsiburadaListing),
-      nextCursor: listings.length === 100 ? String(offset + 100) : undefined,
+      products: groupListings(listings).map(normalizeHepsiburadaListingGroup),
+      nextCursor: getNextOffset(payload, offset, 100, listings.length),
     };
   }
 
@@ -53,52 +53,146 @@ export class HepsiburadaConnector
     context: ConnectorContext,
     cursor = '0',
   ): Promise<InventoryBatch> {
-    const payload = await this.requestListings(context, cursor, 100);
+    const offset = parseOffsetCursor(cursor);
+    const payload = await this.requestListings(context, offset, 100);
     const listings = getListings(payload);
-    const offset = Number(cursor);
 
     return {
       variants: listings.map(normalizeHepsiburadaInventory),
-      nextCursor: listings.length === 100 ? String(offset + 100) : undefined,
+      nextCursor: getNextOffset(payload, offset, 100, listings.length),
     };
   }
 
-  fetchProductQuestions(): Promise<ProductQuestionBatch> {
-    throw new ServiceUnavailableException(
-      'Hepsiburada canlı ürün sorusu adaptörü henüz yapılandırılmadı.',
-    );
+  async fetchProductQuestions(
+    context: ConnectorContext,
+    options: { cursor?: string; createdAfter: Date },
+  ): Promise<ProductQuestionBatch> {
+    const page = parsePageCursor(options.cursor);
+    const endDate = new Date();
+    const startDate =
+      options.createdAfter > endDate ? endDate : options.createdAfter;
+    const payload = await this.requestQuestions(context, '', {
+      query: {
+        status: 'Open',
+        minCreatedAt: startDate.toISOString(),
+        maxCreatedAt: endDate.toISOString(),
+        page: String(page),
+        size: String(HEPSIBURADA_QUESTION_PAGE_SIZE),
+      },
+    });
+    const items = getQuestionItems(payload);
+
+    return {
+      questions: items.flatMap((item) => {
+        const question = normalizeHepsiburadaQuestion(item);
+        return question ? [question] : [];
+      }),
+      nextCursor: getNextQuestionPage(
+        payload,
+        page,
+        HEPSIBURADA_QUESTION_PAGE_SIZE,
+        items.length,
+      ),
+    };
   }
 
-  sendProductQuestionAnswer(): Promise<ProductQuestionAnswerResult> {
-    throw new ServiceUnavailableException(
-      'Hepsiburada canlı ürün sorusu yanıtlama adaptörü henüz yapılandırılmadı.',
+  async sendProductQuestionAnswer(
+    context: ConnectorContext,
+    externalQuestionId: string,
+    answer: string,
+  ): Promise<ProductQuestionAnswerResult> {
+    const normalizedAnswer = answer.trim();
+
+    if (!normalizedAnswer || normalizedAnswer.length > 2000) {
+      throw new BadRequestException(
+        'Hepsiburada cevapları 1 ile 2000 karakter arasında olmalıdır.',
+      );
+    }
+
+    const payload = await this.requestQuestions(
+      context,
+      `/${encodeURIComponent(externalQuestionId)}/answer`,
+      {
+        method: 'POST',
+        body: { answer: normalizedAnswer },
+      },
     );
+    const response = asRecord(payload);
+
+    return {
+      externalAnswerId: response
+        ? firstString(response, ['answerId', 'id', 'number'])
+        : undefined,
+      answeredAt: new Date(),
+    };
   }
 
   private async requestListings(
     context: ConnectorContext,
-    offset: string,
+    offset: number,
     limit: number,
   ) {
-    const { merchantId, developerUser, serviceKey } = context.credentials;
-    const host =
-      context.environment === IntegrationEnvironment.PRODUCTION
-        ? 'https://listing-external.hepsiburada.com'
-        : 'https://listing-external-sit.hepsiburada.com';
     const url = new URL(
-      `/listings/merchantid/${encodeURIComponent(merchantId)}`,
-      host,
+      `/listings/merchantid/${encodeURIComponent(context.credentials.merchantId)}`,
+      resolveListingBaseUrl(context),
     );
-    url.searchParams.set('offset', offset);
+    url.searchParams.set('offset', String(offset));
     url.searchParams.set('limit', String(limit));
+    const payload = await this.performRequest(context, url);
+    const record = asRecord(payload);
 
+    if (!record) {
+      throw new Error('Hepsiburada returned an invalid listing response.');
+    }
+
+    return record;
+  }
+
+  private requestQuestions(
+    context: ConnectorContext,
+    suffix: string,
+    options: {
+      method?: 'GET' | 'POST';
+      query?: Record<string, string>;
+      body?: Record<string, unknown>;
+    } = {},
+  ) {
+    const url = new URL(
+      `/api/v1.0/issues${suffix}`,
+      resolveQuestionBaseUrl(context),
+    );
+
+    Object.entries(options.query ?? {}).forEach(([key, value]) => {
+      url.searchParams.set(key, value);
+    });
+
+    return this.performRequest(context, url, {
+      method: options.method,
+      body: options.body,
+      headers: { merchantId: context.credentials.merchantId },
+    });
+  }
+
+  private async performRequest(
+    context: ConnectorContext,
+    url: URL,
+    options: {
+      method?: 'GET' | 'POST';
+      body?: Record<string, unknown>;
+      headers?: Record<string, string>;
+    } = {},
+  ): Promise<unknown> {
+    const { developerUser, serviceKey } = context.credentials;
     const response = await fetch(url, {
+      method: options.method ?? 'GET',
       headers: {
         Accept: 'application/json',
         Authorization: basicAuthorization(developerUser, serviceKey),
         'Content-Type': 'application/json',
         'User-Agent': 'CoreAssist',
+        ...options.headers,
       },
+      ...(options.body ? { body: JSON.stringify(options.body) } : {}),
       signal: AbortSignal.timeout(15_000),
     });
 
@@ -106,45 +200,67 @@ export class HepsiburadaConnector
       throw new Error(await readProviderError(response));
     }
 
-    const payload = asRecord(await response.json());
+    const body = await response.text();
+    if (!body) return undefined;
 
-    if (!payload) {
-      throw new Error('Hepsiburada returned an invalid listing response.');
+    try {
+      return JSON.parse(body) as unknown;
+    } catch {
+      return body;
     }
-
-    return payload;
   }
 }
 
+const HEPSIBURADA_QUESTION_PAGE_SIZE = 50;
+
+function resolveListingBaseUrl(context: ConnectorContext) {
+  return context.environment === IntegrationEnvironment.PRODUCTION
+    ? 'https://listing-external.hepsiburada.com'
+    : 'https://listing-external-sit.hepsiburada.com';
+}
+
+function resolveQuestionBaseUrl(context: ConnectorContext) {
+  return context.environment === IntegrationEnvironment.PRODUCTION
+    ? 'https://api-asktoseller-merchant.hepsiburada.com'
+    : 'https://api-asktoseller-merchant-sit.hepsiburada.com';
+}
+
 function getListings(payload: Record<string, unknown>) {
+  const data = asRecord(payload.data);
   return asRecordArray(
-    payload.listings ?? payload.items ?? payload.content ?? payload.data,
+    payload.listings ??
+      payload.items ??
+      payload.content ??
+      data?.listings ??
+      data?.items ??
+      payload.data,
   );
 }
 
-function normalizeHepsiburadaListing(
-  item: Record<string, unknown>,
+function groupListings(listings: Record<string, unknown>[]) {
+  const groups = new Map<string, Record<string, unknown>[]>();
+
+  for (const listing of listings) {
+    const externalProductId = getExternalProductId(listing);
+    const group = groups.get(externalProductId) ?? [];
+    group.push(listing);
+    groups.set(externalProductId, group);
+  }
+
+  return [...groups.values()];
+}
+
+function normalizeHepsiburadaListingGroup(
+  items: Record<string, unknown>[],
 ): NormalizedProduct {
+  const item = items[0];
   const externalUrl = firstString(item, ['productUrl', 'url']);
-  const sku =
-    firstString(item, ['merchantSku', 'sku', 'hbSku', 'barcode']) ??
-    `HB-${firstString(item, ['id', 'productId']) ?? 'UNKNOWN'}`;
-  const attributesRecord = asRecord(item.attributes);
-  const attributes = attributesRecord
-    ? Object.entries(attributesRecord)
-        .filter((entry): entry is [string, string] =>
-          ['string', 'number', 'boolean'].includes(typeof entry[1]),
-        )
-        .map(([name, value]) => ({ name, value: String(value) }))
-    : [];
-  const imageRecords = asRecordArray(item.images);
-  const images = imageRecords
-    .map((image) => firstString(image, ['url', 'imageUrl']))
-    .filter((url): url is string => Boolean(url));
+  const attributes = normalizeAttributes(item.attributes);
+  const images = [...new Set(items.flatMap(normalizeImages))];
   const title =
     firstString(item, ['title', 'name', 'productName']) ??
     'İsimsiz Hepsiburada ürünü';
-  const category = firstString(item, ['categoryName', 'category']);
+  const category = readNamedValue(item.category, item.categoryName);
   const sizeGuide =
     createNormalizedSizeGuide(item, externalUrl) ??
     (isMenClothing(title, category, attributes)
@@ -152,46 +268,47 @@ function normalizeHepsiburadaListing(
       : undefined);
 
   return {
-    externalId:
-      firstString(item, ['listingId', 'id', 'hbSku', 'productId']) ?? sku,
+    externalId: getExternalProductId(item),
     externalUrl,
     title,
     description: firstString(item, ['description']),
-    brand: firstString(item, ['brand', 'brandName']),
+    brand: readNamedValue(item.brand, item.brandName),
     category,
     attributes,
     images,
     sizeGuide,
-    variants: [
-      {
-        externalId:
-          firstString(item, ['listingId', 'id', 'hbSku', 'merchantSku']) ?? sku,
-        title: firstString(item, ['variantName', 'listingName']),
-        sku,
-        barcode: firstString(item, ['barcode']),
-        color: firstString(item, ['color', 'colour']),
-        size: firstString(item, ['size']),
-        price: firstNumber(item, ['price', 'salePrice']),
-        currency: firstString(item, ['currency', 'currencyType']) ?? 'TRY',
-        stock: Math.max(
-          0,
-          Math.trunc(
-            firstNumber(item, ['availableStock', 'stock', 'quantity']),
-          ),
-        ),
-        sourceUpdatedAt: firstDate(item, [
-          'lastModifiedDate',
-          'updatedAt',
-          'lastUpdateDate',
-        ]),
-      },
-    ],
+    variants: items.map(normalizeHepsiburadaVariant),
+    sourceUpdatedAt: latestDate(items),
+    rawPayload: { listings: items },
+  };
+}
+
+function normalizeHepsiburadaVariant(item: Record<string, unknown>) {
+  const attributes = normalizeAttributes(item.attributes);
+  const sku = getMerchantSku(item);
+
+  return {
+    externalId: getExternalVariantId(item),
+    title: firstString(item, ['variantName', 'listingName', 'productName']),
+    sku,
+    barcode: firstString(item, ['barcode', 'ean']),
+    color:
+      firstString(item, ['color', 'colour']) ??
+      findAttribute(attributes, ['renk', 'color', 'colour']),
+    size:
+      firstString(item, ['size']) ??
+      findAttribute(attributes, ['beden', 'size']),
+    price: readMoney(item, ['price', 'salePrice']),
+    currency: readCurrency(item) ?? 'TRY',
+    stock: Math.max(
+      0,
+      Math.trunc(firstNumber(item, ['availableStock', 'stock', 'quantity'])),
+    ),
     sourceUpdatedAt: firstDate(item, [
       'lastModifiedDate',
       'updatedAt',
       'lastUpdateDate',
     ]),
-    rawPayload: item,
   };
 }
 
@@ -444,11 +561,6 @@ function toStringArray(value: unknown) {
 function normalizeHepsiburadaInventory(
   item: Record<string, unknown>,
 ): NormalizedInventoryVariant {
-  const sku =
-    firstString(item, ['merchantSku', 'sku', 'hbSku', 'barcode']) ??
-    `HB-${firstString(item, ['id', 'productId']) ?? 'UNKNOWN'}`;
-  const externalProductId =
-    firstString(item, ['listingId', 'id', 'hbSku', 'productId']) ?? sku;
   const stock = firstOptionalNumber(item, [
     'availableStock',
     'stock',
@@ -456,13 +568,12 @@ function normalizeHepsiburadaInventory(
   ]);
 
   return {
-    externalProductId,
-    externalVariantId:
-      firstString(item, ['listingId', 'id', 'hbSku', 'merchantSku']) ?? sku,
-    sku,
-    barcode: firstString(item, ['barcode']),
-    price: firstOptionalNumber(item, ['price', 'salePrice']),
-    currency: firstString(item, ['currency', 'currencyType']),
+    externalProductId: getExternalProductId(item),
+    externalVariantId: getExternalVariantId(item),
+    sku: getMerchantSku(item),
+    barcode: firstString(item, ['barcode', 'ean']),
+    price: readOptionalMoney(item, ['price', 'salePrice']),
+    currency: readCurrency(item),
     stock: stock === undefined ? undefined : Math.max(0, Math.trunc(stock)),
     sourceUpdatedAt: firstDate(item, [
       'lastModifiedDate',
@@ -470,4 +581,290 @@ function normalizeHepsiburadaInventory(
       'lastUpdateDate',
     ]),
   };
+}
+
+function parseOffsetCursor(cursor: string) {
+  const offset = Number(cursor);
+
+  if (!Number.isInteger(offset) || offset < 0) {
+    throw new BadRequestException('Hepsiburada sayfalama anahtarı geçersiz.');
+  }
+
+  return offset;
+}
+
+function parsePageCursor(cursor: string | undefined) {
+  if (cursor === undefined) return 0;
+  const page = Number(cursor);
+
+  if (!Number.isInteger(page) || page < 0) {
+    throw new BadRequestException(
+      'Hepsiburada soru sayfalama anahtarı geçersiz.',
+    );
+  }
+
+  return page;
+}
+
+function getNextOffset(
+  payload: Record<string, unknown>,
+  offset: number,
+  limit: number,
+  itemCount: number,
+) {
+  const totalCount = firstOptionalNumber(payload, [
+    'totalCount',
+    'totalElements',
+    'count',
+  ]);
+  const nextOffset = offset + itemCount;
+
+  if (totalCount !== undefined) {
+    return nextOffset < totalCount ? String(nextOffset) : undefined;
+  }
+
+  return itemCount === limit ? String(offset + limit) : undefined;
+}
+
+function getQuestionItems(payload: unknown) {
+  if (Array.isArray(payload)) return asRecordArray(payload);
+  const record = asRecord(payload);
+  if (!record) return [];
+  const data = asRecord(record.data);
+
+  return asRecordArray(
+    record.items ??
+      record.issues ??
+      record.content ??
+      data?.items ??
+      data?.issues ??
+      record.data,
+  );
+}
+
+function getNextQuestionPage(
+  payload: unknown,
+  page: number,
+  size: number,
+  itemCount: number,
+) {
+  const record = asRecord(payload);
+  const data = record ? asRecord(record.data) : null;
+  const metadata = data ?? record;
+  const totalPages = metadata
+    ? firstOptionalNumber(metadata, ['totalPages', 'pageCount'])
+    : undefined;
+
+  if (totalPages !== undefined) {
+    return page + 1 < totalPages ? String(page + 1) : undefined;
+  }
+
+  const totalCount = metadata
+    ? firstOptionalNumber(metadata, ['totalCount', 'totalElements', 'count'])
+    : undefined;
+
+  if (totalCount !== undefined) {
+    return (page + 1) * size < totalCount ? String(page + 1) : undefined;
+  }
+
+  return itemCount === size ? String(page + 1) : undefined;
+}
+
+function normalizeHepsiburadaQuestion(item: Record<string, unknown>) {
+  const product = asRecord(item.product);
+  const externalId = firstString(item, ['number', 'id', 'issueNumber']);
+  const externalProductId =
+    firstString(item, [
+      'productSku',
+      'merchantSku',
+      'hepsiburadaSku',
+      'hbSku',
+      'productId',
+    ]) ??
+    (product
+      ? firstString(product, [
+          'productSku',
+          'merchantSku',
+          'hepsiburadaSku',
+          'hbSku',
+          'productId',
+          'id',
+        ])
+      : undefined);
+  const text = firstString(item, ['text', 'question', 'issueText']);
+  const createdAt = firstDate(item, [
+    'createdDate',
+    'createdAt',
+    'creationDate',
+  ]);
+
+  if (!externalId || !externalProductId || !text || !createdAt) {
+    return undefined;
+  }
+
+  return {
+    externalId,
+    externalProductId,
+    externalCustomerId: firstString(item, [
+      'customerId',
+      'userId',
+      'customerNumber',
+    ]),
+    customerName: firstString(item, [
+      'customerName',
+      'userName',
+      'displayName',
+    ]),
+    text,
+    createdAt,
+    rawPayload: item,
+  };
+}
+
+function getExternalProductId(item: Record<string, unknown>) {
+  return (
+    firstString(item, [
+      'productId',
+      'variantGroupId',
+      'variantGroupID',
+      'listingGroupId',
+      'hepsiburadaSku',
+      'hbSku',
+      'listingId',
+      'id',
+      'merchantSku',
+    ]) ?? 'HB-UNKNOWN'
+  );
+}
+
+function getExternalVariantId(item: Record<string, unknown>) {
+  return (
+    firstString(item, [
+      'hepsiburadaSku',
+      'hbSku',
+      'listingId',
+      'id',
+      'merchantSku',
+      'sku',
+      'barcode',
+    ]) ?? getMerchantSku(item)
+  );
+}
+
+function getMerchantSku(item: Record<string, unknown>) {
+  return (
+    firstString(item, [
+      'merchantSku',
+      'sku',
+      'hepsiburadaSku',
+      'hbSku',
+      'barcode',
+    ]) ?? `HB-${firstString(item, ['id', 'productId']) ?? 'UNKNOWN'}`
+  );
+}
+
+function normalizeAttributes(value: unknown) {
+  const record = asRecord(value);
+
+  if (record) {
+    return Object.entries(record).flatMap(([name, rawValue]) => {
+      const nested = asRecord(rawValue);
+      const normalizedValue =
+        typeof rawValue === 'string' ||
+        typeof rawValue === 'number' ||
+        typeof rawValue === 'boolean'
+          ? String(rawValue)
+          : nested
+            ? firstString(nested, ['value', 'name', 'label'])
+            : undefined;
+      return normalizedValue ? [{ name, value: normalizedValue }] : [];
+    });
+  }
+
+  return asRecordArray(value).flatMap((attribute) => {
+    const name = firstString(attribute, ['name', 'key', 'label']);
+    const attributeValue = firstString(attribute, ['value', 'displayValue']);
+    return name && attributeValue ? [{ name, value: attributeValue }] : [];
+  });
+}
+
+function normalizeImages(item: Record<string, unknown>) {
+  const fromArray = Array.isArray(item.images)
+    ? item.images.flatMap((image) => {
+        if (typeof image === 'string' && image.trim()) return [image.trim()];
+        const record = asRecord(image);
+        const url = record
+          ? firstString(record, ['url', 'imageUrl', 'link'])
+          : undefined;
+        return url ? [url] : [];
+      })
+    : [];
+  const numbered = Object.entries(item).flatMap(([key, value]) =>
+    /^image\d+$/i.test(key) && typeof value === 'string' && value.trim()
+      ? [value.trim()]
+      : [],
+  );
+  const primary = firstString(item, ['imageUrl', 'image']);
+
+  return [...fromArray, ...numbered, ...(primary ? [primary] : [])];
+}
+
+function findAttribute(
+  attributes: Array<{ name: string; value: string }>,
+  names: string[],
+) {
+  return attributes.find((attribute) =>
+    names.includes(attribute.name.toLocaleLowerCase('tr-TR')),
+  )?.value;
+}
+
+function readNamedValue(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) return value.trim();
+    const record = asRecord(value);
+    if (record) {
+      const text = firstString(record, ['name', 'value', 'label']);
+      if (text) return text;
+    }
+  }
+
+  return undefined;
+}
+
+function readOptionalMoney(item: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = item[key];
+    const record = asRecord(value);
+    if (record) {
+      const amount = firstOptionalNumber(record, ['amount', 'value']);
+      if (amount !== undefined) return amount;
+    }
+  }
+
+  return firstOptionalNumber(item, keys);
+}
+
+function readMoney(item: Record<string, unknown>, keys: string[]) {
+  return readOptionalMoney(item, keys) ?? 0;
+}
+
+function readCurrency(item: Record<string, unknown>) {
+  for (const key of ['price', 'salePrice']) {
+    const record = asRecord(item[key]);
+    if (record) {
+      const currency = firstString(record, ['currency', 'currencyType']);
+      if (currency) return currency;
+    }
+  }
+
+  return firstString(item, ['currency', 'currencyType']);
+}
+
+function latestDate(items: Record<string, unknown>[]) {
+  return items
+    .map((item) =>
+      firstDate(item, ['lastModifiedDate', 'updatedAt', 'lastUpdateDate']),
+    )
+    .filter((date): date is Date => Boolean(date))
+    .sort((left, right) => right.getTime() - left.getTime())[0];
 }

@@ -74,7 +74,7 @@ export class QuestionAnswerWorkerService {
         where: { id: delivery.id },
         data: {
           status: QuestionAnswerStatus.SENT,
-          externalAnswerId: result.externalAnswerId,
+          externalAnswerId: result.externalAnswerId ?? null,
           sentAt: result.answeredAt,
           processingStartedAt: null,
           lastError: null,

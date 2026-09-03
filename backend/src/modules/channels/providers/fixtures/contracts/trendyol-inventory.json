@@ -1,0 +1,40 @@
+{
+  "totalElements": 1,
+  "totalPages": 1,
+  "page": 0,
+  "size": 100,
+  "content": [
+    {
+      "contentId": 12715815,
+      "productMainId": "D1902AX25SM",
+      "variants": [
+        {
+          "variantId": 70228905,
+          "barcode": "8683526124546",
+          "stockCode": "D1902AX25SM",
+          "stock": {
+            "quantity": 8,
+            "lastModifiedDate": 1774949958844
+          },
+          "price": {
+            "salePrice": 579.99,
+            "listPrice": 799.99
+          }
+        },
+        {
+          "variantId": 70229505,
+          "barcode": "8683526124553",
+          "stockCode": "D1902AX25SM",
+          "stock": {
+            "quantity": 2,
+            "lastModifiedDate": 1774949959844
+          },
+          "price": {
+            "salePrice": 579.99,
+            "listPrice": 799.99
+          }
+        }
+      ]
+    }
+  ]
+}

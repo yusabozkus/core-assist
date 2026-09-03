@@ -1,0 +1,36 @@
+{
+  "content": [
+    {
+      "creationDate": 1788424200000,
+      "customerId": 99112233,
+      "id": 44001122,
+      "imageUrl": "https://cdn.dsmcdn.com/ty100/product/media/images/1.jpg",
+      "productName": "Regular Fit Yazlık Pamuklu Kısa Kollu Beyaz Gömlek",
+      "productMainId": "D1902AX25SM",
+      "public": true,
+      "showUserName": true,
+      "status": "WAITING_FOR_ANSWER",
+      "text": "Ürün regular kalıp mı?",
+      "userName": "Mehmet T.",
+      "webUrl": "https://www.trendyol.com/defacto/regular-fit-gomlek-p-12715815"
+    },
+    {
+      "creationDate": 1788427800000,
+      "customerId": 99112234,
+      "id": 44001123,
+      "imageUrl": "https://cdn.dsmcdn.com/ty100/product/media/images/1.jpg",
+      "productName": "Regular Fit Yazlık Pamuklu Kısa Kollu Beyaz Gömlek",
+      "productMainId": "D1902AX25SM",
+      "public": true,
+      "showUserName": false,
+      "status": "WAITING_FOR_ANSWER",
+      "text": "M beden stokta var mı?",
+      "userName": "Gizli Kullanıcı",
+      "webUrl": "https://www.trendyol.com/defacto/regular-fit-gomlek-p-12715815"
+    }
+  ],
+  "page": 0,
+  "size": 2,
+  "totalElements": 4,
+  "totalPages": 2
+}

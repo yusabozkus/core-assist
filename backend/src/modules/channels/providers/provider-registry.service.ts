@@ -24,9 +24,10 @@ export class ProviderRegistryService {
   private readonly manifests = new Map(
     PROVIDER_MANIFESTS.map((manifest) => [manifest.key, manifest]),
   );
-  private readonly liveConnectors: Map<
+  private readonly liveCatalogConnectors: Map<string, CatalogConnector>;
+  private readonly liveQuestionConnectors: Map<
     string,
-    CatalogConnector & ProductQuestionConnector
+    ProductQuestionConnector
   >;
   private readonly catalogMode: 'mock' | 'live';
   private readonly questionMode: 'mock' | 'live';
@@ -37,10 +38,11 @@ export class ProviderRegistryService {
     private readonly mockConnector: MockCatalogConnector,
     private readonly mockQuestionConnector: MockQuestionConnector,
   ) {
-    this.liveConnectors = new Map<
-      string,
-      CatalogConnector & ProductQuestionConnector
-    >([
+    this.liveCatalogConnectors = new Map<string, CatalogConnector>([
+      [trendyolConnector.providerKey, trendyolConnector],
+      [hepsiburadaConnector.providerKey, hepsiburadaConnector],
+    ]);
+    this.liveQuestionConnectors = new Map<string, ProductQuestionConnector>([
       [trendyolConnector.providerKey, trendyolConnector],
       [hepsiburadaConnector.providerKey, hepsiburadaConnector],
     ]);
@@ -52,7 +54,23 @@ export class ProviderRegistryService {
   }
 
   getAvailableProviders(): ProviderManifest[] {
-    return [...this.manifests.values()];
+    return [...this.manifests.values()].map((manifest) => ({
+      ...manifest,
+      capabilities: manifest.capabilities.filter(
+        (capability) =>
+          (capability !== 'PRODUCT_QNA_READ' &&
+            capability !== 'PRODUCT_QNA_REPLY') ||
+          this.supportsProductQuestions(manifest.key),
+      ),
+    }));
+  }
+
+  supportsProductQuestions(providerKey: string) {
+    return (
+      this.manifests.has(providerKey) &&
+      (this.questionMode === 'mock' ||
+        this.liveQuestionConnectors.has(providerKey))
+    );
   }
 
   getManifest(providerKey: string): ProviderManifest {
@@ -102,7 +120,7 @@ export class ProviderRegistryService {
       );
     }
 
-    return this.getLiveConnector(providerKey).verifyCredentials(context);
+    return this.getLiveCatalogConnector(providerKey).verifyCredentials(context);
   }
 
   async fetchProducts(
@@ -114,7 +132,10 @@ export class ProviderRegistryService {
       return this.mockConnector.fetchProducts(providerKey, context);
     }
 
-    return this.getLiveConnector(providerKey).fetchProducts(context, cursor);
+    return this.getLiveCatalogConnector(providerKey).fetchProducts(
+      context,
+      cursor,
+    );
   }
 
   async fetchInventory(
@@ -126,7 +147,10 @@ export class ProviderRegistryService {
       return this.mockConnector.fetchInventory(providerKey, context);
     }
 
-    return this.getLiveConnector(providerKey).fetchInventory(context, cursor);
+    return this.getLiveCatalogConnector(providerKey).fetchInventory(
+      context,
+      cursor,
+    );
   }
 
   async fetchProductQuestions(
@@ -142,7 +166,7 @@ export class ProviderRegistryService {
       );
     }
 
-    return this.getLiveConnector(providerKey).fetchProductQuestions(
+    return this.getLiveQuestionConnector(providerKey).fetchProductQuestions(
       context,
       options,
     );
@@ -163,19 +187,31 @@ export class ProviderRegistryService {
       );
     }
 
-    return this.getLiveConnector(providerKey).sendProductQuestionAnswer(
+    return this.getLiveQuestionConnector(providerKey).sendProductQuestionAnswer(
       context,
       externalQuestionId,
       answer,
     );
   }
 
-  private getLiveConnector(providerKey: string) {
-    const connector = this.liveConnectors.get(providerKey);
+  private getLiveCatalogConnector(providerKey: string) {
+    const connector = this.liveCatalogConnectors.get(providerKey);
 
     if (!connector) {
       throw new BadRequestException(
         'Bu sağlayıcı için canlı katalog adaptörü bulunmuyor.',
+      );
+    }
+
+    return connector;
+  }
+
+  private getLiveQuestionConnector(providerKey: string) {
+    const connector = this.liveQuestionConnectors.get(providerKey);
+
+    if (!connector) {
+      throw new BadRequestException(
+        'Bu sağlayıcı için canlı ürün sorusu adaptörü bulunmuyor.',
       );
     }
 

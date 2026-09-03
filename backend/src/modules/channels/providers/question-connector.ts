@@ -19,7 +19,7 @@ export type ProductQuestionBatch = {
 };
 
 export type ProductQuestionAnswerResult = {
-  externalAnswerId: string;
+  externalAnswerId?: string;
   answeredAt: Date;
 };
 
