@@ -3,12 +3,24 @@ export type QuestionAnswerJobData = {
   answerId: string;
 };
 
-export type QueueQuestionAnswerInput = {
+type QueueManualQuestionAnswerInput = {
   storeId: string;
   questionId: string;
   requestedByUserId: string;
+  origin?: 'MANUAL';
   answer: string;
 };
+
+type QueueAutomatedQuestionAnswerInput = {
+  storeId: string;
+  questionId: string;
+  requestedByUserId?: never;
+  origin: 'AUTOMATION';
+  answer: string;
+};
+
+export type QueueQuestionAnswerInput =
+  QueueManualQuestionAnswerInput | QueueAutomatedQuestionAnswerInput;
 
 export type QueuedQuestionAnswer = {
   id: string;

@@ -38,6 +38,7 @@ export type StoreKnowledgeProfileMinAggregateOutputType = {
   closingEnabled: boolean | null
   emojiPolicy: $Enums.AiEmojiPolicy | null
   preferredEmoji: string | null
+  automationMode: $Enums.AiAutomationMode | null
   emojiEnabled: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -57,6 +58,7 @@ export type StoreKnowledgeProfileMaxAggregateOutputType = {
   closingEnabled: boolean | null
   emojiPolicy: $Enums.AiEmojiPolicy | null
   preferredEmoji: string | null
+  automationMode: $Enums.AiAutomationMode | null
   emojiEnabled: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -76,6 +78,7 @@ export type StoreKnowledgeProfileCountAggregateOutputType = {
   closingEnabled: number
   emojiPolicy: number
   preferredEmoji: number
+  automationMode: number
   emojiEnabled: number
   createdAt: number
   updatedAt: number
@@ -97,6 +100,7 @@ export type StoreKnowledgeProfileMinAggregateInputType = {
   closingEnabled?: true
   emojiPolicy?: true
   preferredEmoji?: true
+  automationMode?: true
   emojiEnabled?: true
   createdAt?: true
   updatedAt?: true
@@ -116,6 +120,7 @@ export type StoreKnowledgeProfileMaxAggregateInputType = {
   closingEnabled?: true
   emojiPolicy?: true
   preferredEmoji?: true
+  automationMode?: true
   emojiEnabled?: true
   createdAt?: true
   updatedAt?: true
@@ -135,6 +140,7 @@ export type StoreKnowledgeProfileCountAggregateInputType = {
   closingEnabled?: true
   emojiPolicy?: true
   preferredEmoji?: true
+  automationMode?: true
   emojiEnabled?: true
   createdAt?: true
   updatedAt?: true
@@ -227,6 +233,7 @@ export type StoreKnowledgeProfileGroupByOutputType = {
   closingEnabled: boolean
   emojiPolicy: $Enums.AiEmojiPolicy
   preferredEmoji: string | null
+  automationMode: $Enums.AiAutomationMode
   emojiEnabled: boolean
   createdAt: Date
   updatedAt: Date
@@ -267,6 +274,7 @@ export type StoreKnowledgeProfileWhereInput = {
   closingEnabled?: Prisma.BoolFilter<"StoreKnowledgeProfile"> | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFilter<"StoreKnowledgeProfile"> | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.StringNullableFilter<"StoreKnowledgeProfile"> | string | null
+  automationMode?: Prisma.EnumAiAutomationModeFilter<"StoreKnowledgeProfile"> | $Enums.AiAutomationMode
   emojiEnabled?: Prisma.BoolFilter<"StoreKnowledgeProfile"> | boolean
   createdAt?: Prisma.DateTimeFilter<"StoreKnowledgeProfile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StoreKnowledgeProfile"> | Date | string
@@ -287,6 +295,7 @@ export type StoreKnowledgeProfileOrderByWithRelationInput = {
   closingEnabled?: Prisma.SortOrder
   emojiPolicy?: Prisma.SortOrder
   preferredEmoji?: Prisma.SortOrderInput | Prisma.SortOrder
+  automationMode?: Prisma.SortOrder
   emojiEnabled?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -310,6 +319,7 @@ export type StoreKnowledgeProfileWhereUniqueInput = Prisma.AtLeast<{
   closingEnabled?: Prisma.BoolFilter<"StoreKnowledgeProfile"> | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFilter<"StoreKnowledgeProfile"> | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.StringNullableFilter<"StoreKnowledgeProfile"> | string | null
+  automationMode?: Prisma.EnumAiAutomationModeFilter<"StoreKnowledgeProfile"> | $Enums.AiAutomationMode
   emojiEnabled?: Prisma.BoolFilter<"StoreKnowledgeProfile"> | boolean
   createdAt?: Prisma.DateTimeFilter<"StoreKnowledgeProfile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StoreKnowledgeProfile"> | Date | string
@@ -330,6 +340,7 @@ export type StoreKnowledgeProfileOrderByWithAggregationInput = {
   closingEnabled?: Prisma.SortOrder
   emojiPolicy?: Prisma.SortOrder
   preferredEmoji?: Prisma.SortOrderInput | Prisma.SortOrder
+  automationMode?: Prisma.SortOrder
   emojiEnabled?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -355,6 +366,7 @@ export type StoreKnowledgeProfileScalarWhereWithAggregatesInput = {
   closingEnabled?: Prisma.BoolWithAggregatesFilter<"StoreKnowledgeProfile"> | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyWithAggregatesFilter<"StoreKnowledgeProfile"> | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.StringNullableWithAggregatesFilter<"StoreKnowledgeProfile"> | string | null
+  automationMode?: Prisma.EnumAiAutomationModeWithAggregatesFilter<"StoreKnowledgeProfile"> | $Enums.AiAutomationMode
   emojiEnabled?: Prisma.BoolWithAggregatesFilter<"StoreKnowledgeProfile"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"StoreKnowledgeProfile"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"StoreKnowledgeProfile"> | Date | string
@@ -373,6 +385,7 @@ export type StoreKnowledgeProfileCreateInput = {
   closingEnabled?: boolean
   emojiPolicy?: $Enums.AiEmojiPolicy
   preferredEmoji?: string | null
+  automationMode?: $Enums.AiAutomationMode
   emojiEnabled?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -393,6 +406,7 @@ export type StoreKnowledgeProfileUncheckedCreateInput = {
   closingEnabled?: boolean
   emojiPolicy?: $Enums.AiEmojiPolicy
   preferredEmoji?: string | null
+  automationMode?: $Enums.AiAutomationMode
   emojiEnabled?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -411,6 +425,7 @@ export type StoreKnowledgeProfileUpdateInput = {
   closingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFieldUpdateOperationsInput | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
   emojiEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -431,6 +446,7 @@ export type StoreKnowledgeProfileUncheckedUpdateInput = {
   closingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFieldUpdateOperationsInput | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
   emojiEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -450,6 +466,7 @@ export type StoreKnowledgeProfileCreateManyInput = {
   closingEnabled?: boolean
   emojiPolicy?: $Enums.AiEmojiPolicy
   preferredEmoji?: string | null
+  automationMode?: $Enums.AiAutomationMode
   emojiEnabled?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -468,6 +485,7 @@ export type StoreKnowledgeProfileUpdateManyMutationInput = {
   closingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFieldUpdateOperationsInput | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
   emojiEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -487,6 +505,7 @@ export type StoreKnowledgeProfileUncheckedUpdateManyInput = {
   closingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFieldUpdateOperationsInput | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
   emojiEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -511,6 +530,7 @@ export type StoreKnowledgeProfileCountOrderByAggregateInput = {
   closingEnabled?: Prisma.SortOrder
   emojiPolicy?: Prisma.SortOrder
   preferredEmoji?: Prisma.SortOrder
+  automationMode?: Prisma.SortOrder
   emojiEnabled?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -530,6 +550,7 @@ export type StoreKnowledgeProfileMaxOrderByAggregateInput = {
   closingEnabled?: Prisma.SortOrder
   emojiPolicy?: Prisma.SortOrder
   preferredEmoji?: Prisma.SortOrder
+  automationMode?: Prisma.SortOrder
   emojiEnabled?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -549,6 +570,7 @@ export type StoreKnowledgeProfileMinOrderByAggregateInput = {
   closingEnabled?: Prisma.SortOrder
   emojiPolicy?: Prisma.SortOrder
   preferredEmoji?: Prisma.SortOrder
+  automationMode?: Prisma.SortOrder
   emojiEnabled?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -598,6 +620,10 @@ export type EnumAiEmojiPolicyFieldUpdateOperationsInput = {
   set?: $Enums.AiEmojiPolicy
 }
 
+export type EnumAiAutomationModeFieldUpdateOperationsInput = {
+  set?: $Enums.AiAutomationMode
+}
+
 export type StoreKnowledgeProfileCreateWithoutStoreInput = {
   brandDescription?: string | null
   shippingPolicy?: string | null
@@ -611,6 +637,7 @@ export type StoreKnowledgeProfileCreateWithoutStoreInput = {
   closingEnabled?: boolean
   emojiPolicy?: $Enums.AiEmojiPolicy
   preferredEmoji?: string | null
+  automationMode?: $Enums.AiAutomationMode
   emojiEnabled?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -629,6 +656,7 @@ export type StoreKnowledgeProfileUncheckedCreateWithoutStoreInput = {
   closingEnabled?: boolean
   emojiPolicy?: $Enums.AiEmojiPolicy
   preferredEmoji?: string | null
+  automationMode?: $Enums.AiAutomationMode
   emojiEnabled?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -663,6 +691,7 @@ export type StoreKnowledgeProfileUpdateWithoutStoreInput = {
   closingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFieldUpdateOperationsInput | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
   emojiEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -681,6 +710,7 @@ export type StoreKnowledgeProfileUncheckedUpdateWithoutStoreInput = {
   closingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFieldUpdateOperationsInput | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
   emojiEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -702,6 +732,7 @@ export type StoreKnowledgeProfileSelect<ExtArgs extends runtime.Types.Extensions
   closingEnabled?: boolean
   emojiPolicy?: boolean
   preferredEmoji?: boolean
+  automationMode?: boolean
   emojiEnabled?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -722,6 +753,7 @@ export type StoreKnowledgeProfileSelectCreateManyAndReturn<ExtArgs extends runti
   closingEnabled?: boolean
   emojiPolicy?: boolean
   preferredEmoji?: boolean
+  automationMode?: boolean
   emojiEnabled?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -742,6 +774,7 @@ export type StoreKnowledgeProfileSelectUpdateManyAndReturn<ExtArgs extends runti
   closingEnabled?: boolean
   emojiPolicy?: boolean
   preferredEmoji?: boolean
+  automationMode?: boolean
   emojiEnabled?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -762,12 +795,13 @@ export type StoreKnowledgeProfileSelectScalar = {
   closingEnabled?: boolean
   emojiPolicy?: boolean
   preferredEmoji?: boolean
+  automationMode?: boolean
   emojiEnabled?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type StoreKnowledgeProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"storeId" | "brandDescription" | "shippingPolicy" | "returnPolicy" | "exchangePolicy" | "warrantyPolicy" | "additionalInformation" | "tone" | "responseLength" | "greetingEnabled" | "closingEnabled" | "emojiPolicy" | "preferredEmoji" | "emojiEnabled" | "createdAt" | "updatedAt", ExtArgs["result"]["storeKnowledgeProfile"]>
+export type StoreKnowledgeProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"storeId" | "brandDescription" | "shippingPolicy" | "returnPolicy" | "exchangePolicy" | "warrantyPolicy" | "additionalInformation" | "tone" | "responseLength" | "greetingEnabled" | "closingEnabled" | "emojiPolicy" | "preferredEmoji" | "automationMode" | "emojiEnabled" | "createdAt" | "updatedAt", ExtArgs["result"]["storeKnowledgeProfile"]>
 export type StoreKnowledgeProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
 }
@@ -797,6 +831,7 @@ export type $StoreKnowledgeProfilePayload<ExtArgs extends runtime.Types.Extensio
     closingEnabled: boolean
     emojiPolicy: $Enums.AiEmojiPolicy
     preferredEmoji: string | null
+    automationMode: $Enums.AiAutomationMode
     emojiEnabled: boolean
     createdAt: Date
     updatedAt: Date
@@ -1237,6 +1272,7 @@ export interface StoreKnowledgeProfileFieldRefs {
   readonly closingEnabled: Prisma.FieldRef<"StoreKnowledgeProfile", 'Boolean'>
   readonly emojiPolicy: Prisma.FieldRef<"StoreKnowledgeProfile", 'AiEmojiPolicy'>
   readonly preferredEmoji: Prisma.FieldRef<"StoreKnowledgeProfile", 'String'>
+  readonly automationMode: Prisma.FieldRef<"StoreKnowledgeProfile", 'AiAutomationMode'>
   readonly emojiEnabled: Prisma.FieldRef<"StoreKnowledgeProfile", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"StoreKnowledgeProfile", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"StoreKnowledgeProfile", 'DateTime'>

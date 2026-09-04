@@ -76,6 +76,10 @@ export class QuestionDraftService {
             draftEvidenceIds: [],
             draftModel: null,
             draftedAt: new Date(),
+            draftProcessingStatus: null,
+            draftProcessingError: null,
+            draftQueuedAt: null,
+            draftProcessingStartedAt: null,
           },
         });
 
@@ -148,6 +152,10 @@ export class QuestionDraftService {
         draftEvidenceIds: aiDraft.usedEvidenceIds,
         draftModel: aiDraft.model,
         draftedAt,
+        draftProcessingStatus: null,
+        draftProcessingError: null,
+        draftQueuedAt: null,
+        draftProcessingStartedAt: null,
       },
     });
 

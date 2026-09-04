@@ -1,0 +1,172 @@
+import { Inject, Injectable } from '@nestjs/common';
+import {
+  AiAutomationMode,
+  ProductQuestionStatus,
+  QuestionAnswerStatus,
+  QuestionDraftProcessingStatus,
+  QuestionReplyDecision,
+} from '../../generated/prisma/enums';
+import { PrismaService } from '../../database/prisma.service';
+import { QUESTION_ANSWER_DISPATCHER } from '../question-answer/question-answer.constants';
+import type { QuestionAnswerDispatcher } from '../question-answer/question-answer.types';
+import { QuestionDraftService } from './question-draft.service';
+import type { QuestionDraftJobData } from './question-draft.types';
+
+@Injectable()
+export class QuestionDraftWorkerService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly drafts: QuestionDraftService,
+    @Inject(QUESTION_ANSWER_DISPATCHER)
+    private readonly answers: QuestionAnswerDispatcher,
+  ) {}
+
+  async run(data: QuestionDraftJobData) {
+    const question = await this.prisma.productQuestion.findFirst({
+      where: { id: data.questionId, storeId: data.storeId },
+      select: {
+        status: true,
+        answer: true,
+        draftDecision: true,
+        answerDelivery: { select: { status: true } },
+        store: {
+          select: {
+            knowledgeProfile: { select: { automationMode: true } },
+          },
+        },
+      },
+    });
+
+    if (!question) {
+      return { status: 'SKIPPED' as const };
+    }
+
+    const automationMode = question.store.knowledgeProfile?.automationMode;
+    if (
+      automationMode !== AiAutomationMode.DRAFT_ONLY &&
+      automationMode !== AiAutomationMode.SAFE_AUTO
+    ) {
+      await this.clearProcessingState(data);
+      return { status: 'SKIPPED' as const };
+    }
+
+    if (question.status === ProductQuestionStatus.DRAFTED) {
+      const deliveryCanBeQueued =
+        !question.answerDelivery ||
+        question.answerDelivery.status === QuestionAnswerStatus.FAILED;
+
+      if (
+        automationMode === AiAutomationMode.SAFE_AUTO &&
+        question.draftDecision === QuestionReplyDecision.READY_FOR_SEND &&
+        question.answer &&
+        deliveryCanBeQueued
+      ) {
+        await this.enqueueAutomaticAnswer(
+          data.storeId,
+          data.questionId,
+          question.answer,
+        );
+        await this.clearProcessingState(data);
+        return { status: 'QUEUED' as const };
+      }
+
+      await this.clearProcessingState(data);
+      return { status: 'SKIPPED' as const };
+    }
+
+    if (question.status !== ProductQuestionStatus.PENDING) {
+      await this.clearProcessingState(data);
+      return { status: 'SKIPPED' as const };
+    }
+
+    await this.prisma.productQuestion.updateMany({
+      where: {
+        id: data.questionId,
+        storeId: data.storeId,
+        status: ProductQuestionStatus.PENDING,
+        draftProcessingStatus: {
+          in: [
+            QuestionDraftProcessingStatus.QUEUED,
+            QuestionDraftProcessingStatus.PROCESSING,
+          ],
+        },
+      },
+      data: {
+        draftProcessingStatus: QuestionDraftProcessingStatus.PROCESSING,
+        draftProcessingError: null,
+        draftProcessingStartedAt: new Date(),
+      },
+    });
+
+    const result = await this.drafts.generate(data.storeId, data.questionId);
+
+    if (
+      automationMode !== AiAutomationMode.SAFE_AUTO ||
+      result.status !== 'DRAFTED' ||
+      result.context.decision !== 'READY_FOR_SEND'
+    ) {
+      return { status: result.status };
+    }
+
+    await this.enqueueAutomaticAnswer(
+      data.storeId,
+      data.questionId,
+      result.answer,
+    );
+
+    return { status: 'QUEUED' as const };
+  }
+
+  async markFinalFailure(data: QuestionDraftJobData, error: unknown) {
+    const message =
+      error instanceof Error ? error.message : 'AI taslağı oluşturulamadı.';
+
+    await this.prisma.productQuestion.updateMany({
+      where: {
+        id: data.questionId,
+        storeId: data.storeId,
+        status: ProductQuestionStatus.PENDING,
+        draftProcessingStatus: {
+          in: [
+            QuestionDraftProcessingStatus.QUEUED,
+            QuestionDraftProcessingStatus.PROCESSING,
+          ],
+        },
+      },
+      data: {
+        draftProcessingStatus: QuestionDraftProcessingStatus.FAILED,
+        draftProcessingError: message.slice(0, 1_000),
+        draftProcessingStartedAt: null,
+      },
+    });
+  }
+
+  private async enqueueAutomaticAnswer(
+    storeId: string,
+    questionId: string,
+    answer: string,
+  ) {
+    await this.answers.enqueue({
+      storeId,
+      questionId,
+      origin: 'AUTOMATION',
+      answer,
+    });
+  }
+
+  private async clearProcessingState(data: QuestionDraftJobData) {
+    await this.prisma.productQuestion.updateMany({
+      where: {
+        id: data.questionId,
+        storeId: data.storeId,
+        draftProcessingStatus: { not: null },
+      },
+      data: {
+        draftProcessingStatus: null,
+        draftProcessingError: null,
+        draftQueuedAt: null,
+        draftProcessingStartedAt: null,
+      },
+    });
+  }
+}

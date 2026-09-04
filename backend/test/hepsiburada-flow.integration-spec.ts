@@ -21,6 +21,7 @@ import { QuestionAnswerQueueService } from '../src/modules/question-answer/quest
 import type { QuestionAnswerJobData } from '../src/modules/question-answer/question-answer.types';
 import { QuestionAnswerWorkerService } from '../src/modules/question-answer/question-answer-worker.service';
 import { QuestionSyncWorkerService } from '../src/modules/question-sync/question-sync-worker.service';
+import type { QuestionDraftDispatcher } from '../src/modules/questions/question-draft.types';
 import { SizeGuideDispatcher } from '../src/modules/size-guides/size-guide.types';
 
 describe('Hepsiburada product question flow', () => {
@@ -75,10 +76,15 @@ describe('Hepsiburada product question flow', () => {
       encryption,
       sizeGuides,
     );
+    const enqueueDraft = jest.fn().mockResolvedValue(undefined);
+    const draftDispatcher = {
+      enqueue: enqueueDraft,
+    } as QuestionDraftDispatcher;
     const questionWorker = new QuestionSyncWorkerService(
       prisma,
       registry,
       encryption,
+      draftDispatcher,
     );
     const queueAdd = jest.fn().mockResolvedValue({});
     const answerDispatcher = new QuestionAnswerQueueService(prisma, registry, {
@@ -202,6 +208,7 @@ describe('Hepsiburada product question flow', () => {
     });
     expect(persistedQuestions[1].externalProductId).toBe('HBCV00009U88OT-S');
     expect(questionRuns.map((run) => run.questionsProcessed)).toEqual([2, 0]);
+    expect(enqueueDraft).not.toHaveBeenCalled();
 
     const queuedAnswer = await answerDispatcher.enqueue({
       storeId: resources.storeId,

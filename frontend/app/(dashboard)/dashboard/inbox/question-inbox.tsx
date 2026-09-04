@@ -59,6 +59,8 @@ export type QuestionInboxProps = {
 const PAGE_SIZE = 30
 const SEARCH_DEBOUNCE_MS = 300
 const DETAIL_CACHE_TTL_MS = 60_000
+const LIVE_REFRESH_INTERVAL_MS = 2_000
+const MAX_LIVE_REFRESH_ITEMS = 50
 
 type DetailCacheEntry = {
   question: ProductQuestion
@@ -113,12 +115,25 @@ export function QuestionInbox({
   const detailAbortControllerRef = useRef<AbortController | null>(null)
   const detailCacheRef = useRef(new Map<string, DetailCacheEntry>())
   const detailRefreshInFlightRef = useRef(false)
+  const liveRefreshInFlightRef = useRef(false)
+  const questionsRef = useRef(initialPage.items)
+  const selectedQuestionSummaryRef =
+    useRef<ProductQuestionListItem | null>(null)
 
   const applyFirstPage = useCallback((page: ProductQuestionPage) => {
+    questionsRef.current = page.items
     setQuestions(page.items)
     setNextCursor(page.nextCursor)
     setSummary(page.summary)
   }, [])
+
+  useEffect(() => {
+    questionsRef.current = questions
+  }, [questions])
+
+  useEffect(() => {
+    selectedQuestionSummaryRef.current = selectedQuestionSummary
+  }, [selectedQuestionSummary])
 
   const loadQuestionDetail = useCallback(
     async (questionId: string, force = false) => {
@@ -329,27 +344,101 @@ export function QuestionInbox({
     })
   }
 
-  async function refreshCurrentList() {
+  const refreshCurrentList = useCallback(async () => {
+    if (liveRefreshInFlightRef.current) return
+
+    liveRefreshInFlightRef.current = true
     try {
+      const loadedQuestionCount = questionsRef.current.length
+      const refreshLimit = Math.min(
+        Math.max(loadedQuestionCount, PAGE_SIZE),
+        MAX_LIVE_REFRESH_ITEMS
+      )
       const page = await getProductQuestions(storeId, {
-        limit: PAGE_SIZE,
+        limit: refreshLimit,
         status: filter,
-        query,
+        query: query.trim(),
       })
 
-      applyFirstPage(page)
+      setQuestions((currentQuestions) => {
+        if (currentQuestions.length <= refreshLimit) {
+          questionsRef.current = page.items
+          return page.items
+        }
+
+        const refreshedQuestionIds = new Set(
+          page.items.map((question) => question.id)
+        )
+        const preservedTail = currentQuestions
+          .slice(refreshLimit)
+          .filter((question) => !refreshedQuestionIds.has(question.id))
+        const nextQuestions = [...page.items, ...preservedTail]
+        questionsRef.current = nextQuestions
+        return nextQuestions
+      })
+      if (loadedQuestionCount <= refreshLimit) {
+        setNextCursor(page.nextCursor)
+      }
+      setSummary(page.summary)
       setSelectedQuestionSummary((currentQuestion) => {
         if (!currentQuestion) return null
 
-        return (
+        const nextQuestion =
           page.items.find((question) => question.id === currentQuestion.id) ??
           currentQuestion
-        )
+        selectedQuestionSummaryRef.current = nextQuestion
+        return nextQuestion
       })
     } catch {
       // Senkronizasyon arka planda sürerken mevcut liste korunur.
+    } finally {
+      liveRefreshInFlightRef.current = false
     }
-  }
+  }, [filter, query, storeId])
+
+  useEffect(() => {
+    async function refreshLiveState() {
+      const activeRequestKey = `${storeId}|${filter}|${query.trim()}`
+      if (
+        document.visibilityState !== "visible" ||
+        isListLoading ||
+        isLoadingMore ||
+        activeRequestKey !== lastListRequestKeyRef.current
+      ) {
+        return
+      }
+
+      await refreshCurrentList()
+
+      if (isQuestionProcessing(selectedQuestionSummaryRef.current)) {
+        await refreshSelectedQuestion()
+      }
+    }
+
+    const intervalId = window.setInterval(
+      () => void refreshLiveState(),
+      LIVE_REFRESH_INTERVAL_MS
+    )
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void refreshLiveState()
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+    return () => {
+      window.clearInterval(intervalId)
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+    }
+  }, [
+    filter,
+    isListLoading,
+    isLoadingMore,
+    query,
+    refreshCurrentList,
+    refreshSelectedQuestion,
+    storeId,
+  ])
 
   function syncQuestions() {
     startSyncTransition(async () => {
@@ -607,6 +696,9 @@ export function QuestionInbox({
                     deliveryStatus={
                       selectedQuestionSummary.answerDelivery?.status
                     }
+                    draftProcessingStatus={
+                      selectedQuestionSummary.draftProcessingStatus
+                    }
                     draftDecision={selectedQuestionSummary.draftDecision}
                   />
                 </span>
@@ -649,6 +741,7 @@ function listItemFromDetail(
     question: question.question,
     status: question.status,
     draftDecision: question.draftDecision,
+    draftProcessingStatus: question.draftProcessingStatus,
     externalCreatedAt: question.externalCreatedAt,
     connection: question.connection,
     product: question.product
@@ -682,6 +775,15 @@ function filterCount(
 
 function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === "AbortError"
+}
+
+function isQuestionProcessing(question: ProductQuestionListItem | null) {
+  return (
+    question?.draftProcessingStatus === "QUEUED" ||
+    question?.draftProcessingStatus === "PROCESSING" ||
+    question?.answerDelivery?.status === "QUEUED" ||
+    question?.answerDelivery?.status === "PROCESSING"
+  )
 }
 
 function parseQuestionFilter(value: string | null): ProductQuestionFilter {

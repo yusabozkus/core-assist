@@ -56,6 +56,10 @@ export type ProductQuestionMinAggregateOutputType = {
   draftAnswerability: string | null
   draftModel: string | null
   draftedAt: Date | null
+  draftProcessingStatus: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError: string | null
+  draftQueuedAt: Date | null
+  draftProcessingStartedAt: Date | null
   externalCreatedAt: Date | null
   answeredAt: Date | null
   createdAt: Date | null
@@ -84,6 +88,10 @@ export type ProductQuestionMaxAggregateOutputType = {
   draftAnswerability: string | null
   draftModel: string | null
   draftedAt: Date | null
+  draftProcessingStatus: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError: string | null
+  draftQueuedAt: Date | null
+  draftProcessingStartedAt: Date | null
   externalCreatedAt: Date | null
   answeredAt: Date | null
   createdAt: Date | null
@@ -115,6 +123,10 @@ export type ProductQuestionCountAggregateOutputType = {
   draftEvidenceIds: number
   draftModel: number
   draftedAt: number
+  draftProcessingStatus: number
+  draftProcessingError: number
+  draftQueuedAt: number
+  draftProcessingStartedAt: number
   externalCreatedAt: number
   answeredAt: number
   createdAt: number
@@ -153,6 +165,10 @@ export type ProductQuestionMinAggregateInputType = {
   draftAnswerability?: true
   draftModel?: true
   draftedAt?: true
+  draftProcessingStatus?: true
+  draftProcessingError?: true
+  draftQueuedAt?: true
+  draftProcessingStartedAt?: true
   externalCreatedAt?: true
   answeredAt?: true
   createdAt?: true
@@ -181,6 +197,10 @@ export type ProductQuestionMaxAggregateInputType = {
   draftAnswerability?: true
   draftModel?: true
   draftedAt?: true
+  draftProcessingStatus?: true
+  draftProcessingError?: true
+  draftQueuedAt?: true
+  draftProcessingStartedAt?: true
   externalCreatedAt?: true
   answeredAt?: true
   createdAt?: true
@@ -212,6 +232,10 @@ export type ProductQuestionCountAggregateInputType = {
   draftEvidenceIds?: true
   draftModel?: true
   draftedAt?: true
+  draftProcessingStatus?: true
+  draftProcessingError?: true
+  draftQueuedAt?: true
+  draftProcessingStartedAt?: true
   externalCreatedAt?: true
   answeredAt?: true
   createdAt?: true
@@ -330,6 +354,10 @@ export type ProductQuestionGroupByOutputType = {
   draftEvidenceIds: runtime.JsonValue | null
   draftModel: string | null
   draftedAt: Date | null
+  draftProcessingStatus: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError: string | null
+  draftQueuedAt: Date | null
+  draftProcessingStartedAt: Date | null
   externalCreatedAt: Date
   answeredAt: Date | null
   createdAt: Date
@@ -384,6 +412,10 @@ export type ProductQuestionWhereInput = {
   draftEvidenceIds?: Prisma.JsonNullableFilter<"ProductQuestion">
   draftModel?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
   draftedAt?: Prisma.DateTimeNullableFilter<"ProductQuestion"> | Date | string | null
+  draftProcessingStatus?: Prisma.EnumQuestionDraftProcessingStatusNullableFilter<"ProductQuestion"> | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
+  draftQueuedAt?: Prisma.DateTimeNullableFilter<"ProductQuestion"> | Date | string | null
+  draftProcessingStartedAt?: Prisma.DateTimeNullableFilter<"ProductQuestion"> | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFilter<"ProductQuestion"> | Date | string
   answeredAt?: Prisma.DateTimeNullableFilter<"ProductQuestion"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ProductQuestion"> | Date | string
@@ -421,6 +453,10 @@ export type ProductQuestionOrderByWithRelationInput = {
   draftEvidenceIds?: Prisma.SortOrderInput | Prisma.SortOrder
   draftModel?: Prisma.SortOrderInput | Prisma.SortOrder
   draftedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  draftProcessingStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  draftProcessingError?: Prisma.SortOrderInput | Prisma.SortOrder
+  draftQueuedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  draftProcessingStartedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   externalCreatedAt?: Prisma.SortOrder
   answeredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -462,6 +498,10 @@ export type ProductQuestionWhereUniqueInput = Prisma.AtLeast<{
   draftEvidenceIds?: Prisma.JsonNullableFilter<"ProductQuestion">
   draftModel?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
   draftedAt?: Prisma.DateTimeNullableFilter<"ProductQuestion"> | Date | string | null
+  draftProcessingStatus?: Prisma.EnumQuestionDraftProcessingStatusNullableFilter<"ProductQuestion"> | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
+  draftQueuedAt?: Prisma.DateTimeNullableFilter<"ProductQuestion"> | Date | string | null
+  draftProcessingStartedAt?: Prisma.DateTimeNullableFilter<"ProductQuestion"> | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFilter<"ProductQuestion"> | Date | string
   answeredAt?: Prisma.DateTimeNullableFilter<"ProductQuestion"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ProductQuestion"> | Date | string
@@ -499,6 +539,10 @@ export type ProductQuestionOrderByWithAggregationInput = {
   draftEvidenceIds?: Prisma.SortOrderInput | Prisma.SortOrder
   draftModel?: Prisma.SortOrderInput | Prisma.SortOrder
   draftedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  draftProcessingStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  draftProcessingError?: Prisma.SortOrderInput | Prisma.SortOrder
+  draftQueuedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  draftProcessingStartedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   externalCreatedAt?: Prisma.SortOrder
   answeredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -538,6 +582,10 @@ export type ProductQuestionScalarWhereWithAggregatesInput = {
   draftEvidenceIds?: Prisma.JsonNullableWithAggregatesFilter<"ProductQuestion">
   draftModel?: Prisma.StringNullableWithAggregatesFilter<"ProductQuestion"> | string | null
   draftedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ProductQuestion"> | Date | string | null
+  draftProcessingStatus?: Prisma.EnumQuestionDraftProcessingStatusNullableWithAggregatesFilter<"ProductQuestion"> | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.StringNullableWithAggregatesFilter<"ProductQuestion"> | string | null
+  draftQueuedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ProductQuestion"> | Date | string | null
+  draftProcessingStartedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ProductQuestion"> | Date | string | null
   externalCreatedAt?: Prisma.DateTimeWithAggregatesFilter<"ProductQuestion"> | Date | string
   answeredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ProductQuestion"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"ProductQuestion"> | Date | string
@@ -564,6 +612,10 @@ export type ProductQuestionCreateInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -601,6 +653,10 @@ export type ProductQuestionUncheckedCreateInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -628,6 +684,10 @@ export type ProductQuestionUpdateInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -665,6 +725,10 @@ export type ProductQuestionUncheckedUpdateInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -697,6 +761,10 @@ export type ProductQuestionCreateManyInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -723,6 +791,10 @@ export type ProductQuestionUpdateManyMutationInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -754,6 +826,10 @@ export type ProductQuestionUncheckedUpdateManyInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -805,6 +881,10 @@ export type ProductQuestionCountOrderByAggregateInput = {
   draftEvidenceIds?: Prisma.SortOrder
   draftModel?: Prisma.SortOrder
   draftedAt?: Prisma.SortOrder
+  draftProcessingStatus?: Prisma.SortOrder
+  draftProcessingError?: Prisma.SortOrder
+  draftQueuedAt?: Prisma.SortOrder
+  draftProcessingStartedAt?: Prisma.SortOrder
   externalCreatedAt?: Prisma.SortOrder
   answeredAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -837,6 +917,10 @@ export type ProductQuestionMaxOrderByAggregateInput = {
   draftAnswerability?: Prisma.SortOrder
   draftModel?: Prisma.SortOrder
   draftedAt?: Prisma.SortOrder
+  draftProcessingStatus?: Prisma.SortOrder
+  draftProcessingError?: Prisma.SortOrder
+  draftQueuedAt?: Prisma.SortOrder
+  draftProcessingStartedAt?: Prisma.SortOrder
   externalCreatedAt?: Prisma.SortOrder
   answeredAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -865,6 +949,10 @@ export type ProductQuestionMinOrderByAggregateInput = {
   draftAnswerability?: Prisma.SortOrder
   draftModel?: Prisma.SortOrder
   draftedAt?: Prisma.SortOrder
+  draftProcessingStatus?: Prisma.SortOrder
+  draftProcessingError?: Prisma.SortOrder
+  draftQueuedAt?: Prisma.SortOrder
+  draftProcessingStartedAt?: Prisma.SortOrder
   externalCreatedAt?: Prisma.SortOrder
   answeredAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -1088,6 +1176,10 @@ export type NullableEnumQuestionReplyDecisionFieldUpdateOperationsInput = {
   set?: $Enums.QuestionReplyDecision | null
 }
 
+export type NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput = {
+  set?: $Enums.QuestionDraftProcessingStatus | null
+}
+
 export type ProductQuestionCreateNestedOneWithoutAnswerDeliveryInput = {
   create?: Prisma.XOR<Prisma.ProductQuestionCreateWithoutAnswerDeliveryInput, Prisma.ProductQuestionUncheckedCreateWithoutAnswerDeliveryInput>
   connectOrCreate?: Prisma.ProductQuestionCreateOrConnectWithoutAnswerDeliveryInput
@@ -1122,6 +1214,10 @@ export type ProductQuestionCreateWithoutStoreInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -1157,6 +1253,10 @@ export type ProductQuestionUncheckedCreateWithoutStoreInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -1218,6 +1318,10 @@ export type ProductQuestionScalarWhereInput = {
   draftEvidenceIds?: Prisma.JsonNullableFilter<"ProductQuestion">
   draftModel?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
   draftedAt?: Prisma.DateTimeNullableFilter<"ProductQuestion"> | Date | string | null
+  draftProcessingStatus?: Prisma.EnumQuestionDraftProcessingStatusNullableFilter<"ProductQuestion"> | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
+  draftQueuedAt?: Prisma.DateTimeNullableFilter<"ProductQuestion"> | Date | string | null
+  draftProcessingStartedAt?: Prisma.DateTimeNullableFilter<"ProductQuestion"> | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFilter<"ProductQuestion"> | Date | string
   answeredAt?: Prisma.DateTimeNullableFilter<"ProductQuestion"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ProductQuestion"> | Date | string
@@ -1244,6 +1348,10 @@ export type ProductQuestionCreateWithoutConnectionInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -1279,6 +1387,10 @@ export type ProductQuestionUncheckedCreateWithoutConnectionInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -1332,6 +1444,10 @@ export type ProductQuestionCreateWithoutProductInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -1367,6 +1483,10 @@ export type ProductQuestionUncheckedCreateWithoutProductInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -1420,6 +1540,10 @@ export type ProductQuestionCreateWithoutExternalProductInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -1455,6 +1579,10 @@ export type ProductQuestionUncheckedCreateWithoutExternalProductInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -1508,6 +1636,10 @@ export type ProductQuestionCreateWithoutIncomingEventInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -1543,6 +1675,10 @@ export type ProductQuestionUncheckedCreateWithoutIncomingEventInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -1586,6 +1722,10 @@ export type ProductQuestionUpdateWithoutIncomingEventInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1621,6 +1761,10 @@ export type ProductQuestionUncheckedUpdateWithoutIncomingEventInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1648,6 +1792,10 @@ export type ProductQuestionCreateWithoutAnswerDeliveryInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -1684,6 +1832,10 @@ export type ProductQuestionUncheckedCreateWithoutAnswerDeliveryInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -1726,6 +1878,10 @@ export type ProductQuestionUpdateWithoutAnswerDeliveryInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1762,6 +1918,10 @@ export type ProductQuestionUncheckedUpdateWithoutAnswerDeliveryInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1792,6 +1952,10 @@ export type ProductQuestionCreateManyStoreInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -1818,6 +1982,10 @@ export type ProductQuestionUpdateWithoutStoreInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1853,6 +2021,10 @@ export type ProductQuestionUncheckedUpdateWithoutStoreInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1884,6 +2056,10 @@ export type ProductQuestionUncheckedUpdateManyWithoutStoreInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1914,6 +2090,10 @@ export type ProductQuestionCreateManyConnectionInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -1940,6 +2120,10 @@ export type ProductQuestionUpdateWithoutConnectionInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1975,6 +2159,10 @@ export type ProductQuestionUncheckedUpdateWithoutConnectionInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2006,6 +2194,10 @@ export type ProductQuestionUncheckedUpdateManyWithoutConnectionInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2036,6 +2228,10 @@ export type ProductQuestionCreateManyProductInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -2062,6 +2258,10 @@ export type ProductQuestionUpdateWithoutProductInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2097,6 +2297,10 @@ export type ProductQuestionUncheckedUpdateWithoutProductInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2128,6 +2332,10 @@ export type ProductQuestionUncheckedUpdateManyWithoutProductInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2158,6 +2366,10 @@ export type ProductQuestionCreateManyExternalProductInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: string | null
   draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
   externalCreatedAt: Date | string
   answeredAt?: Date | string | null
   createdAt?: Date | string
@@ -2184,6 +2396,10 @@ export type ProductQuestionUpdateWithoutExternalProductInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2219,6 +2435,10 @@ export type ProductQuestionUncheckedUpdateWithoutExternalProductInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2250,6 +2470,10 @@ export type ProductQuestionUncheckedUpdateManyWithoutExternalProductInput = {
   draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2283,6 +2507,10 @@ export type ProductQuestionSelect<ExtArgs extends runtime.Types.Extensions.Inter
   draftEvidenceIds?: boolean
   draftModel?: boolean
   draftedAt?: boolean
+  draftProcessingStatus?: boolean
+  draftProcessingError?: boolean
+  draftQueuedAt?: boolean
+  draftProcessingStartedAt?: boolean
   externalCreatedAt?: boolean
   answeredAt?: boolean
   createdAt?: boolean
@@ -2320,6 +2548,10 @@ export type ProductQuestionSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   draftEvidenceIds?: boolean
   draftModel?: boolean
   draftedAt?: boolean
+  draftProcessingStatus?: boolean
+  draftProcessingError?: boolean
+  draftQueuedAt?: boolean
+  draftProcessingStartedAt?: boolean
   externalCreatedAt?: boolean
   answeredAt?: boolean
   createdAt?: boolean
@@ -2356,6 +2588,10 @@ export type ProductQuestionSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   draftEvidenceIds?: boolean
   draftModel?: boolean
   draftedAt?: boolean
+  draftProcessingStatus?: boolean
+  draftProcessingError?: boolean
+  draftQueuedAt?: boolean
+  draftProcessingStartedAt?: boolean
   externalCreatedAt?: boolean
   answeredAt?: boolean
   createdAt?: boolean
@@ -2392,13 +2628,17 @@ export type ProductQuestionSelectScalar = {
   draftEvidenceIds?: boolean
   draftModel?: boolean
   draftedAt?: boolean
+  draftProcessingStatus?: boolean
+  draftProcessingError?: boolean
+  draftQueuedAt?: boolean
+  draftProcessingStartedAt?: boolean
   externalCreatedAt?: boolean
   answeredAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ProductQuestionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "storeId" | "connectionId" | "incomingEventId" | "productId" | "externalProductRecordId" | "externalQuestionId" | "externalProductId" | "externalCustomerId" | "customerName" | "question" | "referenceAnswer" | "referenceSourceUrl" | "referenceSourceProvider" | "status" | "answer" | "draftDecision" | "draftConfidence" | "draftAnswerability" | "draftRisks" | "draftMissingInformation" | "draftEvidenceIds" | "draftModel" | "draftedAt" | "externalCreatedAt" | "answeredAt" | "createdAt" | "updatedAt", ExtArgs["result"]["productQuestion"]>
+export type ProductQuestionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "storeId" | "connectionId" | "incomingEventId" | "productId" | "externalProductRecordId" | "externalQuestionId" | "externalProductId" | "externalCustomerId" | "customerName" | "question" | "referenceAnswer" | "referenceSourceUrl" | "referenceSourceProvider" | "status" | "answer" | "draftDecision" | "draftConfidence" | "draftAnswerability" | "draftRisks" | "draftMissingInformation" | "draftEvidenceIds" | "draftModel" | "draftedAt" | "draftProcessingStatus" | "draftProcessingError" | "draftQueuedAt" | "draftProcessingStartedAt" | "externalCreatedAt" | "answeredAt" | "createdAt" | "updatedAt", ExtArgs["result"]["productQuestion"]>
 export type ProductQuestionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
   connection?: boolean | Prisma.ChannelConnectionDefaultArgs<ExtArgs>
@@ -2457,6 +2697,10 @@ export type $ProductQuestionPayload<ExtArgs extends runtime.Types.Extensions.Int
     draftEvidenceIds: runtime.JsonValue | null
     draftModel: string | null
     draftedAt: Date | null
+    draftProcessingStatus: $Enums.QuestionDraftProcessingStatus | null
+    draftProcessingError: string | null
+    draftQueuedAt: Date | null
+    draftProcessingStartedAt: Date | null
     externalCreatedAt: Date
     answeredAt: Date | null
     createdAt: Date
@@ -2914,6 +3158,10 @@ export interface ProductQuestionFieldRefs {
   readonly draftEvidenceIds: Prisma.FieldRef<"ProductQuestion", 'Json'>
   readonly draftModel: Prisma.FieldRef<"ProductQuestion", 'String'>
   readonly draftedAt: Prisma.FieldRef<"ProductQuestion", 'DateTime'>
+  readonly draftProcessingStatus: Prisma.FieldRef<"ProductQuestion", 'QuestionDraftProcessingStatus'>
+  readonly draftProcessingError: Prisma.FieldRef<"ProductQuestion", 'String'>
+  readonly draftQueuedAt: Prisma.FieldRef<"ProductQuestion", 'DateTime'>
+  readonly draftProcessingStartedAt: Prisma.FieldRef<"ProductQuestion", 'DateTime'>
   readonly externalCreatedAt: Prisma.FieldRef<"ProductQuestion", 'DateTime'>
   readonly answeredAt: Prisma.FieldRef<"ProductQuestion", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"ProductQuestion", 'DateTime'>

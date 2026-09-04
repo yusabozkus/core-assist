@@ -31,6 +31,7 @@ const QUESTION_LIST_SELECT = {
   question: true,
   status: true,
   draftDecision: true,
+  draftProcessingStatus: true,
   externalCreatedAt: true,
   connection: {
     select: { providerKey: true },
@@ -72,6 +73,10 @@ const QUESTION_DETAIL_SELECT = {
   draftEvidenceIds: true,
   draftModel: true,
   draftedAt: true,
+  draftProcessingStatus: true,
+  draftProcessingError: true,
+  draftQueuedAt: true,
+  draftProcessingStartedAt: true,
   answeredAt: true,
   connection: {
     select: { providerKey: true },
@@ -140,6 +145,7 @@ const QUESTION_DETAIL_SELECT = {
     select: {
       id: true,
       answer: true,
+      origin: true,
       status: true,
       attempts: true,
       lastError: true,

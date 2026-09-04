@@ -36,7 +36,7 @@ export function getProductQuestions(
 
   return apiFetch<ProductQuestionPage>(
     `/stores/${storeId}/questions?${searchParams.toString()}`,
-    { signal }
+    { cache: "no-store", signal }
   )
 }
 
@@ -47,7 +47,7 @@ export function getProductQuestion(
 ) {
   return apiFetch<ProductQuestion>(
     `/stores/${storeId}/questions/${questionId}`,
-    { signal }
+    { cache: "no-store", signal }
   )
 }
 

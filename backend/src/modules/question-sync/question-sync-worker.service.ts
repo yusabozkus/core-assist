@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
+  AiAutomationMode,
   CatalogSyncStatus,
   ChannelConnectionStatus,
   IncomingEventProcessingStatus,
@@ -13,6 +14,8 @@ import { CredentialsEncryptionService } from '../channels/credentials-encryption
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
 import type { NormalizedProductQuestion } from '../channels/providers/question-connector';
 import { evaluateQuestionResponsePolicy } from '../questions/question-response-policy.service';
+import { QUESTION_DRAFT_DISPATCHER } from '../questions/question-draft.constants';
+import type { QuestionDraftDispatcher } from '../questions/question-draft.types';
 import { QUESTION_SYNC_MAX_BATCHES } from './question-sync.constants';
 import type { QuestionSyncJobData } from './question-sync.types';
 
@@ -31,6 +34,8 @@ export class QuestionSyncWorkerService {
     private readonly prisma: PrismaService,
     private readonly providers: ProviderRegistryService,
     private readonly encryption: CredentialsEncryptionService,
+    @Inject(QUESTION_DRAFT_DISPATCHER)
+    private readonly questionDrafts: QuestionDraftDispatcher,
   ) {}
 
   async run(data: QuestionSyncJobData) {
@@ -66,6 +71,16 @@ export class QuestionSyncWorkerService {
       await this.removeLegacyMockQuestions(syncConnection);
     }
 
+    const knowledgeProfile = await this.prisma.storeKnowledgeProfile.findUnique(
+      {
+        where: { storeId: syncConnection.storeId },
+        select: { automationMode: true },
+      },
+    );
+    const automaticDraftsEnabled =
+      knowledgeProfile?.automationMode === AiAutomationMode.DRAFT_ONLY ||
+      knowledgeProfile?.automationMode === AiAutomationMode.SAFE_AUTO;
+
     let cursor: string | undefined;
     let batchCount = 0;
     let questionsProcessed = 0;
@@ -85,9 +100,21 @@ export class QuestionSyncWorkerService {
       );
 
       for (const question of batch.questions) {
-        if (await this.persistQuestion(syncConnection, question)) {
+        const persisted = await this.persistQuestion(syncConnection, question);
+
+        if (persisted?.isNew) {
           questionsProcessed += 1;
           batchQuestionsProcessed += 1;
+        }
+
+        if (
+          automaticDraftsEnabled &&
+          persisted?.status === ProductQuestionStatus.PENDING
+        ) {
+          await this.questionDrafts.enqueue(
+            syncConnection.storeId,
+            persisted.id,
+          );
         }
       }
 
@@ -201,7 +228,19 @@ export class QuestionSyncWorkerService {
           });
         }
 
-        return false;
+        const existingQuestion = await this.prisma.productQuestion.findUnique({
+          where: {
+            connectionId_externalQuestionId: {
+              connectionId: connection.id,
+              externalQuestionId: question.externalId,
+            },
+          },
+          select: { id: true, status: true },
+        });
+
+        return existingQuestion
+          ? { ...existingQuestion, isNew: false as const }
+          : null;
       }
       throw error;
     }
@@ -215,7 +254,7 @@ export class QuestionSyncWorkerService {
           processedAt: new Date(),
         },
       });
-      return false;
+      return null;
     }
 
     try {
@@ -225,7 +264,11 @@ export class QuestionSyncWorkerService {
       );
       const responsePolicy = evaluateQuestionResponsePolicy(question.text);
 
-      await this.prisma.$transaction([
+      const questionStatus =
+        responsePolicy.action === 'DO_NOT_REPLY'
+          ? ProductQuestionStatus.IGNORED
+          : ProductQuestionStatus.PENDING;
+      const [persistedQuestion] = await this.prisma.$transaction([
         this.prisma.productQuestion.create({
           data: {
             storeId: connection.storeId,
@@ -241,12 +284,10 @@ export class QuestionSyncWorkerService {
             referenceAnswer: question.referenceAnswer,
             referenceSourceUrl: question.referenceSourceUrl,
             referenceSourceProvider: question.referenceSourceProvider,
-            status:
-              responsePolicy.action === 'DO_NOT_REPLY'
-                ? ProductQuestionStatus.IGNORED
-                : ProductQuestionStatus.PENDING,
+            status: questionStatus,
             externalCreatedAt: question.createdAt,
           },
+          select: { id: true, status: true },
         }),
         this.prisma.incomingEvent.update({
           where: { id: event.id },
@@ -256,7 +297,7 @@ export class QuestionSyncWorkerService {
           },
         }),
       ]);
-      return true;
+      return { ...persistedQuestion, isNew: true as const };
     } catch (error) {
       await this.prisma.incomingEvent.update({
         where: { id: event.id },

@@ -6,6 +6,9 @@ export type ProductQuestionStatus =
 export type ProductQuestionFilter = "ALL" | "PENDING" | "ANSWERED" | "IGNORED"
 
 export type QuestionAnswerStatus = "QUEUED" | "PROCESSING" | "SENT" | "FAILED"
+export type QuestionAnswerOrigin = "MANUAL" | "AUTOMATION"
+
+export type QuestionDraftProcessingStatus = "QUEUED" | "PROCESSING" | "FAILED"
 
 export type QuestionReplyDecision =
   "READY_FOR_SEND" | "NEEDS_REVIEW" | "DO_NOT_REPLY"
@@ -37,6 +40,7 @@ export type ProductAnswerFact =
 export type QuestionAnswerDelivery = {
   id: string
   answer: string
+  origin: QuestionAnswerOrigin
   status: QuestionAnswerStatus
   attempts: number
   lastError: string | null
@@ -63,6 +67,10 @@ export type ProductQuestion = {
   draftEvidenceIds: string[] | null
   draftModel: string | null
   draftedAt: string | null
+  draftProcessingStatus: QuestionDraftProcessingStatus | null
+  draftProcessingError: string | null
+  draftQueuedAt: string | null
+  draftProcessingStartedAt: string | null
   answeredAt: string | null
   externalCreatedAt: string
   createdAt: string
@@ -80,6 +88,7 @@ export type ProductQuestionListItem = {
   question: string
   status: ProductQuestionStatus
   draftDecision: QuestionReplyDecision | null
+  draftProcessingStatus: QuestionDraftProcessingStatus | null
   externalCreatedAt: string
   connection: {
     providerKey: string

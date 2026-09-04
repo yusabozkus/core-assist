@@ -14,6 +14,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import {
+  AiAutomationMode,
   AiEmojiPolicy,
   AiResponseLength,
   AiTone,
@@ -83,6 +84,10 @@ export class ChannelKnowledgeOverrideDto {
 }
 
 export class UpdateStoreKnowledgeDto {
+  @IsOptional()
+  @IsEnum(AiAutomationMode)
+  automationMode?: AiAutomationMode;
+
   @IsOptional()
   @IsString()
   @MaxLength(4_000)

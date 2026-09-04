@@ -87,6 +87,7 @@ export function QuestionListItem({
         <QuestionStatus
           status={question.status}
           deliveryStatus={question.answerDelivery?.status}
+          draftProcessingStatus={question.draftProcessingStatus}
           draftDecision={question.draftDecision}
           compact
         />

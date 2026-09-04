@@ -7,12 +7,16 @@ import {
 import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
 import {
+  AiAutomationMode,
   ChannelConnectionStatus,
   ProductQuestionStatus,
+  QuestionAnswerOrigin,
   QuestionAnswerStatus,
+  QuestionReplyDecision,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
+import { MINIMUM_READY_CONFIDENCE } from '../questions/question-reply-decision.service';
 import {
   QUESTION_ANSWER_QUEUE,
   SEND_QUESTION_ANSWER_JOB,
@@ -36,12 +40,27 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
   async enqueue(
     input: QueueQuestionAnswerInput,
   ): Promise<QueuedQuestionAnswer> {
+    const origin =
+      input.origin === 'AUTOMATION'
+        ? QuestionAnswerOrigin.AUTOMATION
+        : QuestionAnswerOrigin.MANUAL;
     const question = await this.prisma.productQuestion.findFirst({
       where: { id: input.questionId, storeId: input.storeId },
       select: {
         id: true,
         status: true,
+        answer: true,
+        draftDecision: true,
+        draftConfidence: true,
+        draftRisks: true,
+        draftMissingInformation: true,
+        draftEvidenceIds: true,
         connectionId: true,
+        store: {
+          select: {
+            knowledgeProfile: { select: { automationMode: true } },
+          },
+        },
         connection: {
           select: {
             providerKey: true,
@@ -62,6 +81,24 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
 
     if (question.status === ProductQuestionStatus.IGNORED) {
       throw new ConflictException('Yoksayılan ürün sorusu yanıtlanamaz.');
+    }
+
+    if (
+      origin === QuestionAnswerOrigin.AUTOMATION &&
+      (question.status !== ProductQuestionStatus.DRAFTED ||
+        question.answer !== input.answer ||
+        question.draftDecision !== QuestionReplyDecision.READY_FOR_SEND ||
+        question.draftConfidence === null ||
+        question.draftConfidence < MINIMUM_READY_CONFIDENCE ||
+        !isEmptyList(question.draftRisks) ||
+        !isEmptyList(question.draftMissingInformation) ||
+        !isNonEmptyList(question.draftEvidenceIds) ||
+        question.store.knowledgeProfile?.automationMode !==
+          AiAutomationMode.SAFE_AUTO)
+    ) {
+      throw new ConflictException(
+        'Bu taslak güvenli otomatik gönderim koşullarını karşılamıyor.',
+      );
     }
 
     if (
@@ -104,7 +141,8 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
         where: { id: existing.id, status: QuestionAnswerStatus.FAILED },
         data: {
           answer: input.answer,
-          requestedByUserId: input.requestedByUserId,
+          requestedByUserId: input.requestedByUserId ?? null,
+          origin,
           status: QuestionAnswerStatus.QUEUED,
           lastError: null,
           queuedAt,
@@ -125,7 +163,8 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
               storeId: input.storeId,
               connectionId: question.connectionId,
               questionId: question.id,
-              requestedByUserId: input.requestedByUserId,
+              requestedByUserId: input.requestedByUserId ?? null,
+              origin,
               answer: input.answer,
               queuedAt,
             },
@@ -173,6 +212,14 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
 
     return { id: answerId, status: 'QUEUED', queuedAt };
   }
+}
+
+function isEmptyList(value: unknown) {
+  return Array.isArray(value) && value.length === 0;
+}
+
+function isNonEmptyList(value: unknown) {
+  return Array.isArray(value) && value.length > 0;
 }
 
 function isUniqueConstraintError(error: unknown) {

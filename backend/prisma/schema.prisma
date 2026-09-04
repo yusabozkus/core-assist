@@ -149,6 +149,12 @@ enum AiEmojiPolicy {
   ALWAYS
 }
 
+enum AiAutomationMode {
+  OFF
+  DRAFT_ONLY
+  SAFE_AUTO
+}
+
 model StoreKnowledgeProfile {
   storeId               String           @id
   brandDescription      String?
@@ -163,6 +169,7 @@ model StoreKnowledgeProfile {
   closingEnabled        Boolean          @default(true)
   emojiPolicy           AiEmojiPolicy    @default(NEVER)
   preferredEmoji        String?
+  automationMode        AiAutomationMode @default(OFF)
   // Kept temporarily so existing checkbox preferences can be migrated safely.
   emojiEnabled          Boolean          @default(false)
   createdAt             DateTime         @default(now())
@@ -539,35 +546,50 @@ enum QuestionAnswerStatus {
   FAILED
 }
 
+enum QuestionAnswerOrigin {
+  MANUAL
+  AUTOMATION
+}
+
+enum QuestionDraftProcessingStatus {
+  QUEUED
+  PROCESSING
+  FAILED
+}
+
 model ProductQuestion {
-  id                      String                @id @default(uuid())
-  storeId                 String
-  connectionId            String
-  incomingEventId         String                @unique
-  productId               String?
-  externalProductRecordId String?
-  externalQuestionId      String
-  externalProductId       String
-  externalCustomerId      String?
-  customerName            String?
-  question                String
-  referenceAnswer         String?
-  referenceSourceUrl      String?
-  referenceSourceProvider String?
-  status                  ProductQuestionStatus @default(PENDING)
-  answer                  String?
-  draftDecision           QuestionReplyDecision?
-  draftConfidence         Float?
-  draftAnswerability      String?
-  draftRisks              Json?
-  draftMissingInformation Json?
-  draftEvidenceIds        Json?
-  draftModel              String?
-  draftedAt               DateTime?
-  externalCreatedAt       DateTime
-  answeredAt              DateTime?
-  createdAt               DateTime              @default(now())
-  updatedAt               DateTime              @updatedAt
+  id                       String                         @id @default(uuid())
+  storeId                  String
+  connectionId             String
+  incomingEventId          String                         @unique
+  productId                String?
+  externalProductRecordId  String?
+  externalQuestionId       String
+  externalProductId        String
+  externalCustomerId       String?
+  customerName             String?
+  question                 String
+  referenceAnswer          String?
+  referenceSourceUrl       String?
+  referenceSourceProvider  String?
+  status                   ProductQuestionStatus          @default(PENDING)
+  answer                   String?
+  draftDecision            QuestionReplyDecision?
+  draftConfidence          Float?
+  draftAnswerability       String?
+  draftRisks               Json?
+  draftMissingInformation  Json?
+  draftEvidenceIds         Json?
+  draftModel               String?
+  draftedAt                DateTime?
+  draftProcessingStatus    QuestionDraftProcessingStatus?
+  draftProcessingError     String?
+  draftQueuedAt            DateTime?
+  draftProcessingStartedAt DateTime?
+  externalCreatedAt        DateTime
+  answeredAt               DateTime?
+  createdAt                DateTime                       @default(now())
+  updatedAt                DateTime                       @updatedAt
 
   store           Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
   connection      ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
@@ -579,6 +601,7 @@ model ProductQuestion {
   @@unique([connectionId, externalQuestionId])
   @@index([storeId, status, externalCreatedAt])
   @@index([storeId, draftDecision])
+  @@index([storeId, draftProcessingStatus])
   @@index([productId])
   @@index([externalProductRecordId])
   @@map("product_question")
@@ -589,7 +612,8 @@ model QuestionAnswer {
   storeId             String
   connectionId        String
   questionId          String               @unique
-  requestedByUserId   String
+  requestedByUserId   String?
+  origin              QuestionAnswerOrigin @default(MANUAL)
   answer              String
   status              QuestionAnswerStatus @default(QUEUED)
   externalAnswerId    String?
@@ -604,7 +628,7 @@ model QuestionAnswer {
   store       Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
   connection  ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
   question    ProductQuestion   @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  requestedBy User              @relation("QuestionAnswerRequester", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  requestedBy User?             @relation("QuestionAnswerRequester", fields: [requestedByUserId], references: [id], onDelete: SetNull)
 
   @@index([storeId, status, queuedAt])
   @@index([connectionId, status])

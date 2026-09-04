@@ -1,7 +1,10 @@
 import { Badge } from "@/components/ui/badge"
+import { RefreshIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import type {
   ProductQuestionStatus,
   QuestionAnswerStatus,
+  QuestionDraftProcessingStatus,
   QuestionReplyDecision,
 } from "@/types/question"
 import { cn } from "@/lib/utils"
@@ -9,11 +12,13 @@ import { cn } from "@/lib/utils"
 export function QuestionStatus({
   status,
   deliveryStatus,
+  draftProcessingStatus,
   draftDecision,
   compact = false,
 }: {
   status: ProductQuestionStatus
   deliveryStatus?: QuestionAnswerStatus
+  draftProcessingStatus?: QuestionDraftProcessingStatus | null
   draftDecision?: QuestionReplyDecision | null
   compact?: boolean
 }) {
@@ -44,7 +49,48 @@ export function QuestionStatus({
           compactClassName
         )}
       >
-        Gönderiliyor
+        <HugeiconsIcon
+          icon={RefreshIcon}
+          className={cn("animate-spin", compact ? "size-2.5" : "size-3")}
+        />
+        {deliveryStatus === "QUEUED" ? "Gönderim kuyruğunda" : "Gönderiliyor"}
+      </Badge>
+    )
+  }
+
+  if (
+    draftProcessingStatus === "QUEUED" ||
+    draftProcessingStatus === "PROCESSING"
+  ) {
+    return (
+      <Badge
+        variant="outline"
+        className={cn(
+          "shrink-0 border-violet-500/25 bg-violet-500/10 text-violet-700 dark:text-violet-400",
+          compactClassName
+        )}
+      >
+        <HugeiconsIcon
+          icon={RefreshIcon}
+          className={cn("animate-spin", compact ? "size-2.5" : "size-3")}
+        />
+        {draftProcessingStatus === "QUEUED"
+          ? "Taslak kuyruğunda"
+          : "Taslak hazırlanıyor"}
+      </Badge>
+    )
+  }
+
+  if (draftProcessingStatus === "FAILED") {
+    return (
+      <Badge
+        variant="outline"
+        className={cn(
+          "shrink-0 border-red-500/25 bg-red-500/10 text-red-600 dark:text-red-400",
+          compactClassName
+        )}
+      >
+        Taslak hatası
       </Badge>
     )
   }

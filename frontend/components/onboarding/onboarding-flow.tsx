@@ -163,6 +163,7 @@ const RESPONSE_LENGTHS: Array<{
 type ChannelId = (typeof CHANNELS)[number]["id"]
 
 const INITIAL_AI_PROFILE: StoreKnowledge["profile"] = {
+  automationMode: "OFF",
   brandDescription: null,
   shippingPolicy: null,
   returnPolicy: null,

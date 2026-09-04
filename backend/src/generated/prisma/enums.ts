@@ -46,6 +46,15 @@ export const AiEmojiPolicy = {
 export type AiEmojiPolicy = (typeof AiEmojiPolicy)[keyof typeof AiEmojiPolicy]
 
 
+export const AiAutomationMode = {
+  OFF: 'OFF',
+  DRAFT_ONLY: 'DRAFT_ONLY',
+  SAFE_AUTO: 'SAFE_AUTO'
+} as const
+
+export type AiAutomationMode = (typeof AiAutomationMode)[keyof typeof AiAutomationMode]
+
+
 export const StoreStatus = {
   ACTIVE: 'ACTIVE',
   INACTIVE: 'INACTIVE'
@@ -180,6 +189,23 @@ export const QuestionAnswerStatus = {
 } as const
 
 export type QuestionAnswerStatus = (typeof QuestionAnswerStatus)[keyof typeof QuestionAnswerStatus]
+
+
+export const QuestionAnswerOrigin = {
+  MANUAL: 'MANUAL',
+  AUTOMATION: 'AUTOMATION'
+} as const
+
+export type QuestionAnswerOrigin = (typeof QuestionAnswerOrigin)[keyof typeof QuestionAnswerOrigin]
+
+
+export const QuestionDraftProcessingStatus = {
+  QUEUED: 'QUEUED',
+  PROCESSING: 'PROCESSING',
+  FAILED: 'FAILED'
+} as const
+
+export type QuestionDraftProcessingStatus = (typeof QuestionDraftProcessingStatus)[keyof typeof QuestionDraftProcessingStatus]
 
 
 export const StoreRole = {

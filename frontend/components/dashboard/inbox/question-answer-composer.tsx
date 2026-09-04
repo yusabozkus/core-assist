@@ -67,13 +67,6 @@ export function QuestionAnswerComposer({
     delivery?.status === "PROCESSING"
 
   useEffect(() => {
-    if (!isQueued || !onQuestionUpdated) return
-
-    const intervalId = window.setInterval(() => void onQuestionUpdated(), 1_500)
-    return () => window.clearInterval(intervalId)
-  }, [isQueued, onQuestionUpdated])
-
-  useEffect(() => {
     if (draftRetrySeconds <= 0) return
 
     const timeoutId = window.setTimeout(
@@ -113,7 +106,9 @@ export function QuestionAnswerComposer({
         <div className="mx-auto max-w-4xl">
           <div className="flex items-center gap-2 text-sm font-medium text-emerald-600 dark:text-emerald-400">
             <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-4" />
-            Cevap gönderildi
+            {delivery?.origin === "AUTOMATION"
+              ? "AI tarafından otomatik gönderildi"
+              : "Cevap gönderildi"}
           </div>
           <p className="mt-3 rounded-xl border border-border bg-card p-4 text-sm leading-6 text-foreground">
             {question.answer ?? delivery?.answer}

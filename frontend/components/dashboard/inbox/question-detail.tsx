@@ -54,6 +54,7 @@ export function QuestionDetail({
             <QuestionStatus
               status={question.status}
               deliveryStatus={question.answerDelivery?.status}
+              draftProcessingStatus={question.draftProcessingStatus}
               draftDecision={question.draftDecision}
             />
             <Badge variant="outline" className="bg-card font-medium">

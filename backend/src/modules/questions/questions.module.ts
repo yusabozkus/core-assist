@@ -1,24 +1,19 @@
 import { Module } from '@nestjs/common';
-import { AiModule } from '../ai/ai.module';
 import { AuthModule } from '../auth/auth.module';
 import { QuestionSyncModule } from '../question-sync/question-sync.module';
 import { QuestionAnswerModule } from '../question-answer/question-answer.module';
 import { QuestionsController } from './questions.controller';
 import { QuestionsService } from './questions.service';
-import { ProductAnswerContextService } from './product-answer-context.service';
-import { QuestionDraftService } from './question-draft.service';
-import { QuestionResponsePolicyService } from './question-response-policy.service';
-import { QuestionReplyDecisionService } from './question-reply-decision.service';
+import { QuestionDraftModule } from './question-draft.module';
 
 @Module({
-  imports: [AuthModule, QuestionSyncModule, QuestionAnswerModule, AiModule],
-  controllers: [QuestionsController],
-  providers: [
-    QuestionsService,
-    ProductAnswerContextService,
-    QuestionDraftService,
-    QuestionResponsePolicyService,
-    QuestionReplyDecisionService,
+  imports: [
+    AuthModule,
+    QuestionSyncModule,
+    QuestionAnswerModule,
+    QuestionDraftModule,
   ],
+  controllers: [QuestionsController],
+  providers: [QuestionsService],
 })
 export class QuestionsModule {}

@@ -2364,6 +2364,7 @@ export const StoreKnowledgeProfileScalarFieldEnum = {
   closingEnabled: 'closingEnabled',
   emojiPolicy: 'emojiPolicy',
   preferredEmoji: 'preferredEmoji',
+  automationMode: 'automationMode',
   emojiEnabled: 'emojiEnabled',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -2617,6 +2618,10 @@ export const ProductQuestionScalarFieldEnum = {
   draftEvidenceIds: 'draftEvidenceIds',
   draftModel: 'draftModel',
   draftedAt: 'draftedAt',
+  draftProcessingStatus: 'draftProcessingStatus',
+  draftProcessingError: 'draftProcessingError',
+  draftQueuedAt: 'draftQueuedAt',
+  draftProcessingStartedAt: 'draftProcessingStartedAt',
   externalCreatedAt: 'externalCreatedAt',
   answeredAt: 'answeredAt',
   createdAt: 'createdAt',
@@ -2632,6 +2637,7 @@ export const QuestionAnswerScalarFieldEnum = {
   connectionId: 'connectionId',
   questionId: 'questionId',
   requestedByUserId: 'requestedByUserId',
+  origin: 'origin',
   answer: 'answer',
   status: 'status',
   externalAnswerId: 'externalAnswerId',
@@ -2816,6 +2822,20 @@ export type EnumAiEmojiPolicyFieldRefInput<$PrismaModel> = FieldRefInputType<$Pr
  */
 export type ListEnumAiEmojiPolicyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiEmojiPolicy[]'>
     
+
+
+/**
+ * Reference to a field of type 'AiAutomationMode'
+ */
+export type EnumAiAutomationModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiAutomationMode'>
+
+
+
+/**
+ * Reference to a field of type 'AiAutomationMode[]'
+ */
+export type ListEnumAiAutomationModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiAutomationMode[]'>
+
 
 
 /**
@@ -3054,6 +3074,34 @@ export type EnumQuestionReplyDecisionFieldRefInput<$PrismaModel> = FieldRefInput
  */
 export type ListEnumQuestionReplyDecisionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionReplyDecision[]'>
     
+
+
+/**
+ * Reference to a field of type 'QuestionDraftProcessingStatus'
+ */
+export type EnumQuestionDraftProcessingStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionDraftProcessingStatus'>
+
+
+
+/**
+ * Reference to a field of type 'QuestionDraftProcessingStatus[]'
+ */
+export type ListEnumQuestionDraftProcessingStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionDraftProcessingStatus[]'>
+
+
+
+/**
+ * Reference to a field of type 'QuestionAnswerOrigin'
+ */
+export type EnumQuestionAnswerOriginFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionAnswerOrigin'>
+
+
+
+/**
+ * Reference to a field of type 'QuestionAnswerOrigin[]'
+ */
+export type ListEnumQuestionAnswerOriginFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionAnswerOrigin[]'>
+
 
 
 /**
@@ -3320,4 +3368,3 @@ export type PrismaAction =
  * `PrismaClient` proxy available in interactive transactions.
  */
 export type TransactionClient = Omit<DefaultPrismaClient, runtime.ITXClientDenyList>
-

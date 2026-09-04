@@ -9,6 +9,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { AiResponsePreview } from "@/components/dashboard/ai/ai-response-preview"
+import { AutomationModeSelector } from "@/components/dashboard/ai/automation-mode-selector"
 import { ResponseBehaviorControls } from "@/components/dashboard/ai/response-behavior-controls"
 import {
   CollectionCard,
@@ -38,12 +39,19 @@ export function AiResponseSettings({
 }: Props) {
   const [knowledge, setKnowledge] = useState(initialKnowledge)
   const [profileDraft, setProfileDraft] = useState(initialKnowledge.profile)
+  const [automationModeDraft, setAutomationModeDraft] = useState(
+    initialKnowledge.profile.automationMode
+  )
   const [instructionDialogOpen, setInstructionDialogOpen] = useState(false)
+  const [autoReplyConfirmationOpen, setAutoReplyConfirmationOpen] =
+    useState(false)
   const [instructionDraft, setInstructionDraft] = useState("")
   const [isSavingBehavior, setIsSavingBehavior] = useState(false)
+  const [isSavingAutomation, setIsSavingAutomation] = useState(false)
   const [isSavingInstruction, setIsSavingInstruction] = useState(false)
   const [removingInstruction, setRemovingInstruction] = useState<number>()
   const [behaviorFeedback, setBehaviorFeedback] = useState<SaveFeedback>()
+  const [automationFeedback, setAutomationFeedback] = useState<SaveFeedback>()
   const [instructionFeedback, setInstructionFeedback] = useState<SaveFeedback>()
 
   function updateProfile<Key extends keyof StoreKnowledge["profile"]>(
@@ -77,6 +85,40 @@ export function AiResponseSettings({
       setBehaviorFeedback(toErrorFeedback(error))
     } finally {
       setIsSavingBehavior(false)
+    }
+  }
+
+  function requestAutomationModeSave() {
+    if (automationModeDraft === "SAFE_AUTO") {
+      setAutoReplyConfirmationOpen(true)
+      return
+    }
+
+    void saveAutomationMode()
+  }
+
+  async function saveAutomationMode() {
+    setIsSavingAutomation(true)
+    setAutomationFeedback(undefined)
+    try {
+      const updated = await updateStoreKnowledge(storeId, {
+        automationMode: automationModeDraft,
+      })
+      setKnowledge(updated)
+      setProfileDraft((current) => ({
+        ...current,
+        automationMode: updated.profile.automationMode,
+      }))
+      setAutomationModeDraft(updated.profile.automationMode)
+      setAutoReplyConfirmationOpen(false)
+      setAutomationFeedback({
+        type: "success",
+        message: automationModeSavedMessage(updated.profile.automationMode),
+      })
+    } catch (error) {
+      setAutomationFeedback(toErrorFeedback(error))
+    } finally {
+      setIsSavingAutomation(false)
     }
   }
 
@@ -146,6 +188,38 @@ export function AiResponseSettings({
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="grid min-w-0 gap-6">
           <SettingsCard
+            title="Yanıt otomasyonu"
+            description="Yeni sorular geldiğinde AI'ın hangi aşamaya kadar ilerleyebileceğini belirleyin."
+            action={
+              <Button
+                size="sm"
+                onClick={requestAutomationModeSave}
+                disabled={
+                  isSavingAutomation ||
+                  automationModeDraft === knowledge.profile.automationMode
+                }
+              >
+                <HugeiconsIcon
+                  icon={
+                    isSavingAutomation ? RefreshIcon : CheckmarkCircle01Icon
+                  }
+                  className={`size-4 ${isSavingAutomation ? "animate-spin" : ""}`}
+                />
+                Modu kaydet
+              </Button>
+            }
+          >
+            <FeedbackBanner feedback={automationFeedback} />
+            <AutomationModeSelector
+              value={automationModeDraft}
+              onChange={(value) => {
+                setAutomationModeDraft(value)
+                setAutomationFeedback(undefined)
+              }}
+            />
+          </SettingsCard>
+
+          <SettingsCard
             title="Yanıt davranışı"
             description="Ton, uzunluk ve mesaj biçimini mağazanızın iletişim diline göre ayarlayın."
             action={
@@ -206,6 +280,49 @@ export function AiResponseSettings({
       </div>
 
       <ResponsiveDialog
+        open={autoReplyConfirmationOpen}
+        onOpenChange={setAutoReplyConfirmationOpen}
+        preventClose={isSavingAutomation}
+        title="Otomatik yanıtları etkinleştirin"
+        description="Bu mod yalnızca güvenli kabul edilen AI taslaklarını bağlı pazaryerine sizin onayınızı beklemeden gönderir."
+        footer={({ close }) => (
+          <>
+            <Button
+              variant="outline"
+              onClick={close}
+              disabled={isSavingAutomation}
+            >
+              Vazgeç
+            </Button>
+            <Button
+              onClick={() => void saveAutomationMode()}
+              disabled={isSavingAutomation}
+            >
+              {isSavingAutomation ? (
+                <HugeiconsIcon
+                  icon={RefreshIcon}
+                  className="size-4 animate-spin"
+                />
+              ) : null}
+              Evet, etkinleştir
+            </Button>
+          </>
+        )}
+      >
+        <div className="space-y-3 rounded-lg border border-amber-500/25 bg-amber-500/8 px-4 py-3.5 text-sm leading-6">
+          <p className="font-medium text-foreground">
+            Otomatik gönderim için tüm koşullar birlikte aranır:
+          </p>
+          <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
+            <li>AI güven puanı en az %85 olmalıdır.</li>
+            <li>Cevap doğrulanmış katalog verilerine dayanmalıdır.</li>
+            <li>Eksik bilgi veya risk işareti bulunmamalıdır.</li>
+            <li>Diğer cevaplar incelemeniz için taslak olarak kalır.</li>
+          </ul>
+        </div>
+      </ResponsiveDialog>
+
+      <ResponsiveDialog
         open={instructionDialogOpen}
         onOpenChange={setInstructionDialogOpen}
         preventClose={isSavingInstruction}
@@ -261,4 +378,16 @@ function toErrorFeedback(error: unknown): SaveFeedback {
     message:
       error instanceof Error ? error.message : "Değişiklikler kaydedilemedi.",
   }
+}
+
+function automationModeSavedMessage(
+  mode: StoreKnowledge["profile"]["automationMode"]
+) {
+  if (mode === "DRAFT_ONLY") {
+    return "Yalnızca taslak modu etkinleştirildi."
+  }
+  if (mode === "SAFE_AUTO") {
+    return "Güvenli otomatik yanıt modu etkinleştirildi."
+  }
+  return "Yanıt otomasyonu kapatıldı."
 }

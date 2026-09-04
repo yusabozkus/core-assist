@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  AiAutomationMode,
   AiEmojiPolicy,
   AiResponseLength,
   AiTone,
@@ -15,6 +16,7 @@ import { PrismaService } from '../../database/prisma.service';
 import type { UpdateStoreKnowledgeDto } from './dto/update-store-knowledge.dto';
 
 const profileSelect = {
+  automationMode: true,
   brandDescription: true,
   shippingPolicy: true,
   returnPolicy: true,
@@ -74,6 +76,7 @@ export class KnowledgeService {
         where: { storeId },
         create: {
           storeId,
+          automationMode: dto.automationMode ?? AiAutomationMode.OFF,
           brandDescription: clean(dto.brandDescription),
           shippingPolicy: clean(dto.shippingPolicy),
           returnPolicy: clean(dto.returnPolicy),
@@ -92,6 +95,7 @@ export class KnowledgeService {
               : false,
         },
         update: {
+          automationMode: dto.automationMode,
           ...(dto.brandDescription !== undefined
             ? { brandDescription: clean(dto.brandDescription) }
             : {}),
@@ -221,6 +225,7 @@ export class KnowledgeService {
               : profile.emojiPolicy,
         }
       : {
+          automationMode: AiAutomationMode.OFF,
           brandDescription: null,
           shippingPolicy: null,
           returnPolicy: null,
@@ -238,6 +243,7 @@ export class KnowledgeService {
 
     const { emojiEnabled: _legacyEmojiEnabled, ...publicProfile } =
       resolvedProfile;
+    void _legacyEmojiEnabled;
 
     return {
       profile: publicProfile,

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import type { Queue } from 'bullmq';
 import { PrismaService } from '../src/database/prisma.service';
 import {
+  AiAutomationMode,
   CatalogSyncKind,
   ChannelConnectionStatus,
   ChannelType,
@@ -21,6 +22,7 @@ import { QuestionAnswerQueueService } from '../src/modules/question-answer/quest
 import type { QuestionAnswerJobData } from '../src/modules/question-answer/question-answer.types';
 import { QuestionAnswerWorkerService } from '../src/modules/question-answer/question-answer-worker.service';
 import { QuestionSyncWorkerService } from '../src/modules/question-sync/question-sync-worker.service';
+import type { QuestionDraftDispatcher } from '../src/modules/questions/question-draft.types';
 import { SizeGuideDispatcher } from '../src/modules/size-guides/size-guide.types';
 
 describe('Trendyol product question flow', () => {
@@ -75,10 +77,15 @@ describe('Trendyol product question flow', () => {
       encryption,
       sizeGuides,
     );
+    const enqueueDraft = jest.fn().mockResolvedValue(undefined);
+    const draftDispatcher = {
+      enqueue: enqueueDraft,
+    } as QuestionDraftDispatcher;
     const questionWorker = new QuestionSyncWorkerService(
       prisma,
       registry,
       encryption,
+      draftDispatcher,
     );
     const queueAdd = jest.fn().mockResolvedValue({});
     const answerQueue = {
@@ -251,16 +258,49 @@ describe('Trendyol product question flow', () => {
     });
     expect(persistedQuestions[1].customerName).toBeNull();
     expect(questionRuns.map((run) => run.questionsProcessed)).toEqual([2, 0]);
+    expect(enqueueDraft).toHaveBeenCalledTimes(4);
     expect(
       await prisma.incomingEvent.count({
         where: { connectionId: resources.connectionId },
       }),
     ).toBe(2);
 
+    await prisma.$transaction([
+      prisma.storeKnowledgeProfile.update({
+        where: { storeId: resources.storeId },
+        data: { automationMode: AiAutomationMode.SAFE_AUTO },
+      }),
+      prisma.productQuestion.update({
+        where: { id: persistedQuestions[0].id },
+        data: {
+          answer: 'Merhabalar, ürünümüz regular kalıptır.',
+          status: 'DRAFTED',
+          draftDecision: 'READY_FOR_SEND',
+          draftConfidence: 0.7,
+          draftRisks: [],
+          draftMissingInformation: [],
+          draftEvidenceIds: ['attribute-fit'],
+        },
+      }),
+    ]);
+    await expect(
+      answerDispatcher.enqueue({
+        storeId: resources.storeId,
+        questionId: persistedQuestions[0].id,
+        origin: 'AUTOMATION',
+        answer: 'Merhabalar, ürünümüz regular kalıptır.',
+      }),
+    ).rejects.toThrow('güvenli otomatik gönderim koşullarını karşılamıyor');
+    expect(queueAdd).not.toHaveBeenCalled();
+
+    await prisma.productQuestion.update({
+      where: { id: persistedQuestions[0].id },
+      data: { draftConfidence: 0.95 },
+    });
     const queuedAnswer = await answerDispatcher.enqueue({
       storeId: resources.storeId,
       questionId: persistedQuestions[0].id,
-      requestedByUserId: resources.userId,
+      origin: 'AUTOMATION',
       answer: 'Merhabalar, ürünümüz regular kalıptır.',
     });
     expect(queueAdd).toHaveBeenCalledTimes(1);
@@ -281,6 +321,8 @@ describe('Trendyol product question flow', () => {
     });
     expect(answeredQuestion.answerDelivery).toMatchObject({
       status: 'SENT',
+      origin: 'AUTOMATION',
+      requestedByUserId: null,
       externalAnswerId: '55002211',
       attempts: 1,
     });
@@ -325,6 +367,12 @@ describe('Trendyol product question flow', () => {
           apiKey: 'integration-test-key',
           apiSecret: 'integration-test-secret',
         }),
+      },
+    });
+    await prisma.storeKnowledgeProfile.create({
+      data: {
+        storeId: store.id,
+        automationMode: AiAutomationMode.DRAFT_ONLY,
       },
     });
 

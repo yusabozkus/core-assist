@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import {
+  AiAutomationMode,
   ChannelConnectionStatus,
   ProductQuestionStatus,
+  QuestionAnswerOrigin,
   QuestionAnswerStatus,
+  QuestionReplyDecision,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { CredentialsEncryptionService } from '../channels/credentials-encryption.service';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
+import { MINIMUM_READY_CONFIDENCE } from '../questions/question-reply-decision.service';
 import type { QuestionAnswerJobData } from './question-answer.types';
 
 @Injectable()
@@ -23,9 +27,25 @@ export class QuestionAnswerWorkerService {
       select: {
         id: true,
         answer: true,
+        origin: true,
         status: true,
         questionId: true,
-        question: { select: { externalQuestionId: true } },
+        question: {
+          select: {
+            externalQuestionId: true,
+            answer: true,
+            draftDecision: true,
+            draftConfidence: true,
+            draftRisks: true,
+            draftMissingInformation: true,
+            draftEvidenceIds: true,
+            store: {
+              select: {
+                knowledgeProfile: { select: { automationMode: true } },
+              },
+            },
+          },
+        },
         connection: {
           select: {
             providerKey: true,
@@ -44,6 +64,29 @@ export class QuestionAnswerWorkerService {
     }
     if (!delivery.connection.credentialsEncrypted) {
       throw new Error('Question channel credentials are unavailable.');
+    }
+    if (
+      delivery.origin === QuestionAnswerOrigin.AUTOMATION &&
+      (delivery.question.draftDecision !==
+        QuestionReplyDecision.READY_FOR_SEND ||
+        delivery.question.answer !== delivery.answer ||
+        delivery.question.draftConfidence === null ||
+        delivery.question.draftConfidence < MINIMUM_READY_CONFIDENCE ||
+        !isEmptyList(delivery.question.draftRisks) ||
+        !isEmptyList(delivery.question.draftMissingInformation) ||
+        !isNonEmptyList(delivery.question.draftEvidenceIds) ||
+        delivery.question.store.knowledgeProfile?.automationMode !==
+          AiAutomationMode.SAFE_AUTO)
+    ) {
+      await this.prisma.questionAnswer.updateMany({
+        where: { id: delivery.id, status: QuestionAnswerStatus.QUEUED },
+        data: {
+          status: QuestionAnswerStatus.FAILED,
+          lastError:
+            'Otomatik gönderim güvenlik koşulları artık karşılanmadığı için cevap gönderilmedi.',
+        },
+      });
+      return;
     }
 
     await this.prisma.questionAnswer.update({
@@ -108,4 +151,12 @@ export class QuestionAnswerWorkerService {
       },
     });
   }
+}
+
+function isEmptyList(value: unknown) {
+  return Array.isArray(value) && value.length === 0;
+}
+
+function isNonEmptyList(value: unknown) {
+  return Array.isArray(value) && value.length > 0;
 }
