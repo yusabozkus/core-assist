@@ -349,6 +349,7 @@ function createPersistedDraftContext(
   }
 
   return {
+    attemptId: question.draftAttempts?.[0]?.id ?? "",
     requestedFacts: [],
     matchedColor: null,
     matchedSize: null,

@@ -204,6 +204,7 @@ export type UserWhereInput = {
   workspaceMembers?: Prisma.WorkspaceMemberListRelationFilter
   storeMembers?: Prisma.StoreMemberListRelationFilter
   requestedQuestionAnswers?: Prisma.QuestionAnswerListRelationFilter
+  requestedAiDrafts?: Prisma.AiDraftAttemptListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -220,6 +221,7 @@ export type UserOrderByWithRelationInput = {
   workspaceMembers?: Prisma.WorkspaceMemberOrderByRelationAggregateInput
   storeMembers?: Prisma.StoreMemberOrderByRelationAggregateInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerOrderByRelationAggregateInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -239,6 +241,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   workspaceMembers?: Prisma.WorkspaceMemberListRelationFilter
   storeMembers?: Prisma.StoreMemberListRelationFilter
   requestedQuestionAnswers?: Prisma.QuestionAnswerListRelationFilter
+  requestedAiDrafts?: Prisma.AiDraftAttemptListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -281,6 +284,7 @@ export type UserCreateInput = {
   workspaceMembers?: Prisma.WorkspaceMemberCreateNestedManyWithoutUserInput
   storeMembers?: Prisma.StoreMemberCreateNestedManyWithoutUserInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptCreateNestedManyWithoutRequestedByInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -297,6 +301,7 @@ export type UserUncheckedCreateInput = {
   workspaceMembers?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutUserInput
   storeMembers?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutUserInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutRequestedByInput
 }
 
 export type UserUpdateInput = {
@@ -313,6 +318,7 @@ export type UserUpdateInput = {
   workspaceMembers?: Prisma.WorkspaceMemberUpdateManyWithoutUserNestedInput
   storeMembers?: Prisma.StoreMemberUpdateManyWithoutUserNestedInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUpdateManyWithoutRequestedByNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -329,6 +335,7 @@ export type UserUncheckedUpdateInput = {
   workspaceMembers?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutUserNestedInput
   storeMembers?: Prisma.StoreMemberUncheckedUpdateManyWithoutUserNestedInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutRequestedByNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -473,6 +480,22 @@ export type UserUpdateOneRequiredWithoutWorkspaceMembersNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutWorkspaceMembersInput, Prisma.UserUpdateWithoutWorkspaceMembersInput>, Prisma.UserUncheckedUpdateWithoutWorkspaceMembersInput>
 }
 
+export type UserCreateNestedOneWithoutRequestedAiDraftsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutRequestedAiDraftsInput, Prisma.UserUncheckedCreateWithoutRequestedAiDraftsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutRequestedAiDraftsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutRequestedAiDraftsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutRequestedAiDraftsInput, Prisma.UserUncheckedCreateWithoutRequestedAiDraftsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutRequestedAiDraftsInput
+  upsert?: Prisma.UserUpsertWithoutRequestedAiDraftsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutRequestedAiDraftsInput, Prisma.UserUpdateWithoutRequestedAiDraftsInput>, Prisma.UserUncheckedUpdateWithoutRequestedAiDraftsInput>
+}
+
 export type UserCreateNestedOneWithoutRequestedQuestionAnswersInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutRequestedQuestionAnswersInput, Prisma.UserUncheckedCreateWithoutRequestedQuestionAnswersInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutRequestedQuestionAnswersInput
@@ -516,6 +539,7 @@ export type UserCreateWithoutSessionsInput = {
   workspaceMembers?: Prisma.WorkspaceMemberCreateNestedManyWithoutUserInput
   storeMembers?: Prisma.StoreMemberCreateNestedManyWithoutUserInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptCreateNestedManyWithoutRequestedByInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -531,6 +555,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   workspaceMembers?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutUserInput
   storeMembers?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutUserInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutRequestedByInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -562,6 +587,7 @@ export type UserUpdateWithoutSessionsInput = {
   workspaceMembers?: Prisma.WorkspaceMemberUpdateManyWithoutUserNestedInput
   storeMembers?: Prisma.StoreMemberUpdateManyWithoutUserNestedInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUpdateManyWithoutRequestedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -577,6 +603,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   workspaceMembers?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutUserNestedInput
   storeMembers?: Prisma.StoreMemberUncheckedUpdateManyWithoutUserNestedInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutRequestedByNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -592,6 +619,7 @@ export type UserCreateWithoutAccountsInput = {
   workspaceMembers?: Prisma.WorkspaceMemberCreateNestedManyWithoutUserInput
   storeMembers?: Prisma.StoreMemberCreateNestedManyWithoutUserInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptCreateNestedManyWithoutRequestedByInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -607,6 +635,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   workspaceMembers?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutUserInput
   storeMembers?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutUserInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutRequestedByInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -638,6 +667,7 @@ export type UserUpdateWithoutAccountsInput = {
   workspaceMembers?: Prisma.WorkspaceMemberUpdateManyWithoutUserNestedInput
   storeMembers?: Prisma.StoreMemberUpdateManyWithoutUserNestedInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUpdateManyWithoutRequestedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -653,6 +683,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   workspaceMembers?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutUserNestedInput
   storeMembers?: Prisma.StoreMemberUncheckedUpdateManyWithoutUserNestedInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutRequestedByNestedInput
 }
 
 export type UserCreateWithoutOwnedWorkspacesInput = {
@@ -668,6 +699,7 @@ export type UserCreateWithoutOwnedWorkspacesInput = {
   workspaceMembers?: Prisma.WorkspaceMemberCreateNestedManyWithoutUserInput
   storeMembers?: Prisma.StoreMemberCreateNestedManyWithoutUserInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptCreateNestedManyWithoutRequestedByInput
 }
 
 export type UserUncheckedCreateWithoutOwnedWorkspacesInput = {
@@ -683,6 +715,7 @@ export type UserUncheckedCreateWithoutOwnedWorkspacesInput = {
   workspaceMembers?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutUserInput
   storeMembers?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutUserInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutRequestedByInput
 }
 
 export type UserCreateOrConnectWithoutOwnedWorkspacesInput = {
@@ -714,6 +747,7 @@ export type UserUpdateWithoutOwnedWorkspacesInput = {
   workspaceMembers?: Prisma.WorkspaceMemberUpdateManyWithoutUserNestedInput
   storeMembers?: Prisma.StoreMemberUpdateManyWithoutUserNestedInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUpdateManyWithoutRequestedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOwnedWorkspacesInput = {
@@ -729,6 +763,7 @@ export type UserUncheckedUpdateWithoutOwnedWorkspacesInput = {
   workspaceMembers?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutUserNestedInput
   storeMembers?: Prisma.StoreMemberUncheckedUpdateManyWithoutUserNestedInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutRequestedByNestedInput
 }
 
 export type UserCreateWithoutWorkspaceMembersInput = {
@@ -744,6 +779,7 @@ export type UserCreateWithoutWorkspaceMembersInput = {
   ownedWorkspaces?: Prisma.WorkspaceCreateNestedManyWithoutOwnerInput
   storeMembers?: Prisma.StoreMemberCreateNestedManyWithoutUserInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptCreateNestedManyWithoutRequestedByInput
 }
 
 export type UserUncheckedCreateWithoutWorkspaceMembersInput = {
@@ -759,6 +795,7 @@ export type UserUncheckedCreateWithoutWorkspaceMembersInput = {
   ownedWorkspaces?: Prisma.WorkspaceUncheckedCreateNestedManyWithoutOwnerInput
   storeMembers?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutUserInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutRequestedByInput
 }
 
 export type UserCreateOrConnectWithoutWorkspaceMembersInput = {
@@ -790,6 +827,7 @@ export type UserUpdateWithoutWorkspaceMembersInput = {
   ownedWorkspaces?: Prisma.WorkspaceUpdateManyWithoutOwnerNestedInput
   storeMembers?: Prisma.StoreMemberUpdateManyWithoutUserNestedInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUpdateManyWithoutRequestedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWorkspaceMembersInput = {
@@ -803,6 +841,87 @@ export type UserUncheckedUpdateWithoutWorkspaceMembersInput = {
   sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   ownedWorkspaces?: Prisma.WorkspaceUncheckedUpdateManyWithoutOwnerNestedInput
+  storeMembers?: Prisma.StoreMemberUncheckedUpdateManyWithoutUserNestedInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutRequestedByNestedInput
+}
+
+export type UserCreateWithoutRequestedAiDraftsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  ownedWorkspaces?: Prisma.WorkspaceCreateNestedManyWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberCreateNestedManyWithoutUserInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutRequestedByInput
+}
+
+export type UserUncheckedCreateWithoutRequestedAiDraftsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  ownedWorkspaces?: Prisma.WorkspaceUncheckedCreateNestedManyWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutUserInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutRequestedByInput
+}
+
+export type UserCreateOrConnectWithoutRequestedAiDraftsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutRequestedAiDraftsInput, Prisma.UserUncheckedCreateWithoutRequestedAiDraftsInput>
+}
+
+export type UserUpsertWithoutRequestedAiDraftsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutRequestedAiDraftsInput, Prisma.UserUncheckedUpdateWithoutRequestedAiDraftsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutRequestedAiDraftsInput, Prisma.UserUncheckedCreateWithoutRequestedAiDraftsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutRequestedAiDraftsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutRequestedAiDraftsInput, Prisma.UserUncheckedUpdateWithoutRequestedAiDraftsInput>
+}
+
+export type UserUpdateWithoutRequestedAiDraftsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  ownedWorkspaces?: Prisma.WorkspaceUpdateManyWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUpdateManyWithoutUserNestedInput
+  storeMembers?: Prisma.StoreMemberUpdateManyWithoutUserNestedInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutRequestedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutRequestedAiDraftsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  ownedWorkspaces?: Prisma.WorkspaceUncheckedUpdateManyWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutUserNestedInput
   storeMembers?: Prisma.StoreMemberUncheckedUpdateManyWithoutUserNestedInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutRequestedByNestedInput
 }
@@ -820,6 +939,7 @@ export type UserCreateWithoutRequestedQuestionAnswersInput = {
   ownedWorkspaces?: Prisma.WorkspaceCreateNestedManyWithoutOwnerInput
   workspaceMembers?: Prisma.WorkspaceMemberCreateNestedManyWithoutUserInput
   storeMembers?: Prisma.StoreMemberCreateNestedManyWithoutUserInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptCreateNestedManyWithoutRequestedByInput
 }
 
 export type UserUncheckedCreateWithoutRequestedQuestionAnswersInput = {
@@ -835,6 +955,7 @@ export type UserUncheckedCreateWithoutRequestedQuestionAnswersInput = {
   ownedWorkspaces?: Prisma.WorkspaceUncheckedCreateNestedManyWithoutOwnerInput
   workspaceMembers?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutUserInput
   storeMembers?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutUserInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutRequestedByInput
 }
 
 export type UserCreateOrConnectWithoutRequestedQuestionAnswersInput = {
@@ -866,6 +987,7 @@ export type UserUpdateWithoutRequestedQuestionAnswersInput = {
   ownedWorkspaces?: Prisma.WorkspaceUpdateManyWithoutOwnerNestedInput
   workspaceMembers?: Prisma.WorkspaceMemberUpdateManyWithoutUserNestedInput
   storeMembers?: Prisma.StoreMemberUpdateManyWithoutUserNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUpdateManyWithoutRequestedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRequestedQuestionAnswersInput = {
@@ -881,6 +1003,7 @@ export type UserUncheckedUpdateWithoutRequestedQuestionAnswersInput = {
   ownedWorkspaces?: Prisma.WorkspaceUncheckedUpdateManyWithoutOwnerNestedInput
   workspaceMembers?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutUserNestedInput
   storeMembers?: Prisma.StoreMemberUncheckedUpdateManyWithoutUserNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutRequestedByNestedInput
 }
 
 export type UserCreateWithoutStoreMembersInput = {
@@ -896,6 +1019,7 @@ export type UserCreateWithoutStoreMembersInput = {
   ownedWorkspaces?: Prisma.WorkspaceCreateNestedManyWithoutOwnerInput
   workspaceMembers?: Prisma.WorkspaceMemberCreateNestedManyWithoutUserInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptCreateNestedManyWithoutRequestedByInput
 }
 
 export type UserUncheckedCreateWithoutStoreMembersInput = {
@@ -911,6 +1035,7 @@ export type UserUncheckedCreateWithoutStoreMembersInput = {
   ownedWorkspaces?: Prisma.WorkspaceUncheckedCreateNestedManyWithoutOwnerInput
   workspaceMembers?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutUserInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutRequestedByInput
 }
 
 export type UserCreateOrConnectWithoutStoreMembersInput = {
@@ -942,6 +1067,7 @@ export type UserUpdateWithoutStoreMembersInput = {
   ownedWorkspaces?: Prisma.WorkspaceUpdateManyWithoutOwnerNestedInput
   workspaceMembers?: Prisma.WorkspaceMemberUpdateManyWithoutUserNestedInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUpdateManyWithoutRequestedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutStoreMembersInput = {
@@ -957,6 +1083,7 @@ export type UserUncheckedUpdateWithoutStoreMembersInput = {
   ownedWorkspaces?: Prisma.WorkspaceUncheckedUpdateManyWithoutOwnerNestedInput
   workspaceMembers?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutUserNestedInput
   requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutRequestedByNestedInput
 }
 
 
@@ -971,6 +1098,7 @@ export type UserCountOutputType = {
   workspaceMembers: number
   storeMembers: number
   requestedQuestionAnswers: number
+  requestedAiDrafts: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -980,6 +1108,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   workspaceMembers?: boolean | UserCountOutputTypeCountWorkspaceMembersArgs
   storeMembers?: boolean | UserCountOutputTypeCountStoreMembersArgs
   requestedQuestionAnswers?: boolean | UserCountOutputTypeCountRequestedQuestionAnswersArgs
+  requestedAiDrafts?: boolean | UserCountOutputTypeCountRequestedAiDraftsArgs
 }
 
 /**
@@ -1034,6 +1163,13 @@ export type UserCountOutputTypeCountRequestedQuestionAnswersArgs<ExtArgs extends
   where?: Prisma.QuestionAnswerWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountRequestedAiDraftsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AiDraftAttemptWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1049,6 +1185,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   workspaceMembers?: boolean | Prisma.User$workspaceMembersArgs<ExtArgs>
   storeMembers?: boolean | Prisma.User$storeMembersArgs<ExtArgs>
   requestedQuestionAnswers?: boolean | Prisma.User$requestedQuestionAnswersArgs<ExtArgs>
+  requestedAiDrafts?: boolean | Prisma.User$requestedAiDraftsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1090,6 +1227,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   workspaceMembers?: boolean | Prisma.User$workspaceMembersArgs<ExtArgs>
   storeMembers?: boolean | Prisma.User$storeMembersArgs<ExtArgs>
   requestedQuestionAnswers?: boolean | Prisma.User$requestedQuestionAnswersArgs<ExtArgs>
+  requestedAiDrafts?: boolean | Prisma.User$requestedAiDraftsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1104,6 +1242,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     workspaceMembers: Prisma.$WorkspaceMemberPayload<ExtArgs>[]
     storeMembers: Prisma.$StoreMemberPayload<ExtArgs>[]
     requestedQuestionAnswers: Prisma.$QuestionAnswerPayload<ExtArgs>[]
+    requestedAiDrafts: Prisma.$AiDraftAttemptPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1513,6 +1652,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   workspaceMembers<T extends Prisma.User$workspaceMembersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$workspaceMembersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkspaceMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   storeMembers<T extends Prisma.User$storeMembersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$storeMembersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StoreMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   requestedQuestionAnswers<T extends Prisma.User$requestedQuestionAnswersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$requestedQuestionAnswersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$QuestionAnswerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  requestedAiDrafts<T extends Prisma.User$requestedAiDraftsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$requestedAiDraftsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AiDraftAttemptPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2083,6 +2223,30 @@ export type User$requestedQuestionAnswersArgs<ExtArgs extends runtime.Types.Exte
   take?: number
   skip?: number
   distinct?: Prisma.QuestionAnswerScalarFieldEnum | Prisma.QuestionAnswerScalarFieldEnum[]
+}
+
+/**
+ * User.requestedAiDrafts
+ */
+export type User$requestedAiDraftsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AiDraftAttempt
+   */
+  select?: Prisma.AiDraftAttemptSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AiDraftAttempt
+   */
+  omit?: Prisma.AiDraftAttemptOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AiDraftAttemptInclude<ExtArgs> | null
+  where?: Prisma.AiDraftAttemptWhereInput
+  orderBy?: Prisma.AiDraftAttemptOrderByWithRelationInput | Prisma.AiDraftAttemptOrderByWithRelationInput[]
+  cursor?: Prisma.AiDraftAttemptWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AiDraftAttemptScalarFieldEnum | Prisma.AiDraftAttemptScalarFieldEnum[]
 }
 
 /**

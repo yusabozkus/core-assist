@@ -28,6 +28,11 @@ export class QuestionDraftWorkerService {
         status: true,
         answer: true,
         draftDecision: true,
+        draftAttempts: {
+          orderBy: [{ createdAt: 'desc' as const }, { id: 'desc' as const }],
+          take: 1,
+          select: { id: true },
+        },
         answerDelivery: { select: { status: true } },
         store: {
           select: {
@@ -59,12 +64,14 @@ export class QuestionDraftWorkerService {
         automationMode === AiAutomationMode.SAFE_AUTO &&
         question.draftDecision === QuestionReplyDecision.READY_FOR_SEND &&
         question.answer &&
+        question.draftAttempts[0] &&
         deliveryCanBeQueued
       ) {
         await this.enqueueAutomaticAnswer(
           data.storeId,
           data.questionId,
           question.answer,
+          question.draftAttempts[0].id,
         );
         await this.clearProcessingState(data);
         return { status: 'QUEUED' as const };
@@ -98,7 +105,9 @@ export class QuestionDraftWorkerService {
       },
     });
 
-    const result = await this.drafts.generate(data.storeId, data.questionId);
+    const result = await this.drafts.generate(data.storeId, data.questionId, {
+      trigger: 'AUTOMATION',
+    });
 
     if (
       automationMode !== AiAutomationMode.SAFE_AUTO ||
@@ -112,6 +121,7 @@ export class QuestionDraftWorkerService {
       data.storeId,
       data.questionId,
       result.answer,
+      result.context.attemptId,
     );
 
     return { status: 'QUEUED' as const };
@@ -145,12 +155,14 @@ export class QuestionDraftWorkerService {
     storeId: string,
     questionId: string,
     answer: string,
+    draftAttemptId: string,
   ) {
     await this.answers.enqueue({
       storeId,
       questionId,
       origin: 'AUTOMATION',
       answer,
+      draftAttemptId,
     });
   }
 

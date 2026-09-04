@@ -73,6 +73,7 @@ export const ModelName = {
   CatalogSyncRun: 'CatalogSyncRun',
   IncomingEvent: 'IncomingEvent',
   ProductQuestion: 'ProductQuestion',
+  AiDraftAttempt: 'AiDraftAttempt',
   QuestionAnswer: 'QuestionAnswer',
   StoreMember: 'StoreMember'
 } as const
@@ -479,13 +480,41 @@ export const ProductQuestionScalarFieldEnum = {
 export type ProductQuestionScalarFieldEnum = (typeof ProductQuestionScalarFieldEnum)[keyof typeof ProductQuestionScalarFieldEnum]
 
 
+export const AiDraftAttemptScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  questionId: 'questionId',
+  requestedByUserId: 'requestedByUserId',
+  trigger: 'trigger',
+  outcome: 'outcome',
+  answer: 'answer',
+  decision: 'decision',
+  confidence: 'confidence',
+  answerability: 'answerability',
+  risks: 'risks',
+  missingInformation: 'missingInformation',
+  evidenceIds: 'evidenceIds',
+  model: 'model',
+  interpretation: 'interpretation',
+  requestedFacts: 'requestedFacts',
+  detectedFacts: 'detectedFacts',
+  selectedAt: 'selectedAt',
+  finalizedAt: 'finalizedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type AiDraftAttemptScalarFieldEnum = (typeof AiDraftAttemptScalarFieldEnum)[keyof typeof AiDraftAttemptScalarFieldEnum]
+
+
 export const QuestionAnswerScalarFieldEnum = {
   id: 'id',
   storeId: 'storeId',
   connectionId: 'connectionId',
   questionId: 'questionId',
   requestedByUserId: 'requestedByUserId',
+  draftAttemptId: 'draftAttemptId',
   origin: 'origin',
+  composition: 'composition',
   answer: 'answer',
   status: 'status',
   externalAnswerId: 'externalAnswerId',

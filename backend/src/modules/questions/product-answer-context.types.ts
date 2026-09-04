@@ -115,6 +115,7 @@ export type DraftedQuestionAnswer = {
   answer: string;
   status: 'DRAFTED';
   context: {
+    attemptId: string;
     requestedFacts: ProductAnswerFact[];
     matchedColor: string | null;
     matchedSize: string | null;

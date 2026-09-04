@@ -128,6 +128,11 @@ export type IncomingEvent = Prisma.IncomingEventModel
  */
 export type ProductQuestion = Prisma.ProductQuestionModel
 /**
+ * Model AiDraftAttempt
+ * 
+ */
+export type AiDraftAttempt = Prisma.AiDraftAttemptModel
+/**
  * Model QuestionAnswer
  * 
  */

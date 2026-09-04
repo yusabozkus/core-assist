@@ -705,11 +705,96 @@ export type EnumQuestionDraftProcessingStatusNullableWithAggregatesFilter<$Prism
   _max?: Prisma.NestedEnumQuestionDraftProcessingStatusNullableFilter<$PrismaModel>
 }
 
+export type EnumAiDraftTriggerFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiDraftTrigger | Prisma.EnumAiDraftTriggerFieldRefInput<$PrismaModel>
+  in?: $Enums.AiDraftTrigger[] | Prisma.ListEnumAiDraftTriggerFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiDraftTrigger[] | Prisma.ListEnumAiDraftTriggerFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiDraftTriggerFilter<$PrismaModel> | $Enums.AiDraftTrigger
+}
+
+export type EnumAiDraftOutcomeFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiDraftOutcome | Prisma.EnumAiDraftOutcomeFieldRefInput<$PrismaModel>
+  in?: $Enums.AiDraftOutcome[] | Prisma.ListEnumAiDraftOutcomeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiDraftOutcome[] | Prisma.ListEnumAiDraftOutcomeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiDraftOutcomeFilter<$PrismaModel> | $Enums.AiDraftOutcome
+}
+
+export type EnumQuestionReplyDecisionFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuestionReplyDecision | Prisma.EnumQuestionReplyDecisionFieldRefInput<$PrismaModel>
+  in?: $Enums.QuestionReplyDecision[] | Prisma.ListEnumQuestionReplyDecisionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuestionReplyDecision[] | Prisma.ListEnumQuestionReplyDecisionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuestionReplyDecisionFilter<$PrismaModel> | $Enums.QuestionReplyDecision
+}
+
+export type FloatFilter<$PrismaModel = never> = {
+  equals?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  in?: number[] | Prisma.ListFloatFieldRefInput<$PrismaModel>
+  notIn?: number[] | Prisma.ListFloatFieldRefInput<$PrismaModel>
+  lt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  lte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  gt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  gte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedFloatFilter<$PrismaModel> | number
+}
+
+export type EnumAiDraftTriggerWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiDraftTrigger | Prisma.EnumAiDraftTriggerFieldRefInput<$PrismaModel>
+  in?: $Enums.AiDraftTrigger[] | Prisma.ListEnumAiDraftTriggerFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiDraftTrigger[] | Prisma.ListEnumAiDraftTriggerFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiDraftTriggerWithAggregatesFilter<$PrismaModel> | $Enums.AiDraftTrigger
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumAiDraftTriggerFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumAiDraftTriggerFilter<$PrismaModel>
+}
+
+export type EnumAiDraftOutcomeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiDraftOutcome | Prisma.EnumAiDraftOutcomeFieldRefInput<$PrismaModel>
+  in?: $Enums.AiDraftOutcome[] | Prisma.ListEnumAiDraftOutcomeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiDraftOutcome[] | Prisma.ListEnumAiDraftOutcomeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiDraftOutcomeWithAggregatesFilter<$PrismaModel> | $Enums.AiDraftOutcome
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumAiDraftOutcomeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumAiDraftOutcomeFilter<$PrismaModel>
+}
+
+export type EnumQuestionReplyDecisionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuestionReplyDecision | Prisma.EnumQuestionReplyDecisionFieldRefInput<$PrismaModel>
+  in?: $Enums.QuestionReplyDecision[] | Prisma.ListEnumQuestionReplyDecisionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuestionReplyDecision[] | Prisma.ListEnumQuestionReplyDecisionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuestionReplyDecisionWithAggregatesFilter<$PrismaModel> | $Enums.QuestionReplyDecision
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumQuestionReplyDecisionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumQuestionReplyDecisionFilter<$PrismaModel>
+}
+
+export type FloatWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  in?: number[] | Prisma.ListFloatFieldRefInput<$PrismaModel>
+  notIn?: number[] | Prisma.ListFloatFieldRefInput<$PrismaModel>
+  lt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  lte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  gt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  gte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedFloatWithAggregatesFilter<$PrismaModel> | number
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _avg?: Prisma.NestedFloatFilter<$PrismaModel>
+  _sum?: Prisma.NestedFloatFilter<$PrismaModel>
+  _min?: Prisma.NestedFloatFilter<$PrismaModel>
+  _max?: Prisma.NestedFloatFilter<$PrismaModel>
+}
+
 export type EnumQuestionAnswerOriginFilter<$PrismaModel = never> = {
   equals?: $Enums.QuestionAnswerOrigin | Prisma.EnumQuestionAnswerOriginFieldRefInput<$PrismaModel>
   in?: $Enums.QuestionAnswerOrigin[] | Prisma.ListEnumQuestionAnswerOriginFieldRefInput<$PrismaModel>
   notIn?: $Enums.QuestionAnswerOrigin[] | Prisma.ListEnumQuestionAnswerOriginFieldRefInput<$PrismaModel>
   not?: Prisma.NestedEnumQuestionAnswerOriginFilter<$PrismaModel> | $Enums.QuestionAnswerOrigin
+}
+
+export type EnumQuestionAnswerCompositionFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuestionAnswerComposition | Prisma.EnumQuestionAnswerCompositionFieldRefInput<$PrismaModel>
+  in?: $Enums.QuestionAnswerComposition[] | Prisma.ListEnumQuestionAnswerCompositionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuestionAnswerComposition[] | Prisma.ListEnumQuestionAnswerCompositionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuestionAnswerCompositionFilter<$PrismaModel> | $Enums.QuestionAnswerComposition
 }
 
 export type EnumQuestionAnswerStatusFilter<$PrismaModel = never> = {
@@ -727,6 +812,16 @@ export type EnumQuestionAnswerOriginWithAggregatesFilter<$PrismaModel = never> =
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumQuestionAnswerOriginFilter<$PrismaModel>
   _max?: Prisma.NestedEnumQuestionAnswerOriginFilter<$PrismaModel>
+}
+
+export type EnumQuestionAnswerCompositionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuestionAnswerComposition | Prisma.EnumQuestionAnswerCompositionFieldRefInput<$PrismaModel>
+  in?: $Enums.QuestionAnswerComposition[] | Prisma.ListEnumQuestionAnswerCompositionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuestionAnswerComposition[] | Prisma.ListEnumQuestionAnswerCompositionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuestionAnswerCompositionWithAggregatesFilter<$PrismaModel> | $Enums.QuestionAnswerComposition
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumQuestionAnswerCompositionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumQuestionAnswerCompositionFilter<$PrismaModel>
 }
 
 export type EnumQuestionAnswerStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -1406,11 +1501,85 @@ export type NestedEnumQuestionDraftProcessingStatusNullableWithAggregatesFilter<
   _max?: Prisma.NestedEnumQuestionDraftProcessingStatusNullableFilter<$PrismaModel>
 }
 
+export type NestedEnumAiDraftTriggerFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiDraftTrigger | Prisma.EnumAiDraftTriggerFieldRefInput<$PrismaModel>
+  in?: $Enums.AiDraftTrigger[] | Prisma.ListEnumAiDraftTriggerFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiDraftTrigger[] | Prisma.ListEnumAiDraftTriggerFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiDraftTriggerFilter<$PrismaModel> | $Enums.AiDraftTrigger
+}
+
+export type NestedEnumAiDraftOutcomeFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiDraftOutcome | Prisma.EnumAiDraftOutcomeFieldRefInput<$PrismaModel>
+  in?: $Enums.AiDraftOutcome[] | Prisma.ListEnumAiDraftOutcomeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiDraftOutcome[] | Prisma.ListEnumAiDraftOutcomeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiDraftOutcomeFilter<$PrismaModel> | $Enums.AiDraftOutcome
+}
+
+export type NestedEnumQuestionReplyDecisionFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuestionReplyDecision | Prisma.EnumQuestionReplyDecisionFieldRefInput<$PrismaModel>
+  in?: $Enums.QuestionReplyDecision[] | Prisma.ListEnumQuestionReplyDecisionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuestionReplyDecision[] | Prisma.ListEnumQuestionReplyDecisionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuestionReplyDecisionFilter<$PrismaModel> | $Enums.QuestionReplyDecision
+}
+
+export type NestedEnumAiDraftTriggerWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiDraftTrigger | Prisma.EnumAiDraftTriggerFieldRefInput<$PrismaModel>
+  in?: $Enums.AiDraftTrigger[] | Prisma.ListEnumAiDraftTriggerFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiDraftTrigger[] | Prisma.ListEnumAiDraftTriggerFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiDraftTriggerWithAggregatesFilter<$PrismaModel> | $Enums.AiDraftTrigger
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumAiDraftTriggerFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumAiDraftTriggerFilter<$PrismaModel>
+}
+
+export type NestedEnumAiDraftOutcomeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.AiDraftOutcome | Prisma.EnumAiDraftOutcomeFieldRefInput<$PrismaModel>
+  in?: $Enums.AiDraftOutcome[] | Prisma.ListEnumAiDraftOutcomeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.AiDraftOutcome[] | Prisma.ListEnumAiDraftOutcomeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumAiDraftOutcomeWithAggregatesFilter<$PrismaModel> | $Enums.AiDraftOutcome
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumAiDraftOutcomeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumAiDraftOutcomeFilter<$PrismaModel>
+}
+
+export type NestedEnumQuestionReplyDecisionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuestionReplyDecision | Prisma.EnumQuestionReplyDecisionFieldRefInput<$PrismaModel>
+  in?: $Enums.QuestionReplyDecision[] | Prisma.ListEnumQuestionReplyDecisionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuestionReplyDecision[] | Prisma.ListEnumQuestionReplyDecisionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuestionReplyDecisionWithAggregatesFilter<$PrismaModel> | $Enums.QuestionReplyDecision
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumQuestionReplyDecisionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumQuestionReplyDecisionFilter<$PrismaModel>
+}
+
+export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  in?: number[] | Prisma.ListFloatFieldRefInput<$PrismaModel>
+  notIn?: number[] | Prisma.ListFloatFieldRefInput<$PrismaModel>
+  lt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  lte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  gt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  gte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedFloatWithAggregatesFilter<$PrismaModel> | number
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _avg?: Prisma.NestedFloatFilter<$PrismaModel>
+  _sum?: Prisma.NestedFloatFilter<$PrismaModel>
+  _min?: Prisma.NestedFloatFilter<$PrismaModel>
+  _max?: Prisma.NestedFloatFilter<$PrismaModel>
+}
+
 export type NestedEnumQuestionAnswerOriginFilter<$PrismaModel = never> = {
   equals?: $Enums.QuestionAnswerOrigin | Prisma.EnumQuestionAnswerOriginFieldRefInput<$PrismaModel>
   in?: $Enums.QuestionAnswerOrigin[] | Prisma.ListEnumQuestionAnswerOriginFieldRefInput<$PrismaModel>
   notIn?: $Enums.QuestionAnswerOrigin[] | Prisma.ListEnumQuestionAnswerOriginFieldRefInput<$PrismaModel>
   not?: Prisma.NestedEnumQuestionAnswerOriginFilter<$PrismaModel> | $Enums.QuestionAnswerOrigin
+}
+
+export type NestedEnumQuestionAnswerCompositionFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuestionAnswerComposition | Prisma.EnumQuestionAnswerCompositionFieldRefInput<$PrismaModel>
+  in?: $Enums.QuestionAnswerComposition[] | Prisma.ListEnumQuestionAnswerCompositionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuestionAnswerComposition[] | Prisma.ListEnumQuestionAnswerCompositionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuestionAnswerCompositionFilter<$PrismaModel> | $Enums.QuestionAnswerComposition
 }
 
 export type NestedEnumQuestionAnswerStatusFilter<$PrismaModel = never> = {
@@ -1428,6 +1597,16 @@ export type NestedEnumQuestionAnswerOriginWithAggregatesFilter<$PrismaModel = ne
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumQuestionAnswerOriginFilter<$PrismaModel>
   _max?: Prisma.NestedEnumQuestionAnswerOriginFilter<$PrismaModel>
+}
+
+export type NestedEnumQuestionAnswerCompositionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.QuestionAnswerComposition | Prisma.EnumQuestionAnswerCompositionFieldRefInput<$PrismaModel>
+  in?: $Enums.QuestionAnswerComposition[] | Prisma.ListEnumQuestionAnswerCompositionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.QuestionAnswerComposition[] | Prisma.ListEnumQuestionAnswerCompositionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumQuestionAnswerCompositionWithAggregatesFilter<$PrismaModel> | $Enums.QuestionAnswerComposition
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumQuestionAnswerCompositionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumQuestionAnswerCompositionFilter<$PrismaModel>
 }
 
 export type NestedEnumQuestionAnswerStatusWithAggregatesFilter<$PrismaModel = never> = {

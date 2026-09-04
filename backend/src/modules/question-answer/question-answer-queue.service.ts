@@ -8,9 +8,11 @@ import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
 import {
   AiAutomationMode,
+  AiDraftOutcome,
   ChannelConnectionStatus,
   ProductQuestionStatus,
   ProductVariantStatus,
+  QuestionAnswerComposition,
   QuestionAnswerOrigin,
   QuestionAnswerStatus,
   QuestionReplyDecision,
@@ -57,6 +59,11 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
         draftRisks: true,
         draftMissingInformation: true,
         draftEvidenceIds: true,
+        draftAttempts: {
+          orderBy: [{ createdAt: 'desc' as const }, { id: 'desc' as const }],
+          take: 1,
+          select: { id: true, answer: true },
+        },
         product: {
           select: {
             variants: {
@@ -93,9 +100,22 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
       throw new ConflictException('Yoksayılan ürün sorusu yanıtlanamaz.');
     }
 
+    const latestDraftAttempt = question.draftAttempts[0] ?? null;
+
+    if (
+      input.draftAttemptId &&
+      input.draftAttemptId !== latestDraftAttempt?.id
+    ) {
+      throw new ConflictException(
+        'Seçilen AI taslağı artık bu sorunun güncel taslağı değil.',
+      );
+    }
+
     if (
       origin === QuestionAnswerOrigin.AUTOMATION &&
       (question.status !== ProductQuestionStatus.DRAFTED ||
+        !latestDraftAttempt ||
+        input.draftAttemptId !== latestDraftAttempt.id ||
         question.answer !== input.answer ||
         question.draftDecision !== QuestionReplyDecision.READY_FOR_SEND ||
         question.draftConfidence === null ||
@@ -133,6 +153,15 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
     }
 
     const queuedAt = new Date();
+    const selectedDraftAttempt =
+      question.status === ProductQuestionStatus.DRAFTED
+        ? latestDraftAttempt
+        : null;
+    const composition = resolveAnswerComposition(
+      input.answer,
+      selectedDraftAttempt?.answer ?? null,
+      origin,
+    );
     const existing = await this.prisma.questionAnswer.findUnique({
       where: { questionId: question.id },
       select: { id: true, status: true },
@@ -151,17 +180,32 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
         throw new ConflictException('Bu cevap zaten gönderim kuyruğunda.');
       }
 
-      const updated = await this.prisma.questionAnswer.updateMany({
-        where: { id: existing.id, status: QuestionAnswerStatus.FAILED },
-        data: {
-          answer: input.answer,
-          requestedByUserId: input.requestedByUserId ?? null,
-          origin,
-          status: QuestionAnswerStatus.QUEUED,
-          lastError: null,
-          queuedAt,
-          processingStartedAt: null,
-        },
+      const updated = await this.prisma.$transaction(async (transaction) => {
+        const deliveryUpdate = await transaction.questionAnswer.updateMany({
+          where: { id: existing.id, status: QuestionAnswerStatus.FAILED },
+          data: {
+            answer: input.answer,
+            requestedByUserId: input.requestedByUserId ?? null,
+            draftAttemptId: selectedDraftAttempt?.id ?? null,
+            origin,
+            composition,
+            status: QuestionAnswerStatus.QUEUED,
+            lastError: null,
+            queuedAt,
+            processingStartedAt: null,
+          },
+        });
+        if (selectedDraftAttempt) {
+          await transaction.aiDraftAttempt.update({
+            where: { id: selectedDraftAttempt.id },
+            data: {
+              outcome: AiDraftOutcome.SELECTED,
+              selectedAt: queuedAt,
+              finalizedAt: null,
+            },
+          });
+        }
+        return deliveryUpdate;
       });
 
       if (updated.count !== 1) {
@@ -171,24 +215,36 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
       answerId = existing.id;
     } else {
       try {
-        const [delivery] = await this.prisma.$transaction([
-          this.prisma.questionAnswer.create({
+        const delivery = await this.prisma.$transaction(async (transaction) => {
+          const created = await transaction.questionAnswer.create({
             data: {
               storeId: input.storeId,
               connectionId: question.connectionId,
               questionId: question.id,
               requestedByUserId: input.requestedByUserId ?? null,
+              draftAttemptId: selectedDraftAttempt?.id ?? null,
               origin,
+              composition,
               answer: input.answer,
               queuedAt,
             },
             select: { id: true },
-          }),
-          this.prisma.productQuestion.update({
+          });
+          await transaction.productQuestion.update({
             where: { id: question.id },
             data: { status: ProductQuestionStatus.DRAFTED },
-          }),
-        ]);
+          });
+          if (selectedDraftAttempt) {
+            await transaction.aiDraftAttempt.update({
+              where: { id: selectedDraftAttempt.id },
+              data: {
+                outcome: AiDraftOutcome.SELECTED,
+                selectedAt: queuedAt,
+              },
+            });
+          }
+          return created;
+        });
         answerId = delivery.id;
       } catch (error) {
         if (isUniqueConstraintError(error)) {
@@ -211,12 +267,23 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
         },
       );
     } catch (error) {
-      await this.prisma.questionAnswer.updateMany({
-        where: { id: answerId, status: QuestionAnswerStatus.QUEUED },
-        data: {
-          status: QuestionAnswerStatus.FAILED,
-          lastError: 'Cevap gönderim kuyruğuna eklenemedi.',
-        },
+      await this.prisma.$transaction(async (transaction) => {
+        await transaction.questionAnswer.updateMany({
+          where: { id: answerId, status: QuestionAnswerStatus.QUEUED },
+          data: {
+            status: QuestionAnswerStatus.FAILED,
+            lastError: 'Cevap gönderim kuyruğuna eklenemedi.',
+          },
+        });
+        if (selectedDraftAttempt) {
+          await transaction.aiDraftAttempt.updateMany({
+            where: { id: selectedDraftAttempt.id },
+            data: {
+              outcome: AiDraftOutcome.FAILED,
+              finalizedAt: new Date(),
+            },
+          });
+        }
       });
       throw new ServiceUnavailableException(
         'Cevap gönderim kuyruğuna şu anda ulaşılamıyor.',
@@ -226,6 +293,25 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
 
     return { id: answerId, status: 'QUEUED', queuedAt };
   }
+}
+
+function resolveAnswerComposition(
+  answer: string,
+  draftAnswer: string | null,
+  origin: QuestionAnswerOrigin,
+) {
+  if (!draftAnswer) return QuestionAnswerComposition.MANUAL;
+  if (origin === QuestionAnswerOrigin.AUTOMATION) {
+    return QuestionAnswerComposition.AI_UNCHANGED;
+  }
+
+  return normalizeAnswer(answer) === normalizeAnswer(draftAnswer)
+    ? QuestionAnswerComposition.AI_UNCHANGED
+    : QuestionAnswerComposition.AI_EDITED;
+}
+
+function normalizeAnswer(answer: string) {
+  return answer.trim().replace(/\s+/g, ' ');
 }
 
 function isEmptyList(value: unknown) {

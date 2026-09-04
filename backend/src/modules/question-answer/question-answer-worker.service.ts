@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   AiAutomationMode,
+  AiDraftOutcome,
   ChannelConnectionStatus,
   ProductQuestionStatus,
   ProductVariantStatus,
@@ -32,6 +33,7 @@ export class QuestionAnswerWorkerService {
         origin: true,
         status: true,
         questionId: true,
+        draftAttemptId: true,
         question: {
           select: {
             externalQuestionId: true,
@@ -41,6 +43,14 @@ export class QuestionAnswerWorkerService {
             draftRisks: true,
             draftMissingInformation: true,
             draftEvidenceIds: true,
+            draftAttempts: {
+              orderBy: [
+                { createdAt: 'desc' as const },
+                { id: 'desc' as const },
+              ],
+              take: 1,
+              select: { id: true },
+            },
             product: {
               select: {
                 variants: {
@@ -77,8 +87,10 @@ export class QuestionAnswerWorkerService {
     }
     if (
       delivery.origin === QuestionAnswerOrigin.AUTOMATION &&
-      (delivery.question.draftDecision !==
-        QuestionReplyDecision.READY_FOR_SEND ||
+      (!delivery.draftAttemptId ||
+        delivery.draftAttemptId !== delivery.question.draftAttempts[0]?.id ||
+        delivery.question.draftDecision !==
+          QuestionReplyDecision.READY_FOR_SEND ||
         delivery.question.answer !== delivery.answer ||
         delivery.question.draftConfidence === null ||
         delivery.question.draftConfidence < MINIMUM_READY_CONFIDENCE ||
@@ -100,6 +112,15 @@ export class QuestionAnswerWorkerService {
             'Otomatik gönderim güvenlik koşulları artık karşılanmadığı için cevap gönderilmedi.',
         },
       });
+      if (delivery.draftAttemptId) {
+        await this.prisma.aiDraftAttempt.updateMany({
+          where: { id: delivery.draftAttemptId },
+          data: {
+            outcome: AiDraftOutcome.FAILED,
+            finalizedAt: new Date(),
+          },
+        });
+      }
       return;
     }
 
@@ -126,8 +147,8 @@ export class QuestionAnswerWorkerService {
       delivery.answer,
     );
 
-    await this.prisma.$transaction([
-      this.prisma.questionAnswer.update({
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.questionAnswer.update({
         where: { id: delivery.id },
         data: {
           status: QuestionAnswerStatus.SENT,
@@ -136,33 +157,58 @@ export class QuestionAnswerWorkerService {
           processingStartedAt: null,
           lastError: null,
         },
-      }),
-      this.prisma.productQuestion.update({
+      });
+      await transaction.productQuestion.update({
         where: { id: delivery.questionId },
         data: {
           status: ProductQuestionStatus.ANSWERED,
           answer: delivery.answer,
           answeredAt: result.answeredAt,
         },
-      }),
-    ]);
+      });
+      if (delivery.draftAttemptId) {
+        await transaction.aiDraftAttempt.update({
+          where: { id: delivery.draftAttemptId },
+          data: {
+            outcome: AiDraftOutcome.SENT,
+            finalizedAt: result.answeredAt,
+          },
+        });
+      }
+    });
   }
 
   async markFinalFailure(data: QuestionAnswerJobData, error: unknown) {
     const message =
       error instanceof Error ? error.message : 'Cevap gönderilemedi.';
 
-    await this.prisma.questionAnswer.updateMany({
-      where: {
-        id: data.answerId,
-        storeId: data.storeId,
-        status: { not: QuestionAnswerStatus.SENT },
-      },
-      data: {
-        status: QuestionAnswerStatus.FAILED,
-        processingStartedAt: null,
-        lastError: message,
-      },
+    const delivery = await this.prisma.questionAnswer.findFirst({
+      where: { id: data.answerId, storeId: data.storeId },
+      select: { draftAttemptId: true },
+    });
+
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.questionAnswer.updateMany({
+        where: {
+          id: data.answerId,
+          storeId: data.storeId,
+          status: { not: QuestionAnswerStatus.SENT },
+        },
+        data: {
+          status: QuestionAnswerStatus.FAILED,
+          processingStartedAt: null,
+          lastError: message,
+        },
+      });
+      if (delivery?.draftAttemptId) {
+        await transaction.aiDraftAttempt.updateMany({
+          where: { id: delivery.draftAttemptId },
+          data: {
+            outcome: AiDraftOutcome.FAILED,
+            finalizedAt: new Date(),
+          },
+        });
+      }
     });
   }
 }

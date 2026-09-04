@@ -141,11 +141,37 @@ const QUESTION_DETAIL_SELECT = {
       },
     },
   },
+  draftAttempts: {
+    orderBy: [{ createdAt: 'desc' as const }, { id: 'desc' as const }],
+    take: 12,
+    select: {
+      id: true,
+      trigger: true,
+      outcome: true,
+      answer: true,
+      decision: true,
+      confidence: true,
+      answerability: true,
+      risks: true,
+      missingInformation: true,
+      evidenceIds: true,
+      model: true,
+      interpretation: true,
+      requestedFacts: true,
+      detectedFacts: true,
+      selectedAt: true,
+      finalizedAt: true,
+      createdAt: true,
+      requestedBy: { select: { name: true } },
+    },
+  },
   answerDelivery: {
     select: {
       id: true,
+      draftAttemptId: true,
       answer: true,
       origin: true,
+      composition: true,
       status: true,
       attempts: true,
       lastError: true,
@@ -358,7 +384,10 @@ export class QuestionsService {
       );
     }
 
-    return this.questionDrafts.generate(storeId, questionId);
+    return this.questionDrafts.generate(storeId, questionId, {
+      trigger: 'MANUAL',
+      requestedByUserId: userId,
+    });
   }
 
   private async requireStoreMembership(storeId: string, userId: string) {

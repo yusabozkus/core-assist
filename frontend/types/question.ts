@@ -7,6 +7,10 @@ export type ProductQuestionFilter = "ALL" | "PENDING" | "ANSWERED" | "IGNORED"
 
 export type QuestionAnswerStatus = "QUEUED" | "PROCESSING" | "SENT" | "FAILED"
 export type QuestionAnswerOrigin = "MANUAL" | "AUTOMATION"
+export type QuestionAnswerComposition = "MANUAL" | "AI_UNCHANGED" | "AI_EDITED"
+export type AiDraftTrigger = "MANUAL" | "AUTOMATION"
+export type AiDraftOutcome =
+  "AVAILABLE" | "SUPERSEDED" | "SELECTED" | "SENT" | "FAILED"
 
 export type QuestionDraftProcessingStatus = "QUEUED" | "PROCESSING" | "FAILED"
 
@@ -40,13 +44,36 @@ export type ProductAnswerFact =
 
 export type QuestionAnswerDelivery = {
   id: string
+  draftAttemptId: string | null
   answer: string
   origin: QuestionAnswerOrigin
+  composition: QuestionAnswerComposition
   status: QuestionAnswerStatus
   attempts: number
   lastError: string | null
   queuedAt: string
   sentAt: string | null
+}
+
+export type AiDraftAttempt = {
+  id: string
+  trigger: AiDraftTrigger
+  outcome: AiDraftOutcome
+  answer: string
+  decision: Exclude<QuestionReplyDecision, "DO_NOT_REPLY">
+  confidence: number
+  answerability: "FULL" | "PARTIAL" | "INSUFFICIENT"
+  risks: ProductAnswerRisk[]
+  missingInformation: string[]
+  evidenceIds: string[]
+  model: string
+  interpretation: string | null
+  requestedFacts: ProductAnswerFact[] | null
+  detectedFacts: ProductAnswerFact[] | null
+  selectedAt: string | null
+  finalizedAt: string | null
+  createdAt: string
+  requestedBy: { name: string } | null
 }
 
 export type ProductQuestion = {
@@ -79,6 +106,7 @@ export type ProductQuestion = {
     providerKey: string
   }
   product: CatalogProduct | null
+  draftAttempts: AiDraftAttempt[]
   answerDelivery: QuestionAnswerDelivery | null
 }
 
@@ -134,6 +162,7 @@ export type DraftedQuestionAnswerResult = {
   answer: string
   status: "DRAFTED"
   context: {
+    attemptId: string
     requestedFacts: ProductAnswerFact[]
     matchedColor: string | null
     matchedSize: string | null

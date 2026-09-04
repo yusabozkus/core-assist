@@ -9,6 +9,7 @@ type QueueManualQuestionAnswerInput = {
   requestedByUserId: string;
   origin?: 'MANUAL';
   answer: string;
+  draftAttemptId?: string;
 };
 
 type QueueAutomatedQuestionAnswerInput = {
@@ -17,6 +18,7 @@ type QueueAutomatedQuestionAnswerInput = {
   requestedByUserId?: never;
   origin: 'AUTOMATION';
   answer: string;
+  draftAttemptId: string;
 };
 
 export type QueueQuestionAnswerInput =

@@ -205,6 +205,7 @@ export type StoreWhereInput = {
   incomingEvents?: Prisma.IncomingEventListRelationFilter
   productQuestions?: Prisma.ProductQuestionListRelationFilter
   questionAnswers?: Prisma.QuestionAnswerListRelationFilter
+  aiDraftAttempts?: Prisma.AiDraftAttemptListRelationFilter
   knowledgeProfile?: Prisma.XOR<Prisma.StoreKnowledgeProfileNullableScalarRelationFilter, Prisma.StoreKnowledgeProfileWhereInput> | null
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqListRelationFilter
   aiInstructions?: Prisma.StoreAiInstructionListRelationFilter
@@ -226,6 +227,7 @@ export type StoreOrderByWithRelationInput = {
   incomingEvents?: Prisma.IncomingEventOrderByRelationAggregateInput
   productQuestions?: Prisma.ProductQuestionOrderByRelationAggregateInput
   questionAnswers?: Prisma.QuestionAnswerOrderByRelationAggregateInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptOrderByRelationAggregateInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileOrderByWithRelationInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqOrderByRelationAggregateInput
   aiInstructions?: Prisma.StoreAiInstructionOrderByRelationAggregateInput
@@ -250,6 +252,7 @@ export type StoreWhereUniqueInput = Prisma.AtLeast<{
   incomingEvents?: Prisma.IncomingEventListRelationFilter
   productQuestions?: Prisma.ProductQuestionListRelationFilter
   questionAnswers?: Prisma.QuestionAnswerListRelationFilter
+  aiDraftAttempts?: Prisma.AiDraftAttemptListRelationFilter
   knowledgeProfile?: Prisma.XOR<Prisma.StoreKnowledgeProfileNullableScalarRelationFilter, Prisma.StoreKnowledgeProfileWhereInput> | null
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqListRelationFilter
   aiInstructions?: Prisma.StoreAiInstructionListRelationFilter
@@ -296,6 +299,7 @@ export type StoreCreateInput = {
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
@@ -316,6 +320,7 @@ export type StoreUncheckedCreateInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
@@ -336,6 +341,7 @@ export type StoreUpdateInput = {
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
@@ -356,6 +362,7 @@ export type StoreUncheckedUpdateInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
@@ -594,6 +601,20 @@ export type StoreUpdateOneRequiredWithoutProductQuestionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutProductQuestionsInput, Prisma.StoreUpdateWithoutProductQuestionsInput>, Prisma.StoreUncheckedUpdateWithoutProductQuestionsInput>
 }
 
+export type StoreCreateNestedOneWithoutAiDraftAttemptsInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutAiDraftAttemptsInput, Prisma.StoreUncheckedCreateWithoutAiDraftAttemptsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutAiDraftAttemptsInput
+  connect?: Prisma.StoreWhereUniqueInput
+}
+
+export type StoreUpdateOneRequiredWithoutAiDraftAttemptsNestedInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutAiDraftAttemptsInput, Prisma.StoreUncheckedCreateWithoutAiDraftAttemptsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutAiDraftAttemptsInput
+  upsert?: Prisma.StoreUpsertWithoutAiDraftAttemptsInput
+  connect?: Prisma.StoreWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutAiDraftAttemptsInput, Prisma.StoreUpdateWithoutAiDraftAttemptsInput>, Prisma.StoreUncheckedUpdateWithoutAiDraftAttemptsInput>
+}
+
 export type StoreCreateNestedOneWithoutQuestionAnswersInput = {
   create?: Prisma.XOR<Prisma.StoreCreateWithoutQuestionAnswersInput, Prisma.StoreUncheckedCreateWithoutQuestionAnswersInput>
   connectOrCreate?: Prisma.StoreCreateOrConnectWithoutQuestionAnswersInput
@@ -635,6 +656,7 @@ export type StoreCreateWithoutWorkspaceInput = {
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
@@ -654,6 +676,7 @@ export type StoreUncheckedCreateWithoutWorkspaceInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
@@ -713,6 +736,7 @@ export type StoreCreateWithoutKnowledgeProfileInput = {
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
@@ -732,6 +756,7 @@ export type StoreUncheckedCreateWithoutKnowledgeProfileInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
@@ -767,6 +792,7 @@ export type StoreUpdateWithoutKnowledgeProfileInput = {
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
@@ -786,6 +812,7 @@ export type StoreUncheckedUpdateWithoutKnowledgeProfileInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
@@ -805,6 +832,7 @@ export type StoreCreateWithoutKnowledgeFaqsInput = {
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
@@ -824,6 +852,7 @@ export type StoreUncheckedCreateWithoutKnowledgeFaqsInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
@@ -859,6 +888,7 @@ export type StoreUpdateWithoutKnowledgeFaqsInput = {
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
@@ -878,6 +908,7 @@ export type StoreUncheckedUpdateWithoutKnowledgeFaqsInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
@@ -897,6 +928,7 @@ export type StoreCreateWithoutAiInstructionsInput = {
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
@@ -916,6 +948,7 @@ export type StoreUncheckedCreateWithoutAiInstructionsInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
@@ -951,6 +984,7 @@ export type StoreUpdateWithoutAiInstructionsInput = {
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
@@ -970,6 +1004,7 @@ export type StoreUncheckedUpdateWithoutAiInstructionsInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
@@ -989,6 +1024,7 @@ export type StoreCreateWithoutChannelKnowledgeInput = {
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
@@ -1008,6 +1044,7 @@ export type StoreUncheckedCreateWithoutChannelKnowledgeInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
@@ -1043,6 +1080,7 @@ export type StoreUpdateWithoutChannelKnowledgeInput = {
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
@@ -1062,6 +1100,7 @@ export type StoreUncheckedUpdateWithoutChannelKnowledgeInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
@@ -1080,6 +1119,7 @@ export type StoreCreateWithoutChannelConnectionsInput = {
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
@@ -1099,6 +1139,7 @@ export type StoreUncheckedCreateWithoutChannelConnectionsInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
@@ -1134,6 +1175,7 @@ export type StoreUpdateWithoutChannelConnectionsInput = {
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
@@ -1153,6 +1195,7 @@ export type StoreUncheckedUpdateWithoutChannelConnectionsInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
@@ -1172,6 +1215,7 @@ export type StoreCreateWithoutProductsInput = {
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
@@ -1191,6 +1235,7 @@ export type StoreUncheckedCreateWithoutProductsInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
@@ -1226,6 +1271,7 @@ export type StoreUpdateWithoutProductsInput = {
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
@@ -1245,6 +1291,7 @@ export type StoreUncheckedUpdateWithoutProductsInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
@@ -1264,6 +1311,7 @@ export type StoreCreateWithoutIncomingEventsInput = {
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
@@ -1283,6 +1331,7 @@ export type StoreUncheckedCreateWithoutIncomingEventsInput = {
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
@@ -1318,6 +1367,7 @@ export type StoreUpdateWithoutIncomingEventsInput = {
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
@@ -1337,6 +1387,7 @@ export type StoreUncheckedUpdateWithoutIncomingEventsInput = {
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
@@ -1356,6 +1407,7 @@ export type StoreCreateWithoutProductQuestionsInput = {
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
@@ -1375,6 +1427,7 @@ export type StoreUncheckedCreateWithoutProductQuestionsInput = {
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
@@ -1410,6 +1463,7 @@ export type StoreUpdateWithoutProductQuestionsInput = {
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
@@ -1428,6 +1482,103 @@ export type StoreUncheckedUpdateWithoutProductQuestionsInput = {
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreCreateWithoutAiDraftAttemptsInput = {
+  id?: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
+  members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
+}
+
+export type StoreUncheckedCreateWithoutAiDraftAttemptsInput = {
+  id?: string
+  workspaceId: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
+}
+
+export type StoreCreateOrConnectWithoutAiDraftAttemptsInput = {
+  where: Prisma.StoreWhereUniqueInput
+  create: Prisma.XOR<Prisma.StoreCreateWithoutAiDraftAttemptsInput, Prisma.StoreUncheckedCreateWithoutAiDraftAttemptsInput>
+}
+
+export type StoreUpsertWithoutAiDraftAttemptsInput = {
+  update: Prisma.XOR<Prisma.StoreUpdateWithoutAiDraftAttemptsInput, Prisma.StoreUncheckedUpdateWithoutAiDraftAttemptsInput>
+  create: Prisma.XOR<Prisma.StoreCreateWithoutAiDraftAttemptsInput, Prisma.StoreUncheckedCreateWithoutAiDraftAttemptsInput>
+  where?: Prisma.StoreWhereInput
+}
+
+export type StoreUpdateToOneWithWhereWithoutAiDraftAttemptsInput = {
+  where?: Prisma.StoreWhereInput
+  data: Prisma.XOR<Prisma.StoreUpdateWithoutAiDraftAttemptsInput, Prisma.StoreUncheckedUpdateWithoutAiDraftAttemptsInput>
+}
+
+export type StoreUpdateWithoutAiDraftAttemptsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
+  members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreUncheckedUpdateWithoutAiDraftAttemptsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
@@ -1448,6 +1599,7 @@ export type StoreCreateWithoutQuestionAnswersInput = {
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
@@ -1467,6 +1619,7 @@ export type StoreUncheckedCreateWithoutQuestionAnswersInput = {
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
@@ -1502,6 +1655,7 @@ export type StoreUpdateWithoutQuestionAnswersInput = {
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
@@ -1521,6 +1675,7 @@ export type StoreUncheckedUpdateWithoutQuestionAnswersInput = {
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
@@ -1540,6 +1695,7 @@ export type StoreCreateWithoutMembersInput = {
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
@@ -1559,6 +1715,7 @@ export type StoreUncheckedCreateWithoutMembersInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
   productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
@@ -1594,6 +1751,7 @@ export type StoreUpdateWithoutMembersInput = {
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
@@ -1613,6 +1771,7 @@ export type StoreUncheckedUpdateWithoutMembersInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
@@ -1641,6 +1800,7 @@ export type StoreUpdateWithoutWorkspaceInput = {
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
@@ -1660,6 +1820,7 @@ export type StoreUncheckedUpdateWithoutWorkspaceInput = {
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
   knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
   knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
   aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
@@ -1687,6 +1848,7 @@ export type StoreCountOutputType = {
   incomingEvents: number
   productQuestions: number
   questionAnswers: number
+  aiDraftAttempts: number
   knowledgeFaqs: number
   aiInstructions: number
   channelKnowledge: number
@@ -1699,6 +1861,7 @@ export type StoreCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.
   incomingEvents?: boolean | StoreCountOutputTypeCountIncomingEventsArgs
   productQuestions?: boolean | StoreCountOutputTypeCountProductQuestionsArgs
   questionAnswers?: boolean | StoreCountOutputTypeCountQuestionAnswersArgs
+  aiDraftAttempts?: boolean | StoreCountOutputTypeCountAiDraftAttemptsArgs
   knowledgeFaqs?: boolean | StoreCountOutputTypeCountKnowledgeFaqsArgs
   aiInstructions?: boolean | StoreCountOutputTypeCountAiInstructionsArgs
   channelKnowledge?: boolean | StoreCountOutputTypeCountChannelKnowledgeArgs
@@ -1759,6 +1922,13 @@ export type StoreCountOutputTypeCountQuestionAnswersArgs<ExtArgs extends runtime
 /**
  * StoreCountOutputType without action
  */
+export type StoreCountOutputTypeCountAiDraftAttemptsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AiDraftAttemptWhereInput
+}
+
+/**
+ * StoreCountOutputType without action
+ */
 export type StoreCountOutputTypeCountKnowledgeFaqsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.StoreKnowledgeFaqWhereInput
 }
@@ -1793,6 +1963,7 @@ export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   incomingEvents?: boolean | Prisma.Store$incomingEventsArgs<ExtArgs>
   productQuestions?: boolean | Prisma.Store$productQuestionsArgs<ExtArgs>
   questionAnswers?: boolean | Prisma.Store$questionAnswersArgs<ExtArgs>
+  aiDraftAttempts?: boolean | Prisma.Store$aiDraftAttemptsArgs<ExtArgs>
   knowledgeProfile?: boolean | Prisma.Store$knowledgeProfileArgs<ExtArgs>
   knowledgeFaqs?: boolean | Prisma.Store$knowledgeFaqsArgs<ExtArgs>
   aiInstructions?: boolean | Prisma.Store$aiInstructionsArgs<ExtArgs>
@@ -1841,6 +2012,7 @@ export type StoreInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   incomingEvents?: boolean | Prisma.Store$incomingEventsArgs<ExtArgs>
   productQuestions?: boolean | Prisma.Store$productQuestionsArgs<ExtArgs>
   questionAnswers?: boolean | Prisma.Store$questionAnswersArgs<ExtArgs>
+  aiDraftAttempts?: boolean | Prisma.Store$aiDraftAttemptsArgs<ExtArgs>
   knowledgeProfile?: boolean | Prisma.Store$knowledgeProfileArgs<ExtArgs>
   knowledgeFaqs?: boolean | Prisma.Store$knowledgeFaqsArgs<ExtArgs>
   aiInstructions?: boolean | Prisma.Store$aiInstructionsArgs<ExtArgs>
@@ -1864,6 +2036,7 @@ export type $StorePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     incomingEvents: Prisma.$IncomingEventPayload<ExtArgs>[]
     productQuestions: Prisma.$ProductQuestionPayload<ExtArgs>[]
     questionAnswers: Prisma.$QuestionAnswerPayload<ExtArgs>[]
+    aiDraftAttempts: Prisma.$AiDraftAttemptPayload<ExtArgs>[]
     knowledgeProfile: Prisma.$StoreKnowledgeProfilePayload<ExtArgs> | null
     knowledgeFaqs: Prisma.$StoreKnowledgeFaqPayload<ExtArgs>[]
     aiInstructions: Prisma.$StoreAiInstructionPayload<ExtArgs>[]
@@ -2278,6 +2451,7 @@ export interface Prisma__StoreClient<T, Null = never, ExtArgs extends runtime.Ty
   incomingEvents<T extends Prisma.Store$incomingEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$incomingEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$IncomingEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   productQuestions<T extends Prisma.Store$productQuestionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$productQuestionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductQuestionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   questionAnswers<T extends Prisma.Store$questionAnswersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$questionAnswersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$QuestionAnswerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  aiDraftAttempts<T extends Prisma.Store$aiDraftAttemptsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$aiDraftAttemptsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AiDraftAttemptPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   knowledgeProfile<T extends Prisma.Store$knowledgeProfileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$knowledgeProfileArgs<ExtArgs>>): Prisma.Prisma__StoreKnowledgeProfileClient<runtime.Types.Result.GetResult<Prisma.$StoreKnowledgeProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   knowledgeFaqs<T extends Prisma.Store$knowledgeFaqsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$knowledgeFaqsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StoreKnowledgeFaqPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   aiInstructions<T extends Prisma.Store$aiInstructionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$aiInstructionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StoreAiInstructionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -2860,6 +3034,30 @@ export type Store$questionAnswersArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   distinct?: Prisma.QuestionAnswerScalarFieldEnum | Prisma.QuestionAnswerScalarFieldEnum[]
+}
+
+/**
+ * Store.aiDraftAttempts
+ */
+export type Store$aiDraftAttemptsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AiDraftAttempt
+   */
+  select?: Prisma.AiDraftAttemptSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AiDraftAttempt
+   */
+  omit?: Prisma.AiDraftAttemptOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AiDraftAttemptInclude<ExtArgs> | null
+  where?: Prisma.AiDraftAttemptWhereInput
+  orderBy?: Prisma.AiDraftAttemptOrderByWithRelationInput | Prisma.AiDraftAttemptOrderByWithRelationInput[]
+  cursor?: Prisma.AiDraftAttemptWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AiDraftAttemptScalarFieldEnum | Prisma.AiDraftAttemptScalarFieldEnum[]
 }
 
 /**

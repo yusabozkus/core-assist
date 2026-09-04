@@ -230,6 +230,34 @@ export const QuestionDraftProcessingStatus = {
 export type QuestionDraftProcessingStatus = (typeof QuestionDraftProcessingStatus)[keyof typeof QuestionDraftProcessingStatus]
 
 
+export const AiDraftTrigger = {
+  MANUAL: 'MANUAL',
+  AUTOMATION: 'AUTOMATION'
+} as const
+
+export type AiDraftTrigger = (typeof AiDraftTrigger)[keyof typeof AiDraftTrigger]
+
+
+export const AiDraftOutcome = {
+  AVAILABLE: 'AVAILABLE',
+  SUPERSEDED: 'SUPERSEDED',
+  SELECTED: 'SELECTED',
+  SENT: 'SENT',
+  FAILED: 'FAILED'
+} as const
+
+export type AiDraftOutcome = (typeof AiDraftOutcome)[keyof typeof AiDraftOutcome]
+
+
+export const QuestionAnswerComposition = {
+  MANUAL: 'MANUAL',
+  AI_UNCHANGED: 'AI_UNCHANGED',
+  AI_EDITED: 'AI_EDITED'
+} as const
+
+export type QuestionAnswerComposition = (typeof QuestionAnswerComposition)[keyof typeof QuestionAnswerComposition]
+
+
 export const StoreRole = {
   OWNER: 'OWNER',
   ADMIN: 'ADMIN',

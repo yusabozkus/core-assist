@@ -419,6 +419,7 @@ export const ModelName = {
   CatalogSyncRun: 'CatalogSyncRun',
   IncomingEvent: 'IncomingEvent',
   ProductQuestion: 'ProductQuestion',
+  AiDraftAttempt: 'AiDraftAttempt',
   QuestionAnswer: 'QuestionAnswer',
   StoreMember: 'StoreMember'
 } as const
@@ -436,7 +437,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "questionAnswer" | "storeMember"
+    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2068,6 +2069,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    AiDraftAttempt: {
+      payload: Prisma.$AiDraftAttemptPayload<ExtArgs>
+      fields: Prisma.AiDraftAttemptFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AiDraftAttemptFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftAttemptPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AiDraftAttemptFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftAttemptPayload>
+        }
+        findFirst: {
+          args: Prisma.AiDraftAttemptFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftAttemptPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AiDraftAttemptFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftAttemptPayload>
+        }
+        findMany: {
+          args: Prisma.AiDraftAttemptFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftAttemptPayload>[]
+        }
+        create: {
+          args: Prisma.AiDraftAttemptCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftAttemptPayload>
+        }
+        createMany: {
+          args: Prisma.AiDraftAttemptCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AiDraftAttemptCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftAttemptPayload>[]
+        }
+        delete: {
+          args: Prisma.AiDraftAttemptDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftAttemptPayload>
+        }
+        update: {
+          args: Prisma.AiDraftAttemptUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftAttemptPayload>
+        }
+        deleteMany: {
+          args: Prisma.AiDraftAttemptDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AiDraftAttemptUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AiDraftAttemptUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftAttemptPayload>[]
+        }
+        upsert: {
+          args: Prisma.AiDraftAttemptUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftAttemptPayload>
+        }
+        aggregate: {
+          args: Prisma.AiDraftAttemptAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAiDraftAttempt>
+        }
+        groupBy: {
+          args: Prisma.AiDraftAttemptGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AiDraftAttemptGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AiDraftAttemptCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AiDraftAttemptCountAggregateOutputType> | number
+        }
+      }
+    }
     QuestionAnswer: {
       payload: Prisma.$QuestionAnswerPayload<ExtArgs>
       fields: Prisma.QuestionAnswerFieldRefs
@@ -2641,13 +2716,41 @@ export const ProductQuestionScalarFieldEnum = {
 export type ProductQuestionScalarFieldEnum = (typeof ProductQuestionScalarFieldEnum)[keyof typeof ProductQuestionScalarFieldEnum]
 
 
+export const AiDraftAttemptScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  questionId: 'questionId',
+  requestedByUserId: 'requestedByUserId',
+  trigger: 'trigger',
+  outcome: 'outcome',
+  answer: 'answer',
+  decision: 'decision',
+  confidence: 'confidence',
+  answerability: 'answerability',
+  risks: 'risks',
+  missingInformation: 'missingInformation',
+  evidenceIds: 'evidenceIds',
+  model: 'model',
+  interpretation: 'interpretation',
+  requestedFacts: 'requestedFacts',
+  detectedFacts: 'detectedFacts',
+  selectedAt: 'selectedAt',
+  finalizedAt: 'finalizedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type AiDraftAttemptScalarFieldEnum = (typeof AiDraftAttemptScalarFieldEnum)[keyof typeof AiDraftAttemptScalarFieldEnum]
+
+
 export const QuestionAnswerScalarFieldEnum = {
   id: 'id',
   storeId: 'storeId',
   connectionId: 'connectionId',
   questionId: 'questionId',
   requestedByUserId: 'requestedByUserId',
+  draftAttemptId: 'draftAttemptId',
   origin: 'origin',
+  composition: 'composition',
   answer: 'answer',
   status: 'status',
   externalAnswerId: 'externalAnswerId',
@@ -3129,6 +3232,34 @@ export type ListEnumQuestionDraftProcessingStatusFieldRefInput<$PrismaModel> = F
 
 
 /**
+ * Reference to a field of type 'AiDraftTrigger'
+ */
+export type EnumAiDraftTriggerFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiDraftTrigger'>
+    
+
+
+/**
+ * Reference to a field of type 'AiDraftTrigger[]'
+ */
+export type ListEnumAiDraftTriggerFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiDraftTrigger[]'>
+    
+
+
+/**
+ * Reference to a field of type 'AiDraftOutcome'
+ */
+export type EnumAiDraftOutcomeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiDraftOutcome'>
+    
+
+
+/**
+ * Reference to a field of type 'AiDraftOutcome[]'
+ */
+export type ListEnumAiDraftOutcomeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiDraftOutcome[]'>
+    
+
+
+/**
  * Reference to a field of type 'QuestionAnswerOrigin'
  */
 export type EnumQuestionAnswerOriginFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionAnswerOrigin'>
@@ -3139,6 +3270,20 @@ export type EnumQuestionAnswerOriginFieldRefInput<$PrismaModel> = FieldRefInputT
  * Reference to a field of type 'QuestionAnswerOrigin[]'
  */
 export type ListEnumQuestionAnswerOriginFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionAnswerOrigin[]'>
+    
+
+
+/**
+ * Reference to a field of type 'QuestionAnswerComposition'
+ */
+export type EnumQuestionAnswerCompositionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionAnswerComposition'>
+    
+
+
+/**
+ * Reference to a field of type 'QuestionAnswerComposition[]'
+ */
+export type ListEnumQuestionAnswerCompositionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionAnswerComposition[]'>
     
 
 
@@ -3342,6 +3487,7 @@ export type GlobalOmitConfig = {
   catalogSyncRun?: Prisma.CatalogSyncRunOmit
   incomingEvent?: Prisma.IncomingEventOmit
   productQuestion?: Prisma.ProductQuestionOmit
+  aiDraftAttempt?: Prisma.AiDraftAttemptOmit
   questionAnswer?: Prisma.QuestionAnswerOmit
   storeMember?: Prisma.StoreMemberOmit
 }

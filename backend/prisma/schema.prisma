@@ -22,6 +22,7 @@ model User {
   workspaceMembers         WorkspaceMember[]
   storeMembers             StoreMember[]
   requestedQuestionAnswers QuestionAnswer[]  @relation("QuestionAnswerRequester")
+  requestedAiDrafts        AiDraftAttempt[]  @relation("AiDraftRequester")
 
   @@map("user")
 }
@@ -122,6 +123,7 @@ model Store {
   incomingEvents     IncomingEvent[]
   productQuestions   ProductQuestion[]
   questionAnswers    QuestionAnswer[]
+  aiDraftAttempts    AiDraftAttempt[]
   knowledgeProfile   StoreKnowledgeProfile?
   knowledgeFaqs      StoreKnowledgeFaq[]
   aiInstructions     StoreAiInstruction[]
@@ -584,6 +586,25 @@ enum QuestionDraftProcessingStatus {
   FAILED
 }
 
+enum AiDraftTrigger {
+  MANUAL
+  AUTOMATION
+}
+
+enum AiDraftOutcome {
+  AVAILABLE
+  SUPERSEDED
+  SELECTED
+  SENT
+  FAILED
+}
+
+enum QuestionAnswerComposition {
+  MANUAL
+  AI_UNCHANGED
+  AI_EDITED
+}
+
 model ProductQuestion {
   id                       String                         @id @default(uuid())
   storeId                  String
@@ -624,6 +645,7 @@ model ProductQuestion {
   product         Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
   externalProduct ExternalProduct?  @relation(fields: [externalProductRecordId], references: [id], onDelete: SetNull)
   answerDelivery  QuestionAnswer?
+  draftAttempts   AiDraftAttempt[]
 
   @@unique([connectionId, externalQuestionId])
   @@index([storeId, status, externalCreatedAt])
@@ -634,28 +656,63 @@ model ProductQuestion {
   @@map("product_question")
 }
 
+model AiDraftAttempt {
+  id                 String                @id @default(uuid())
+  storeId            String
+  questionId         String
+  requestedByUserId  String?
+  trigger            AiDraftTrigger
+  outcome            AiDraftOutcome        @default(AVAILABLE)
+  answer             String
+  decision           QuestionReplyDecision
+  confidence         Float
+  answerability      String
+  risks              Json
+  missingInformation Json
+  evidenceIds        Json
+  model              String
+  interpretation     String?
+  requestedFacts     Json?
+  detectedFacts      Json?
+  selectedAt         DateTime?
+  finalizedAt        DateTime?
+  createdAt          DateTime              @default(now())
+
+  store          Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  question       ProductQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  requestedBy    User?           @relation("AiDraftRequester", fields: [requestedByUserId], references: [id], onDelete: SetNull)
+  answerDelivery QuestionAnswer?
+
+  @@index([questionId, createdAt])
+  @@index([storeId, outcome, createdAt])
+  @@map("ai_draft_attempt")
+}
+
 model QuestionAnswer {
-  id                  String               @id @default(uuid())
+  id                  String                    @id @default(uuid())
   storeId             String
   connectionId        String
-  questionId          String               @unique
+  questionId          String                    @unique
   requestedByUserId   String?
-  origin              QuestionAnswerOrigin @default(MANUAL)
+  draftAttemptId      String?                   @unique
+  origin              QuestionAnswerOrigin      @default(MANUAL)
+  composition         QuestionAnswerComposition @default(MANUAL)
   answer              String
-  status              QuestionAnswerStatus @default(QUEUED)
+  status              QuestionAnswerStatus      @default(QUEUED)
   externalAnswerId    String?
-  attempts            Int                  @default(0)
+  attempts            Int                       @default(0)
   lastError           String?
-  queuedAt            DateTime             @default(now())
+  queuedAt            DateTime                  @default(now())
   processingStartedAt DateTime?
   sentAt              DateTime?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
 
-  store       Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  connection  ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
-  question    ProductQuestion   @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  requestedBy User?             @relation("QuestionAnswerRequester", fields: [requestedByUserId], references: [id], onDelete: SetNull)
+  store        Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  connection   ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  question     ProductQuestion   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  requestedBy  User?             @relation("QuestionAnswerRequester", fields: [requestedByUserId], references: [id], onDelete: SetNull)
+  draftAttempt AiDraftAttempt?   @relation(fields: [draftAttemptId], references: [id], onDelete: SetNull)
 
   @@index([storeId, status, queuedAt])
   @@index([connectionId, status])

@@ -7,7 +7,10 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import {
+  AiDraftOutcome,
+  AiDraftTrigger,
   ProductQuestionStatus,
+  QuestionAnswerStatus,
   QuestionReplyDecision,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
@@ -24,6 +27,11 @@ import type {
 import { QuestionResponsePolicyService } from './question-response-policy.service';
 import { QuestionReplyDecisionService } from './question-reply-decision.service';
 
+type GenerateDraftOptions = {
+  trigger?: 'MANUAL' | 'AUTOMATION';
+  requestedByUserId?: string;
+};
+
 @Injectable()
 export class QuestionDraftService {
   constructor(
@@ -37,18 +45,30 @@ export class QuestionDraftService {
   async generate(
     storeId: string,
     questionId: string,
+    options: GenerateDraftOptions = {},
   ): Promise<DraftQuestionAnswer> {
     const policyQuestion = await this.prisma.productQuestion.findFirst({
       where: { id: questionId, storeId },
       select: {
         question: true,
         status: true,
-        answerDelivery: { select: { id: true } },
+        answerDelivery: { select: { status: true } },
       },
     });
 
     if (!policyQuestion) {
       throw new NotFoundException('Ürün sorusu bulunamadı.');
+    }
+
+    if (
+      policyQuestion.answerDelivery?.status === QuestionAnswerStatus.QUEUED ||
+      policyQuestion.answerDelivery?.status ===
+        QuestionAnswerStatus.PROCESSING ||
+      policyQuestion.answerDelivery?.status === QuestionAnswerStatus.SENT
+    ) {
+      throw new ConflictException(
+        'Gönderim süreci başlamış bir soru için yeni taslak oluşturulamaz.',
+      );
     }
 
     const policyDecision = this.responsePolicy.evaluate(
@@ -137,40 +157,83 @@ export class QuestionDraftService {
     const answer = guardedDraft.answer;
     const replyDecision = this.replyDecision.evaluate(guardedDraft);
     const draftedAt = new Date();
-    const updated = await this.prisma.productQuestion.updateMany({
-      where: {
-        id: questionId,
-        storeId,
-        status: {
-          in: [ProductQuestionStatus.PENDING, ProductQuestionStatus.DRAFTED],
+    const draftAttempt = await this.prisma.$transaction(async (transaction) => {
+      await transaction.aiDraftAttempt.updateMany({
+        where: {
+          storeId,
+          questionId,
+          outcome: AiDraftOutcome.AVAILABLE,
         },
-      },
-      data: {
-        answer,
-        status: ProductQuestionStatus.DRAFTED,
-        draftDecision: replyDecision,
-        draftConfidence: guardedDraft.confidence,
-        draftAnswerability: guardedDraft.answerability,
-        draftRisks: guardedDraft.risks,
-        draftMissingInformation: guardedDraft.missingInformation,
-        draftEvidenceIds: guardedDraft.usedEvidenceIds,
-        draftModel: guardedDraft.model,
-        draftedAt,
-        draftProcessingStatus: null,
-        draftProcessingError: null,
-        draftQueuedAt: null,
-        draftProcessingStartedAt: null,
-      },
-    });
+        data: {
+          outcome: AiDraftOutcome.SUPERSEDED,
+          finalizedAt: draftedAt,
+        },
+      });
 
-    if (updated.count !== 1) {
-      throw new ConflictException('Taslak oluşturulurken soru durumu değişti.');
-    }
+      const attempt = await transaction.aiDraftAttempt.create({
+        data: {
+          storeId,
+          questionId,
+          requestedByUserId: options.requestedByUserId,
+          trigger:
+            options.trigger === 'AUTOMATION'
+              ? AiDraftTrigger.AUTOMATION
+              : AiDraftTrigger.MANUAL,
+          answer,
+          decision: replyDecision,
+          confidence: guardedDraft.confidence,
+          answerability: guardedDraft.answerability,
+          risks: guardedDraft.risks,
+          missingInformation: guardedDraft.missingInformation,
+          evidenceIds: guardedDraft.usedEvidenceIds,
+          model: guardedDraft.model,
+          interpretation: guardedDraft.interpretation,
+          requestedFacts: context.requestedFacts,
+          detectedFacts: guardedDraft.detectedFacts,
+        },
+        select: { id: true },
+      });
+
+      const updated = await transaction.productQuestion.updateMany({
+        where: {
+          id: questionId,
+          storeId,
+          status: {
+            in: [ProductQuestionStatus.PENDING, ProductQuestionStatus.DRAFTED],
+          },
+        },
+        data: {
+          answer,
+          status: ProductQuestionStatus.DRAFTED,
+          draftDecision: replyDecision,
+          draftConfidence: guardedDraft.confidence,
+          draftAnswerability: guardedDraft.answerability,
+          draftRisks: guardedDraft.risks,
+          draftMissingInformation: guardedDraft.missingInformation,
+          draftEvidenceIds: guardedDraft.usedEvidenceIds,
+          draftModel: guardedDraft.model,
+          draftedAt,
+          draftProcessingStatus: null,
+          draftProcessingError: null,
+          draftQueuedAt: null,
+          draftProcessingStartedAt: null,
+        },
+      });
+
+      if (updated.count !== 1) {
+        throw new ConflictException(
+          'Taslak oluşturulurken soru durumu değişti.',
+        );
+      }
+
+      return attempt;
+    });
 
     return {
       answer,
       status: 'DRAFTED',
       context: {
+        attemptId: draftAttempt.id,
         requestedFacts: context.requestedFacts,
         matchedColor: context.matchedColor,
         matchedSize: context.matchedSize,

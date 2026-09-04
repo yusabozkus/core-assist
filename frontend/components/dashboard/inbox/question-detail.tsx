@@ -3,6 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 import { ProductContext } from "@/components/dashboard/inbox/product-context"
 import { QuestionAnswerComposer } from "@/components/dashboard/inbox/question-answer-composer"
+import { QuestionDraftHistory } from "@/components/dashboard/inbox/question-draft-history"
 import { QuestionStatus } from "@/components/dashboard/inbox/question-status"
 import { ReferenceAnswer } from "@/components/dashboard/inbox/reference-answer"
 import {
@@ -83,6 +84,11 @@ export function QuestionDetail({
           </section>
 
           <ReferenceAnswer question={question} />
+
+          <QuestionDraftHistory
+            attempts={question.draftAttempts ?? []}
+            delivery={question.answerDelivery}
+          />
 
           <ProductContext question={question} />
         </div>
