@@ -11,6 +11,15 @@ export type QueuedQuestionSync = {
   queuedAt: Date;
 };
 
+export type QuestionSyncEnqueueOptions = {
+  trigger?: 'MANUAL' | 'SCHEDULED' | 'RETRY' | 'ONBOARDING';
+  retryOfId?: string;
+};
+
 export interface QuestionSyncDispatcher {
-  enqueue(storeId: string, connectionId: string): Promise<QueuedQuestionSync>;
+  enqueue(
+    storeId: string,
+    connectionId: string,
+    options?: QuestionSyncEnqueueOptions,
+  ): Promise<QueuedQuestionSync>;
 }

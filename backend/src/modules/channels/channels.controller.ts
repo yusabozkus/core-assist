@@ -43,6 +43,25 @@ export class ChannelsController {
     return this.channelsService.findSyncHistory(storeId, user.id, query);
   }
 
+  @Get('sync-runs/:syncRunId')
+  findSyncRun(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
+    @Param('syncRunId', new ParseUUIDPipe()) syncRunId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.channelsService.findSyncRun(storeId, syncRunId, user.id);
+  }
+
+  @Post('sync-runs/:syncRunId/retry')
+  @HttpCode(HttpStatus.ACCEPTED)
+  retrySyncRun(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
+    @Param('syncRunId', new ParseUUIDPipe()) syncRunId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.channelsService.retrySyncRun(storeId, syncRunId, user.id);
+  }
+
   @Get()
   findAll(
     @Param('storeId', new ParseUUIDPipe()) storeId: string,

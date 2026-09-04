@@ -145,6 +145,28 @@ export const CatalogSyncKind = {
 export type CatalogSyncKind = (typeof CatalogSyncKind)[keyof typeof CatalogSyncKind]
 
 
+export const CatalogSyncTrigger = {
+  MANUAL: 'MANUAL',
+  SCHEDULED: 'SCHEDULED',
+  RETRY: 'RETRY',
+  ONBOARDING: 'ONBOARDING'
+} as const
+
+export type CatalogSyncTrigger = (typeof CatalogSyncTrigger)[keyof typeof CatalogSyncTrigger]
+
+
+export const CatalogSyncStage = {
+  QUEUED: 'QUEUED',
+  FETCHING: 'FETCHING',
+  PERSISTING: 'PERSISTING',
+  RECONCILING: 'RECONCILING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED'
+} as const
+
+export type CatalogSyncStage = (typeof CatalogSyncStage)[keyof typeof CatalogSyncStage]
+
+
 export const IncomingEventType = {
   PRODUCT_QUESTION: 'PRODUCT_QUESTION'
 } as const

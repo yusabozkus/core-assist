@@ -1,5 +1,10 @@
 export type InventoryStockFilter =
-  "ALL" | "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK" | "UNAVAILABLE"
+  "ALL" | "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK" | "UNAVAILABLE" | "STALE"
+
+export type InventoryFreshness = "FRESH" | "STALE" | "UNKNOWN"
+
+export type InventorySort =
+  "CRITICAL_FIRST" | "STOCK_ASC" | "STOCK_DESC" | "RECENTLY_UPDATED"
 
 export type InventoryItem = {
   id: string
@@ -19,6 +24,7 @@ export type InventoryItem = {
   status: "ACTIVE" | "OUT_OF_STOCK" | "UNAVAILABLE" | "ARCHIVED"
   sourceUpdatedAt: string | null
   lastSyncedAt: string | null
+  freshness: InventoryFreshness
   providers: string[]
 }
 
@@ -28,6 +34,7 @@ export type InventorySummary = {
   lowStock: number
   outOfStock: number
   unavailable: number
+  stale: number
   totalStock: number
   lastSyncedAt: string | null
 }
@@ -38,6 +45,7 @@ export type InventoryPage = {
   total: number
   variantTotal: number
   lowStockThreshold: number
+  freshnessMaxAgeMs: number
   providers: string[]
   summary: InventorySummary
 }

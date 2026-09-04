@@ -17,7 +17,10 @@ import {
   type AiDraftResult,
 } from '../ai/ai-draft.types';
 import { ProductAnswerContextService } from './product-answer-context.service';
-import type { DraftQuestionAnswer } from './product-answer-context.types';
+import type {
+  DraftQuestionAnswer,
+  ProductAnswerContext,
+} from './product-answer-context.types';
 import { QuestionResponsePolicyService } from './question-response-policy.service';
 import { QuestionReplyDecisionService } from './question-reply-decision.service';
 
@@ -130,8 +133,9 @@ export class QuestionDraftService {
       );
     }
 
-    const answer = aiDraft.answer;
-    const replyDecision = this.replyDecision.evaluate(aiDraft);
+    const guardedDraft = applyInventoryFreshnessGuard(aiDraft, context);
+    const answer = guardedDraft.answer;
+    const replyDecision = this.replyDecision.evaluate(guardedDraft);
     const draftedAt = new Date();
     const updated = await this.prisma.productQuestion.updateMany({
       where: {
@@ -145,12 +149,12 @@ export class QuestionDraftService {
         answer,
         status: ProductQuestionStatus.DRAFTED,
         draftDecision: replyDecision,
-        draftConfidence: aiDraft.confidence,
-        draftAnswerability: aiDraft.answerability,
-        draftRisks: aiDraft.risks,
-        draftMissingInformation: aiDraft.missingInformation,
-        draftEvidenceIds: aiDraft.usedEvidenceIds,
-        draftModel: aiDraft.model,
+        draftConfidence: guardedDraft.confidence,
+        draftAnswerability: guardedDraft.answerability,
+        draftRisks: guardedDraft.risks,
+        draftMissingInformation: guardedDraft.missingInformation,
+        draftEvidenceIds: guardedDraft.usedEvidenceIds,
+        draftModel: guardedDraft.model,
         draftedAt,
         draftProcessingStatus: null,
         draftProcessingError: null,
@@ -171,17 +175,44 @@ export class QuestionDraftService {
         matchedColor: context.matchedColor,
         matchedSize: context.matchedSize,
         matchingVariantCount: context.matchingVariants.length,
-        source: aiDraft.source,
-        model: aiDraft.model,
-        interpretation: aiDraft.interpretation,
-        detectedFacts: aiDraft.detectedFacts,
-        answerability: aiDraft.answerability,
+        source: guardedDraft.source,
+        model: guardedDraft.model,
+        interpretation: guardedDraft.interpretation,
+        detectedFacts: guardedDraft.detectedFacts,
+        answerability: guardedDraft.answerability,
         decision: replyDecision,
-        confidence: aiDraft.confidence,
-        missingInformation: aiDraft.missingInformation,
-        usedEvidenceIds: aiDraft.usedEvidenceIds,
-        risks: aiDraft.risks,
+        confidence: guardedDraft.confidence,
+        missingInformation: guardedDraft.missingInformation,
+        usedEvidenceIds: guardedDraft.usedEvidenceIds,
+        risks: guardedDraft.risks,
       },
     };
   }
+}
+
+function applyInventoryFreshnessGuard(
+  draft: AiDraftResult,
+  context: ProductAnswerContext,
+): AiDraftResult {
+  if (
+    !context.requestedFacts.includes('STOCK') ||
+    context.inventoryFreshness.status === 'FRESH'
+  ) {
+    return draft;
+  }
+
+  const missingInformation =
+    context.inventoryFreshness.status === 'UNKNOWN'
+      ? 'Stok verisinin son kontrol zamanı bilinmiyor'
+      : 'Stok bilgisi güncel bir senkronizasyonla doğrulanmalı';
+
+  return {
+    ...draft,
+    decision: 'NEEDS_REVIEW',
+    confidence: Math.min(draft.confidence, 0.6),
+    missingInformation: [
+      ...new Set([...draft.missingInformation, missingInformation]),
+    ],
+    risks: [...new Set([...draft.risks, 'STALE_INVENTORY' as const])],
+  };
 }

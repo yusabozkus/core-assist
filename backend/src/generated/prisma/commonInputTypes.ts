@@ -515,6 +515,20 @@ export type EnumCatalogSyncStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumCatalogSyncStatusFilter<$PrismaModel> | $Enums.CatalogSyncStatus
 }
 
+export type EnumCatalogSyncTriggerFilter<$PrismaModel = never> = {
+  equals?: $Enums.CatalogSyncTrigger | Prisma.EnumCatalogSyncTriggerFieldRefInput<$PrismaModel>
+  in?: $Enums.CatalogSyncTrigger[] | Prisma.ListEnumCatalogSyncTriggerFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CatalogSyncTrigger[] | Prisma.ListEnumCatalogSyncTriggerFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCatalogSyncTriggerFilter<$PrismaModel> | $Enums.CatalogSyncTrigger
+}
+
+export type EnumCatalogSyncStageFilter<$PrismaModel = never> = {
+  equals?: $Enums.CatalogSyncStage | Prisma.EnumCatalogSyncStageFieldRefInput<$PrismaModel>
+  in?: $Enums.CatalogSyncStage[] | Prisma.ListEnumCatalogSyncStageFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CatalogSyncStage[] | Prisma.ListEnumCatalogSyncStageFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCatalogSyncStageFilter<$PrismaModel> | $Enums.CatalogSyncStage
+}
+
 export type EnumCatalogSyncKindWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.CatalogSyncKind | Prisma.EnumCatalogSyncKindFieldRefInput<$PrismaModel>
   in?: $Enums.CatalogSyncKind[] | Prisma.ListEnumCatalogSyncKindFieldRefInput<$PrismaModel>
@@ -533,6 +547,26 @@ export type EnumCatalogSyncStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumCatalogSyncStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumCatalogSyncStatusFilter<$PrismaModel>
+}
+
+export type EnumCatalogSyncTriggerWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CatalogSyncTrigger | Prisma.EnumCatalogSyncTriggerFieldRefInput<$PrismaModel>
+  in?: $Enums.CatalogSyncTrigger[] | Prisma.ListEnumCatalogSyncTriggerFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CatalogSyncTrigger[] | Prisma.ListEnumCatalogSyncTriggerFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCatalogSyncTriggerWithAggregatesFilter<$PrismaModel> | $Enums.CatalogSyncTrigger
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCatalogSyncTriggerFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCatalogSyncTriggerFilter<$PrismaModel>
+}
+
+export type EnumCatalogSyncStageWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CatalogSyncStage | Prisma.EnumCatalogSyncStageFieldRefInput<$PrismaModel>
+  in?: $Enums.CatalogSyncStage[] | Prisma.ListEnumCatalogSyncStageFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CatalogSyncStage[] | Prisma.ListEnumCatalogSyncStageFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCatalogSyncStageWithAggregatesFilter<$PrismaModel> | $Enums.CatalogSyncStage
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCatalogSyncStageFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCatalogSyncStageFilter<$PrismaModel>
 }
 
 export type EnumIncomingEventTypeFilter<$PrismaModel = never> = {
@@ -1209,6 +1243,20 @@ export type NestedEnumCatalogSyncStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumCatalogSyncStatusFilter<$PrismaModel> | $Enums.CatalogSyncStatus
 }
 
+export type NestedEnumCatalogSyncTriggerFilter<$PrismaModel = never> = {
+  equals?: $Enums.CatalogSyncTrigger | Prisma.EnumCatalogSyncTriggerFieldRefInput<$PrismaModel>
+  in?: $Enums.CatalogSyncTrigger[] | Prisma.ListEnumCatalogSyncTriggerFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CatalogSyncTrigger[] | Prisma.ListEnumCatalogSyncTriggerFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCatalogSyncTriggerFilter<$PrismaModel> | $Enums.CatalogSyncTrigger
+}
+
+export type NestedEnumCatalogSyncStageFilter<$PrismaModel = never> = {
+  equals?: $Enums.CatalogSyncStage | Prisma.EnumCatalogSyncStageFieldRefInput<$PrismaModel>
+  in?: $Enums.CatalogSyncStage[] | Prisma.ListEnumCatalogSyncStageFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CatalogSyncStage[] | Prisma.ListEnumCatalogSyncStageFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCatalogSyncStageFilter<$PrismaModel> | $Enums.CatalogSyncStage
+}
+
 export type NestedEnumCatalogSyncKindWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.CatalogSyncKind | Prisma.EnumCatalogSyncKindFieldRefInput<$PrismaModel>
   in?: $Enums.CatalogSyncKind[] | Prisma.ListEnumCatalogSyncKindFieldRefInput<$PrismaModel>
@@ -1227,6 +1275,26 @@ export type NestedEnumCatalogSyncStatusWithAggregatesFilter<$PrismaModel = never
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumCatalogSyncStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumCatalogSyncStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumCatalogSyncTriggerWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CatalogSyncTrigger | Prisma.EnumCatalogSyncTriggerFieldRefInput<$PrismaModel>
+  in?: $Enums.CatalogSyncTrigger[] | Prisma.ListEnumCatalogSyncTriggerFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CatalogSyncTrigger[] | Prisma.ListEnumCatalogSyncTriggerFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCatalogSyncTriggerWithAggregatesFilter<$PrismaModel> | $Enums.CatalogSyncTrigger
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCatalogSyncTriggerFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCatalogSyncTriggerFilter<$PrismaModel>
+}
+
+export type NestedEnumCatalogSyncStageWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CatalogSyncStage | Prisma.EnumCatalogSyncStageFieldRefInput<$PrismaModel>
+  in?: $Enums.CatalogSyncStage[] | Prisma.ListEnumCatalogSyncStageFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CatalogSyncStage[] | Prisma.ListEnumCatalogSyncStageFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCatalogSyncStageWithAggregatesFilter<$PrismaModel> | $Enums.CatalogSyncStage
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCatalogSyncStageFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCatalogSyncStageFilter<$PrismaModel>
 }
 
 export type NestedEnumIncomingEventTypeFilter<$PrismaModel = never> = {

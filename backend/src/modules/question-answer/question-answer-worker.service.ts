@@ -3,6 +3,7 @@ import {
   AiAutomationMode,
   ChannelConnectionStatus,
   ProductQuestionStatus,
+  ProductVariantStatus,
   QuestionAnswerOrigin,
   QuestionAnswerStatus,
   QuestionReplyDecision,
@@ -12,6 +13,7 @@ import { CredentialsEncryptionService } from '../channels/credentials-encryption
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
 import { MINIMUM_READY_CONFIDENCE } from '../questions/question-reply-decision.service';
 import type { QuestionAnswerJobData } from './question-answer.types';
+import { hasFreshInventoryForAutomaticAnswer } from './automatic-answer-inventory.guard';
 
 @Injectable()
 export class QuestionAnswerWorkerService {
@@ -39,6 +41,14 @@ export class QuestionAnswerWorkerService {
             draftRisks: true,
             draftMissingInformation: true,
             draftEvidenceIds: true,
+            product: {
+              select: {
+                variants: {
+                  where: { status: { not: ProductVariantStatus.ARCHIVED } },
+                  select: { lastSyncedAt: true },
+                },
+              },
+            },
             store: {
               select: {
                 knowledgeProfile: { select: { automationMode: true } },
@@ -75,6 +85,10 @@ export class QuestionAnswerWorkerService {
         !isEmptyList(delivery.question.draftRisks) ||
         !isEmptyList(delivery.question.draftMissingInformation) ||
         !isNonEmptyList(delivery.question.draftEvidenceIds) ||
+        !hasFreshInventoryForAutomaticAnswer(
+          delivery.question.draftEvidenceIds,
+          delivery.question.product?.variants ?? [],
+        ) ||
         delivery.question.store.knowledgeProfile?.automationMode !==
           AiAutomationMode.SAFE_AUTO)
     ) {

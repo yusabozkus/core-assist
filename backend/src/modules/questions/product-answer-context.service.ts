@@ -10,6 +10,11 @@ import {
   SizeGuideStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import {
+  getInventoryFreshnessCutoff,
+  getInventoryFreshnessMaxAgeMs,
+  resolveInventoryFreshness,
+} from '../catalog/inventory-freshness';
 import type {
   ProductAnswerContext,
   ProductAnswerEvidence,
@@ -246,6 +251,7 @@ export class ProductAnswerContextService {
                 currency: true,
                 stock: true,
                 status: true,
+                lastSyncedAt: true,
               },
             },
             sizeGuides: {
@@ -314,6 +320,7 @@ export class ProductAnswerContextService {
     const variants = question.product.variants.map((variant) => ({
       ...variant,
       price: Number(variant.price),
+      lastSyncedAt: variant.lastSyncedAt?.toISOString() ?? null,
     }));
     const context = analyzeProductQuestion({
       questionId: question.id,
@@ -517,6 +524,9 @@ export function analyzeProductQuestion(input: {
     );
   });
   const requestedFacts = detectRequestedFacts(normalizedQuestion);
+  const inventoryFreshness = evaluateInventoryFreshness(
+    matchingVariants.length > 0 ? matchingVariants : variants,
+  );
   const matchedAttributes = findRelevantAttributes(
     normalizedQuestion,
     requestedFacts,
@@ -565,9 +575,43 @@ export function analyzeProductQuestion(input: {
     matchedSize,
     product: input.product,
     matchingVariants,
+    inventoryFreshness,
     relevantAttributes,
     relevantDescription,
     evidence,
+  };
+}
+
+function evaluateInventoryFreshness(
+  variants: ProductAnswerContext['product']['variants'],
+): ProductAnswerContext['inventoryFreshness'] {
+  const cutoff = getInventoryFreshnessCutoff();
+  const freshness = variants.map((variant) =>
+    resolveInventoryFreshness(
+      variant.lastSyncedAt ? new Date(variant.lastSyncedAt) : null,
+      cutoff,
+    ),
+  );
+  const syncedDates = variants
+    .flatMap((variant) =>
+      variant.lastSyncedAt ? [new Date(variant.lastSyncedAt)] : [],
+    )
+    .filter((date) => Number.isFinite(date.getTime()));
+  const latestSyncedAt = syncedDates.length
+    ? new Date(
+        Math.max(...syncedDates.map((date) => date.getTime())),
+      ).toISOString()
+    : null;
+
+  return {
+    status:
+      freshness.length > 0 && freshness.every((item) => item === 'FRESH')
+        ? 'FRESH'
+        : freshness.some((item) => item === 'STALE')
+          ? 'STALE'
+          : 'UNKNOWN',
+    latestSyncedAt,
+    maxAgeMs: getInventoryFreshnessMaxAgeMs(),
   };
 }
 

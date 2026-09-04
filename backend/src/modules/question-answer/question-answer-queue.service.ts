@@ -10,6 +10,7 @@ import {
   AiAutomationMode,
   ChannelConnectionStatus,
   ProductQuestionStatus,
+  ProductVariantStatus,
   QuestionAnswerOrigin,
   QuestionAnswerStatus,
   QuestionReplyDecision,
@@ -27,6 +28,7 @@ import type {
   QuestionAnswerJobData,
   QueueQuestionAnswerInput,
 } from './question-answer.types';
+import { hasFreshInventoryForAutomaticAnswer } from './automatic-answer-inventory.guard';
 
 @Injectable()
 export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
@@ -55,6 +57,14 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
         draftRisks: true,
         draftMissingInformation: true,
         draftEvidenceIds: true,
+        product: {
+          select: {
+            variants: {
+              where: { status: { not: ProductVariantStatus.ARCHIVED } },
+              select: { lastSyncedAt: true },
+            },
+          },
+        },
         connectionId: true,
         store: {
           select: {
@@ -93,6 +103,10 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
         !isEmptyList(question.draftRisks) ||
         !isEmptyList(question.draftMissingInformation) ||
         !isNonEmptyList(question.draftEvidenceIds) ||
+        !hasFreshInventoryForAutomaticAnswer(
+          question.draftEvidenceIds,
+          question.product?.variants ?? [],
+        ) ||
         question.store.knowledgeProfile?.automationMode !==
           AiAutomationMode.SAFE_AUTO)
     ) {

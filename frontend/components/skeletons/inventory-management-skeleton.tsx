@@ -27,18 +27,15 @@ export function InventoryManagementSkeleton() {
     <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <Skeleton className="h-9 w-48" />
+          <Skeleton className="h-9 w-40" />
           <Skeleton className="mt-3 h-4 w-full max-w-md" />
         </div>
         <Skeleton className="h-11 w-40 rounded-xl" />
       </div>
 
-      <div className="mt-6 grid overflow-hidden rounded-xl border border-border sm:grid-cols-2 lg:grid-cols-5">
-        {Array.from({ length: 5 }, (_, index) => (
-          <div
-            key={index}
-            className="border-b border-border px-4 py-4 lg:border-r lg:border-b-0 lg:last:border-r-0"
-          >
+      <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {Array.from({ length: 6 }, (_, index) => (
+          <div key={index} className="bg-card px-4 py-4">
             <Skeleton className="h-5 w-16" />
             <Skeleton className="mt-2 h-3 w-24" />
           </div>

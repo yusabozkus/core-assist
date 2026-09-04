@@ -31,14 +31,19 @@ export function InventorySummary({ summary }: InventorySummaryProps) {
       value: summary.unavailable,
       indicator: "bg-muted-foreground/55",
     },
+    {
+      label: "Güncel değil",
+      value: summary.stale,
+      indicator: "bg-violet-500",
+    },
   ]
 
   return (
-    <div className="grid overflow-hidden rounded-xl border border-border bg-card sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       {items.map((item) => (
         <div
           key={item.label}
-          className="flex min-w-0 items-center gap-3 border-b border-border px-4 py-3.5 last:border-b-0 lg:border-r lg:border-b-0 lg:last:border-r-0 sm:[&:nth-child(odd)]:border-r"
+          className="flex min-w-0 items-center gap-3 bg-card px-4 py-3.5"
         >
           <span className={`size-2 shrink-0 rounded-full ${item.indicator}`} />
           <span className="min-w-0">

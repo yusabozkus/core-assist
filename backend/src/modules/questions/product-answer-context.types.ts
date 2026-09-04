@@ -39,6 +39,7 @@ export type ProductAnswerRisk =
   | 'UNSUPPORTED_CLAIM'
   | 'STOCK_CONTRADICTION'
   | 'PRICE_CONTRADICTION'
+  | 'STALE_INVENTORY'
   | 'LOW_CONFIDENCE'
   | 'HIGH_RISK_INTENT';
 
@@ -54,6 +55,7 @@ export type ProductAnswerVariantContext = {
   currency: string;
   stock: number;
   status: 'ACTIVE' | 'OUT_OF_STOCK' | 'UNAVAILABLE' | 'ARCHIVED';
+  lastSyncedAt: string | null;
 };
 
 export type ProductAnswerSizeGuideContext = {
@@ -84,6 +86,11 @@ export type ProductAnswerContext = {
     sizeGuides?: ProductAnswerSizeGuideContext[];
   };
   matchingVariants: ProductAnswerVariantContext[];
+  inventoryFreshness: {
+    status: 'FRESH' | 'STALE' | 'UNKNOWN';
+    latestSyncedAt: string | null;
+    maxAgeMs: number;
+  };
   relevantAttributes: Array<{ name: string; value: string }>;
   relevantDescription: string | null;
   evidence: ProductAnswerEvidence[];

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '../../generated/prisma/client';
 import {
+  ChannelConnectionStatus,
   ProductVariantStatus,
   StoreStatus,
 } from '../../generated/prisma/enums';
@@ -10,6 +11,11 @@ import {
   InventoryStockFilter,
 } from './catalog-inventory-query.dto';
 import type { CatalogProductsQueryDto } from './catalog-products-query.dto';
+import {
+  getInventoryFreshnessCutoff,
+  getInventoryFreshnessMaxAgeMs,
+  resolveInventoryFreshness,
+} from './inventory-freshness';
 
 const PRODUCT_DETAIL_SELECT = {
   id: true,
@@ -250,6 +256,7 @@ export class CatalogService {
 
     const query = options.query?.trim();
     const provider = options.provider?.trim();
+    const freshnessCutoff = getInventoryFreshnessCutoff();
     const baseWhere = {
       product: { storeId, status: 'ACTIVE' },
       status: { not: ProductVariantStatus.ARCHIVED },
@@ -286,6 +293,7 @@ export class CatalogService {
     const stockFilter = this.getInventoryStockFilter(
       options.status,
       options.lowStockThreshold,
+      freshnessCutoff,
     );
     if (stockFilter) filters.push(stockFilter);
 
@@ -330,6 +338,7 @@ export class CatalogService {
       lowStockVariants,
       outOfStockVariants,
       unavailableVariants,
+      staleVariants,
       stock,
       freshness,
       providerConnections,
@@ -350,7 +359,7 @@ export class CatalogService {
             select: { url: true },
           },
           variants: {
-            where: baseWhere,
+            where,
             orderBy: [{ stock: 'asc' }, { id: 'asc' }],
             select: {
               id: true,
@@ -387,6 +396,19 @@ export class CatalogService {
       this.prisma.productVariant.count({
         where: { ...baseWhere, status: ProductVariantStatus.UNAVAILABLE },
       }),
+      this.prisma.productVariant.count({
+        where: {
+          AND: [
+            baseWhere,
+            {
+              OR: [
+                { lastSyncedAt: null },
+                { lastSyncedAt: { lt: freshnessCutoff } },
+              ],
+            },
+          ],
+        },
+      }),
       this.prisma.productVariant.aggregate({
         where: { ...baseWhere, status: ProductVariantStatus.ACTIVE },
         _sum: { stock: true },
@@ -396,7 +418,11 @@ export class CatalogService {
         _max: { lastSyncedAt: true },
       }),
       this.prisma.channelConnection.findMany({
-        where: { storeId, type: 'COMMERCE' },
+        where: {
+          storeId,
+          type: 'COMMERCE',
+          status: ChannelConnectionStatus.CONNECTED,
+        },
         distinct: ['providerKey'],
         orderBy: { providerKey: 'asc' },
         select: { providerKey: true },
@@ -428,6 +454,10 @@ export class CatalogService {
           status: variant.status,
           sourceUpdatedAt: variant.sourceUpdatedAt,
           lastSyncedAt: variant.lastSyncedAt,
+          freshness: resolveInventoryFreshness(
+            variant.lastSyncedAt,
+            freshnessCutoff,
+          ),
           providers: [
             ...new Set(
               variant.externalVariants.map(
@@ -442,6 +472,7 @@ export class CatalogService {
       total: filteredProductTotal,
       variantTotal: filteredVariantTotal,
       lowStockThreshold: options.lowStockThreshold,
+      freshnessMaxAgeMs: getInventoryFreshnessMaxAgeMs(),
       providers: providerConnections.map(
         (connection) => connection.providerKey,
       ),
@@ -451,6 +482,7 @@ export class CatalogService {
         lowStock: lowStockVariants,
         outOfStock: outOfStockVariants,
         unavailable: unavailableVariants,
+        stale: staleVariants,
         totalStock: stock._sum.stock ?? 0,
         lastSyncedAt: freshness._max.lastSyncedAt,
       },
@@ -460,6 +492,7 @@ export class CatalogService {
   private getInventoryStockFilter(
     status: InventoryStockFilter,
     lowStockThreshold: number,
+    freshnessCutoff: Date,
   ): Prisma.ProductVariantWhereInput | null {
     switch (status) {
       case InventoryStockFilter.IN_STOCK:
@@ -484,6 +517,13 @@ export class CatalogService {
         };
       case InventoryStockFilter.UNAVAILABLE:
         return { status: ProductVariantStatus.UNAVAILABLE };
+      case InventoryStockFilter.STALE:
+        return {
+          OR: [
+            { lastSyncedAt: null },
+            { lastSyncedAt: { lt: freshnessCutoff } },
+          ],
+        };
       case InventoryStockFilter.ALL:
         return null;
     }

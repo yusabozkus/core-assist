@@ -20,6 +20,7 @@ import {
 } from './product-sync.constants';
 import type {
   ProductSyncDispatcher,
+  ProductSyncEnqueueOptions,
   ProductSyncJobData,
   ProductSyncKind,
   QueuedProductSync,
@@ -37,6 +38,7 @@ export class ProductSyncQueueService implements ProductSyncDispatcher {
     storeId: string,
     connectionId: string,
     kind: ProductSyncKind = 'FULL',
+    options: ProductSyncEnqueueOptions = {},
   ): Promise<QueuedProductSync> {
     const queuedAt = new Date();
     const staleBefore = new Date(
@@ -72,6 +74,8 @@ export class ProductSyncQueueService implements ProductSyncDispatcher {
       const syncRun = await this.prisma.catalogSyncRun.create({
         data: {
           connectionId,
+          trigger: options.trigger ?? 'MANUAL',
+          retryOfId: options.retryOfId,
           kind:
             kind === 'INVENTORY'
               ? CatalogSyncKind.INVENTORY
@@ -119,6 +123,8 @@ export class ProductSyncQueueService implements ProductSyncDispatcher {
           where: { id: syncRunId },
           data: {
             status: CatalogSyncStatus.FAILED,
+            stage: 'FAILED',
+            progress: 100,
             errorMessage: 'Senkronizasyon işi kuyruğa eklenemedi.',
             completedAt: new Date(),
           },

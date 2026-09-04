@@ -39,6 +39,11 @@ export class QuestionSyncWorkerService {
   ) {}
 
   async run(data: QuestionSyncJobData) {
+    await this.prisma.catalogSyncRun.updateMany({
+      where: { id: data.syncRunId, connectionId: data.connectionId },
+      data: { stage: 'FETCHING', progress: 10 },
+    });
+
     const connection = await this.prisma.channelConnection.findFirst({
       where: {
         id: data.connectionId,
@@ -84,6 +89,7 @@ export class QuestionSyncWorkerService {
     let cursor: string | undefined;
     let batchCount = 0;
     let questionsProcessed = 0;
+    let questionsUnchanged = 0;
 
     do {
       let batchQuestionsProcessed = 0;
@@ -105,6 +111,8 @@ export class QuestionSyncWorkerService {
         if (persisted?.isNew) {
           questionsProcessed += 1;
           batchQuestionsProcessed += 1;
+        } else if (persisted && !persisted.isNew) {
+          questionsUnchanged += 1;
         }
 
         if (
@@ -125,6 +133,9 @@ export class QuestionSyncWorkerService {
         where: { id: data.syncRunId, connectionId: syncConnection.id },
         data: {
           questionsProcessed: { increment: batchQuestionsProcessed },
+          questionsUnchanged,
+          stage: 'PERSISTING',
+          progress: Math.min(90, 20 + batchCount * 5),
         },
       });
 
@@ -139,6 +150,8 @@ export class QuestionSyncWorkerService {
         where: { id: data.syncRunId, connectionId: syncConnection.id },
         data: {
           status: CatalogSyncStatus.COMPLETED,
+          stage: 'COMPLETED',
+          progress: 100,
           errorMessage: null,
           completedAt,
         },
@@ -167,6 +180,8 @@ export class QuestionSyncWorkerService {
         where: { id: data.syncRunId, connectionId: data.connectionId },
         data: {
           status: CatalogSyncStatus.FAILED,
+          stage: 'FAILED',
+          progress: 100,
           errorMessage: message,
           completedAt: new Date(),
         },

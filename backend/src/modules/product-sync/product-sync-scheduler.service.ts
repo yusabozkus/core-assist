@@ -75,6 +75,7 @@ export class ProductSyncSchedulerService implements OnModuleInit {
           connection.storeId,
           connection.id,
           requiresFullSync ? 'FULL' : 'INVENTORY',
+          { trigger: 'SCHEDULED' },
         );
       }),
     );

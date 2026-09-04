@@ -2558,9 +2558,19 @@ export const CatalogSyncRunScalarFieldEnum = {
   connectionId: 'connectionId',
   kind: 'kind',
   status: 'status',
+  trigger: 'trigger',
+  stage: 'stage',
+  progress: 'progress',
+  retryOfId: 'retryOfId',
   productsProcessed: 'productsProcessed',
+  productsCreated: 'productsCreated',
+  productsUpdated: 'productsUpdated',
+  productsUnchanged: 'productsUnchanged',
   variantsProcessed: 'variantsProcessed',
+  variantsUpdated: 'variantsUpdated',
+  variantsUnchanged: 'variantsUnchanged',
   questionsProcessed: 'questionsProcessed',
+  questionsUnchanged: 'questionsUnchanged',
   productsArchived: 'productsArchived',
   cursor: 'cursor',
   errorMessage: 'errorMessage',
@@ -2828,14 +2838,14 @@ export type ListEnumAiEmojiPolicyFieldRefInput<$PrismaModel> = FieldRefInputType
  * Reference to a field of type 'AiAutomationMode'
  */
 export type EnumAiAutomationModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiAutomationMode'>
-
+    
 
 
 /**
  * Reference to a field of type 'AiAutomationMode[]'
  */
 export type ListEnumAiAutomationModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AiAutomationMode[]'>
-
+    
 
 
 /**
@@ -3021,6 +3031,34 @@ export type ListEnumCatalogSyncStatusFieldRefInput<$PrismaModel> = FieldRefInput
 
 
 /**
+ * Reference to a field of type 'CatalogSyncTrigger'
+ */
+export type EnumCatalogSyncTriggerFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CatalogSyncTrigger'>
+    
+
+
+/**
+ * Reference to a field of type 'CatalogSyncTrigger[]'
+ */
+export type ListEnumCatalogSyncTriggerFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CatalogSyncTrigger[]'>
+    
+
+
+/**
+ * Reference to a field of type 'CatalogSyncStage'
+ */
+export type EnumCatalogSyncStageFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CatalogSyncStage'>
+    
+
+
+/**
+ * Reference to a field of type 'CatalogSyncStage[]'
+ */
+export type ListEnumCatalogSyncStageFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CatalogSyncStage[]'>
+    
+
+
+/**
  * Reference to a field of type 'IncomingEventType'
  */
 export type EnumIncomingEventTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'IncomingEventType'>
@@ -3080,28 +3118,28 @@ export type ListEnumQuestionReplyDecisionFieldRefInput<$PrismaModel> = FieldRefI
  * Reference to a field of type 'QuestionDraftProcessingStatus'
  */
 export type EnumQuestionDraftProcessingStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionDraftProcessingStatus'>
-
+    
 
 
 /**
  * Reference to a field of type 'QuestionDraftProcessingStatus[]'
  */
 export type ListEnumQuestionDraftProcessingStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionDraftProcessingStatus[]'>
-
+    
 
 
 /**
  * Reference to a field of type 'QuestionAnswerOrigin'
  */
 export type EnumQuestionAnswerOriginFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionAnswerOrigin'>
-
+    
 
 
 /**
  * Reference to a field of type 'QuestionAnswerOrigin[]'
  */
 export type ListEnumQuestionAnswerOriginFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionAnswerOrigin[]'>
-
+    
 
 
 /**
@@ -3368,3 +3406,4 @@ export type PrismaAction =
  * `PrismaClient` proxy available in interactive transactions.
  */
 export type TransactionClient = Omit<DefaultPrismaClient, runtime.ITXClientDenyList>
+

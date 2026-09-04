@@ -16,6 +16,7 @@ export enum InventoryStockFilter {
   LOW_STOCK = 'LOW_STOCK',
   OUT_OF_STOCK = 'OUT_OF_STOCK',
   UNAVAILABLE = 'UNAVAILABLE',
+  STALE = 'STALE',
 }
 
 export class CatalogInventoryQueryDto {

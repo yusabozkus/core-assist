@@ -31,7 +31,15 @@ type SyncCounters = {
   productsProcessed: number;
   variantsProcessed: number;
   productsArchived: number;
+  productsCreated: number;
+  productsUpdated: number;
+  productsUnchanged: number;
+  variantsUpdated: number;
+  variantsUnchanged: number;
 };
+
+type ProductChange = 'CREATED' | 'UPDATED' | 'UNCHANGED';
+type InventoryChange = 'UPDATED' | 'UNCHANGED';
 
 @Injectable()
 export class ProductSyncWorkerService {
@@ -48,6 +56,12 @@ export class ProductSyncWorkerService {
     data: ProductSyncJobData,
     updateProgress: (progress: number) => Promise<void>,
   ) {
+    await this.prisma.catalogSyncRun.updateMany({
+      where: { id: data.syncRunId, connectionId: data.connectionId },
+      data: { stage: 'FETCHING', progress: 10 },
+    });
+    await updateProgress(10);
+
     const connection = await this.prisma.channelConnection.findFirst({
       where: {
         id: data.connectionId,
@@ -114,6 +128,8 @@ export class ProductSyncWorkerService {
         where: { id: data.syncRunId },
         data: {
           status: CatalogSyncStatus.FAILED,
+          stage: 'FAILED',
+          progress: 100,
           errorMessage: message,
           completedAt: new Date(),
         },
@@ -135,6 +151,9 @@ export class ProductSyncWorkerService {
     let productsProcessed = 0;
     let variantsProcessed = 0;
     let batchCount = 0;
+    let productsCreated = 0;
+    let productsUpdated = 0;
+    let productsUnchanged = 0;
 
     do {
       const batch = await this.providers.fetchProducts(
@@ -144,12 +163,15 @@ export class ProductSyncWorkerService {
       );
 
       for (const product of batch.products) {
-        await this.saveNormalizedProduct(
+        const change = await this.saveNormalizedProduct(
           data.storeId,
           connection.id,
           data.syncRunId,
           product,
         );
+        if (change === 'CREATED') productsCreated += 1;
+        if (change === 'UPDATED') productsUpdated += 1;
+        if (change === 'UNCHANGED') productsUnchanged += 1;
         productsProcessed += 1;
         variantsProcessed += uniqueVariants(product.variants).length;
       }
@@ -159,21 +181,41 @@ export class ProductSyncWorkerService {
       await this.updateRunProgress(data.syncRunId, {
         productsProcessed,
         variantsProcessed,
+        productsCreated,
+        productsUpdated,
+        productsUnchanged,
+        stage: 'PERSISTING',
+        progress: Math.min(80, 20 + batchCount * 5),
         cursor,
       });
-      await updateProgress(Math.min(95, batchCount));
+      await updateProgress(Math.min(80, 20 + batchCount * 5));
     } while (cursor && batchCount < PRODUCT_SYNC_MAX_BATCHES);
 
     if (cursor) {
       throw new Error('Katalog senkronizasyonu güvenli batch sınırını aştı.');
     }
 
+    await this.prisma.catalogSyncRun.update({
+      where: { id: data.syncRunId },
+      data: { stage: 'RECONCILING', progress: 90 },
+    });
+    await updateProgress(90);
+
     const productsArchived = await this.reconcileMissingProducts(
       connection.id,
       data.syncRunId,
     );
 
-    return { productsProcessed, variantsProcessed, productsArchived };
+    return {
+      productsProcessed,
+      variantsProcessed,
+      productsArchived,
+      productsCreated,
+      productsUpdated,
+      productsUnchanged,
+      variantsUpdated: 0,
+      variantsUnchanged: 0,
+    };
   }
 
   private async syncInventory(
@@ -185,6 +227,8 @@ export class ProductSyncWorkerService {
     let cursor: string | undefined;
     let variantsProcessed = 0;
     let batchCount = 0;
+    let variantsUpdated = 0;
+    let variantsUnchanged = 0;
 
     do {
       const batch = await this.providers.fetchInventory(
@@ -194,11 +238,13 @@ export class ProductSyncWorkerService {
       );
 
       for (const variant of batch.variants) {
-        const updated = await this.updateInventoryVariant(
+        const change = await this.updateInventoryVariant(
           connection.id,
           variant,
         );
-        if (updated) variantsProcessed += 1;
+        if (change) variantsProcessed += 1;
+        if (change === 'UPDATED') variantsUpdated += 1;
+        if (change === 'UNCHANGED') variantsUnchanged += 1;
       }
 
       cursor = batch.nextCursor;
@@ -206,9 +252,13 @@ export class ProductSyncWorkerService {
       await this.updateRunProgress(data.syncRunId, {
         productsProcessed: 0,
         variantsProcessed,
+        variantsUpdated,
+        variantsUnchanged,
+        stage: 'PERSISTING',
+        progress: Math.min(90, 20 + batchCount * 5),
         cursor,
       });
-      await updateProgress(Math.min(95, batchCount));
+      await updateProgress(Math.min(90, 20 + batchCount * 5));
     } while (cursor && batchCount < PRODUCT_SYNC_MAX_BATCHES);
 
     if (cursor) {
@@ -219,6 +269,11 @@ export class ProductSyncWorkerService {
       productsProcessed: 0,
       variantsProcessed,
       productsArchived: 0,
+      productsCreated: 0,
+      productsUpdated: 0,
+      productsUnchanged: 0,
+      variantsUpdated,
+      variantsUnchanged,
     };
   }
 
@@ -241,8 +296,18 @@ export class ProductSyncWorkerService {
               externalId: normalized.externalId,
             },
           },
-          select: { id: true, productId: true },
+          select: {
+            id: true,
+            productId: true,
+            rawPayload: true,
+            sourceUpdatedAt: true,
+          },
         });
+      const change: ProductChange = !existingExternalProduct
+        ? 'CREATED'
+        : isSameProductSnapshot(existingExternalProduct, normalized)
+          ? 'UNCHANGED'
+          : 'UPDATED';
       const productData = {
         title: normalized.title,
         description: normalized.description ?? null,
@@ -334,7 +399,7 @@ export class ProductSyncWorkerService {
         syncRunId,
       );
 
-      return { productId, externalProductId };
+      return { productId, externalProductId, change };
     });
 
     if (normalized.sizeGuide) {
@@ -351,6 +416,8 @@ export class ProductSyncWorkerService {
         );
       }
     }
+
+    return saved.change;
   }
 
   private async upsertVariant(
@@ -529,6 +596,15 @@ export class ProductSyncWorkerService {
               productVariantId: true,
               externalProductId: true,
               sourceUpdatedAt: true,
+              productVariant: {
+                select: {
+                  sku: true,
+                  barcode: true,
+                  price: true,
+                  currency: true,
+                  stock: true,
+                },
+              },
             },
           })
         : null;
@@ -547,18 +623,34 @@ export class ProductSyncWorkerService {
           productVariantId: true,
           externalProductId: true,
           sourceUpdatedAt: true,
+          productVariant: {
+            select: {
+              sku: true,
+              barcode: true,
+              price: true,
+              currency: true,
+              stock: true,
+            },
+          },
         },
       });
 
-      if (!externalVariant) return false;
+      if (!externalVariant) return null;
 
       if (
         normalized.sourceUpdatedAt &&
         externalVariant.sourceUpdatedAt &&
         normalized.sourceUpdatedAt < externalVariant.sourceUpdatedAt
       ) {
-        return false;
+        return null;
       }
+
+      const change: InventoryChange = isSameInventorySnapshot(
+        externalVariant.productVariant,
+        normalized,
+      )
+        ? 'UNCHANGED'
+        : 'UPDATED';
 
       const syncedAt = new Date();
       const inventoryData = {
@@ -605,7 +697,7 @@ export class ProductSyncWorkerService {
         data: { status: ProductStatus.ACTIVE },
       });
 
-      return true;
+      return change;
     });
   }
 
@@ -663,6 +755,13 @@ export class ProductSyncWorkerService {
     data: {
       productsProcessed: number;
       variantsProcessed: number;
+      productsCreated?: number;
+      productsUpdated?: number;
+      productsUnchanged?: number;
+      variantsUpdated?: number;
+      variantsUnchanged?: number;
+      stage?: 'FETCHING' | 'PERSISTING' | 'RECONCILING';
+      progress?: number;
       cursor?: string;
     },
   ) {
@@ -671,6 +770,13 @@ export class ProductSyncWorkerService {
       data: {
         productsProcessed: data.productsProcessed,
         variantsProcessed: data.variantsProcessed,
+        productsCreated: data.productsCreated,
+        productsUpdated: data.productsUpdated,
+        productsUnchanged: data.productsUnchanged,
+        variantsUpdated: data.variantsUpdated,
+        variantsUnchanged: data.variantsUnchanged,
+        stage: data.stage,
+        progress: data.progress,
         cursor: data.cursor ?? null,
       },
     });
@@ -695,9 +801,16 @@ export class ProductSyncWorkerService {
         where: { id: data.syncRunId },
         data: {
           status: CatalogSyncStatus.COMPLETED,
+          stage: 'COMPLETED',
+          progress: 100,
           productsProcessed: counters.productsProcessed,
           variantsProcessed: counters.variantsProcessed,
           productsArchived: counters.productsArchived,
+          productsCreated: counters.productsCreated,
+          productsUpdated: counters.productsUpdated,
+          productsUnchanged: counters.productsUnchanged,
+          variantsUpdated: counters.variantsUpdated,
+          variantsUnchanged: counters.variantsUnchanged,
           cursor: null,
           completedAt,
         },
@@ -708,6 +821,43 @@ export class ProductSyncWorkerService {
       }),
     ]);
   }
+}
+
+function isSameProductSnapshot(
+  existing: { rawPayload: Prisma.JsonValue; sourceUpdatedAt: Date | null },
+  normalized: NormalizedProduct,
+) {
+  if (normalized.sourceUpdatedAt && existing.sourceUpdatedAt) {
+    return (
+      normalized.sourceUpdatedAt.getTime() ===
+      existing.sourceUpdatedAt.getTime()
+    );
+  }
+
+  return (
+    JSON.stringify(existing.rawPayload) ===
+    JSON.stringify(normalized.rawPayload)
+  );
+}
+
+function isSameInventorySnapshot(
+  existing: {
+    sku: string;
+    barcode: string | null;
+    price: Prisma.Decimal;
+    currency: string;
+    stock: number;
+  },
+  normalized: NormalizedInventoryVariant,
+) {
+  return (
+    existing.sku === normalized.sku &&
+    existing.barcode === (normalized.barcode ?? null) &&
+    (normalized.price === undefined ||
+      existing.price.toString() === String(normalized.price)) &&
+    (!normalized.currency || existing.currency === normalized.currency) &&
+    (normalized.stock === undefined || existing.stock === normalized.stock)
+  );
 }
 
 function uniqueAttributes(attributes: Array<{ name: string; value: string }>) {

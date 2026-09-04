@@ -5,6 +5,7 @@ import { RefreshIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { ProductDetailContent } from "@/components/dashboard/catalog/products/product-detail-content"
+import { ProductMarketplaceAction } from "@/components/dashboard/catalog/products/product-marketplace-action"
 import { Button } from "@/components/ui/button"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
 import { ProductDetailSkeleton } from "@/components/skeletons/product-detail-skeleton"
@@ -67,7 +68,13 @@ export function ProductDetailDialog({
           ? [product.brand, product.category].filter(Boolean).join(" · ")
           : "Ürün bilgileri pazaryeri kataloğundan alınıyor."
       }
+      headerActions={
+        product ? (
+          <ProductMarketplaceAction sources={product.externalProducts} />
+        ) : null
+      }
       contentClassName="sm:max-w-5xl"
+      headerClassName={product ? "pr-32 sm:pr-48" : undefined}
       bodyClassName="themed-scrollbar px-0 py-0"
     >
       {error ? (

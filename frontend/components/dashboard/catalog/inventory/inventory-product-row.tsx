@@ -2,9 +2,15 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { ChevronRightIcon, Package01Icon } from "@hugeicons/core-free-icons"
+import {
+  ChevronRightIcon,
+  Clock01Icon,
+  Package01Icon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
+import { getProviderName } from "@/components/dashboard/catalog/products/product-catalog-utils"
+import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,7 +19,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { cn } from "@/lib/utils"
-import type { InventoryItem } from "@/types/inventory"
+import type { InventoryFreshness, InventoryItem } from "@/types/inventory"
 
 export type InventoryProductGroup = {
   productId: string
@@ -22,20 +28,26 @@ export type InventoryProductGroup = {
   productCategory: string | null
   imageUrl: string | null
   variants: InventoryItem[]
+  providers: string[]
+  lastSyncedAt: string | null
+  freshness: InventoryFreshness
 }
 
 type InventoryProductRowProps = {
   product: InventoryProductGroup
   lowStockThreshold: number
+  forceOpen: boolean
   onSelect: (productId: string) => void
 }
 
 export function InventoryProductRow({
   product,
   lowStockThreshold,
+  forceOpen,
   onSelect,
 }: InventoryProductRowProps) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(forceOpen)
+
   const totalStock = product.variants.reduce(
     (total, variant) => total + Math.max(variant.stock, 0),
     0
@@ -84,6 +96,28 @@ export function InventoryProductRow({
               {[product.productBrand, product.productCategory]
                 .filter(Boolean)
                 .join(" · ") || "Kategori bilgisi bulunmuyor"}
+            </span>
+            <span className="mt-1 flex min-w-0 items-center gap-2 text-[10px] text-muted-foreground">
+              <span className="flex min-w-0 items-center gap-1.5">
+                {product.providers.slice(0, 2).map((provider) => (
+                  <ProviderLogo
+                    key={provider}
+                    provider={provider}
+                    className="size-4 rounded-sm shadow-none"
+                    sizes="16px"
+                  />
+                ))}
+                <span className="truncate">
+                  {product.providers.map(getProviderName).join(", ") ||
+                    "Kanal bilgisi yok"}
+                </span>
+              </span>
+              {product.freshness !== "FRESH" ? (
+                <span className="inline-flex shrink-0 items-center gap-1 font-medium text-amber-600 dark:text-amber-400">
+                  <HugeiconsIcon icon={Clock01Icon} className="size-3" />
+                  Güncelleme gerekli
+                </span>
+              ) : null}
             </span>
             <span className="mt-1 block text-[11px] text-muted-foreground sm:hidden">
               {product.variants.length} varyant
@@ -135,6 +169,13 @@ export function InventoryProductRow({
                     <span className="mt-0.5 block truncate font-mono text-[10px] text-muted-foreground">
                       {variant.sku}
                     </span>
+                    <span className="mt-0.5 block truncate text-[10px] text-muted-foreground">
+                      {variant.providers.map(getProviderName).join(", ") ||
+                        "Kanal bilgisi yok"}
+                      {variant.freshness !== "FRESH"
+                        ? " · Güncelleme gerekli"
+                        : " · Güncel"}
+                    </span>
                   </span>
                 </div>
 
@@ -157,7 +198,7 @@ export function InventoryProductRow({
   )
 }
 
-type StockAvailability = "AVAILABLE" | "LOW" | "OUT"
+type StockAvailability = "AVAILABLE" | "LOW" | "OUT" | "UNAVAILABLE"
 
 function StockStatusBadge({
   availability,
@@ -170,6 +211,10 @@ function StockStatusBadge({
         Tükendi
       </Badge>
     )
+  }
+
+  if (availability === "UNAVAILABLE") {
+    return <Badge variant="secondary">Kullanılamıyor</Badge>
   }
 
   if (availability === "LOW") {
@@ -188,6 +233,10 @@ function getProductAvailability(
     0
   )
 
+  if (variants.every((variant) => variant.status === "UNAVAILABLE")) {
+    return "UNAVAILABLE"
+  }
+
   if (totalStock === 0) return "OUT"
 
   const hasCriticalVariant = variants.some(
@@ -202,6 +251,7 @@ function getVariantAvailability(
   variant: InventoryItem,
   lowStockThreshold: number
 ): StockAvailability {
+  if (variant.status === "UNAVAILABLE") return "UNAVAILABLE"
   if (variant.stock <= 0 || variant.status === "OUT_OF_STOCK") return "OUT"
 
   if (variant.stock <= lowStockThreshold || variant.status !== "ACTIVE") {

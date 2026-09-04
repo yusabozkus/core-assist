@@ -7,7 +7,9 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 import { getProviderName } from "@/components/dashboard/catalog/products/product-catalog-utils"
 import { SyncHistoryRow } from "@/components/dashboard/channels/sync-history-row"
+import { SyncProviderHealth } from "@/components/dashboard/channels/sync-provider-health"
 import { SyncHistorySummary } from "@/components/dashboard/channels/sync-history-summary"
+import { SyncRunDetailDialog } from "@/components/dashboard/channels/sync-run-detail-dialog"
 import { SyncHistoryRowsSkeleton } from "@/components/skeletons/sync-history-skeleton"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,55 +20,75 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { APP_ROUTES } from "@/constants/site"
-import { getChannelSyncHistory } from "@/lib/api/channels"
+import { getChannelSyncHistory, retryChannelSyncRun } from "@/lib/api/channels"
 import type {
   SyncHistoryItem,
   SyncHistoryKindFilter,
+  SyncHistoryOrder,
   SyncHistoryPage,
+  SyncHistoryPeriod,
   SyncHistoryStatusFilter,
 } from "@/types/sync-history"
 
 const PAGE_SIZE = 20
 const RUNNING_REFRESH_INTERVAL_MS = 4_000
 
-const STATUS_FILTERS: Array<{
-  value: SyncHistoryStatusFilter
-  label: string
-}> = [
-  { value: "ALL", label: "Tüm durumlar" },
-  { value: "COMPLETED", label: "Tamamlandı" },
-  { value: "RUNNING", label: "Çalışıyor" },
-  { value: "FAILED", label: "Başarısız" },
-]
+type SyncHistoryFilters = {
+  status: SyncHistoryStatusFilter
+  kind: SyncHistoryKindFilter
+  provider: string
+  period: SyncHistoryPeriod
+  order: SyncHistoryOrder
+}
 
-const KIND_FILTERS: Array<{
-  value: SyncHistoryKindFilter
-  label: string
-}> = [
+const STATUS_FILTERS: Array<{ value: SyncHistoryStatusFilter; label: string }> =
+  [
+    { value: "ALL", label: "Tüm durumlar" },
+    { value: "COMPLETED", label: "Tamamlandı" },
+    { value: "RUNNING", label: "Çalışıyor" },
+    { value: "FAILED", label: "Başarısız" },
+  ]
+
+const KIND_FILTERS: Array<{ value: SyncHistoryKindFilter; label: string }> = [
   { value: "ALL", label: "Tüm işlemler" },
   { value: "FULL", label: "Ürün kataloğu" },
   { value: "INVENTORY", label: "Stok kontrolü" },
   { value: "QUESTION", label: "Soru kontrolü" },
 ]
 
+const PERIOD_FILTERS: Array<{ value: SyncHistoryPeriod; label: string }> = [
+  { value: "ALL", label: "Tüm zamanlar" },
+  { value: "24H", label: "Son 24 saat" },
+  { value: "7D", label: "Son 7 gün" },
+  { value: "30D", label: "Son 30 gün" },
+  { value: "90D", label: "Son 90 gün" },
+]
+
 export function SyncHistory({
   storeId,
   storeName,
   initialPage,
+  initialFilters,
 }: {
   storeId: string
   storeName: string
   initialPage: SyncHistoryPage
+  initialFilters: SyncHistoryFilters
 }) {
   const [page, setPage] = useState(initialPage)
-  const [status, setStatus] = useState<SyncHistoryStatusFilter>("ALL")
-  const [kind, setKind] = useState<SyncHistoryKindFilter>("ALL")
-  const [provider, setProvider] = useState("ALL")
+  const [status, setStatus] = useState(initialFilters.status)
+  const [kind, setKind] = useState(initialFilters.kind)
+  const [provider, setProvider] = useState(initialFilters.provider)
+  const [period, setPeriod] = useState(initialFilters.period)
+  const [order, setOrder] = useState(initialFilters.order)
+  const [selectedRun, setSelectedRun] = useState<SyncHistoryItem | null>(null)
+  const [retryingRunId, setRetryingRunId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const isInitialRender = useRef(true)
   const requestSequence = useRef(0)
+  const loadMoreTargetRef = useRef<HTMLDivElement | null>(null)
 
   const loadFirstPage = useCallback(
     async (signal?: AbortSignal, quiet = false) => {
@@ -79,12 +101,19 @@ export function SyncHistory({
           status,
           kind,
           provider,
+          order,
+          from: getPeriodStart(period),
           limit: PAGE_SIZE,
           signal,
         })
 
         if (requestId !== requestSequence.current) return
         setPage(result)
+        setSelectedRun((current) =>
+          current
+            ? (result.items.find((item) => item.id === current.id) ?? current)
+            : null
+        )
       } catch (caughtError) {
         if (signal?.aborted) return
         setError(
@@ -98,42 +127,22 @@ export function SyncHistory({
         }
       }
     },
-    [kind, provider, status, storeId]
+    [kind, order, period, provider, status, storeId]
   )
 
-  useEffect(() => {
-    if (isInitialRender.current) {
-      isInitialRender.current = false
-      return
-    }
-
-    const controller = new AbortController()
-    void loadFirstPage(controller.signal)
-    return () => controller.abort()
-  }, [loadFirstPage])
-
-  useEffect(() => {
-    if (page.summary.running === 0) return
-
-    const interval = window.setInterval(() => {
-      void loadFirstPage(undefined, true)
-    }, RUNNING_REFRESH_INTERVAL_MS)
-
-    return () => window.clearInterval(interval)
-  }, [loadFirstPage, page.summary.running])
-
-  async function loadMore() {
-    if (!page.nextCursor || isLoadingMore) return
+  const loadMore = useCallback(async () => {
+    if (!page.nextCursor || isLoadingMore || isLoading) return
 
     setIsLoadingMore(true)
     setError(null)
-
     try {
       const result = await getChannelSyncHistory(storeId, {
         cursor: page.nextCursor,
         status,
         kind,
         provider,
+        order,
+        from: getPeriodStart(period),
         limit: PAGE_SIZE,
       })
       setPage((current) => ({
@@ -149,15 +158,91 @@ export function SyncHistory({
     } finally {
       setIsLoadingMore(false)
     }
+  }, [
+    isLoading,
+    isLoadingMore,
+    kind,
+    order,
+    page.nextCursor,
+    period,
+    provider,
+    status,
+    storeId,
+  ])
+
+  useEffect(() => {
+    writeFiltersToUrl({ status, kind, provider, period, order })
+
+    if (isInitialRender.current) {
+      isInitialRender.current = false
+      return
+    }
+
+    const controller = new AbortController()
+    void loadFirstPage(controller.signal)
+    return () => controller.abort()
+  }, [kind, loadFirstPage, order, period, provider, status])
+
+  useEffect(() => {
+    if (page.summary.running === 0) return
+
+    const interval = window.setInterval(() => {
+      void loadFirstPage(undefined, true)
+    }, RUNNING_REFRESH_INTERVAL_MS)
+
+    return () => window.clearInterval(interval)
+  }, [loadFirstPage, page.summary.running])
+
+  useEffect(() => {
+    const target = loadMoreTargetRef.current
+    if (!target || !page.nextCursor || isLoading) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) void loadMore()
+      },
+      { rootMargin: "240px 0px" }
+    )
+
+    observer.observe(target)
+    return () => observer.disconnect()
+  }, [isLoading, loadMore, page.nextCursor])
+
+  async function retryRun(run: SyncHistoryItem) {
+    if (retryingRunId) return
+
+    setRetryingRunId(run.id)
+    setError(null)
+    try {
+      await retryChannelSyncRun(storeId, run.id)
+      setSelectedRun(null)
+      await loadFirstPage(undefined, true)
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Senkronizasyon yeniden başlatılamadı."
+      )
+    } finally {
+      setRetryingRunId(null)
+    }
   }
 
   function resetFilters() {
     setStatus("ALL")
     setKind("ALL")
     setProvider("ALL")
+    setPeriod("ALL")
+    setOrder("NEWEST")
   }
 
-  const hasFilters = status !== "ALL" || kind !== "ALL" || provider !== "ALL"
+  const hasFilters =
+    status !== "ALL" ||
+    kind !== "ALL" ||
+    provider !== "ALL" ||
+    period !== "ALL" ||
+    order !== "NEWEST"
+  const hasAnyHistory = initialPage.providers.length > 0
 
   return (
     <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
@@ -167,8 +252,8 @@ export function SyncHistory({
             Senkron Geçmişi
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            {storeName} mağazasının ürün, stok ve soru senkronizasyonlarını,
-            işlenen kayıtları ve oluşan hataları takip edin.
+            {storeName} mağazasındaki katalog, stok ve soru akışlarını; güncel
+            ilerleme, değişiklikler ve hatalarla birlikte takip edin.
           </p>
         </div>
 
@@ -191,47 +276,28 @@ export function SyncHistory({
         <SyncHistorySummary summary={page.summary} />
       </div>
 
-      {initialPage.summary.total === 0 ? (
+      <SyncProviderHealth providers={page.providerHealth} />
+
+      {!hasAnyHistory ? (
         <EmptyHistory />
       ) : (
         <>
           <div className="mt-6 flex flex-wrap items-center gap-2">
-            <Select
+            <FilterSelect
               value={status}
               onValueChange={(value) =>
                 setStatus(value as SyncHistoryStatusFilter)
               }
-            >
-              <SelectTrigger className="rounded-xl border-border bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                {STATUS_FILTERS.map((filter) => (
-                  <SelectItem key={filter.value} value={filter.value}>
-                    {filter.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
+              items={STATUS_FILTERS}
+            />
+            <FilterSelect
               value={kind}
               onValueChange={(value) => setKind(value as SyncHistoryKindFilter)}
-            >
-              <SelectTrigger className="rounded-xl border-border bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                {KIND_FILTERS.map((filter) => (
-                  <SelectItem key={filter.value} value={filter.value}>
-                    {filter.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              items={KIND_FILTERS}
+            />
 
             <Select value={provider} onValueChange={setProvider}>
-              <SelectTrigger className="rounded-xl border-border bg-card">
+              <SelectTrigger className="border-border bg-card">
                 <SelectValue placeholder="Tüm kanallar" />
               </SelectTrigger>
               <SelectContent position="popper">
@@ -241,6 +307,25 @@ export function SyncHistory({
                     {getProviderName(providerKey)}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+
+            <FilterSelect
+              value={period}
+              onValueChange={(value) => setPeriod(value as SyncHistoryPeriod)}
+              items={PERIOD_FILTERS}
+            />
+
+            <Select
+              value={order}
+              onValueChange={(value) => setOrder(value as SyncHistoryOrder)}
+            >
+              <SelectTrigger className="border-border bg-card">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                <SelectItem value="NEWEST">En yeni önce</SelectItem>
+                <SelectItem value="OLDEST">En eski önce</SelectItem>
               </SelectContent>
             </Select>
 
@@ -257,7 +342,7 @@ export function SyncHistory({
               <NoHistoryResults onReset={resetFilters} />
             ) : (
               <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
-                <div className="hidden grid-cols-[minmax(11rem,1.1fr)_minmax(9rem,0.75fr)_minmax(11rem,1fr)_minmax(10rem,0.85fr)_5rem_7rem] gap-3 border-b border-border bg-muted/30 px-5 py-2.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase lg:grid">
+                <div className="hidden grid-cols-[minmax(11rem,1.1fr)_minmax(9rem,0.75fr)_minmax(12rem,1.1fr)_minmax(10rem,0.85fr)_5rem_7rem] gap-3 border-b border-border bg-muted/30 px-5 py-2.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase lg:grid">
                   <span>İşlem</span>
                   <span>Kanal</span>
                   <span>Sonuç</span>
@@ -266,31 +351,32 @@ export function SyncHistory({
                   <span>Durum</span>
                 </div>
                 {page.items.map((run) => (
-                  <SyncHistoryRow key={run.id} run={run} />
+                  <SyncHistoryRow
+                    key={run.id}
+                    run={run}
+                    onSelect={() => setSelectedRun(run)}
+                    onRetry={() => void retryRun(run)}
+                    isRetrying={retryingRunId === run.id}
+                  />
                 ))}
               </div>
             )}
           </div>
 
-          <div className="flex min-h-20 flex-col items-center justify-center gap-2">
+          <div
+            ref={loadMoreTargetRef}
+            className="flex min-h-20 flex-col items-center justify-center gap-2"
+          >
             {error ? <p className="text-xs text-destructive">{error}</p> : null}
-            {page.nextCursor && !isLoading ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => void loadMore()}
-                disabled={isLoadingMore}
-              >
-                {isLoadingMore ? (
-                  <HugeiconsIcon
-                    icon={RefreshIcon}
-                    className="size-3.5 animate-spin"
-                  />
-                ) : null}
-                {isLoadingMore ? "Yükleniyor..." : "Daha fazla göster"}
-              </Button>
-            ) : page.items.length > 0 && !error ? (
+            {isLoadingMore ? (
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                <HugeiconsIcon
+                  icon={RefreshIcon}
+                  className="size-3.5 animate-spin"
+                />
+                Diğer kayıtlar yükleniyor...
+              </span>
+            ) : !page.nextCursor && page.items.length > 0 && !error ? (
               <span className="text-xs text-muted-foreground">
                 Tüm senkronizasyon kayıtları gösteriliyor
               </span>
@@ -304,7 +390,46 @@ export function SyncHistory({
           Filtreleri temizle
         </Button>
       ) : null}
+
+      <SyncRunDetailDialog
+        run={selectedRun}
+        open={Boolean(selectedRun)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedRun(null)
+        }}
+        onRetry={
+          selectedRun?.status === "FAILED"
+            ? () => void retryRun(selectedRun)
+            : undefined
+        }
+        isRetrying={selectedRun ? retryingRunId === selectedRun.id : false}
+      />
     </div>
+  )
+}
+
+function FilterSelect({
+  value,
+  onValueChange,
+  items,
+}: {
+  value: string
+  onValueChange: (value: string) => void
+  items: Array<{ value: string; label: string }>
+}) {
+  return (
+    <Select value={value} onValueChange={onValueChange}>
+      <SelectTrigger className="border-border bg-card">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent position="popper">
+        {items.map((item) => (
+          <SelectItem key={item.value} value={item.value}>
+            {item.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }
 
@@ -340,7 +465,7 @@ function NoHistoryResults({ onReset }: { onReset: () => void }) {
         Eşleşen kayıt bulunamadı
       </h2>
       <p className="mt-2 text-sm text-muted-foreground">
-        Seçili kanal, işlem veya durum filtrelerini değiştirin.
+        Seçili kanal, işlem, tarih veya durum filtrelerini değiştirin.
       </p>
       <Button
         type="button"
@@ -353,6 +478,45 @@ function NoHistoryResults({ onReset }: { onReset: () => void }) {
       </Button>
     </div>
   )
+}
+
+function writeFiltersToUrl(filters: SyncHistoryFilters) {
+  const searchParams = new URLSearchParams(window.location.search)
+  setOptionalParam(searchParams, "status", filters.status, "ALL")
+  setOptionalParam(searchParams, "kind", filters.kind, "ALL")
+  setOptionalParam(searchParams, "provider", filters.provider, "ALL")
+  setOptionalParam(searchParams, "period", filters.period, "ALL")
+  setOptionalParam(searchParams, "order", filters.order, "NEWEST")
+
+  const query = searchParams.toString()
+  window.history.replaceState(
+    null,
+    "",
+    `${window.location.pathname}${query ? `?${query}` : ""}`
+  )
+}
+
+function setOptionalParam(
+  searchParams: URLSearchParams,
+  key: string,
+  value: string,
+  defaultValue: string
+) {
+  if (value === defaultValue) searchParams.delete(key)
+  else searchParams.set(key, value)
+}
+
+function getPeriodStart(period: SyncHistoryPeriod) {
+  if (period === "ALL") return undefined
+
+  const durations: Record<Exclude<SyncHistoryPeriod, "ALL">, number> = {
+    "24H": 24 * 60 * 60 * 1_000,
+    "7D": 7 * 24 * 60 * 60 * 1_000,
+    "30D": 30 * 24 * 60 * 60 * 1_000,
+    "90D": 90 * 24 * 60 * 60 * 1_000,
+  }
+
+  return new Date(Date.now() - durations[period]).toISOString()
 }
 
 function mergeHistoryItems(

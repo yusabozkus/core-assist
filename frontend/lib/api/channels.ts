@@ -5,8 +5,10 @@ import type {
   IntegrationEnvironment,
 } from "@/types/channel"
 import type {
+  SyncHistoryItem,
   SyncHistoryKindFilter,
   SyncHistoryPage,
+  SyncHistoryOrder,
   SyncHistoryStatusFilter,
 } from "@/types/sync-history"
 
@@ -15,8 +17,23 @@ type SyncHistoryOptions = {
   status?: SyncHistoryStatusFilter
   kind?: SyncHistoryKindFilter
   provider?: string
+  order?: SyncHistoryOrder
+  from?: string
   limit?: number
   signal?: AbortSignal
+}
+
+export function getChannelSyncRun(storeId: string, syncRunId: string) {
+  return apiFetch<SyncHistoryItem>(
+    `/stores/${storeId}/channels/sync-runs/${syncRunId}`
+  )
+}
+
+export function retryChannelSyncRun(storeId: string, syncRunId: string) {
+  return apiFetch<{ syncRunId: string; status: "RUNNING" }>(
+    `/stores/${storeId}/channels/sync-runs/${syncRunId}/retry`,
+    { method: "POST" }
+  )
 }
 
 export function getChannelSyncHistory(
@@ -26,6 +43,8 @@ export function getChannelSyncHistory(
     status = "ALL",
     kind = "ALL",
     provider,
+    order = "NEWEST",
+    from,
     limit = 20,
     signal,
   }: SyncHistoryOptions = {}
@@ -34,10 +53,12 @@ export function getChannelSyncHistory(
     limit: String(limit),
     status,
     kind,
+    order,
   })
 
   if (cursor) searchParams.set("cursor", cursor)
   if (provider && provider !== "ALL") searchParams.set("provider", provider)
+  if (from) searchParams.set("from", from)
 
   return apiFetch<SyncHistoryPage>(
     `/stores/${storeId}/channels/sync-runs?${searchParams.toString()}`,

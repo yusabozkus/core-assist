@@ -4,6 +4,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 import { formatPriceRange } from "@/components/dashboard/catalog/products/product-catalog-utils"
 import { ProductDetailContent } from "@/components/dashboard/catalog/products/product-detail-content"
+import { ProductMarketplaceAction } from "@/components/dashboard/catalog/products/product-marketplace-action"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
 import type { ProductQuestion } from "@/types/question"
 
@@ -42,7 +43,11 @@ export function ProductContext({ question }: { question: ProductQuestion }) {
     <ResponsiveDialog
       title={product.title}
       description={productMeta || "Ürün ve varyant detayları"}
+      headerActions={
+        <ProductMarketplaceAction sources={product.externalProducts} />
+      }
       contentClassName="sm:max-w-5xl"
+      headerClassName="pr-32 sm:pr-48"
       bodyClassName="px-0 py-0"
       trigger={
         <button

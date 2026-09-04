@@ -467,25 +467,52 @@ enum CatalogSyncKind {
   QUESTION
 }
 
+enum CatalogSyncTrigger {
+  MANUAL
+  SCHEDULED
+  RETRY
+  ONBOARDING
+}
+
+enum CatalogSyncStage {
+  QUEUED
+  FETCHING
+  PERSISTING
+  RECONCILING
+  COMPLETED
+  FAILED
+}
+
 model CatalogSyncRun {
-  id                 String            @id @default(uuid())
+  id                 String             @id @default(uuid())
   connectionId       String
-  kind               CatalogSyncKind   @default(FULL)
-  status             CatalogSyncStatus @default(RUNNING)
-  productsProcessed  Int               @default(0)
-  variantsProcessed  Int               @default(0)
-  questionsProcessed Int               @default(0)
-  productsArchived   Int               @default(0)
+  kind               CatalogSyncKind    @default(FULL)
+  status             CatalogSyncStatus  @default(RUNNING)
+  trigger            CatalogSyncTrigger @default(MANUAL)
+  stage              CatalogSyncStage   @default(QUEUED)
+  progress           Int                @default(0)
+  retryOfId          String?
+  productsProcessed  Int                @default(0)
+  productsCreated    Int                @default(0)
+  productsUpdated    Int                @default(0)
+  productsUnchanged  Int                @default(0)
+  variantsProcessed  Int                @default(0)
+  variantsUpdated    Int                @default(0)
+  variantsUnchanged  Int                @default(0)
+  questionsProcessed Int                @default(0)
+  questionsUnchanged Int                @default(0)
+  productsArchived   Int                @default(0)
   cursor             String?
   errorMessage       String?
-  startedAt          DateTime          @default(now())
+  startedAt          DateTime           @default(now())
   completedAt        DateTime?
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
   connection ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
 
   @@index([connectionId, startedAt])
+  @@index([retryOfId])
   @@map("catalog_sync_run")
 }
 

@@ -5,6 +5,7 @@ import Image from "next/image"
 import {
   ArrowLeft01Icon,
   ArrowRight01Icon,
+  ArrowDown01Icon,
   LinkSquare02Icon,
   Package01Icon,
 } from "@hugeicons/core-free-icons"
@@ -16,8 +17,14 @@ import {
   getProviderName,
 } from "@/components/dashboard/catalog/products/product-catalog-utils"
 import { VariantTable } from "@/components/dashboard/catalog/products/variant-table"
+import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import type { CatalogProduct, CatalogSizeGuide } from "@/types/product"
 
 export function ProductDetailContent({ product }: { product: CatalogProduct }) {
@@ -38,6 +45,11 @@ export function ProductDetailContent({ product }: { product: CatalogProduct }) {
                 variant="outline"
                 className="bg-background"
               >
+                <ProviderLogo
+                  provider={source.connection.providerKey}
+                  className="size-4 rounded-sm border-0 shadow-none"
+                  sizes="16px"
+                />
                 {getProviderName(source.connection.providerKey)}
               </Badge>
             ))}
@@ -123,52 +135,6 @@ export function ProductDetailContent({ product }: { product: CatalogProduct }) {
         </div>
         <VariantTable variants={product.variants} />
       </section>
-
-      <section className="px-5 py-6 md:px-6">
-        <h3 className="text-sm font-semibold text-foreground">
-          Pazaryeri kayıtları
-        </h3>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          {product.externalProducts.map((source) => (
-            <div
-              key={`${source.connection.providerKey}-${source.externalId}`}
-              className="rounded-xl border border-border bg-muted/20 p-4"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-medium text-foreground">
-                    {getProviderName(source.connection.providerKey)}
-                  </p>
-                  <p className="mt-1 truncate font-mono text-xs text-muted-foreground">
-                    {source.externalId}
-                  </p>
-                </div>
-                <Badge variant="outline">{source.status}</Badge>
-              </div>
-              <div className="mt-4 flex items-center justify-between gap-3">
-                <span className="text-xs text-muted-foreground">
-                  {formatCatalogDate(source.lastSyncedAt)}
-                </span>
-                {source.externalUrl ? (
-                  <Button asChild size="sm" variant="outline">
-                    <a
-                      href={source.externalUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <HugeiconsIcon
-                        icon={LinkSquare02Icon}
-                        className="size-3.5"
-                      />
-                      Pazaryerinde aç
-                    </a>
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   )
 }
@@ -187,80 +153,92 @@ function SizeGuideSection({ guides = [] }: { guides?: CatalogSizeGuide[] }) {
   }[guide.status]
 
   return (
-    <section className="px-5 py-6 md:px-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-sm font-semibold text-foreground">
-              Beden tablosu
-            </h3>
-            <Badge variant={guide.status === "READY" ? "success" : "secondary"}>
-              {statusLabel}
-            </Badge>
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Pazaryerindeki beden tablosundan alınan ölçüler
-          </p>
-        </div>
-        <Button asChild size="sm" variant="outline">
-          <a href={guide.sourceUrl} target="_blank" rel="noreferrer">
-            <HugeiconsIcon icon={LinkSquare02Icon} className="size-3.5" />
-            Orijinal tablo
-          </a>
-        </Button>
-      </div>
+    <Collapsible asChild className="group/size-guide">
+      <section>
+        <CollapsibleTrigger className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left transition-colors hover:bg-muted/25 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset md:px-6">
+          <span className="min-w-0">
+            <span className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold text-foreground">
+                Beden tablosu
+              </span>
+              <Badge
+                variant={guide.status === "READY" ? "success" : "secondary"}
+              >
+                {statusLabel}
+              </Badge>
+            </span>
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Pazaryerindeki beden tablosundan alınan ölçüler
+            </span>
+          </span>
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground transition-transform group-data-[state=open]/size-guide:rotate-180">
+            <HugeiconsIcon icon={ArrowDown01Icon} className="size-4" />
+          </span>
+        </CollapsibleTrigger>
 
-      {guide.status === "READY" && data?.rows.length ? (
-        <div className="mt-4 space-y-3">
-          <div className="themed-scrollbar overflow-x-auto rounded-xl border border-border">
-            <table className="w-full min-w-max text-left text-sm">
-              <thead className="bg-muted/50 text-xs text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Beden</th>
-                  {data.headers.map((header) => (
-                    <th key={header} className="px-4 py-3 font-medium">
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {data.rows.map((row) => (
-                  <tr key={row.label} className="bg-card">
-                    <th className="px-4 py-3 font-semibold text-foreground">
-                      {row.label}
-                    </th>
-                    {data.headers.map((header) => (
-                      <td
-                        key={`${row.label}-${header}`}
-                        className="px-4 py-3 text-muted-foreground"
-                      >
-                        {row.measurements.find(
-                          (measurement) => measurement.name === header
-                        )?.value ?? "—"}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <CollapsibleContent className="px-5 pb-6 md:px-6">
+          <div className="mb-3 flex justify-end">
+            <Button asChild size="sm" variant="outline">
+              <a href={guide.sourceUrl} target="_blank" rel="noreferrer">
+                <HugeiconsIcon icon={LinkSquare02Icon} className="size-3.5" />
+                Orijinal tablo
+              </a>
+            </Button>
           </div>
-          {data.notes.length ? (
-            <ul className="space-y-1 text-xs leading-5 text-muted-foreground">
-              {data.notes.map((note) => (
-                <li key={note}>• {note}</li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-      ) : (
-        <p className="mt-4 rounded-xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-          {guide.status === "FAILED"
-            ? "Beden tablosu otomatik olarak okunamadı. Orijinal tabloyu kontrol edebilirsiniz."
-            : "Beden tablosu arka planda hazırlanıyor. Analiz tamamlandığında ölçüler burada görünecek."}
-        </p>
-      )}
-    </section>
+
+          {guide.status === "READY" && data?.rows.length ? (
+            <div className="space-y-3">
+              <div className="themed-scrollbar overflow-x-auto rounded-xl border border-border">
+                <table className="w-full min-w-max text-left text-sm">
+                  <thead className="bg-muted/50 text-xs text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Beden</th>
+                      {data.headers.map((header) => (
+                        <th key={header} className="px-4 py-3 font-medium">
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {data.rows.map((row) => (
+                      <tr key={row.label} className="bg-card">
+                        <th className="px-4 py-3 font-semibold text-foreground">
+                          {row.label}
+                        </th>
+                        {data.headers.map((header) => (
+                          <td
+                            key={`${row.label}-${header}`}
+                            className="px-4 py-3 text-muted-foreground"
+                          >
+                            {row.measurements.find(
+                              (measurement) => measurement.name === header
+                            )?.value ?? "—"}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {data.notes.length ? (
+                <ul className="space-y-1 text-xs leading-5 text-muted-foreground">
+                  {data.notes.map((note) => (
+                    <li key={note}>• {note}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : (
+            <p className="rounded-xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+              {guide.status === "FAILED"
+                ? "Beden tablosu otomatik olarak okunamadı. Orijinal tabloyu kontrol edebilirsiniz."
+                : "Beden tablosu arka planda hazırlanıyor. Analiz tamamlandığında ölçüler burada görünecek."}
+            </p>
+          )}
+        </CollapsibleContent>
+      </section>
+    </Collapsible>
   )
 }
 

@@ -54,7 +54,9 @@ export class QuestionSyncSchedulerService implements OnModuleInit {
     });
     const results = await Promise.allSettled(
       connections.map((connection) =>
-        this.questionSyncQueue.enqueue(connection.storeId, connection.id),
+        this.questionSyncQueue.enqueue(connection.storeId, connection.id, {
+          trigger: 'SCHEDULED',
+        }),
       ),
     );
     const failedCount = results.filter(

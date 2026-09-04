@@ -143,6 +143,7 @@ async function createTargetedEvaluationContexts() {
           currency: variant.currency,
           stock: variant.stock,
           status: variant.stock > 0 ? 'ACTIVE' : 'OUT_OF_STOCK',
+          lastSyncedAt: new Date().toISOString(),
         })),
         sizeGuides: [],
       },
@@ -173,6 +174,7 @@ function evaluateRegressions() {
         currency: 'TRY',
         stock: 14,
         status: 'ACTIVE',
+        lastSyncedAt: new Date().toISOString(),
       },
     ],
     sizeGuides: [
@@ -591,6 +593,7 @@ async function createEvaluationContexts() {
               currency: variant.currency,
               stock: variant.stock,
               status: variant.stock > 0 ? 'ACTIVE' : 'OUT_OF_STOCK',
+              lastSyncedAt: new Date().toISOString(),
             })),
             sizeGuides: product.sizeGuide?.structuredData
               ? [

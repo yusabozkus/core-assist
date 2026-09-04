@@ -109,7 +109,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
           icon: Package01Icon,
           items: [
             {
-              title: "Stok Yönetimi",
+              title: "Stok Takibi",
               url: APP_ROUTES.dashboard.catalog.inventory,
             },
             {

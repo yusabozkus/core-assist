@@ -21,6 +21,7 @@ import {
 import type {
   QueuedQuestionSync,
   QuestionSyncDispatcher,
+  QuestionSyncEnqueueOptions,
   QuestionSyncJobData,
 } from './question-sync.types';
 
@@ -36,6 +37,7 @@ export class QuestionSyncQueueService implements QuestionSyncDispatcher {
   async enqueue(
     storeId: string,
     connectionId: string,
+    options: QuestionSyncEnqueueOptions = {},
   ): Promise<QueuedQuestionSync> {
     const queuedAt = new Date();
     const staleBefore = new Date(
@@ -92,6 +94,8 @@ export class QuestionSyncQueueService implements QuestionSyncDispatcher {
         data: {
           connectionId,
           kind: CatalogSyncKind.QUESTION,
+          trigger: options.trigger ?? 'MANUAL',
+          retryOfId: options.retryOfId,
         },
         select: { id: true },
       });
@@ -136,6 +140,8 @@ export class QuestionSyncQueueService implements QuestionSyncDispatcher {
           where: { id: syncRunId },
           data: {
             status: CatalogSyncStatus.FAILED,
+            stage: 'FAILED',
+            progress: 100,
             errorMessage: 'Soru senkronizasyonu işi kuyruğa eklenemedi.',
             completedAt: new Date(),
           },

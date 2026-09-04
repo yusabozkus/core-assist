@@ -6,6 +6,13 @@ export type ProductSyncJobData = {
 };
 
 export type ProductSyncKind = 'FULL' | 'INVENTORY';
+export type ProductSyncTrigger =
+  'MANUAL' | 'SCHEDULED' | 'RETRY' | 'ONBOARDING';
+
+export type ProductSyncEnqueueOptions = {
+  trigger?: ProductSyncTrigger;
+  retryOfId?: string;
+};
 
 export type QueuedProductSync = {
   syncRunId: string;
@@ -19,5 +26,6 @@ export interface ProductSyncDispatcher {
     storeId: string,
     connectionId: string,
     kind?: ProductSyncKind,
+    options?: ProductSyncEnqueueOptions,
   ): Promise<QueuedProductSync>;
 }

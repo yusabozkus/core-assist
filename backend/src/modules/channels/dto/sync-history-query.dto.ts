@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsEnum,
+  IsISO8601,
   IsInt,
   IsOptional,
   IsString,
@@ -22,6 +23,11 @@ export enum SyncHistoryKindFilter {
   FULL = 'FULL',
   INVENTORY = 'INVENTORY',
   QUESTION = 'QUESTION',
+}
+
+export enum SyncHistoryOrder {
+  NEWEST = 'NEWEST',
+  OLDEST = 'OLDEST',
 }
 
 export class SyncHistoryQueryDto {
@@ -48,4 +54,12 @@ export class SyncHistoryQueryDto {
   @IsString()
   @MaxLength(50)
   provider?: string;
+
+  @IsOptional()
+  @IsEnum(SyncHistoryOrder)
+  order: SyncHistoryOrder = SyncHistoryOrder.NEWEST;
+
+  @IsOptional()
+  @IsISO8601()
+  from?: string;
 }

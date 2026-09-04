@@ -40,6 +40,7 @@ type ResponsiveDialogProps = {
   trigger?: React.ReactElement
   children: ResponsiveDialogSlot
   footer?: ResponsiveDialogSlot
+  headerActions?: ResponsiveDialogSlot
   open?: boolean
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
@@ -57,6 +58,7 @@ function ResponsiveDialog({
   trigger,
   children,
   footer,
+  headerActions,
   open,
   defaultOpen = false,
   onOpenChange,
@@ -113,6 +115,17 @@ function ResponsiveDialog({
             </DrawerClose>
           ) : null}
 
+          {headerActions ? (
+            <div
+              className={cn(
+                "absolute top-6 z-10 flex items-center",
+                showCloseButton && !preventClose ? "right-16" : "right-6"
+              )}
+            >
+              {renderSlot(headerActions, controls)}
+            </div>
+          ) : null}
+
           <div className="themed-scrollbar min-h-0 flex-1 overflow-y-auto">
             <DrawerHeader
               className={cn(
@@ -160,6 +173,17 @@ function ResponsiveDialog({
           contentClassName
         )}
       >
+        {headerActions ? (
+          <div
+            className={cn(
+              "absolute top-4 z-10 flex items-center",
+              showCloseButton && !preventClose ? "right-14" : "right-4"
+            )}
+          >
+            {renderSlot(headerActions, controls)}
+          </div>
+        ) : null}
+
         <DialogHeader
           className={cn("shrink-0 border-b px-5 py-4 pr-14", headerClassName)}
         >
