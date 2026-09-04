@@ -1,6 +1,6 @@
 "use client"
 
-import { useId } from "react"
+import { useId, type ReactNode } from "react"
 
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
@@ -24,7 +24,7 @@ const toneOptions: Array<{ value: AiTone; label: string }> = [
   { value: "PROFESSIONAL", label: "Profesyonel" },
   { value: "FRIENDLY", label: "Samimi" },
   { value: "WARM", label: "Sıcak" },
-  { value: "MINIMAL", label: "Kısa ve doğrudan" },
+  { value: "MINIMAL", label: "Doğrudan" },
 ]
 
 const emojiOptions: Array<{ value: AiEmojiPolicy; label: string }> = [
@@ -57,11 +57,11 @@ export function ResponseBehaviorControls({
 
   return (
     <div className="divide-y divide-border">
-      <section className="space-y-3.5 pb-6">
-        <SettingHeading
-          title="Yanıt tonu"
-          description="Müşteriye verilen cevapların genel iletişim karakterini belirler."
-        />
+      <SettingRow
+        title="Yanıt tonu"
+        description="Cevapların müşteride bıraktığı genel iletişim hissini belirler."
+        first
+      >
         <SegmentedControl
           ariaLabel="Yanıt tonu"
           value={profile.tone}
@@ -69,24 +69,26 @@ export function ResponseBehaviorControls({
           options={toneOptions}
           className="grid-cols-2 sm:grid-cols-4"
         />
-      </section>
+      </SettingRow>
 
-      <section className="space-y-5 py-6">
-        <div className="flex items-start justify-between gap-4">
-          <SettingHeading
-            title="Yanıt uzunluğu"
-            description="AI, sorunun gerektirdiği bilgiyi seçtiğiniz hedef uzunlukta aktarır."
-          />
-          <div className="shrink-0 text-right">
-            <p className="text-sm font-semibold text-foreground">
-              {responseLength.label}
+      <SettingRow
+        title="Yanıt uzunluğu"
+        description="AI, gerekli bilgiyi bu hedef uzunluğa göre özetler."
+      >
+        <div className="px-1 py-1">
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <p className="text-xs text-muted-foreground">
+              Hedef cevap uzunluğu
             </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {responseLength.detail}
-            </p>
+            <div className="text-right">
+              <p className="text-sm font-semibold text-foreground">
+                {responseLength.label}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                {responseLength.detail}
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="px-1">
           <Slider
             value={[responseLengthIndex]}
             min={0}
@@ -98,7 +100,7 @@ export function ResponseBehaviorControls({
             }}
             aria-label="Yanıt uzunluğu"
           />
-          <div className="mt-3 grid grid-cols-3 text-xs text-muted-foreground">
+          <div className="mt-3 grid grid-cols-3 text-[11px] text-muted-foreground">
             {responseLengths.map((option, index) => (
               <button
                 key={option.value}
@@ -110,7 +112,7 @@ export function ResponseBehaviorControls({
                   index === 1 && "text-center",
                   index === 2 && "text-right",
                   profile.responseLength === option.value &&
-                    "font-medium text-foreground"
+                    "font-semibold text-primary"
                 )}
               >
                 {option.label}
@@ -118,91 +120,103 @@ export function ResponseBehaviorControls({
             ))}
           </div>
         </div>
-      </section>
+      </SettingRow>
 
-      <section className="space-y-3 py-6">
-        <SettingHeading
-          title="Mesaj yapısı"
-          description="Yanıtın başlangıç ve bitiş biçimini ayrı ayrı yönetin."
-        />
-        <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background">
+      <SettingRow
+        title="Mesaj yapısı"
+        description="Cevabın başlangıç ve bitiş biçimini ayrı ayrı yönetin."
+      >
+        <div className="divide-y divide-border border-y border-border">
           <SettingsSwitchRow
-            title="Selamlama"
-            description="Cevaba “Merhaba” veya “Merhabalar” ile başlar."
+            title="Selamlama kullan"
+            description="Yanıtı kısa bir selamlama ile başlatır."
             checked={profile.greetingEnabled}
             onCheckedChange={(checked) => onChange("greetingEnabled", checked)}
           />
           <SettingsSwitchRow
-            title="Kapanış"
-            description="Yanıtı kısa ve nazik bir kapanış cümlesiyle tamamlar."
+            title="Kapanış kullan"
+            description="Yanıtı nazik bir kapanış cümlesiyle tamamlar."
             checked={profile.closingEnabled}
             onCheckedChange={(checked) => onChange("closingEnabled", checked)}
           />
         </div>
-      </section>
+      </SettingRow>
 
-      <section className="space-y-3.5 pt-6">
-        <SettingHeading
-          title="Emoji kullanımı"
-          description="Emojinin cevaplarda ne sıklıkta kullanılacağını belirleyin. Bu seçim özel talimatlardan önceliklidir."
-        />
-        <SegmentedControl
-          ariaLabel="Emoji kullanımı"
-          value={profile.emojiPolicy}
-          onValueChange={(value) => onChange("emojiPolicy", value)}
-          options={emojiOptions}
-          className="grid-cols-3"
-        />
+      <SettingRow
+        title="Emoji kullanımı"
+        description="Emojinin yanıtlarda ne sıklıkta yer alacağını belirleyin."
+        last
+      >
+        <div className="space-y-4">
+          <SegmentedControl
+            ariaLabel="Emoji kullanımı"
+            value={profile.emojiPolicy}
+            onValueChange={(value) => onChange("emojiPolicy", value)}
+            options={emojiOptions}
+            className="grid-cols-3"
+          />
 
-        {profile.emojiPolicy !== "NEVER" ? (
-          <div className="animate-in pt-1 duration-200 fade-in slide-in-from-top-1">
-            <label
-              htmlFor="preferred-response-emoji"
-              className="text-sm font-medium text-foreground"
-            >
-              Tercih edilen emoji
-            </label>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              {profile.emojiPolicy === "ALWAYS"
-                ? "Her yanıtın sonunda bu emoji bir kez kullanılır."
-                : "AI emoji kullanmayı seçerse öncelikle bu emojiyi kullanır."}
-            </p>
-            <Input
-              id="preferred-response-emoji"
-              value={profile.preferredEmoji ?? ""}
-              onChange={(event) =>
-                onChange(
-                  "preferredEmoji",
-                  normalizePreferredEmoji(event.target.value)
-                )
-              }
-              placeholder="🙂"
-              inputMode="text"
-              maxLength={16}
-              className="mt-2.5 h-10 rounded-lg bg-background text-base"
-              aria-label="Tercih edilen emoji"
-            />
-          </div>
-        ) : null}
-      </section>
+          {profile.emojiPolicy !== "NEVER" ? (
+            <div className="grid animate-in gap-3 border-l-2 border-primary/35 bg-primary/4 px-3.5 py-3 duration-200 fade-in slide-in-from-top-1 sm:grid-cols-[1fr_7rem] sm:items-center">
+              <div>
+                <label
+                  htmlFor="preferred-response-emoji"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Tercih edilen emoji
+                </label>
+                <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
+                  {profile.emojiPolicy === "ALWAYS"
+                    ? "Her yanıtın sonunda yalnızca bir kez kullanılır."
+                    : "Uygun bir yanıtta öncelikli olarak kullanılır."}
+                </p>
+              </div>
+              <Input
+                id="preferred-response-emoji"
+                value={profile.preferredEmoji ?? ""}
+                onChange={(event) =>
+                  onChange(
+                    "preferredEmoji",
+                    normalizePreferredEmoji(event.target.value)
+                  )
+                }
+                placeholder="🙂"
+                inputMode="text"
+                maxLength={16}
+                className="h-10 bg-card text-center text-lg"
+                aria-label="Tercih edilen emoji"
+              />
+            </div>
+          ) : null}
+        </div>
+      </SettingRow>
     </div>
   )
 }
 
-function SettingHeading({
+function SettingRow({
   title,
   description,
+  children,
+  first = false,
+  last = false,
 }: {
   title: string
   description: string
+  children: ReactNode
+  first?: boolean
+  last?: boolean
 }) {
   return (
-    <div>
-      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-      <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
-        {description}
-      </p>
-    </div>
+    <section className={cn("space-y-4 py-6", first && "pt-0", last && "pb-0")}>
+      <div>
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+        <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
+          {description}
+        </p>
+      </div>
+      <div className="min-w-0">{children}</div>
+    </section>
   )
 }
 
@@ -239,9 +253,9 @@ function SegmentedControl<Value extends string>({
             aria-checked={selected}
             onClick={() => onValueChange(option.value)}
             className={cn(
-              "min-w-0 rounded-md px-2.5 py-2 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:text-sm",
+              "min-w-0 rounded-md px-2.5 py-2 text-xs font-medium transition-[background-color,color,box-shadow] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:text-sm",
               selected
-                ? "bg-card text-foreground shadow-xs"
+                ? "bg-card text-foreground shadow-xs ring-1 ring-border/70"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -276,12 +290,22 @@ function SettingsSwitchRow({
           {description}
         </p>
       </div>
-      <Switch
-        id={id}
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-        aria-label={title}
-      />
+      <div className="flex shrink-0 items-center gap-2.5">
+        <span
+          className={cn(
+            "hidden text-[11px] font-medium sm:block",
+            checked ? "text-primary" : "text-muted-foreground"
+          )}
+        >
+          {checked ? "Açık" : "Kapalı"}
+        </span>
+        <Switch
+          id={id}
+          checked={checked}
+          onCheckedChange={onCheckedChange}
+          aria-label={title}
+        />
+      </div>
     </div>
   )
 }

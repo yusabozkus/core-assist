@@ -191,12 +191,14 @@ export function CollectionCard({
 export function CollectionItem({
   title,
   description,
+  hierarchy = "default",
   onRemove,
   isRemoving,
   removeConfirmation,
 }: {
   title: string
   description: string
+  hierarchy?: "default" | "content-first"
   onRemove: () => void | Promise<void>
   isRemoving?: boolean
   removeConfirmation?: RemoveConfirmation
@@ -204,8 +206,22 @@ export function CollectionItem({
   return (
     <div className="flex items-start gap-4 py-4">
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium">{title}</p>
-        <p className="mt-1 text-sm leading-6 text-muted-foreground">
+        <p
+          className={
+            hierarchy === "content-first"
+              ? "text-[10px] font-semibold tracking-[0.08em] text-muted-foreground uppercase"
+              : "text-sm font-medium"
+          }
+        >
+          {title}
+        </p>
+        <p
+          className={
+            hierarchy === "content-first"
+              ? "mt-1.5 text-sm leading-6 text-foreground"
+              : "mt-1 text-sm leading-6 text-muted-foreground"
+          }
+        >
           {description}
         </p>
       </div>

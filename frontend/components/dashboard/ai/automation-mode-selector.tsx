@@ -1,5 +1,12 @@
 "use client"
 
+import {
+  AiEditingIcon,
+  Edit02Icon,
+  ShieldCheckIcon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import type { AiAutomationMode } from "@/types/knowledge"
@@ -9,26 +16,27 @@ const modes: Array<{
   label: string
   description: string
   badge?: string
+  icon: IconSvgElement
 }> = [
   {
     value: "OFF",
-    label: "Kapalı",
-    description:
-      "AI yalnızca Gelen Kutusu'nda Taslak oluştur dediğinizde çalışır.",
+    label: "Manuel",
+    description: "AI yalnızca siz taslak istediğinizde çalışır.",
+    icon: Edit02Icon,
   },
   {
     value: "DRAFT_ONLY",
-    label: "Yalnızca taslak",
-    description:
-      "Yeni ve bekleyen sorular için arka planda taslak hazırlar; gönderim onayı her zaman sizde kalır.",
+    label: "Taslak hazırla",
+    description: "Yanıtı hazırlar; gönderim onayı sizde kalır.",
     badge: "Önerilen",
+    icon: AiEditingIcon,
   },
   {
     value: "SAFE_AUTO",
-    label: "Güvenli otomatik yanıt",
-    description:
-      "Yalnızca doğrulanmış katalog kanıtlarına dayanan ve güven eşiğini geçen yanıtları gönderir.",
+    label: "Güvenli otomatik",
+    description: "Yalnızca güvenli yanıtları otomatik gönderir.",
     badge: "Otomatik",
+    icon: ShieldCheckIcon,
   },
 ]
 
@@ -40,78 +48,70 @@ export function AutomationModeSelector({
   onChange: (value: AiAutomationMode) => void
 }) {
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3">
-        {modes.map((mode) => {
-          const selected = value === mode.value
+    <div
+      role="radiogroup"
+      aria-label="Yanıt otomasyonu"
+      className="grid overflow-hidden rounded-lg border border-border bg-background md:grid-cols-3 md:divide-x md:divide-y-0 md:divide-border"
+    >
+      {modes.map((mode) => {
+        const selected = value === mode.value
 
-          return (
-            <button
-              key={mode.value}
-              type="button"
-              aria-pressed={selected}
-              onClick={() => onChange(mode.value)}
-              className={cn(
-                "flex w-full items-start gap-3 rounded-lg border px-4 py-3.5 text-left transition-colors",
-                selected
-                  ? "border-primary/45 bg-primary/6"
-                  : "border-border bg-background hover:border-foreground/20 hover:bg-muted/35",
-              )}
-            >
+        return (
+          <button
+            key={mode.value}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            onClick={() => onChange(mode.value)}
+            className={cn(
+              "group relative flex min-h-32 w-full flex-col border-b border-border p-4 text-left transition-colors last:border-b-0 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset md:border-b-0",
+              selected ? "bg-primary/7" : "bg-background hover:bg-muted/35"
+            )}
+          >
+            <span className="flex w-full items-start justify-between gap-3">
               <span
                 className={cn(
-                  "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border",
+                  "flex size-9 items-center justify-center rounded-lg border transition-colors",
+                  selected
+                    ? "border-primary/20 bg-primary text-primary-foreground"
+                    : "border-border bg-muted text-muted-foreground group-hover:text-foreground"
+                )}
+              >
+                <HugeiconsIcon icon={mode.icon} className="size-4" />
+              </span>
+              <span
+                className={cn(
+                  "flex size-4 items-center justify-center rounded-full border",
                   selected
                     ? "border-primary bg-primary"
-                    : "border-muted-foreground/45 bg-background"
+                    : "border-muted-foreground/40"
                 )}
               >
                 {selected ? (
                   <span className="size-1.5 rounded-full bg-primary-foreground" />
                 ) : null}
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-medium text-foreground">
-                    {mode.label}
-                  </span>
-                  {mode.badge ? (
-                    <Badge
-                      variant="default"
-                      className="px-2 py-0 text-[10px] leading-4"
-                    >
-                      {mode.badge}
-                    </Badge>
-                  ) : null}
-                </span>
-                <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                  {mode.description}
-                </span>
-              </span>
-            </button>
-          )
-        })}
-      </div>
+            </span>
 
-      <div className="rounded-lg border border-border bg-muted/25 px-4 py-3 text-xs leading-5 text-muted-foreground">
-        {value === "DRAFT_ONLY" ? (
-          <>
-            Taslaklar soru senkronizasyonundan sonra sırayla hazırlanır. AI hiçbir
-            yanıtı pazaryerine otomatik olarak göndermez.
-          </>
-        ) : value === "SAFE_AUTO" ? (
-          <>
-            En az %85 güvene sahip, eksik bilgisi ve risk işareti olmayan
-            yanıtlar otomatik gönderilir. Diğer taslaklar incelemeniz için Gelen
-            Kutusu&apos;nda kalır.
-          </>
-        ) : (
-          <>
-            Otomasyon kapalıyken mevcut manuel taslak ve cevap gönderme akışınız
-            değişmeden devam eder.
-          </>
-        )}
-      </div>
+            <span className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold text-foreground">
+                {mode.label}
+              </span>
+              {mode.badge ? (
+                <Badge
+                  variant={selected ? "default" : "secondary"}
+                  className="h-5 px-1.5 text-[9px] font-semibold"
+                >
+                  {mode.badge}
+                </Badge>
+              ) : null}
+            </span>
+            <span className="mt-1.5 text-xs leading-5 text-muted-foreground">
+              {mode.description}
+            </span>
+          </button>
+        )
+      })}
     </div>
   )
 }
