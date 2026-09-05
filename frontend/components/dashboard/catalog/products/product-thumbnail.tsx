@@ -4,19 +4,30 @@ import { useState } from "react"
 import Image from "next/image"
 import { Package01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { cn } from "@/lib/utils"
 
 type ProductThumbnailProps = {
   title: string
   imageUrl: string | null
+  className?: string
 }
 
-export function ProductThumbnail({ title, imageUrl }: ProductThumbnailProps) {
+export function ProductThumbnail({
+  title,
+  imageUrl,
+  className,
+}: ProductThumbnailProps) {
   const [failed, setFailed] = useState(false)
   const supportedImageUrl =
     imageUrl?.startsWith("/") || imageUrl?.startsWith("https://")
 
   return (
-    <div className="relative h-28 w-22 shrink-0 overflow-hidden rounded-lg border border-border bg-muted sm:h-30 sm:w-24">
+    <div
+      className={cn(
+        "relative h-28 w-22 shrink-0 overflow-hidden rounded-lg border border-border bg-muted sm:h-30 sm:w-24",
+        className
+      )}
+    >
       {imageUrl && supportedImageUrl && !failed ? (
         <Image
           src={imageUrl}

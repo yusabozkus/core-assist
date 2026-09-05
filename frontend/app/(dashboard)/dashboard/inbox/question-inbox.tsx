@@ -91,15 +91,19 @@ export function QuestionInbox({
   const [nextCursor, setNextCursor] = useState(initialPage.nextCursor)
   const [summary, setSummary] = useState(initialPage.summary)
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
-    null
+    searchParams.get("question")
   )
   const [selectedQuestionSummary, setSelectedQuestionSummary] =
     useState<ProductQuestionListItem | null>(null)
   const [selectedQuestion, setSelectedQuestion] =
     useState<ProductQuestion | null>(null)
-  const [isDetailLoading, setIsDetailLoading] = useState(false)
+  const [isDetailLoading, setIsDetailLoading] = useState(
+    Boolean(searchParams.get("question"))
+  )
   const [detailError, setDetailError] = useState<string | null>(null)
-  const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false)
+  const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(
+    Boolean(searchParams.get("question"))
+  )
   const [query, setQuery] = useState("")
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -117,8 +121,9 @@ export function QuestionInbox({
   const detailRefreshInFlightRef = useRef(false)
   const liveRefreshInFlightRef = useRef(false)
   const questionsRef = useRef(initialPage.items)
-  const selectedQuestionSummaryRef =
-    useRef<ProductQuestionListItem | null>(null)
+  const selectedQuestionSummaryRef = useRef<ProductQuestionListItem | null>(
+    null
+  )
 
   const applyFirstPage = useCallback((page: ProductQuestionPage) => {
     questionsRef.current = page.items
@@ -212,6 +217,31 @@ export function QuestionInbox({
   useEffect(() => {
     return () => detailAbortControllerRef.current?.abort()
   }, [])
+
+  // Explicit overview links can open a question outside the first page.
+  // Ordinary inbox visits still start without an automatic selection.
+  const linkedQuestionId = searchParams.get("question")
+  useEffect(() => {
+    if (!linkedQuestionId) return
+    let disposed = false
+    void loadQuestionDetail(linkedQuestionId).then((question) => {
+      if (!question || disposed) return
+      setSelectedQuestionId(question.id)
+      setSelectedQuestionSummary(
+        listItemFromDetail(
+          {
+            ...question,
+            product: null,
+          },
+          question
+        )
+      )
+      setIsMobileDetailOpen(true)
+    })
+    return () => {
+      disposed = true
+    }
+  }, [linkedQuestionId, loadQuestionDetail])
 
   const refreshSelectedQuestion = useCallback(async () => {
     if (!selectedQuestionId || detailRefreshInFlightRef.current) return
@@ -681,33 +711,39 @@ export function QuestionInbox({
       ) : (
         <div className="h-full min-h-0 bg-background">
           {questionListPanel}
-          {selectedQuestionSummary ? (
+          {selectedQuestionId ? (
             <ResponsiveDialog
               open={isMobileDetailOpen}
               onOpenChange={setIsMobileDetailOpen}
               title={
                 <span className="flex min-w-0 items-center gap-2">
                   <span className="truncate">
-                    {selectedQuestionSummary.customerName ??
+                    {selectedQuestionSummary?.customerName ??
                       "Pazaryeri müşterisi"}
                   </span>
-                  <QuestionStatus
-                    status={selectedQuestionSummary.status}
-                    deliveryStatus={
-                      selectedQuestionSummary.answerDelivery?.status
-                    }
-                    draftProcessingStatus={
-                      selectedQuestionSummary.draftProcessingStatus
-                    }
-                    draftDecision={selectedQuestionSummary.draftDecision}
-                  />
+                  {selectedQuestionSummary && (
+                    <QuestionStatus
+                      status={selectedQuestionSummary.status}
+                      deliveryStatus={
+                        selectedQuestionSummary.answerDelivery?.status
+                      }
+                      draftProcessingStatus={
+                        selectedQuestionSummary.draftProcessingStatus
+                      }
+                      draftDecision={selectedQuestionSummary.draftDecision}
+                    />
+                  )}
                 </span>
               }
-              description={`${providerName(
-                selectedQuestionSummary.connection.providerKey
-              )} · ${inboxDateFormatter.format(
-                new Date(selectedQuestionSummary.externalCreatedAt)
-              )}`}
+              description={
+                selectedQuestionSummary
+                  ? `${providerName(
+                      selectedQuestionSummary.connection.providerKey
+                    )} · ${inboxDateFormatter.format(
+                      new Date(selectedQuestionSummary.externalCreatedAt)
+                    )}`
+                  : "Soru detayları"
+              }
               bodyClassName="px-0 py-0"
             >
               {renderQuestionDetail(false)}
