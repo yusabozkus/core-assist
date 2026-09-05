@@ -4,6 +4,7 @@ import type {
   CatalogConnector,
   ConnectorContext,
   InventoryBatch,
+  InventoryLookup,
   NormalizedInventoryVariant,
   NormalizedProduct,
   ProductBatch,
@@ -61,6 +62,25 @@ export class HepsiburadaConnector
       variants: listings.map(normalizeHepsiburadaInventory),
       nextCursor: getNextOffset(payload, offset, 100, listings.length),
     };
+  }
+
+  async fetchInventoryByReferences(
+    context: ConnectorContext,
+    lookup: InventoryLookup,
+  ): Promise<InventoryBatch> {
+    const merchantSkus = [
+      ...new Set(lookup.variants.map((variant) => variant.sku).filter(Boolean)),
+    ];
+    if (!merchantSkus.length) return { variants: [] };
+    const variants: NormalizedInventoryVariant[] = [];
+    for (let index = 0; index < merchantSkus.length; index += 50) {
+      const payload = await this.requestListings(context, 0, 100, {
+        merchantSkuList: merchantSkus.slice(index, index + 50),
+      });
+      const listings = getListings(payload);
+      variants.push(...listings.map(normalizeHepsiburadaInventory));
+    }
+    return { variants };
   }
 
   async fetchProductQuestions(
@@ -131,6 +151,7 @@ export class HepsiburadaConnector
     context: ConnectorContext,
     offset: number,
     limit: number,
+    filters: { merchantSkuList?: string[] } = {},
   ) {
     const url = new URL(
       `/listings/merchantid/${encodeURIComponent(context.credentials.merchantId)}`,
@@ -138,6 +159,12 @@ export class HepsiburadaConnector
     );
     url.searchParams.set('offset', String(offset));
     url.searchParams.set('limit', String(limit));
+    if (filters.merchantSkuList?.length) {
+      url.searchParams.set(
+        'merchantSkuList',
+        filters.merchantSkuList.join(','),
+      );
+    }
     const payload = await this.performRequest(context, url);
     const record = asRecord(payload);
 
@@ -193,7 +220,7 @@ export class HepsiburadaConnector
         ...options.headers,
       },
       ...(options.body ? { body: JSON.stringify(options.body) } : {}),
-      signal: AbortSignal.timeout(15_000),
+      signal: context.signal ?? AbortSignal.timeout(15_000),
     });
 
     if (!response.ok) {

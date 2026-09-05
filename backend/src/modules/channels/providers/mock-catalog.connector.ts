@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type {
   ConnectorContext,
   InventoryBatch,
+  InventoryLookup,
   NormalizedProduct,
   ProductBatch,
   ProviderCredentials,
@@ -104,6 +105,33 @@ export class MockCatalogConnector {
         })),
       ),
     });
+  }
+
+  async fetchInventoryByReferences(
+    providerKey: string,
+    context: ConnectorContext,
+    lookup: InventoryLookup,
+  ): Promise<InventoryBatch> {
+    const inventory = await this.fetchInventory(providerKey, context);
+    const externalVariantIds = new Set(
+      lookup.variants.map((variant) => variant.externalVariantId),
+    );
+    const skus = new Set(lookup.variants.map((variant) => variant.sku));
+    const barcodes = new Set(
+      lookup.variants.flatMap((variant) =>
+        variant.barcode ? [variant.barcode] : [],
+      ),
+    );
+
+    return {
+      variants: inventory.variants.filter(
+        (variant) =>
+          variant.externalProductId === lookup.externalProductId ||
+          externalVariantIds.has(variant.externalVariantId) ||
+          skus.has(variant.sku) ||
+          Boolean(variant.barcode && barcodes.has(variant.barcode)),
+      ),
+    };
   }
 }
 

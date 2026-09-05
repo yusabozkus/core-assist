@@ -67,9 +67,19 @@ export type InventoryBatch = {
   nextCursor?: string;
 };
 
+export type InventoryLookup = {
+  externalProductId: string;
+  variants: Array<{
+    externalVariantId: string;
+    sku: string;
+    barcode?: string;
+  }>;
+};
+
 export type ConnectorContext = {
   environment: IntegrationEnvironment;
   credentials: ProviderCredentials;
+  signal?: AbortSignal;
 };
 
 export interface CatalogConnector {
@@ -82,6 +92,10 @@ export interface CatalogConnector {
   fetchInventory(
     context: ConnectorContext,
     cursor?: string,
+  ): Promise<InventoryBatch>;
+  fetchInventoryByReferences(
+    context: ConnectorContext,
+    lookup: InventoryLookup,
   ): Promise<InventoryBatch>;
 }
 

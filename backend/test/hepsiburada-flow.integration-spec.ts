@@ -11,6 +11,7 @@ import {
   WorkspaceRole,
 } from '../src/generated/prisma/enums';
 import { CredentialsEncryptionService } from '../src/modules/channels/credentials-encryption.service';
+import { InventoryVerificationService } from '../src/modules/inventory-verification/inventory-verification.service';
 import { HepsiburadaConnector } from '../src/modules/channels/providers/hepsiburada.connector';
 import { MockCatalogConnector } from '../src/modules/channels/providers/mock-catalog.connector';
 import { MockQuestionConnector } from '../src/modules/channels/providers/mock-question.connector';
@@ -94,6 +95,7 @@ describe('Hepsiburada product question flow', () => {
       prisma,
       registry,
       encryption,
+      new InventoryVerificationService(prisma, registry, encryption),
     );
 
     fetchSpy.mockResolvedValueOnce(jsonResponse(listings));

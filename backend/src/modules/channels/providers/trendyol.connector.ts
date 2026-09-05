@@ -4,6 +4,7 @@ import type {
   CatalogConnector,
   ConnectorContext,
   InventoryBatch,
+  InventoryLookup,
   NormalizedInventoryVariant,
   NormalizedProduct,
   NormalizedProductVariant,
@@ -60,6 +61,35 @@ export class TrendyolConnector
       variants,
       nextCursor: getNextCursor(payload, cursor),
     };
+  }
+
+  async fetchInventoryByReferences(
+    context: ConnectorContext,
+    lookup: InventoryLookup,
+  ): Promise<InventoryBatch> {
+    if (!lookup.variants.length) return { variants: [] };
+    const variants: NormalizedInventoryVariant[] = [];
+    const barcodes = [
+      ...new Set(
+        lookup.variants.flatMap((v) => (v.barcode ? [v.barcode] : [])),
+      ),
+    ];
+    const filters: Record<string, string>[] = [];
+    for (let index = 0; index < barcodes.length; index += 50) {
+      filters.push({ barcodes: barcodes.slice(index, index + 50).join(',') });
+    }
+    for (const sku of new Set(
+      lookup.variants.filter((v) => !v.barcode).map((v) => v.sku),
+    )) {
+      if (!sku)
+        throw new Error('Inventory lookup requires a barcode or stock code.');
+      filters.push({ stockCode: sku });
+    }
+    for (const filter of filters) {
+      const payload = await this.requestInventory(context, '0', 100, filter);
+      variants.push(...getItems(payload).flatMap(normalizeInventoryProduct));
+    }
+    return { variants };
   }
 
   async fetchProductQuestions(
@@ -161,6 +191,7 @@ export class TrendyolConnector
     context: ConnectorContext,
     cursor: string,
     size: number,
+    filters: Record<string, string> = {},
   ) {
     const { supplierId, apiKey, apiSecret } = context.credentials;
     const baseUrl =
@@ -173,13 +204,19 @@ export class TrendyolConnector
     );
     url.searchParams.set('size', String(size));
 
+    Object.entries(filters).forEach(([key, value]) =>
+      url.searchParams.set(key, value),
+    );
+
     if (/^\d+$/.test(cursor)) {
       url.searchParams.set('page', cursor);
     } else {
       url.searchParams.set('nextPageToken', cursor);
     }
 
-    return this.performRequest(url, supplierId, apiKey, apiSecret);
+    return this.performRequest(url, supplierId, apiKey, apiSecret, {
+      signal: context.signal,
+    });
   }
 
   private async request(
@@ -212,6 +249,7 @@ export class TrendyolConnector
     options: {
       method?: 'GET' | 'POST';
       body?: Record<string, unknown>;
+      signal?: AbortSignal;
     } = {},
   ) {
     const response = await fetch(url, {
@@ -224,7 +262,7 @@ export class TrendyolConnector
         'User-Agent': `${supplierId} - CoreAssist`,
       },
       ...(options.body ? { body: JSON.stringify(options.body) } : {}),
-      signal: AbortSignal.timeout(15_000),
+      signal: options.signal ?? AbortSignal.timeout(15_000),
     });
 
     if (!response.ok) {

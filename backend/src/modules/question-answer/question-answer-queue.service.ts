@@ -11,7 +11,6 @@ import {
   AiDraftOutcome,
   ChannelConnectionStatus,
   ProductQuestionStatus,
-  ProductVariantStatus,
   QuestionAnswerComposition,
   QuestionAnswerOrigin,
   QuestionAnswerStatus,
@@ -29,7 +28,7 @@ import type {
   QuestionAnswerJobData,
   QueueQuestionAnswerInput,
 } from './question-answer.types';
-import { hasFreshInventoryForAutomaticAnswer } from './automatic-answer-inventory.guard';
+import { requiresInventoryVerification } from './automatic-answer-inventory.guard';
 
 @Injectable()
 export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
@@ -60,14 +59,13 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
         draftAttempts: {
           orderBy: [{ createdAt: 'desc' as const }, { id: 'desc' as const }],
           take: 1,
-          select: { id: true, answer: true, autoSendEligible: true },
-        },
-        product: {
           select: {
-            variants: {
-              where: { status: { not: ProductVariantStatus.ARCHIVED } },
-              select: { lastSyncedAt: true },
-            },
+            id: true,
+            answer: true,
+            autoSendEligible: true,
+            inventorySnapshotHash: true,
+            requestedFacts: true,
+            detectedFacts: true,
           },
         },
         connectionId: true,
@@ -120,10 +118,12 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
         !isEmptyList(question.draftRisks) ||
         !isEmptyList(question.draftMissingInformation) ||
         !isNonEmptyList(question.draftEvidenceIds) ||
-        !hasFreshInventoryForAutomaticAnswer(
-          question.draftEvidenceIds,
-          question.product?.variants ?? [],
-        ) ||
+        (requiresInventoryVerification({
+          evidenceIds: question.draftEvidenceIds,
+          requestedFacts: latestDraftAttempt.requestedFacts,
+          detectedFacts: latestDraftAttempt.detectedFacts,
+        }) &&
+          !latestDraftAttempt.inventorySnapshotHash) ||
         question.store.knowledgeProfile?.automationMode !==
           AiAutomationMode.SAFE_AUTO)
     ) {

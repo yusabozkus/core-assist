@@ -52,6 +52,7 @@ export type AiDraftAttemptMinAggregateOutputType = {
   automationMode: $Enums.AiAutomationMode | null
   autoSendEligible: boolean | null
   appliedConfidenceThreshold: number | null
+  inventorySnapshotHash: string | null
   selectedAt: Date | null
   finalizedAt: Date | null
   createdAt: Date | null
@@ -73,6 +74,7 @@ export type AiDraftAttemptMaxAggregateOutputType = {
   automationMode: $Enums.AiAutomationMode | null
   autoSendEligible: boolean | null
   appliedConfidenceThreshold: number | null
+  inventorySnapshotHash: string | null
   selectedAt: Date | null
   finalizedAt: Date | null
   createdAt: Date | null
@@ -100,6 +102,7 @@ export type AiDraftAttemptCountAggregateOutputType = {
   autoSendEligible: number
   appliedConfidenceThreshold: number
   eligibilityReasons: number
+  inventorySnapshotHash: number
   selectedAt: number
   finalizedAt: number
   createdAt: number
@@ -133,6 +136,7 @@ export type AiDraftAttemptMinAggregateInputType = {
   automationMode?: true
   autoSendEligible?: true
   appliedConfidenceThreshold?: true
+  inventorySnapshotHash?: true
   selectedAt?: true
   finalizedAt?: true
   createdAt?: true
@@ -154,6 +158,7 @@ export type AiDraftAttemptMaxAggregateInputType = {
   automationMode?: true
   autoSendEligible?: true
   appliedConfidenceThreshold?: true
+  inventorySnapshotHash?: true
   selectedAt?: true
   finalizedAt?: true
   createdAt?: true
@@ -181,6 +186,7 @@ export type AiDraftAttemptCountAggregateInputType = {
   autoSendEligible?: true
   appliedConfidenceThreshold?: true
   eligibilityReasons?: true
+  inventorySnapshotHash?: true
   selectedAt?: true
   finalizedAt?: true
   createdAt?: true
@@ -295,6 +301,7 @@ export type AiDraftAttemptGroupByOutputType = {
   autoSendEligible: boolean
   appliedConfidenceThreshold: number
   eligibilityReasons: runtime.JsonValue
+  inventorySnapshotHash: string | null
   selectedAt: Date | null
   finalizedAt: Date | null
   createdAt: Date
@@ -345,6 +352,7 @@ export type AiDraftAttemptWhereInput = {
   autoSendEligible?: Prisma.BoolFilter<"AiDraftAttempt"> | boolean
   appliedConfidenceThreshold?: Prisma.FloatFilter<"AiDraftAttempt"> | number
   eligibilityReasons?: Prisma.JsonFilter<"AiDraftAttempt">
+  inventorySnapshotHash?: Prisma.StringNullableFilter<"AiDraftAttempt"> | string | null
   selectedAt?: Prisma.DateTimeNullableFilter<"AiDraftAttempt"> | Date | string | null
   finalizedAt?: Prisma.DateTimeNullableFilter<"AiDraftAttempt"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"AiDraftAttempt"> | Date | string
@@ -376,6 +384,7 @@ export type AiDraftAttemptOrderByWithRelationInput = {
   autoSendEligible?: Prisma.SortOrder
   appliedConfidenceThreshold?: Prisma.SortOrder
   eligibilityReasons?: Prisma.SortOrder
+  inventorySnapshotHash?: Prisma.SortOrderInput | Prisma.SortOrder
   selectedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   finalizedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -410,6 +419,7 @@ export type AiDraftAttemptWhereUniqueInput = Prisma.AtLeast<{
   autoSendEligible?: Prisma.BoolFilter<"AiDraftAttempt"> | boolean
   appliedConfidenceThreshold?: Prisma.FloatFilter<"AiDraftAttempt"> | number
   eligibilityReasons?: Prisma.JsonFilter<"AiDraftAttempt">
+  inventorySnapshotHash?: Prisma.StringNullableFilter<"AiDraftAttempt"> | string | null
   selectedAt?: Prisma.DateTimeNullableFilter<"AiDraftAttempt"> | Date | string | null
   finalizedAt?: Prisma.DateTimeNullableFilter<"AiDraftAttempt"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"AiDraftAttempt"> | Date | string
@@ -441,6 +451,7 @@ export type AiDraftAttemptOrderByWithAggregationInput = {
   autoSendEligible?: Prisma.SortOrder
   appliedConfidenceThreshold?: Prisma.SortOrder
   eligibilityReasons?: Prisma.SortOrder
+  inventorySnapshotHash?: Prisma.SortOrderInput | Prisma.SortOrder
   selectedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   finalizedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -476,6 +487,7 @@ export type AiDraftAttemptScalarWhereWithAggregatesInput = {
   autoSendEligible?: Prisma.BoolWithAggregatesFilter<"AiDraftAttempt"> | boolean
   appliedConfidenceThreshold?: Prisma.FloatWithAggregatesFilter<"AiDraftAttempt"> | number
   eligibilityReasons?: Prisma.JsonWithAggregatesFilter<"AiDraftAttempt">
+  inventorySnapshotHash?: Prisma.StringNullableWithAggregatesFilter<"AiDraftAttempt"> | string | null
   selectedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AiDraftAttempt"> | Date | string | null
   finalizedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AiDraftAttempt"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"AiDraftAttempt"> | Date | string
@@ -500,6 +512,7 @@ export type AiDraftAttemptCreateInput = {
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: string | null
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -531,6 +544,7 @@ export type AiDraftAttemptUncheckedCreateInput = {
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: string | null
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -556,6 +570,7 @@ export type AiDraftAttemptUpdateInput = {
   autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
   appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -587,6 +602,7 @@ export type AiDraftAttemptUncheckedUpdateInput = {
   autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
   appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -615,6 +631,7 @@ export type AiDraftAttemptCreateManyInput = {
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: string | null
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -639,6 +656,7 @@ export type AiDraftAttemptUpdateManyMutationInput = {
   autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
   appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -666,6 +684,7 @@ export type AiDraftAttemptUncheckedUpdateManyInput = {
   autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
   appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -703,6 +722,7 @@ export type AiDraftAttemptCountOrderByAggregateInput = {
   autoSendEligible?: Prisma.SortOrder
   appliedConfidenceThreshold?: Prisma.SortOrder
   eligibilityReasons?: Prisma.SortOrder
+  inventorySnapshotHash?: Prisma.SortOrder
   selectedAt?: Prisma.SortOrder
   finalizedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -729,6 +749,7 @@ export type AiDraftAttemptMaxOrderByAggregateInput = {
   automationMode?: Prisma.SortOrder
   autoSendEligible?: Prisma.SortOrder
   appliedConfidenceThreshold?: Prisma.SortOrder
+  inventorySnapshotHash?: Prisma.SortOrder
   selectedAt?: Prisma.SortOrder
   finalizedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -750,6 +771,7 @@ export type AiDraftAttemptMinOrderByAggregateInput = {
   automationMode?: Prisma.SortOrder
   autoSendEligible?: Prisma.SortOrder
   appliedConfidenceThreshold?: Prisma.SortOrder
+  inventorySnapshotHash?: Prisma.SortOrder
   selectedAt?: Prisma.SortOrder
   finalizedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -938,6 +960,7 @@ export type AiDraftAttemptCreateWithoutRequestedByInput = {
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: string | null
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -967,6 +990,7 @@ export type AiDraftAttemptUncheckedCreateWithoutRequestedByInput = {
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: string | null
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1024,6 +1048,7 @@ export type AiDraftAttemptScalarWhereInput = {
   autoSendEligible?: Prisma.BoolFilter<"AiDraftAttempt"> | boolean
   appliedConfidenceThreshold?: Prisma.FloatFilter<"AiDraftAttempt"> | number
   eligibilityReasons?: Prisma.JsonFilter<"AiDraftAttempt">
+  inventorySnapshotHash?: Prisma.StringNullableFilter<"AiDraftAttempt"> | string | null
   selectedAt?: Prisma.DateTimeNullableFilter<"AiDraftAttempt"> | Date | string | null
   finalizedAt?: Prisma.DateTimeNullableFilter<"AiDraftAttempt"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"AiDraftAttempt"> | Date | string
@@ -1048,6 +1073,7 @@ export type AiDraftAttemptCreateWithoutStoreInput = {
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: string | null
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1077,6 +1103,7 @@ export type AiDraftAttemptUncheckedCreateWithoutStoreInput = {
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: string | null
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1128,6 +1155,7 @@ export type AiDraftAttemptCreateWithoutQuestionInput = {
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: string | null
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1157,6 +1185,7 @@ export type AiDraftAttemptUncheckedCreateWithoutQuestionInput = {
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: string | null
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1208,6 +1237,7 @@ export type AiDraftAttemptCreateWithoutAnswerDeliveryInput = {
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: string | null
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1238,6 +1268,7 @@ export type AiDraftAttemptUncheckedCreateWithoutAnswerDeliveryInput = {
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: string | null
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1278,6 +1309,7 @@ export type AiDraftAttemptUpdateWithoutAnswerDeliveryInput = {
   autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
   appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1308,6 +1340,7 @@ export type AiDraftAttemptUncheckedUpdateWithoutAnswerDeliveryInput = {
   autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
   appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1334,6 +1367,7 @@ export type AiDraftAttemptCreateManyRequestedByInput = {
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: string | null
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1358,6 +1392,7 @@ export type AiDraftAttemptUpdateWithoutRequestedByInput = {
   autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
   appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1387,6 +1422,7 @@ export type AiDraftAttemptUncheckedUpdateWithoutRequestedByInput = {
   autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
   appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1414,6 +1450,7 @@ export type AiDraftAttemptUncheckedUpdateManyWithoutRequestedByInput = {
   autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
   appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1440,6 +1477,7 @@ export type AiDraftAttemptCreateManyStoreInput = {
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: string | null
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1464,6 +1502,7 @@ export type AiDraftAttemptUpdateWithoutStoreInput = {
   autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
   appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1493,6 +1532,7 @@ export type AiDraftAttemptUncheckedUpdateWithoutStoreInput = {
   autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
   appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1520,6 +1560,7 @@ export type AiDraftAttemptUncheckedUpdateManyWithoutStoreInput = {
   autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
   appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1546,6 +1587,7 @@ export type AiDraftAttemptCreateManyQuestionInput = {
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: string | null
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1570,6 +1612,7 @@ export type AiDraftAttemptUpdateWithoutQuestionInput = {
   autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
   appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1599,6 +1642,7 @@ export type AiDraftAttemptUncheckedUpdateWithoutQuestionInput = {
   autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
   appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1626,6 +1670,7 @@ export type AiDraftAttemptUncheckedUpdateManyWithoutQuestionInput = {
   autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
   appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
   eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  inventorySnapshotHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1655,6 +1700,7 @@ export type AiDraftAttemptSelect<ExtArgs extends runtime.Types.Extensions.Intern
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: boolean
   eligibilityReasons?: boolean
+  inventorySnapshotHash?: boolean
   selectedAt?: boolean
   finalizedAt?: boolean
   createdAt?: boolean
@@ -1686,6 +1732,7 @@ export type AiDraftAttemptSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: boolean
   eligibilityReasons?: boolean
+  inventorySnapshotHash?: boolean
   selectedAt?: boolean
   finalizedAt?: boolean
   createdAt?: boolean
@@ -1716,6 +1763,7 @@ export type AiDraftAttemptSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: boolean
   eligibilityReasons?: boolean
+  inventorySnapshotHash?: boolean
   selectedAt?: boolean
   finalizedAt?: boolean
   createdAt?: boolean
@@ -1746,12 +1794,13 @@ export type AiDraftAttemptSelectScalar = {
   autoSendEligible?: boolean
   appliedConfidenceThreshold?: boolean
   eligibilityReasons?: boolean
+  inventorySnapshotHash?: boolean
   selectedAt?: boolean
   finalizedAt?: boolean
   createdAt?: boolean
 }
 
-export type AiDraftAttemptOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "storeId" | "questionId" | "requestedByUserId" | "trigger" | "outcome" | "answer" | "decision" | "confidence" | "answerability" | "risks" | "missingInformation" | "evidenceIds" | "model" | "interpretation" | "requestedFacts" | "detectedFacts" | "automationMode" | "autoSendEligible" | "appliedConfidenceThreshold" | "eligibilityReasons" | "selectedAt" | "finalizedAt" | "createdAt", ExtArgs["result"]["aiDraftAttempt"]>
+export type AiDraftAttemptOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "storeId" | "questionId" | "requestedByUserId" | "trigger" | "outcome" | "answer" | "decision" | "confidence" | "answerability" | "risks" | "missingInformation" | "evidenceIds" | "model" | "interpretation" | "requestedFacts" | "detectedFacts" | "automationMode" | "autoSendEligible" | "appliedConfidenceThreshold" | "eligibilityReasons" | "inventorySnapshotHash" | "selectedAt" | "finalizedAt" | "createdAt", ExtArgs["result"]["aiDraftAttempt"]>
 export type AiDraftAttemptInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
   question?: boolean | Prisma.ProductQuestionDefaultArgs<ExtArgs>
@@ -1799,6 +1848,7 @@ export type $AiDraftAttemptPayload<ExtArgs extends runtime.Types.Extensions.Inte
     autoSendEligible: boolean
     appliedConfidenceThreshold: number
     eligibilityReasons: runtime.JsonValue
+    inventorySnapshotHash: string | null
     selectedAt: Date | null
     finalizedAt: Date | null
     createdAt: Date
@@ -2250,6 +2300,7 @@ export interface AiDraftAttemptFieldRefs {
   readonly autoSendEligible: Prisma.FieldRef<"AiDraftAttempt", 'Boolean'>
   readonly appliedConfidenceThreshold: Prisma.FieldRef<"AiDraftAttempt", 'Float'>
   readonly eligibilityReasons: Prisma.FieldRef<"AiDraftAttempt", 'Json'>
+  readonly inventorySnapshotHash: Prisma.FieldRef<"AiDraftAttempt", 'String'>
   readonly selectedAt: Prisma.FieldRef<"AiDraftAttempt", 'DateTime'>
   readonly finalizedAt: Prisma.FieldRef<"AiDraftAttempt", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"AiDraftAttempt", 'DateTime'>

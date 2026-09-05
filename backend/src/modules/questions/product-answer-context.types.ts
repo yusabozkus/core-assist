@@ -91,6 +91,10 @@ export type ProductAnswerContext = {
     latestSyncedAt: string | null;
     maxAgeMs: number;
   };
+  inventoryVerification?: {
+    status: 'VERIFIED' | 'UNAVAILABLE';
+    checkedAt: string | null;
+  };
   relevantAttributes: Array<{ name: string; value: string }>;
   relevantDescription: string | null;
   evidence: ProductAnswerEvidence[];

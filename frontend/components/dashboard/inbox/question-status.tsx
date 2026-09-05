@@ -28,7 +28,9 @@ export function QuestionStatus({
     ? "h-5 gap-1 px-1.5 py-0 text-[10px] font-medium"
     : undefined
 
-  if (deliveryStatus === "FAILED") {
+  const needsReview = status === "DRAFTED" && draftDecision === "NEEDS_REVIEW"
+
+  if (deliveryStatus === "FAILED" && !needsReview) {
     return (
       <Badge
         variant="outline"
@@ -97,7 +99,7 @@ export function QuestionStatus({
     )
   }
 
-  if (status === "DRAFTED" && shadowEligible) {
+  if (status === "DRAFTED" && shadowEligible && !needsReview) {
     return (
       <Badge
         variant="outline"
@@ -115,7 +117,7 @@ export function QuestionStatus({
     )
   }
 
-  if (status === "DRAFTED" && draftDecision === "NEEDS_REVIEW") {
+  if (needsReview) {
     return (
       <Badge
         variant="outline"

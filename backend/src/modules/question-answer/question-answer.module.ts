@@ -1,6 +1,7 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { IntegrationsModule } from '../integrations/integrations.module';
+import { InventoryVerificationModule } from '../inventory-verification/inventory-verification.module';
 import {
   QUESTION_ANSWER_DISPATCHER,
   QUESTION_ANSWER_QUEUE,
@@ -12,6 +13,7 @@ import { QuestionAnswerWorkerService } from './question-answer-worker.service';
 @Module({
   imports: [
     IntegrationsModule,
+    InventoryVerificationModule,
     BullModule.registerQueue({ name: QUESTION_ANSWER_QUEUE }),
   ],
   providers: [

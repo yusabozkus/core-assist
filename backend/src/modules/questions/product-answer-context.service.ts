@@ -584,6 +584,7 @@ export function analyzeProductQuestion(input: {
   question: string;
   providerKey?: string;
   product: ProductAnswerContext['product'];
+  additionalRequestedFacts?: ProductAnswerFact[];
 }): ProductAnswerContext {
   const normalizedQuestion = normalizeSearchValue(input.question);
   const variants = input.product.variants;
@@ -618,7 +619,12 @@ export function analyzeProductQuestion(input: {
       (!matchedSize || sameValue(variant.size, matchedSize))
     );
   });
-  const requestedFacts = detectRequestedFacts(normalizedQuestion);
+  const requestedFacts = [
+    ...new Set([
+      ...detectRequestedFacts(normalizedQuestion),
+      ...(input.additionalRequestedFacts ?? []),
+    ]),
+  ];
   const inventoryFreshness = evaluateInventoryFreshness(
     matchingVariants.length > 0 ? matchingVariants : variants,
   );
@@ -764,6 +770,23 @@ function isColorQuestion(normalizedQuestion: string) {
 
 function isStockQuestion(normalizedQuestion: string) {
   if (includesAny(normalizedQuestion, STOCK_PATTERNS)) return true;
+
+  if (
+    /(?:^| )(?:xxs|xs|s|m|l|xl|xxl|xxxl|[2-6]xl|\d{2,3})(?: beden| bedeni| numara)? (?:var ?mi|mevcut|bulunur|kalmis)(?: |$)/.test(
+      normalizedQuestion,
+    )
+  ) {
+    return true;
+  }
+  if (
+    COMMON_COLORS.some((color) =>
+      new RegExp(
+        `(?:^| )${escapeRegExp(normalizeSearchValue(color))}(?:i|si| rengi| renk)? (?:var ?mi|mevcut|bulunur)(?: |$)`,
+      ).test(normalizedQuestion),
+    )
+  ) {
+    return true;
+  }
 
   return /(?:^| )(?:urun|renk|rengi|beden|numara|varyant) (?:var mi|mevcut mu)(?: |$)/.test(
     normalizedQuestion,

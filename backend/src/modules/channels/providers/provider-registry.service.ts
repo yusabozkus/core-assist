@@ -4,6 +4,7 @@ import type {
   CatalogConnector,
   ConnectorContext,
   InventoryBatch,
+  InventoryLookup,
   ProductBatch,
   ProviderCredentials,
   ProviderManifest,
@@ -150,6 +151,25 @@ export class ProviderRegistryService {
     return this.getLiveCatalogConnector(providerKey).fetchInventory(
       context,
       cursor,
+    );
+  }
+
+  async fetchInventoryByReferences(
+    providerKey: string,
+    context: ConnectorContext,
+    lookup: InventoryLookup,
+  ): Promise<InventoryBatch> {
+    if (this.catalogMode === 'mock') {
+      return this.mockConnector.fetchInventoryByReferences(
+        providerKey,
+        context,
+        lookup,
+      );
+    }
+
+    return this.getLiveCatalogConnector(providerKey).fetchInventoryByReferences(
+      context,
+      lookup,
     );
   }
 

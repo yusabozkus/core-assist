@@ -504,6 +504,7 @@ export const AiDraftAttemptScalarFieldEnum = {
   autoSendEligible: 'autoSendEligible',
   appliedConfidenceThreshold: 'appliedConfidenceThreshold',
   eligibilityReasons: 'eligibilityReasons',
+  inventorySnapshotHash: 'inventorySnapshotHash',
   selectedAt: 'selectedAt',
   finalizedAt: 'finalizedAt',
   createdAt: 'createdAt'

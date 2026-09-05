@@ -3,6 +3,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  Logger,
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
@@ -15,12 +16,17 @@ import {
   QuestionReplyDecision,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { InventoryVerificationService } from '../inventory-verification/inventory-verification.service';
 import {
   AiDraftGenerator,
   AiDraftRateLimitError,
   type AiDraftResult,
 } from '../ai/ai-draft.types';
-import { ProductAnswerContextService } from './product-answer-context.service';
+import {
+  analyzeProductQuestion,
+  ProductAnswerContextService,
+} from './product-answer-context.service';
+import type { InventoryVerificationResult } from '../inventory-verification/inventory-verification.types';
 import type {
   DraftQuestionAnswer,
   ProductAnswerContext,
@@ -39,9 +45,12 @@ type GenerateDraftOptions = {
 
 @Injectable()
 export class QuestionDraftService {
+  private readonly logger = new Logger(QuestionDraftService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly productContext: ProductAnswerContextService,
+    private readonly inventoryVerification: InventoryVerificationService,
     private readonly aiDrafts: AiDraftGenerator,
     private readonly responsePolicy: QuestionResponsePolicyService,
     private readonly replyDecision: QuestionReplyDecisionService,
@@ -130,11 +139,43 @@ export class QuestionDraftService {
       };
     }
 
-    const context = await this.productContext.build(storeId, questionId);
+    let context = await this.productContext.build(storeId, questionId);
+    let inventorySnapshotHash: string | null = null;
+    let inventoryCheckAttempted = false;
+    const verifyInventory = async () => {
+      inventoryCheckAttempted = true;
+      try {
+        const verification =
+          await this.inventoryVerification.verifyQuestionProduct(
+            storeId,
+            questionId,
+          );
+        if (verification.productId !== context.product.id) {
+          throw new ConflictException('Sorunun ürün eşleşmesi değişti.');
+        }
+        context = applyVerifiedInventory(context, verification);
+        inventorySnapshotHash = verification.snapshotHash;
+      } catch {
+        this.logger.warn(`${questionId} sorusu için canlı stok doğrulanamadı.`);
+        context = markInventoryAsUnverified(context);
+      }
+    };
     let aiDraft: AiDraftResult | null;
 
     try {
+      if (context.requestedFacts.includes('STOCK')) await verifyInventory();
       aiDraft = await this.aiDrafts.generate(context);
+      if (
+        aiDraft &&
+        !inventoryCheckAttempted &&
+        (aiDraft.detectedFacts.includes('STOCK') ||
+          aiDraft.usedFacts.includes('STOCK') ||
+          aiDraft.usedEvidenceIds.includes('variant-stock'))
+      ) {
+        await verifyInventory();
+        // Discard the first answer: it was composed before the provider check.
+        aiDraft = await this.aiDrafts.generate(context);
+      }
     } catch (error) {
       if (error instanceof AiDraftRateLimitError) {
         const retryAfterSeconds = error.retryAfterSeconds ?? 60;
@@ -209,6 +250,7 @@ export class QuestionDraftService {
           autoSendEligible: autoSend.eligible,
           appliedConfidenceThreshold: autoSend.appliedConfidenceThreshold,
           eligibilityReasons: autoSend.reasons,
+          inventorySnapshotHash,
         },
         select: { id: true },
       });
@@ -278,25 +320,82 @@ export class QuestionDraftService {
   }
 }
 
+function markInventoryAsUnverified(
+  context: ProductAnswerContext,
+): ProductAnswerContext {
+  return {
+    ...context,
+    requestedFacts: [...new Set([...context.requestedFacts, 'STOCK' as const])],
+    inventoryVerification: { status: 'UNAVAILABLE', checkedAt: null },
+    inventoryFreshness: {
+      ...context.inventoryFreshness,
+      status: 'UNKNOWN',
+      latestSyncedAt: null,
+    },
+    evidence: [
+      ...context.evidence.filter((evidence) => evidence.id !== 'variant-stock'),
+      {
+        id: 'variant-stock',
+        fact: 'STOCK',
+        label: 'Canlı stok doğrulaması',
+        value:
+          'Pazaryerinden güncel stok bilgisi doğrulanamadı; ürün veya varyant mevcudiyeti bilinmiyor.',
+        source: 'VARIANT',
+        confidence: 0,
+      },
+    ],
+  };
+}
+
+function applyVerifiedInventory(
+  context: ProductAnswerContext,
+  verification: InventoryVerificationResult,
+): ProductAnswerContext {
+  const analyzed = analyzeProductQuestion({
+    questionId: context.questionId,
+    question: context.question,
+    providerKey: context.providerKey,
+    product: { ...context.product, variants: verification.variants },
+    additionalRequestedFacts: ['STOCK'],
+  });
+  return {
+    ...analyzed,
+    responsePreferences: context.responsePreferences,
+    inventoryVerification: {
+      status: 'VERIFIED',
+      checkedAt: verification.checkedAt.toISOString(),
+    },
+    evidence: [
+      ...analyzed.evidence,
+      ...context.evidence.filter((item) =>
+        ['STORE_KNOWLEDGE', 'CHANNEL_OVERRIDE', 'FAQ'].includes(item.source),
+      ),
+    ],
+  };
+}
+
 function applyInventoryFreshnessGuard(
   draft: AiDraftResult,
   context: ProductAnswerContext,
 ): AiDraftResult {
   if (
     !context.requestedFacts.includes('STOCK') ||
-    context.inventoryFreshness.status === 'FRESH'
+    (context.inventoryVerification?.status === 'VERIFIED' &&
+      context.inventoryFreshness.status === 'FRESH')
   ) {
     return draft;
   }
 
   const missingInformation =
     context.inventoryFreshness.status === 'UNKNOWN'
-      ? 'Stok verisinin son kontrol zamanı bilinmiyor'
+      ? 'Pazaryerinden güncel stok bilgisi doğrulanamadı'
       : 'Stok bilgisi güncel bir senkronizasyonla doğrulanmalı';
 
   return {
     ...draft,
     decision: 'NEEDS_REVIEW',
+    answerability:
+      draft.answerability === 'FULL' ? 'PARTIAL' : draft.answerability,
     confidence: Math.min(draft.confidence, 0.6),
     missingInformation: [
       ...new Set([...draft.missingInformation, missingInformation]),
