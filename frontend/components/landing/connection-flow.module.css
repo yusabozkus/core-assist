@@ -1,0 +1,81 @@
+.signal,
+.signalTrail {
+  opacity: 0;
+  animation: signal-travel 4.8s linear infinite paused;
+}
+
+.signalTrail {
+  animation-name: signal-trail;
+}
+
+.flow[data-active="true"] :is(.signal, .signalTrail),
+.receiver[data-active="true"] .receiverRing {
+  animation-play-state: running;
+}
+
+.receiverRing {
+  position: absolute;
+  inset: 0;
+  border: 1px solid #8bab78;
+  border-radius: 50%;
+  opacity: 0;
+  animation: receive-signal 2.4s ease-out infinite paused;
+}
+
+@keyframes signal-travel {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.65;
+  }
+  75% {
+    opacity: 0.65;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes signal-trail {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.1;
+  }
+  75% {
+    opacity: 0.1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes receive-signal {
+  0% {
+    transform: scale(0.72);
+    opacity: 0;
+  }
+  22% {
+    opacity: 0.35;
+  }
+  85%,
+  100% {
+    transform: scale(1.13);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signal,
+  .signalTrail,
+  .receiverRing {
+    animation: none;
+    display: none;
+  }
+}

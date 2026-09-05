@@ -1,0 +1,253 @@
+.page {
+  --background: #f7f8f4;
+  --foreground: #17281f;
+  --card: #fff;
+  --card-foreground: #17281f;
+  --popover: #fff;
+  --popover-foreground: #17281f;
+  --border: #dce2d9;
+  --muted-foreground: #657267;
+  --primary: #245d46;
+  --primary-foreground: #fff;
+  color-scheme: light;
+  background: var(--background);
+  color: var(--foreground);
+  overflow-x: clip;
+}
+
+.page :is(a, button, summary):focus-visible {
+  outline: 2px solid #45856a;
+  outline-offset: 5px;
+}
+
+.page section[id] {
+  scroll-margin-top: 100px;
+}
+
+.container {
+  width: min(100% - 48px, 1280px);
+  margin-inline: auto;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  border-radius: 50%;
+}
+
+.hero {
+  position: relative;
+  padding-top: clamp(124px, 12vw, 175px);
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+  gap: 36px;
+  align-items: center;
+  padding-bottom: 64px;
+}
+
+.heroTitle {
+  font-size: clamp(60px, 6.6vw, 94px);
+  line-height: 1.02;
+  letter-spacing: -0.075em;
+  font-weight: 500;
+}
+
+.heroAccent {
+  position: relative;
+  display: inline-block;
+  z-index: 0;
+}
+
+.heroAccent::after {
+  position: absolute;
+  content: "";
+  z-index: -1;
+  bottom: 0.02em;
+  left: -0.05em;
+  width: calc(100% + 0.08em);
+  height: 0.24em;
+  background: #d9eeae;
+  transform: rotate(-2deg);
+}
+
+.primaryLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  min-height: 50px;
+  padding: 6px 7px 6px 22px;
+  border-radius: 999px;
+  background: #172f24;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+
+.primaryLink:hover {
+  background: #245d46;
+  transform: translateY(-2px);
+}
+
+.linkArrow {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #d9eeae;
+  color: #172f24;
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .linkArrow {
+    transition: transform 220ms ease;
+  }
+
+  .primaryLink:hover .linkArrow {
+    transform: rotate(-35deg);
+  }
+}
+
+.heroFoot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 28px;
+  padding-block: 25px;
+  border-top: 1px solid #dde3d9;
+}
+
+.sectionTitle {
+  font-size: clamp(32px, 4vw, 56px);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+
+.statement {
+  padding-block: 95px 105px;
+}
+
+.statementText {
+  font-size: clamp(33px, 4.4vw, 64px);
+  font-weight: 500;
+  letter-spacing: -0.05em;
+  line-height: 1.25;
+}
+
+.statementWord {
+  display: inline-block;
+  position: relative;
+  margin-right: 0.22em;
+  color: #c8d0c5;
+}
+
+.statementInk {
+  position: absolute;
+  inset: 0;
+  color: #17281f;
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  align-items: start;
+  gap: 28px;
+}
+
+.featurePanel {
+  border-radius: 26px;
+  padding: clamp(24px, 3.3vw, 44px);
+  overflow: hidden;
+}
+
+.footerWordmark {
+  font-size: clamp(62px, 15.6vw, 217px);
+  font-weight: 500;
+  letter-spacing: -0.085em;
+  line-height: 0.94;
+  white-space: nowrap;
+  color: #dce3d7;
+}
+
+@media (min-width: 1600px) {
+  .hero {
+    padding-top: 175px;
+  }
+  .heroGrid {
+    min-height: 670px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .heroGrid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .heroTitle {
+    font-size: clamp(60px, 9.4vw, 90px);
+  }
+  .heroFoot {
+    flex-wrap: wrap;
+  }
+  .featureGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 639px) {
+  .container {
+    width: calc(100% - 40px);
+  }
+  .hero {
+    padding-top: 120px;
+  }
+  .heroGrid {
+    gap: 8px;
+    padding-bottom: 34px;
+  }
+  .heroTitle {
+    font-size: clamp(48px, 12.3vw, 74px);
+  }
+  .heroFoot {
+    align-items: flex-start;
+    gap: 18px;
+    padding-block: 22px;
+  }
+  .statement {
+    padding-block: 68px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page *,
+  .page *::before,
+  .page *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

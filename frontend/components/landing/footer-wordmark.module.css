@@ -1,0 +1,29 @@
+.wordmark {
+  position: relative;
+  cursor: default;
+}
+
+.spotlight {
+  position: absolute;
+  inset: 0;
+  display: block;
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wordmark:hover .spotlight {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spotlight {
+    display: none;
+    transition: none;
+  }
+}

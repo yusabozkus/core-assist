@@ -124,16 +124,17 @@ export function LoginForm({ reason, returnTo }: LoginFormProps) {
 
   return (
     <div className="w-full">
-      <div className="mb-9">
-        <p className="mb-3 text-xs font-semibold tracking-[0.12em] text-primary uppercase">
-          Yönetim paneli girişi
+      <div className="mb-8 sm:mb-9">
+        <p className="mb-4 flex items-center gap-2.5 text-[10px] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+          <span className="h-px w-6 bg-primary/50" aria-hidden="true" />
+          Çalışma alanınız
         </p>
-        <h1 className="text-[2rem] leading-tight font-semibold tracking-[-0.04em] text-foreground sm:text-[2.25rem]">
-          Tekrar hoş geldiniz
+        <h1 className="text-[2.125rem] leading-[1.14] font-semibold tracking-[-0.045em] text-foreground sm:text-[2.5rem]">
+          Hoş geldiniz.
         </h1>
-        <p className="mt-3 max-w-sm text-sm leading-6 text-muted-foreground">
-          Mağazalarınızı ve müşteri operasyonlarınızı yönetmeye devam etmek için
-          hesabınızı seçin.
+        <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">
+          Ürün sorularınızı yanıtlamak ve mağazanızın AI akışını yönetmek için
+          hesabınızla devam edin.
         </p>
       </div>
 
@@ -210,19 +211,18 @@ export function LoginForm({ reason, returnTo }: LoginFormProps) {
         </Button>
       </div>
 
-      <div className="mt-7 flex items-start gap-3 rounded-xl border border-border/80 bg-muted/55 p-3.5">
+      <div className="mt-6 flex items-start gap-2.5 px-0.5">
         <HugeiconsIcon
           icon={ShieldCheckIcon}
-          className="mt-0.5 size-4 shrink-0 text-primary"
+          className="mt-0.5 size-4 shrink-0 text-muted-foreground/70"
         />
         <p className="text-[11px] leading-5 text-muted-foreground">
-          Parolanız CoreAssist ile paylaşılmaz. Kimlik doğrulama Google üzerinden
-          tamamlanır; hesap kimliğiniz ve güvenli oturum verileriniz hizmetin
-          çalışması için korunarak saklanır.
+          Parolanız CoreAssist ile paylaşılmaz. Kimlik doğrulama Google
+          üzerinden tamamlanır.
         </p>
       </div>
 
-      <p className="mt-7 text-center text-[11px] leading-5 text-muted-foreground/75">
+      <p className="mt-8 border-t border-border/70 pt-5 text-[11px] leading-5 text-muted-foreground/75">
         Devam ederek kullanım koşullarını ve gizlilik politikasını kabul etmiş
         olursunuz.
       </p>
