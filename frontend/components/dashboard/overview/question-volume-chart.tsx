@@ -1,10 +1,20 @@
+"use client"
+
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart"
 import type { DashboardOverview } from "@/types/dashboard"
 import { dashboardNumber as number, dayLabel } from "./dashboard-format"
+
+const chartConfig = {
+  incoming: { label: "Gelen", color: "var(--primary)" },
+  answered: { label: "Yanıtlanan", color: "var(--chart-4)" },
+} satisfies ChartConfig
 
 export function QuestionVolumeChart({ data }: { data: DashboardOverview }) {
   const maximum = Math.max(
@@ -15,6 +25,14 @@ export function QuestionVolumeChart({ data }: { data: DashboardOverview }) {
   const hasActivity = data.activity.some(
     (day) => day.incoming > 0 || day.answered > 0
   )
+  const dateTicks = data.activity
+    .filter(
+      (_, index) =>
+        index === 0 ||
+        index === Math.floor((data.activity.length - 1) / 2) ||
+        index === data.activity.length - 1
+    )
+    .map((day) => day.date)
 
   return (
     <section
@@ -41,81 +59,88 @@ export function QuestionVolumeChart({ data }: { data: DashboardOverview }) {
           </span>
         </div>
       </header>
-      <div className="relative mt-7 pl-9">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 h-48"
+      <div className="relative mt-7">
+        <ChartContainer
+          config={chartConfig}
+          className="aspect-auto h-56 w-full"
         >
-          {[4, 3, 2, 1, 0].map((step) => (
-            <div
-              key={step}
-              className="absolute right-0 left-0 flex items-center gap-2"
-              style={{ top: `${(4 - step) * 25}%` }}
-            >
-              <span className="w-7 -translate-y-1/2 text-right text-[10px] text-muted-foreground tabular-nums">
-                {number.format((ceiling * step) / 4)}
-              </span>
-              <span className="flex-1 border-t border-dashed border-border/70" />
-            </div>
-          ))}
-        </div>
-        <div
-          className="relative grid h-48 items-end gap-1 sm:gap-2"
-          style={{
-            gridTemplateColumns: `repeat(${data.activity.length}, minmax(0, 1fr))`,
-          }}
-        >
-          {data.activity.map((day) => (
-            <Tooltip key={day.date}>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  aria-label={`${dayLabel(day.date)}: ${day.incoming} gelen, ${day.answered} yanıtlanan soru`}
-                  className="group flex h-full min-w-0 items-end justify-center gap-0.5 rounded-sm outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring sm:gap-1"
-                >
-                  <span
-                    className="w-full max-w-5 rounded-t-[3px] bg-primary transition-opacity group-hover:opacity-80"
-                    style={{
-                      height: `${(day.incoming / ceiling) * 100}%`,
-                      minHeight: day.incoming ? 3 : 0,
-                    }}
-                  />
-                  <span
-                    className="w-full max-w-5 rounded-t-[3px] bg-chart-4 transition-opacity group-hover:opacity-80"
-                    style={{
-                      height: `${(day.answered / ceiling) * 100}%`,
-                      minHeight: day.answered ? 3 : 0,
-                    }}
-                  />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="space-y-1 text-xs">
-                <p className="font-semibold">{dayLabel(day.date)}</p>
-                <p>
-                  {number.format(day.incoming)} gelen ·{" "}
-                  {number.format(day.answered)} yanıtlanan
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          ))}
-        </div>
+          <BarChart
+            accessibilityLayer
+            data={data.activity}
+            margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
+            barGap={3}
+            barCategoryGap="25%"
+            title="Günlük soru akışı"
+            desc="Günlük gelen ve yanıtlanan soru sayıları. Günler arasında gezinmek için sağ ve sol ok tuşlarını kullanın."
+          >
+            <CartesianGrid vertical={false} strokeDasharray="3 3" />
+            <XAxis
+              dataKey="date"
+              ticks={dateTicks}
+              tickFormatter={dayLabel}
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+              minTickGap={12}
+              height={28}
+              tick={{ fontSize: 10 }}
+            />
+            <YAxis
+              domain={[0, ceiling]}
+              ticks={[0, 1, 2, 3, 4].map((step) => (ceiling * step) / 4)}
+              allowDecimals={false}
+              tickFormatter={(value: number) => number.format(value)}
+              tickLine={false}
+              axisLine={false}
+              width={44}
+              tickMargin={8}
+              tick={{ fontSize: 10 }}
+            />
+            <ChartTooltip
+              isAnimationActive={false}
+              cursor={{ fillOpacity: 0.4 }}
+              content={
+                <ChartTooltipContent
+                  labelFormatter={(label) => dayLabel(String(label))}
+                  formatter={(value, name, item) => (
+                    <>
+                      <span
+                        className="size-2.5 shrink-0 rounded-xs"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="flex-1 text-muted-foreground">
+                        {chartConfig[name as keyof typeof chartConfig]?.label ??
+                          name}
+                      </span>
+                      <span className="font-mono font-medium tabular-nums">
+                        {number.format(Number(value))}
+                      </span>
+                    </>
+                  )}
+                />
+              }
+            />
+            <Bar
+              dataKey="incoming"
+              fill="var(--color-incoming)"
+              radius={[3, 3, 0, 0]}
+              maxBarSize={20}
+              isAnimationActive={false}
+            />
+            <Bar
+              dataKey="answered"
+              fill="var(--color-answered)"
+              radius={[3, 3, 0, 0]}
+              maxBarSize={20}
+              isAnimationActive={false}
+            />
+          </BarChart>
+        </ChartContainer>
         {!hasActivity && (
           <div className="pointer-events-none absolute inset-x-9 top-16 rounded-lg bg-card/95 px-4 py-3 text-center text-xs text-muted-foreground">
             Bu dönemde henüz soru hareketi yok.
           </div>
         )}
-        <div className="mt-3 flex justify-between text-[10px] text-muted-foreground">
-          {data.activity
-            .filter(
-              (_, index) =>
-                index === 0 ||
-                index === Math.floor((data.activity.length - 1) / 2) ||
-                index === data.activity.length - 1
-            )
-            .map((day) => (
-              <span key={day.date}>{dayLabel(day.date)}</span>
-            ))}
-        </div>
       </div>
       <p className="mt-5 text-[10px] leading-4 text-muted-foreground">
         Yanıtlar gönderildikleri güne aittir; önceki günlerden gelen soruları da

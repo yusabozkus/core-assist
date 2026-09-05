@@ -6,6 +6,8 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
+import { UsageRadialChart } from "./usage-radial-chart"
+
 const usageItems = [
   {
     label: "Yanıtlanan sorular",
@@ -101,53 +103,11 @@ export function SubscriptionUsage() {
                 </p>
               </div>
 
-              <CircularProgress value={percentage} label={item.label} />
+              <UsageRadialChart value={percentage} label={item.label} />
             </div>
           )
         })}
       </div>
     </section>
-  )
-}
-
-function CircularProgress({ value, label }: { value: number; label: string }) {
-  return (
-    <div
-      className="relative size-12 shrink-0"
-      role="progressbar"
-      aria-label={`${label} kullanımı`}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={value}
-    >
-      <svg
-        viewBox="0 0 40 40"
-        className="size-full -rotate-90"
-        aria-hidden="true"
-      >
-        <circle
-          cx="20"
-          cy="20"
-          r="16"
-          fill="none"
-          strokeWidth="3.5"
-          className="stroke-muted"
-        />
-        <circle
-          cx="20"
-          cy="20"
-          r="16"
-          fill="none"
-          pathLength="100"
-          strokeWidth="3.5"
-          strokeLinecap="round"
-          strokeDasharray={`${value} 100`}
-          className="stroke-primary transition-[stroke-dasharray] duration-500"
-        />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-foreground tabular-nums">
-        %{value}
-      </span>
-    </div>
   )
 }

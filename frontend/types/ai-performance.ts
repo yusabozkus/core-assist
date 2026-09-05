@@ -12,10 +12,15 @@ export type AiPerformanceRange = "7D" | "30D" | "90D" | "ALL"
 
 export type AiPerformance = {
   range: AiPerformanceRange
+  provider: string | null
+  timezone: string
+  availableProviders: string[]
   from: string | null
   generatedAt: string
   summary: {
     totalDrafts: number
+    uniqueQuestions: number
+    reviewedAnswers: number
     averageConfidence: number
     readyRate: number
     needsReviewRate: number
@@ -36,6 +41,22 @@ export type AiPerformance = {
   draftDecisions: {
     ready: number
     needsReview: number
+    blocked: number
+  }
+  delivery: {
+    failed: number
+    queued: number
+    processing: number
+    successRate: number | null
+  }
+  trend: Array<{ date: string; drafts: number; sent: number }>
+  trendGranularity: "day" | "month"
+  reviewReasons: Array<{ key: string; count: number }>
+  automation: {
+    mode: AiAutomationMode
+    evaluated: number
+    eligible: number
+    withheld: number
   }
   shadow: {
     evaluated: number
@@ -61,6 +82,7 @@ export type AiPerformance = {
     needsReviewRate: number
     autoSendEligibilityRate: number
     sentAnswers: number
+    reviewedAnswers: number
     editRate: number
   }>
   recentActivity: Array<{
@@ -80,6 +102,8 @@ export type AiPerformance = {
     appliedConfidenceThreshold: number
     composition: QuestionAnswerComposition | null
     deliveryStatus: QuestionAnswerStatus | null
+    deliveryOrigin: "MANUAL" | "AUTOMATION" | null
+    eligibilityReasons: string[]
     createdAt: string
     sentAt: string | null
   }>

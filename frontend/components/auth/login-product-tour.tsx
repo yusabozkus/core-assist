@@ -12,6 +12,13 @@ import {
   Store01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { Bar, BarChart, XAxis, YAxis } from "recharts"
+
+import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
+
+const channelChartConfig = {
+  value: { label: "Kanal yoğunluğu", color: "#2d6b50" },
+} satisfies ChartConfig
 
 const views = [
   { id: "inbox", label: "Gelen kutusu", icon: Message01Icon },
@@ -218,12 +225,29 @@ function PerformanceView() {
                 </span>
                 <span className="text-[#89948e]">{channel.count}</span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-[#edf1ef]">
-                <div
-                  className="h-full rounded-full bg-[#2d6b50]"
-                  style={{ width: `${channel.value}%` }}
-                />
-              </div>
+              <ChartContainer
+                config={channelChartConfig}
+                className="aspect-auto h-1.5 w-full overflow-hidden rounded-full bg-[#edf1ef]"
+                initialDimension={{ width: 240, height: 6 }}
+                aria-hidden="true"
+              >
+                <BarChart
+                  data={[channel]}
+                  layout="vertical"
+                  margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                  accessibilityLayer={false}
+                  barSize={6}
+                >
+                  <XAxis type="number" domain={[0, 100]} hide />
+                  <YAxis type="category" dataKey="label" hide />
+                  <Bar
+                    dataKey="value"
+                    fill="var(--color-value)"
+                    radius={3}
+                    isAnimationActive={false}
+                  />
+                </BarChart>
+              </ChartContainer>
             </div>
           ))}
         </div>

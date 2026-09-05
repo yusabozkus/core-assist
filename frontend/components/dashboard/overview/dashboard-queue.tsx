@@ -7,6 +7,7 @@ import {
   dashboardNumber as number,
   queuePresentation,
 } from "./dashboard-format"
+import { QueueDistributionChart } from "./queue-distribution-chart"
 
 const queueOrder: DashboardQueueState[] = [
   "READY",
@@ -45,23 +46,7 @@ export function DashboardQueue({ data }: { data: DashboardOverview }) {
           soru yanıt bekliyor
         </span>
       </div>
-      <div
-        aria-hidden="true"
-        className="mt-4 flex h-2 gap-0.5 overflow-hidden rounded-full bg-muted"
-      >
-        {queueOrder.map(
-          (state) =>
-            data.queue.counts[state] > 0 && (
-              <span
-                key={state}
-                className={queuePresentation[state].dot}
-                style={{
-                  width: `${(data.queue.counts[state] / data.queue.total) * 100}%`,
-                }}
-              />
-            )
-        )}
-      </div>
+      <QueueDistributionChart queue={data.queue} states={queueOrder} />
       <div className="mt-5 mb-6 grid grid-cols-2 gap-x-5 gap-y-3.5">
         {queueOrder.map((state) => (
           <div

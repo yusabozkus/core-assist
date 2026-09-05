@@ -13,10 +13,15 @@ export default async function AnalyticsPage({
 }) {
   const params = await searchParams
   const range = parseRange(firstValue(params.range))
+  const providerValue = firstValue(params.provider)
+  const provider =
+    providerValue && /^[a-z0-9_-]{1,50}$/.test(providerValue)
+      ? providerValue
+      : "ALL"
   const storeContext = await getOperationalStoreContext()
   const performance = await getServerAiPerformance(
     storeContext.activeStore.id,
-    { range }
+    { range, provider: provider === "ALL" ? undefined : provider }
   ).catch(() => null)
 
   return (
@@ -24,6 +29,7 @@ export default async function AnalyticsPage({
       activeStore={storeContext.activeStore}
       performance={performance}
       range={range}
+      provider={provider}
     />
   )
 }
