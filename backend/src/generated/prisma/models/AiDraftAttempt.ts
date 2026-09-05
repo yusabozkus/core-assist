@@ -28,10 +28,12 @@ export type AggregateAiDraftAttempt = {
 
 export type AiDraftAttemptAvgAggregateOutputType = {
   confidence: number | null
+  appliedConfidenceThreshold: number | null
 }
 
 export type AiDraftAttemptSumAggregateOutputType = {
   confidence: number | null
+  appliedConfidenceThreshold: number | null
 }
 
 export type AiDraftAttemptMinAggregateOutputType = {
@@ -47,6 +49,9 @@ export type AiDraftAttemptMinAggregateOutputType = {
   answerability: string | null
   model: string | null
   interpretation: string | null
+  automationMode: $Enums.AiAutomationMode | null
+  autoSendEligible: boolean | null
+  appliedConfidenceThreshold: number | null
   selectedAt: Date | null
   finalizedAt: Date | null
   createdAt: Date | null
@@ -65,6 +70,9 @@ export type AiDraftAttemptMaxAggregateOutputType = {
   answerability: string | null
   model: string | null
   interpretation: string | null
+  automationMode: $Enums.AiAutomationMode | null
+  autoSendEligible: boolean | null
+  appliedConfidenceThreshold: number | null
   selectedAt: Date | null
   finalizedAt: Date | null
   createdAt: Date | null
@@ -88,6 +96,10 @@ export type AiDraftAttemptCountAggregateOutputType = {
   interpretation: number
   requestedFacts: number
   detectedFacts: number
+  automationMode: number
+  autoSendEligible: number
+  appliedConfidenceThreshold: number
+  eligibilityReasons: number
   selectedAt: number
   finalizedAt: number
   createdAt: number
@@ -97,10 +109,12 @@ export type AiDraftAttemptCountAggregateOutputType = {
 
 export type AiDraftAttemptAvgAggregateInputType = {
   confidence?: true
+  appliedConfidenceThreshold?: true
 }
 
 export type AiDraftAttemptSumAggregateInputType = {
   confidence?: true
+  appliedConfidenceThreshold?: true
 }
 
 export type AiDraftAttemptMinAggregateInputType = {
@@ -116,6 +130,9 @@ export type AiDraftAttemptMinAggregateInputType = {
   answerability?: true
   model?: true
   interpretation?: true
+  automationMode?: true
+  autoSendEligible?: true
+  appliedConfidenceThreshold?: true
   selectedAt?: true
   finalizedAt?: true
   createdAt?: true
@@ -134,6 +151,9 @@ export type AiDraftAttemptMaxAggregateInputType = {
   answerability?: true
   model?: true
   interpretation?: true
+  automationMode?: true
+  autoSendEligible?: true
+  appliedConfidenceThreshold?: true
   selectedAt?: true
   finalizedAt?: true
   createdAt?: true
@@ -157,6 +177,10 @@ export type AiDraftAttemptCountAggregateInputType = {
   interpretation?: true
   requestedFacts?: true
   detectedFacts?: true
+  automationMode?: true
+  autoSendEligible?: true
+  appliedConfidenceThreshold?: true
+  eligibilityReasons?: true
   selectedAt?: true
   finalizedAt?: true
   createdAt?: true
@@ -267,6 +291,10 @@ export type AiDraftAttemptGroupByOutputType = {
   interpretation: string | null
   requestedFacts: runtime.JsonValue | null
   detectedFacts: runtime.JsonValue | null
+  automationMode: $Enums.AiAutomationMode
+  autoSendEligible: boolean
+  appliedConfidenceThreshold: number
+  eligibilityReasons: runtime.JsonValue
   selectedAt: Date | null
   finalizedAt: Date | null
   createdAt: Date
@@ -313,6 +341,10 @@ export type AiDraftAttemptWhereInput = {
   interpretation?: Prisma.StringNullableFilter<"AiDraftAttempt"> | string | null
   requestedFacts?: Prisma.JsonNullableFilter<"AiDraftAttempt">
   detectedFacts?: Prisma.JsonNullableFilter<"AiDraftAttempt">
+  automationMode?: Prisma.EnumAiAutomationModeFilter<"AiDraftAttempt"> | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFilter<"AiDraftAttempt"> | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFilter<"AiDraftAttempt"> | number
+  eligibilityReasons?: Prisma.JsonFilter<"AiDraftAttempt">
   selectedAt?: Prisma.DateTimeNullableFilter<"AiDraftAttempt"> | Date | string | null
   finalizedAt?: Prisma.DateTimeNullableFilter<"AiDraftAttempt"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"AiDraftAttempt"> | Date | string
@@ -340,6 +372,10 @@ export type AiDraftAttemptOrderByWithRelationInput = {
   interpretation?: Prisma.SortOrderInput | Prisma.SortOrder
   requestedFacts?: Prisma.SortOrderInput | Prisma.SortOrder
   detectedFacts?: Prisma.SortOrderInput | Prisma.SortOrder
+  automationMode?: Prisma.SortOrder
+  autoSendEligible?: Prisma.SortOrder
+  appliedConfidenceThreshold?: Prisma.SortOrder
+  eligibilityReasons?: Prisma.SortOrder
   selectedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   finalizedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -370,6 +406,10 @@ export type AiDraftAttemptWhereUniqueInput = Prisma.AtLeast<{
   interpretation?: Prisma.StringNullableFilter<"AiDraftAttempt"> | string | null
   requestedFacts?: Prisma.JsonNullableFilter<"AiDraftAttempt">
   detectedFacts?: Prisma.JsonNullableFilter<"AiDraftAttempt">
+  automationMode?: Prisma.EnumAiAutomationModeFilter<"AiDraftAttempt"> | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFilter<"AiDraftAttempt"> | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFilter<"AiDraftAttempt"> | number
+  eligibilityReasons?: Prisma.JsonFilter<"AiDraftAttempt">
   selectedAt?: Prisma.DateTimeNullableFilter<"AiDraftAttempt"> | Date | string | null
   finalizedAt?: Prisma.DateTimeNullableFilter<"AiDraftAttempt"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"AiDraftAttempt"> | Date | string
@@ -397,6 +437,10 @@ export type AiDraftAttemptOrderByWithAggregationInput = {
   interpretation?: Prisma.SortOrderInput | Prisma.SortOrder
   requestedFacts?: Prisma.SortOrderInput | Prisma.SortOrder
   detectedFacts?: Prisma.SortOrderInput | Prisma.SortOrder
+  automationMode?: Prisma.SortOrder
+  autoSendEligible?: Prisma.SortOrder
+  appliedConfidenceThreshold?: Prisma.SortOrder
+  eligibilityReasons?: Prisma.SortOrder
   selectedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   finalizedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -428,6 +472,10 @@ export type AiDraftAttemptScalarWhereWithAggregatesInput = {
   interpretation?: Prisma.StringNullableWithAggregatesFilter<"AiDraftAttempt"> | string | null
   requestedFacts?: Prisma.JsonNullableWithAggregatesFilter<"AiDraftAttempt">
   detectedFacts?: Prisma.JsonNullableWithAggregatesFilter<"AiDraftAttempt">
+  automationMode?: Prisma.EnumAiAutomationModeWithAggregatesFilter<"AiDraftAttempt"> | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolWithAggregatesFilter<"AiDraftAttempt"> | boolean
+  appliedConfidenceThreshold?: Prisma.FloatWithAggregatesFilter<"AiDraftAttempt"> | number
+  eligibilityReasons?: Prisma.JsonWithAggregatesFilter<"AiDraftAttempt">
   selectedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AiDraftAttempt"> | Date | string | null
   finalizedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AiDraftAttempt"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"AiDraftAttempt"> | Date | string
@@ -448,6 +496,10 @@ export type AiDraftAttemptCreateInput = {
   interpretation?: string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: $Enums.AiAutomationMode
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -475,6 +527,10 @@ export type AiDraftAttemptUncheckedCreateInput = {
   interpretation?: string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: $Enums.AiAutomationMode
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -496,6 +552,10 @@ export type AiDraftAttemptUpdateInput = {
   interpretation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -523,6 +583,10 @@ export type AiDraftAttemptUncheckedUpdateInput = {
   interpretation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -547,6 +611,10 @@ export type AiDraftAttemptCreateManyInput = {
   interpretation?: string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: $Enums.AiAutomationMode
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -567,6 +635,10 @@ export type AiDraftAttemptUpdateManyMutationInput = {
   interpretation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -590,6 +662,10 @@ export type AiDraftAttemptUncheckedUpdateManyInput = {
   interpretation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -623,6 +699,10 @@ export type AiDraftAttemptCountOrderByAggregateInput = {
   interpretation?: Prisma.SortOrder
   requestedFacts?: Prisma.SortOrder
   detectedFacts?: Prisma.SortOrder
+  automationMode?: Prisma.SortOrder
+  autoSendEligible?: Prisma.SortOrder
+  appliedConfidenceThreshold?: Prisma.SortOrder
+  eligibilityReasons?: Prisma.SortOrder
   selectedAt?: Prisma.SortOrder
   finalizedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -630,6 +710,7 @@ export type AiDraftAttemptCountOrderByAggregateInput = {
 
 export type AiDraftAttemptAvgOrderByAggregateInput = {
   confidence?: Prisma.SortOrder
+  appliedConfidenceThreshold?: Prisma.SortOrder
 }
 
 export type AiDraftAttemptMaxOrderByAggregateInput = {
@@ -645,6 +726,9 @@ export type AiDraftAttemptMaxOrderByAggregateInput = {
   answerability?: Prisma.SortOrder
   model?: Prisma.SortOrder
   interpretation?: Prisma.SortOrder
+  automationMode?: Prisma.SortOrder
+  autoSendEligible?: Prisma.SortOrder
+  appliedConfidenceThreshold?: Prisma.SortOrder
   selectedAt?: Prisma.SortOrder
   finalizedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -663,6 +747,9 @@ export type AiDraftAttemptMinOrderByAggregateInput = {
   answerability?: Prisma.SortOrder
   model?: Prisma.SortOrder
   interpretation?: Prisma.SortOrder
+  automationMode?: Prisma.SortOrder
+  autoSendEligible?: Prisma.SortOrder
+  appliedConfidenceThreshold?: Prisma.SortOrder
   selectedAt?: Prisma.SortOrder
   finalizedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -670,6 +757,7 @@ export type AiDraftAttemptMinOrderByAggregateInput = {
 
 export type AiDraftAttemptSumOrderByAggregateInput = {
   confidence?: Prisma.SortOrder
+  appliedConfidenceThreshold?: Prisma.SortOrder
 }
 
 export type AiDraftAttemptNullableScalarRelationFilter = {
@@ -815,14 +903,6 @@ export type EnumQuestionReplyDecisionFieldUpdateOperationsInput = {
   set?: $Enums.QuestionReplyDecision
 }
 
-export type FloatFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type AiDraftAttemptCreateNestedOneWithoutAnswerDeliveryInput = {
   create?: Prisma.XOR<Prisma.AiDraftAttemptCreateWithoutAnswerDeliveryInput, Prisma.AiDraftAttemptUncheckedCreateWithoutAnswerDeliveryInput>
   connectOrCreate?: Prisma.AiDraftAttemptCreateOrConnectWithoutAnswerDeliveryInput
@@ -854,6 +934,10 @@ export type AiDraftAttemptCreateWithoutRequestedByInput = {
   interpretation?: string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: $Enums.AiAutomationMode
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -879,6 +963,10 @@ export type AiDraftAttemptUncheckedCreateWithoutRequestedByInput = {
   interpretation?: string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: $Enums.AiAutomationMode
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -932,6 +1020,10 @@ export type AiDraftAttemptScalarWhereInput = {
   interpretation?: Prisma.StringNullableFilter<"AiDraftAttempt"> | string | null
   requestedFacts?: Prisma.JsonNullableFilter<"AiDraftAttempt">
   detectedFacts?: Prisma.JsonNullableFilter<"AiDraftAttempt">
+  automationMode?: Prisma.EnumAiAutomationModeFilter<"AiDraftAttempt"> | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFilter<"AiDraftAttempt"> | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFilter<"AiDraftAttempt"> | number
+  eligibilityReasons?: Prisma.JsonFilter<"AiDraftAttempt">
   selectedAt?: Prisma.DateTimeNullableFilter<"AiDraftAttempt"> | Date | string | null
   finalizedAt?: Prisma.DateTimeNullableFilter<"AiDraftAttempt"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"AiDraftAttempt"> | Date | string
@@ -952,6 +1044,10 @@ export type AiDraftAttemptCreateWithoutStoreInput = {
   interpretation?: string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: $Enums.AiAutomationMode
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -977,6 +1073,10 @@ export type AiDraftAttemptUncheckedCreateWithoutStoreInput = {
   interpretation?: string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: $Enums.AiAutomationMode
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1024,6 +1124,10 @@ export type AiDraftAttemptCreateWithoutQuestionInput = {
   interpretation?: string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: $Enums.AiAutomationMode
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1049,6 +1153,10 @@ export type AiDraftAttemptUncheckedCreateWithoutQuestionInput = {
   interpretation?: string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: $Enums.AiAutomationMode
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1096,6 +1204,10 @@ export type AiDraftAttemptCreateWithoutAnswerDeliveryInput = {
   interpretation?: string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: $Enums.AiAutomationMode
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1122,6 +1234,10 @@ export type AiDraftAttemptUncheckedCreateWithoutAnswerDeliveryInput = {
   interpretation?: string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: $Enums.AiAutomationMode
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1158,6 +1274,10 @@ export type AiDraftAttemptUpdateWithoutAnswerDeliveryInput = {
   interpretation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1184,6 +1304,10 @@ export type AiDraftAttemptUncheckedUpdateWithoutAnswerDeliveryInput = {
   interpretation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1206,6 +1330,10 @@ export type AiDraftAttemptCreateManyRequestedByInput = {
   interpretation?: string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: $Enums.AiAutomationMode
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1226,6 +1354,10 @@ export type AiDraftAttemptUpdateWithoutRequestedByInput = {
   interpretation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1251,6 +1383,10 @@ export type AiDraftAttemptUncheckedUpdateWithoutRequestedByInput = {
   interpretation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1274,6 +1410,10 @@ export type AiDraftAttemptUncheckedUpdateManyWithoutRequestedByInput = {
   interpretation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1296,6 +1436,10 @@ export type AiDraftAttemptCreateManyStoreInput = {
   interpretation?: string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: $Enums.AiAutomationMode
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1316,6 +1460,10 @@ export type AiDraftAttemptUpdateWithoutStoreInput = {
   interpretation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1341,6 +1489,10 @@ export type AiDraftAttemptUncheckedUpdateWithoutStoreInput = {
   interpretation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1364,6 +1516,10 @@ export type AiDraftAttemptUncheckedUpdateManyWithoutStoreInput = {
   interpretation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1386,6 +1542,10 @@ export type AiDraftAttemptCreateManyQuestionInput = {
   interpretation?: string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: $Enums.AiAutomationMode
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Date | string | null
   finalizedAt?: Date | string | null
   createdAt?: Date | string
@@ -1406,6 +1566,10 @@ export type AiDraftAttemptUpdateWithoutQuestionInput = {
   interpretation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1431,6 +1595,10 @@ export type AiDraftAttemptUncheckedUpdateWithoutQuestionInput = {
   interpretation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1454,6 +1622,10 @@ export type AiDraftAttemptUncheckedUpdateManyWithoutQuestionInput = {
   interpretation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   requestedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   detectedFacts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
+  autoSendEligible?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  appliedConfidenceThreshold?: Prisma.FloatFieldUpdateOperationsInput | number
+  eligibilityReasons?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   selectedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   finalizedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1479,6 +1651,10 @@ export type AiDraftAttemptSelect<ExtArgs extends runtime.Types.Extensions.Intern
   interpretation?: boolean
   requestedFacts?: boolean
   detectedFacts?: boolean
+  automationMode?: boolean
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: boolean
+  eligibilityReasons?: boolean
   selectedAt?: boolean
   finalizedAt?: boolean
   createdAt?: boolean
@@ -1506,6 +1682,10 @@ export type AiDraftAttemptSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   interpretation?: boolean
   requestedFacts?: boolean
   detectedFacts?: boolean
+  automationMode?: boolean
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: boolean
+  eligibilityReasons?: boolean
   selectedAt?: boolean
   finalizedAt?: boolean
   createdAt?: boolean
@@ -1532,6 +1712,10 @@ export type AiDraftAttemptSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   interpretation?: boolean
   requestedFacts?: boolean
   detectedFacts?: boolean
+  automationMode?: boolean
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: boolean
+  eligibilityReasons?: boolean
   selectedAt?: boolean
   finalizedAt?: boolean
   createdAt?: boolean
@@ -1558,12 +1742,16 @@ export type AiDraftAttemptSelectScalar = {
   interpretation?: boolean
   requestedFacts?: boolean
   detectedFacts?: boolean
+  automationMode?: boolean
+  autoSendEligible?: boolean
+  appliedConfidenceThreshold?: boolean
+  eligibilityReasons?: boolean
   selectedAt?: boolean
   finalizedAt?: boolean
   createdAt?: boolean
 }
 
-export type AiDraftAttemptOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "storeId" | "questionId" | "requestedByUserId" | "trigger" | "outcome" | "answer" | "decision" | "confidence" | "answerability" | "risks" | "missingInformation" | "evidenceIds" | "model" | "interpretation" | "requestedFacts" | "detectedFacts" | "selectedAt" | "finalizedAt" | "createdAt", ExtArgs["result"]["aiDraftAttempt"]>
+export type AiDraftAttemptOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "storeId" | "questionId" | "requestedByUserId" | "trigger" | "outcome" | "answer" | "decision" | "confidence" | "answerability" | "risks" | "missingInformation" | "evidenceIds" | "model" | "interpretation" | "requestedFacts" | "detectedFacts" | "automationMode" | "autoSendEligible" | "appliedConfidenceThreshold" | "eligibilityReasons" | "selectedAt" | "finalizedAt" | "createdAt", ExtArgs["result"]["aiDraftAttempt"]>
 export type AiDraftAttemptInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
   question?: boolean | Prisma.ProductQuestionDefaultArgs<ExtArgs>
@@ -1607,6 +1795,10 @@ export type $AiDraftAttemptPayload<ExtArgs extends runtime.Types.Extensions.Inte
     interpretation: string | null
     requestedFacts: runtime.JsonValue | null
     detectedFacts: runtime.JsonValue | null
+    automationMode: $Enums.AiAutomationMode
+    autoSendEligible: boolean
+    appliedConfidenceThreshold: number
+    eligibilityReasons: runtime.JsonValue
     selectedAt: Date | null
     finalizedAt: Date | null
     createdAt: Date
@@ -2054,6 +2246,10 @@ export interface AiDraftAttemptFieldRefs {
   readonly interpretation: Prisma.FieldRef<"AiDraftAttempt", 'String'>
   readonly requestedFacts: Prisma.FieldRef<"AiDraftAttempt", 'Json'>
   readonly detectedFacts: Prisma.FieldRef<"AiDraftAttempt", 'Json'>
+  readonly automationMode: Prisma.FieldRef<"AiDraftAttempt", 'AiAutomationMode'>
+  readonly autoSendEligible: Prisma.FieldRef<"AiDraftAttempt", 'Boolean'>
+  readonly appliedConfidenceThreshold: Prisma.FieldRef<"AiDraftAttempt", 'Float'>
+  readonly eligibilityReasons: Prisma.FieldRef<"AiDraftAttempt", 'Json'>
   readonly selectedAt: Prisma.FieldRef<"AiDraftAttempt", 'DateTime'>
   readonly finalizedAt: Prisma.FieldRef<"AiDraftAttempt", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"AiDraftAttempt", 'DateTime'>

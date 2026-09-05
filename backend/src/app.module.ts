@@ -12,6 +12,7 @@ import { ChannelsModule } from './modules/channels/channels.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { QuestionsModule } from './modules/questions/questions.module';
 import { KnowledgeModule } from './modules/knowledge/knowledge.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { getRedisConnection } from './infrastructure/queue/redis-connection';
 
 @Module({
@@ -27,6 +28,7 @@ import { getRedisConnection } from './infrastructure/queue/redis-connection';
     CatalogModule,
     QuestionsModule,
     KnowledgeModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

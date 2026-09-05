@@ -12,7 +12,6 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { CredentialsEncryptionService } from '../channels/credentials-encryption.service';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
-import { MINIMUM_READY_CONFIDENCE } from '../questions/question-reply-decision.service';
 import type { QuestionAnswerJobData } from './question-answer.types';
 import { hasFreshInventoryForAutomaticAnswer } from './automatic-answer-inventory.guard';
 
@@ -39,7 +38,6 @@ export class QuestionAnswerWorkerService {
             externalQuestionId: true,
             answer: true,
             draftDecision: true,
-            draftConfidence: true,
             draftRisks: true,
             draftMissingInformation: true,
             draftEvidenceIds: true,
@@ -49,7 +47,7 @@ export class QuestionAnswerWorkerService {
                 { id: 'desc' as const },
               ],
               take: 1,
-              select: { id: true },
+              select: { id: true, autoSendEligible: true },
             },
             product: {
               select: {
@@ -89,11 +87,10 @@ export class QuestionAnswerWorkerService {
       delivery.origin === QuestionAnswerOrigin.AUTOMATION &&
       (!delivery.draftAttemptId ||
         delivery.draftAttemptId !== delivery.question.draftAttempts[0]?.id ||
+        !delivery.question.draftAttempts[0]?.autoSendEligible ||
         delivery.question.draftDecision !==
           QuestionReplyDecision.READY_FOR_SEND ||
         delivery.question.answer !== delivery.answer ||
-        delivery.question.draftConfidence === null ||
-        delivery.question.draftConfidence < MINIMUM_READY_CONFIDENCE ||
         !isEmptyList(delivery.question.draftRisks) ||
         !isEmptyList(delivery.question.draftMissingInformation) ||
         !isNonEmptyList(delivery.question.draftEvidenceIds) ||

@@ -2440,6 +2440,7 @@ export const StoreKnowledgeProfileScalarFieldEnum = {
   emojiPolicy: 'emojiPolicy',
   preferredEmoji: 'preferredEmoji',
   automationMode: 'automationMode',
+  minimumAutoSendConfidence: 'minimumAutoSendConfidence',
   emojiEnabled: 'emojiEnabled',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -2734,6 +2735,10 @@ export const AiDraftAttemptScalarFieldEnum = {
   interpretation: 'interpretation',
   requestedFacts: 'requestedFacts',
   detectedFacts: 'detectedFacts',
+  automationMode: 'automationMode',
+  autoSendEligible: 'autoSendEligible',
+  appliedConfidenceThreshold: 'appliedConfidenceThreshold',
+  eligibilityReasons: 'eligibilityReasons',
   selectedAt: 'selectedAt',
   finalizedAt: 'finalizedAt',
   createdAt: 'createdAt'
@@ -2952,6 +2957,20 @@ export type ListEnumAiAutomationModeFieldRefInput<$PrismaModel> = FieldRefInputT
 
 
 /**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+/**
  * Reference to a field of type 'Int'
  */
 export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -3074,20 +3093,6 @@ export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'J
  * Reference to a field of type 'QueryMode'
  */
 export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
-    
-
-
-/**
- * Reference to a field of type 'Float'
- */
-export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-/**
- * Reference to a field of type 'Float[]'
- */
-export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 

@@ -25,9 +25,10 @@ const modes: Array<{
     icon: Edit02Icon,
   },
   {
-    value: "DRAFT_ONLY",
-    label: "Taslak hazırla",
-    description: "Yanıtı hazırlar; gönderim onayı sizde kalır.",
+    value: "SHADOW",
+    label: "Otomatik taslak oluştur",
+    description:
+      "Yeni sorulara taslak hazırlar ve uygunluğunu ölçer; hiçbir cevabı otomatik göndermez.",
     badge: "Önerilen",
     icon: AiEditingIcon,
   },
@@ -51,7 +52,7 @@ export function AutomationModeSelector({
     <div
       role="radiogroup"
       aria-label="Yanıt otomasyonu"
-      className="grid overflow-hidden rounded-lg border border-border bg-background md:grid-cols-3 md:divide-x md:divide-y-0 md:divide-border"
+      className="grid overflow-hidden rounded-lg border border-border bg-background md:grid-cols-3 md:[&>*]:border-r md:[&>*]:border-b-0 md:[&>*:last-child]:border-r-0"
     >
       {modes.map((mode) => {
         const selected = value === mode.value
@@ -64,7 +65,7 @@ export function AutomationModeSelector({
             aria-checked={selected}
             onClick={() => onChange(mode.value)}
             className={cn(
-              "group relative flex min-h-32 w-full flex-col border-b border-border p-4 text-left transition-colors last:border-b-0 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset md:border-b-0",
+              "group relative flex min-h-32 w-full flex-col border-b border-border p-4 text-left transition-colors last:border-b-0 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset",
               selected ? "bg-primary/7" : "bg-background hover:bg-muted/35"
             )}
           >

@@ -95,6 +95,8 @@ export type ProductAnswerContext = {
   relevantDescription: string | null;
   evidence: ProductAnswerEvidence[];
   responsePreferences?: {
+    automationMode: 'OFF' | 'SHADOW' | 'SAFE_AUTO';
+    minimumAutoSendConfidence: number;
     tone: 'PROFESSIONAL' | 'FRIENDLY' | 'WARM' | 'MINIMAL';
     responseLength: 'SHORT' | 'BALANCED' | 'DETAILED';
     greetingEnabled: boolean;
@@ -116,6 +118,12 @@ export type DraftedQuestionAnswer = {
   status: 'DRAFTED';
   context: {
     attemptId: string;
+    autoSend: {
+      eligible: boolean;
+      mode: 'OFF' | 'SHADOW' | 'SAFE_AUTO';
+      appliedConfidenceThreshold: number;
+      reasons: string[];
+    };
     requestedFacts: ProductAnswerFact[];
     matchedColor: string | null;
     matchedSize: string | null;

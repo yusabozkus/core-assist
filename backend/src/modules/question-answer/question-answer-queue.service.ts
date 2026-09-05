@@ -19,7 +19,6 @@ import {
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
-import { MINIMUM_READY_CONFIDENCE } from '../questions/question-reply-decision.service';
 import {
   QUESTION_ANSWER_QUEUE,
   SEND_QUESTION_ANSWER_JOB,
@@ -55,14 +54,13 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
         status: true,
         answer: true,
         draftDecision: true,
-        draftConfidence: true,
         draftRisks: true,
         draftMissingInformation: true,
         draftEvidenceIds: true,
         draftAttempts: {
           orderBy: [{ createdAt: 'desc' as const }, { id: 'desc' as const }],
           take: 1,
-          select: { id: true, answer: true },
+          select: { id: true, answer: true, autoSendEligible: true },
         },
         product: {
           select: {
@@ -115,11 +113,10 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
       origin === QuestionAnswerOrigin.AUTOMATION &&
       (question.status !== ProductQuestionStatus.DRAFTED ||
         !latestDraftAttempt ||
+        !latestDraftAttempt.autoSendEligible ||
         input.draftAttemptId !== latestDraftAttempt.id ||
         question.answer !== input.answer ||
         question.draftDecision !== QuestionReplyDecision.READY_FOR_SEND ||
-        question.draftConfidence === null ||
-        question.draftConfidence < MINIMUM_READY_CONFIDENCE ||
         !isEmptyList(question.draftRisks) ||
         !isEmptyList(question.draftMissingInformation) ||
         !isNonEmptyList(question.draftEvidenceIds) ||

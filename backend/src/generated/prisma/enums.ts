@@ -48,7 +48,7 @@ export type AiEmojiPolicy = (typeof AiEmojiPolicy)[keyof typeof AiEmojiPolicy]
 
 export const AiAutomationMode = {
   OFF: 'OFF',
-  DRAFT_ONLY: 'DRAFT_ONLY',
+  SHADOW: 'SHADOW',
   SAFE_AUTO: 'SAFE_AUTO'
 } as const
 

@@ -204,6 +204,7 @@ export const StoreKnowledgeProfileScalarFieldEnum = {
   emojiPolicy: 'emojiPolicy',
   preferredEmoji: 'preferredEmoji',
   automationMode: 'automationMode',
+  minimumAutoSendConfidence: 'minimumAutoSendConfidence',
   emojiEnabled: 'emojiEnabled',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -498,6 +499,10 @@ export const AiDraftAttemptScalarFieldEnum = {
   interpretation: 'interpretation',
   requestedFacts: 'requestedFacts',
   detectedFacts: 'detectedFacts',
+  automationMode: 'automationMode',
+  autoSendEligible: 'autoSendEligible',
+  appliedConfidenceThreshold: 'appliedConfidenceThreshold',
+  eligibilityReasons: 'eligibilityReasons',
   selectedAt: 'selectedAt',
   finalizedAt: 'finalizedAt',
   createdAt: 'createdAt'

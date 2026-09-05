@@ -5,10 +5,12 @@ import {
   IsBoolean,
   IsEnum,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   Matches,
   MaxLength,
+  Max,
   Min,
   MinLength,
   ValidateNested,
@@ -87,6 +89,12 @@ export class UpdateStoreKnowledgeDto {
   @IsOptional()
   @IsEnum(AiAutomationMode)
   automationMode?: AiAutomationMode;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0.85)
+  @Max(0.99)
+  minimumAutoSendConfidence?: number;
 
   @IsOptional()
   @IsString()

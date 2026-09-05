@@ -1,9 +1,5 @@
-import { Badge } from "@/components/ui/badge"
 import { ProductThumbnail } from "@/components/dashboard/catalog/products/product-thumbnail"
-import {
-  formatPrice,
-  getProviderName,
-} from "@/components/dashboard/catalog/products/product-catalog-utils"
+import { formatPrice } from "@/components/dashboard/catalog/products/product-catalog-utils"
 import type { CatalogProductListItem } from "@/types/product"
 import { ProviderLogo } from "../../channels/provider-logo"
 
@@ -13,7 +9,6 @@ type ProductCardProps = {
 }
 
 export function ProductCard({ product, onSelect }: ProductCardProps) {
-
   return (
     <button
       type="button"

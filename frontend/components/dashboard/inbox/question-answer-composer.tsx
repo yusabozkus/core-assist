@@ -291,6 +291,7 @@ function DraftReliabilityNotice({
   context: DraftReliabilityContext
 }) {
   const needsReview = context.decision === "NEEDS_REVIEW"
+  const isShadowMode = context.autoSend.mode === "SHADOW"
 
   return (
     <div
@@ -328,10 +329,19 @@ function DraftReliabilityNotice({
         </p>
       ) : (
         <p className="mt-2 leading-5">
-          Güvenlik kontrolleri tamamlandı. Otomatik gönderim kapalı olduğu için
-          son onay size aittir.
+          {isShadowMode
+            ? context.autoSend.eligible
+              ? "Otomatik taslak modu bu yanıtı gönderime uygun buldu; müşteriye göndermek için son onay sizde."
+              : "Otomatik taslak modu bu yanıtın kullanıcı tarafından incelenmesi gerektiğini belirledi."
+            : "Güvenlik kontrolleri tamamlandı. Otomatik gönderim kapalı olduğu için son onay size aittir."}
         </p>
       )}
+      {isShadowMode && needsReview ? (
+        <p className="mt-2 border-t border-current/10 pt-2 leading-5">
+          Otomatik taslak modu: Bu yanıt güvenli gönderim koşullarını
+          karşılamadı.
+        </p>
+      ) : null}
     </div>
   )
 }
@@ -350,7 +360,7 @@ function createPersistedDraftContext(
 
   return {
     attemptId: question.draftAttempts?.[0]?.id ?? "",
-    requestedFacts: [],
+    requestedFacts: question.draftAttempts?.[0]?.requestedFacts ?? [],
     matchedColor: null,
     matchedSize: null,
     matchingVariantCount: 0,
@@ -364,5 +374,12 @@ function createPersistedDraftContext(
     missingInformation: question.draftMissingInformation ?? [],
     usedEvidenceIds: question.draftEvidenceIds ?? [],
     risks: question.draftRisks ?? [],
+    autoSend: {
+      eligible: question.draftAttempts?.[0]?.autoSendEligible ?? false,
+      mode: question.draftAttempts?.[0]?.automationMode ?? "OFF",
+      appliedConfidenceThreshold:
+        question.draftAttempts?.[0]?.appliedConfidenceThreshold ?? 0.85,
+      reasons: question.draftAttempts?.[0]?.eligibilityReasons ?? [],
+    },
   }
 }

@@ -153,29 +153,30 @@ enum AiEmojiPolicy {
 
 enum AiAutomationMode {
   OFF
-  DRAFT_ONLY
+  SHADOW
   SAFE_AUTO
 }
 
 model StoreKnowledgeProfile {
-  storeId               String           @id
-  brandDescription      String?
-  shippingPolicy        String?
-  returnPolicy          String?
-  exchangePolicy        String?
-  warrantyPolicy        String?
-  additionalInformation String?
-  tone                  AiTone           @default(PROFESSIONAL)
-  responseLength        AiResponseLength @default(BALANCED)
-  greetingEnabled       Boolean          @default(true)
-  closingEnabled        Boolean          @default(true)
-  emojiPolicy           AiEmojiPolicy    @default(NEVER)
-  preferredEmoji        String?
-  automationMode        AiAutomationMode @default(OFF)
+  storeId                   String           @id
+  brandDescription          String?
+  shippingPolicy            String?
+  returnPolicy              String?
+  exchangePolicy            String?
+  warrantyPolicy            String?
+  additionalInformation     String?
+  tone                      AiTone           @default(PROFESSIONAL)
+  responseLength            AiResponseLength @default(BALANCED)
+  greetingEnabled           Boolean          @default(true)
+  closingEnabled            Boolean          @default(true)
+  emojiPolicy               AiEmojiPolicy    @default(NEVER)
+  preferredEmoji            String?
+  automationMode            AiAutomationMode @default(OFF)
+  minimumAutoSendConfidence Float            @default(0.85)
   // Kept temporarily so existing checkbox preferences can be migrated safely.
-  emojiEnabled          Boolean          @default(false)
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
+  emojiEnabled              Boolean          @default(false)
+  createdAt                 DateTime         @default(now())
+  updatedAt                 DateTime         @updatedAt
 
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
@@ -657,26 +658,30 @@ model ProductQuestion {
 }
 
 model AiDraftAttempt {
-  id                 String                @id @default(uuid())
-  storeId            String
-  questionId         String
-  requestedByUserId  String?
-  trigger            AiDraftTrigger
-  outcome            AiDraftOutcome        @default(AVAILABLE)
-  answer             String
-  decision           QuestionReplyDecision
-  confidence         Float
-  answerability      String
-  risks              Json
-  missingInformation Json
-  evidenceIds        Json
-  model              String
-  interpretation     String?
-  requestedFacts     Json?
-  detectedFacts      Json?
-  selectedAt         DateTime?
-  finalizedAt        DateTime?
-  createdAt          DateTime              @default(now())
+  id                         String                @id @default(uuid())
+  storeId                    String
+  questionId                 String
+  requestedByUserId          String?
+  trigger                    AiDraftTrigger
+  outcome                    AiDraftOutcome        @default(AVAILABLE)
+  answer                     String
+  decision                   QuestionReplyDecision
+  confidence                 Float
+  answerability              String
+  risks                      Json
+  missingInformation         Json
+  evidenceIds                Json
+  model                      String
+  interpretation             String?
+  requestedFacts             Json?
+  detectedFacts              Json?
+  automationMode             AiAutomationMode      @default(OFF)
+  autoSendEligible           Boolean               @default(false)
+  appliedConfidenceThreshold Float                 @default(0.85)
+  eligibilityReasons         Json                  @default("[]")
+  selectedAt                 DateTime?
+  finalizedAt                DateTime?
+  createdAt                  DateTime              @default(now())
 
   store          Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
   question       ProductQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)

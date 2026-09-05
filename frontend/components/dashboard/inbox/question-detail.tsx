@@ -26,6 +26,7 @@ export function QuestionDetail({
   onQuestionUpdated?: () => void | Promise<void>
 }) {
   const customerName = question.customerName ?? "Pazaryeri müşterisi"
+  const latestDraft = question.draftAttempts?.[0]
   const customerInitial = customerName
     .trim()
     .charAt(0)
@@ -57,6 +58,10 @@ export function QuestionDetail({
               deliveryStatus={question.answerDelivery?.status}
               draftProcessingStatus={question.draftProcessingStatus}
               draftDecision={question.draftDecision}
+              shadowEligible={
+                latestDraft?.automationMode === "SHADOW" &&
+                latestDraft.autoSendEligible
+              }
             />
             <Badge variant="outline" className="bg-card font-medium">
               {providerName(question.connection.providerKey)}

@@ -24,7 +24,7 @@ const lengthLabels = {
 
 const automationLabels: Record<AiAutomationMode, string> = {
   OFF: "Manuel",
-  DRAFT_ONLY: "Taslak hazırla",
+  SHADOW: "Otomatik taslak",
   SAFE_AUTO: "Güvenli otomatik",
 }
 
@@ -111,15 +111,17 @@ export function AiResponsePreview({
       <footer className="flex items-start gap-2.5 border-t border-border bg-background px-5 py-3.5 text-xs leading-5 text-muted-foreground">
         <HugeiconsIcon
           icon={
-            automationMode === "SAFE_AUTO"
+            automationMode === "SAFE_AUTO" || automationMode === "SHADOW"
               ? ShieldCheckIcon
               : CheckmarkCircle01Icon
           }
           className="mt-0.5 size-4 shrink-0 text-primary"
         />
         {automationMode === "SAFE_AUTO"
-          ? "Yalnızca güven eşiğini geçen ve katalog kanıtı bulunan yanıtlar otomatik gönderilir."
-          : "Gerçek yanıt ürün kanıtlarıyla oluşturulur; bu alan iletişim biçimini gösterir."}
+          ? `Yalnızca en az %${Math.round(profile.minimumAutoSendConfidence * 100)} güvene ve yeterli kanıta sahip yanıtlar otomatik gönderilir.`
+          : automationMode === "SHADOW"
+            ? "AI yeni sorulara otomatik taslak hazırlar; müşteriye gönderim için onayınızı bekler."
+            : "Gerçek yanıt ürün kanıtlarıyla oluşturulur; bu alan iletişim biçimini gösterir."}
       </footer>
     </aside>
   )

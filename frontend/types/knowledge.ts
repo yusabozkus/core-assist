@@ -1,7 +1,7 @@
 export type AiTone = "PROFESSIONAL" | "FRIENDLY" | "WARM" | "MINIMAL"
 export type AiResponseLength = "SHORT" | "BALANCED" | "DETAILED"
 export type AiEmojiPolicy = "NEVER" | "WHEN_APPROPRIATE" | "ALWAYS"
-export type AiAutomationMode = "OFF" | "DRAFT_ONLY" | "SAFE_AUTO"
+export type AiAutomationMode = "OFF" | "SHADOW" | "SAFE_AUTO"
 
 export type KnowledgeFaq = {
   question: string
@@ -27,6 +27,7 @@ export type ChannelKnowledgeOverride = {
 export type StoreKnowledge = {
   profile: {
     automationMode: AiAutomationMode
+    minimumAutoSendConfidence: number
     brandDescription: string | null
     shippingPolicy: string | null
     returnPolicy: string | null

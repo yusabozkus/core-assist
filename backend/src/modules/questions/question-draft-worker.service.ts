@@ -31,7 +31,7 @@ export class QuestionDraftWorkerService {
         draftAttempts: {
           orderBy: [{ createdAt: 'desc' as const }, { id: 'desc' as const }],
           take: 1,
-          select: { id: true },
+          select: { id: true, autoSendEligible: true },
         },
         answerDelivery: { select: { status: true } },
         store: {
@@ -48,7 +48,7 @@ export class QuestionDraftWorkerService {
 
     const automationMode = question.store.knowledgeProfile?.automationMode;
     if (
-      automationMode !== AiAutomationMode.DRAFT_ONLY &&
+      automationMode !== AiAutomationMode.SHADOW &&
       automationMode !== AiAutomationMode.SAFE_AUTO
     ) {
       await this.clearProcessingState(data);
@@ -65,6 +65,7 @@ export class QuestionDraftWorkerService {
         question.draftDecision === QuestionReplyDecision.READY_FOR_SEND &&
         question.answer &&
         question.draftAttempts[0] &&
+        question.draftAttempts[0].autoSendEligible &&
         deliveryCanBeQueued
       ) {
         await this.enqueueAutomaticAnswer(
@@ -112,7 +113,8 @@ export class QuestionDraftWorkerService {
     if (
       automationMode !== AiAutomationMode.SAFE_AUTO ||
       result.status !== 'DRAFTED' ||
-      result.context.decision !== 'READY_FOR_SEND'
+      result.context.decision !== 'READY_FOR_SEND' ||
+      !result.context.autoSend.eligible
     ) {
       return { status: result.status };
     }

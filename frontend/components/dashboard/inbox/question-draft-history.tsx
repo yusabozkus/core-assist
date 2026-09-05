@@ -103,6 +103,13 @@ export function QuestionDraftHistory({
                       İnceleme gerekli
                     </span>
                   ) : null}
+                  {attempt.automationMode === "SHADOW" ? (
+                    <span className="text-violet-600 dark:text-violet-300">
+                      {attempt.autoSendEligible
+                        ? "Otomatik gönderime uygun"
+                        : "İncelemede bırakırdı"}
+                    </span>
+                  ) : null}
                 </div>
               </article>
             )

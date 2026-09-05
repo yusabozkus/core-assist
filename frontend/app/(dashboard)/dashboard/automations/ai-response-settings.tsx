@@ -29,6 +29,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
+import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { updateStoreKnowledge } from "@/lib/api/knowledge"
 import { cn } from "@/lib/utils"
@@ -63,7 +64,9 @@ export function AiResponseSettings({
   const [instructionFeedback, setInstructionFeedback] = useState<SaveFeedback>()
   const behaviorHasChanges = hasBehaviorChanges(knowledge.profile, profileDraft)
   const automationHasChanges =
-    automationModeDraft !== knowledge.profile.automationMode
+    automationModeDraft !== knowledge.profile.automationMode ||
+    profileDraft.minimumAutoSendConfidence !==
+      knowledge.profile.minimumAutoSendConfidence
   const isSaving = isSavingBehavior || isSavingAutomation || isSavingInstruction
   const hasUnsavedChanges = behaviorHasChanges || automationHasChanges
 
@@ -116,11 +119,13 @@ export function AiResponseSettings({
     try {
       const updated = await updateStoreKnowledge(storeId, {
         automationMode: automationModeDraft,
+        minimumAutoSendConfidence: profileDraft.minimumAutoSendConfidence,
       })
       setKnowledge(updated)
       setProfileDraft((current) => ({
         ...current,
         automationMode: updated.profile.automationMode,
+        minimumAutoSendConfidence: updated.profile.minimumAutoSendConfidence,
       }))
       setAutomationModeDraft(updated.profile.automationMode)
       setAutoReplyConfirmationOpen(false)
@@ -230,7 +235,7 @@ export function AiResponseSettings({
                   }
                   className={cn("size-4", isSavingAutomation && "animate-spin")}
                 />
-                Modu kaydet
+                Otomasyonu kaydet
               </Button>
             }
           >
@@ -242,6 +247,45 @@ export function AiResponseSettings({
                 setAutomationFeedback(undefined)
               }}
             />
+            <div className="border-t border-border pt-5">
+              <div className="flex items-start justify-between gap-5">
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Minimum otomatik gönderim güveni
+                  </p>
+                  <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
+                    Bu değer mağaza genelindeki alt sınırdır. Beden, stok ve
+                    garanti gibi riskli konularda sistem daha yüksek bir eşik
+                    uygulayabilir.
+                  </p>
+                </div>
+                <Badge variant="outline" className="shrink-0 tabular-nums">
+                  %{Math.round(profileDraft.minimumAutoSendConfidence * 100)}
+                </Badge>
+              </div>
+              <Slider
+                className="mt-5"
+                min={85}
+                max={99}
+                step={1}
+                value={[
+                  Math.round(profileDraft.minimumAutoSendConfidence * 100),
+                ]}
+                onValueChange={(values) => {
+                  const nextValue = (values[0] ?? 85) / 100
+                  setProfileDraft((current) => ({
+                    ...current,
+                    minimumAutoSendConfidence: nextValue,
+                  }))
+                  setAutomationFeedback(undefined)
+                }}
+                aria-label="Minimum otomatik gönderim güveni"
+              />
+              <div className="mt-2 flex justify-between text-[10px] text-muted-foreground">
+                <span>%85</span>
+                <span>%99</span>
+              </div>
+            </div>
           </SettingsSection>
 
           <SettingsSection
@@ -368,7 +412,11 @@ export function AiResponseSettings({
             Otomatik gönderim için tüm koşullar birlikte aranır:
           </p>
           <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
-            <li>AI güven puanı en az %85 olmalıdır.</li>
+            <li>
+              AI güven puanı en az %
+              {Math.round(profileDraft.minimumAutoSendConfidence * 100)}
+              olmalıdır.
+            </li>
             <li>Cevap doğrulanmış katalog verilerine dayanmalıdır.</li>
             <li>Eksik bilgi veya risk işareti bulunmamalıdır.</li>
             <li>Diğer cevaplar incelemeniz için taslak olarak kalır.</li>
@@ -554,11 +602,11 @@ function toErrorFeedback(error: unknown): SaveFeedback {
 function automationModeSavedMessage(
   mode: StoreKnowledge["profile"]["automationMode"]
 ) {
-  if (mode === "DRAFT_ONLY") {
-    return "Yalnızca taslak modu etkinleştirildi."
-  }
   if (mode === "SAFE_AUTO") {
     return "Güvenli otomatik yanıt modu etkinleştirildi."
+  }
+  if (mode === "SHADOW") {
+    return "Otomatik taslak oluşturma etkinleştirildi; gönderim onayı sizde kalacak."
   }
   return "Yanıt otomasyonu kapatıldı."
 }

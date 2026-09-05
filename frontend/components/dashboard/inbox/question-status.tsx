@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge"
-import { RefreshIcon } from "@hugeicons/core-free-icons"
+import { AiSparklesIcon, RefreshIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import type {
   ProductQuestionStatus,
@@ -14,12 +14,14 @@ export function QuestionStatus({
   deliveryStatus,
   draftProcessingStatus,
   draftDecision,
+  shadowEligible = false,
   compact = false,
 }: {
   status: ProductQuestionStatus
   deliveryStatus?: QuestionAnswerStatus
   draftProcessingStatus?: QuestionDraftProcessingStatus | null
   draftDecision?: QuestionReplyDecision | null
+  shadowEligible?: boolean
   compact?: boolean
 }) {
   const compactClassName = compact
@@ -91,6 +93,24 @@ export function QuestionStatus({
         )}
       >
         Taslak hatası
+      </Badge>
+    )
+  }
+
+  if (status === "DRAFTED" && shadowEligible) {
+    return (
+      <Badge
+        variant="outline"
+        className={cn(
+          "shrink-0 border-violet-500/25 bg-violet-500/10 text-violet-700 dark:text-violet-300",
+          compactClassName
+        )}
+      >
+        <HugeiconsIcon
+          icon={AiSparklesIcon}
+          className={compact ? "size-2.5" : "size-3"}
+        />
+        Otomatik gönderime uygun
       </Badge>
     )
   }

@@ -164,6 +164,7 @@ type ChannelId = (typeof CHANNELS)[number]["id"]
 
 const INITIAL_AI_PROFILE: StoreKnowledge["profile"] = {
   automationMode: "OFF",
+  minimumAutoSendConfidence: 0.85,
   brandDescription: null,
   shippingPolicy: null,
   returnPolicy: null,

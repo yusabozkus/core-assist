@@ -22,6 +22,7 @@ export function QuestionListItem({
   onSelect,
 }: QuestionListItemProps) {
   const imageUrl = question.product?.imageUrl
+  const latestDraft = question.draftAttempts?.[0]
 
   return (
     <button
@@ -89,6 +90,10 @@ export function QuestionListItem({
           deliveryStatus={question.answerDelivery?.status}
           draftProcessingStatus={question.draftProcessingStatus}
           draftDecision={question.draftDecision}
+          shadowEligible={
+            latestDraft?.automationMode === "SHADOW" &&
+            latestDraft.autoSendEligible
+          }
           compact
         />
       </span>

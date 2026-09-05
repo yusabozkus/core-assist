@@ -17,6 +17,7 @@ import type { UpdateStoreKnowledgeDto } from './dto/update-store-knowledge.dto';
 
 const profileSelect = {
   automationMode: true,
+  minimumAutoSendConfidence: true,
   brandDescription: true,
   shippingPolicy: true,
   returnPolicy: true,
@@ -77,6 +78,7 @@ export class KnowledgeService {
         create: {
           storeId,
           automationMode: dto.automationMode ?? AiAutomationMode.OFF,
+          minimumAutoSendConfidence: dto.minimumAutoSendConfidence ?? 0.85,
           brandDescription: clean(dto.brandDescription),
           shippingPolicy: clean(dto.shippingPolicy),
           returnPolicy: clean(dto.returnPolicy),
@@ -96,6 +98,7 @@ export class KnowledgeService {
         },
         update: {
           automationMode: dto.automationMode,
+          minimumAutoSendConfidence: dto.minimumAutoSendConfidence,
           ...(dto.brandDescription !== undefined
             ? { brandDescription: clean(dto.brandDescription) }
             : {}),
@@ -226,6 +229,7 @@ export class KnowledgeService {
         }
       : {
           automationMode: AiAutomationMode.OFF,
+          minimumAutoSendConfidence: 0.85,
           brandDescription: null,
           shippingPolicy: null,
           returnPolicy: null,

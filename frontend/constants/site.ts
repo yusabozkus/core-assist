@@ -182,7 +182,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
       label: "Analiz ve Yönetim",
       items: [
         {
-          title: "Raporlar",
+          title: "AI Performansı",
           url: APP_ROUTES.dashboard.analytics,
           icon: Analytics01Icon,
         },

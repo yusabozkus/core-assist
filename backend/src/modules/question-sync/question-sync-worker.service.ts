@@ -83,7 +83,7 @@ export class QuestionSyncWorkerService {
       },
     );
     const automaticDraftsEnabled =
-      knowledgeProfile?.automationMode === AiAutomationMode.DRAFT_ONLY ||
+      knowledgeProfile?.automationMode === AiAutomationMode.SHADOW ||
       knowledgeProfile?.automationMode === AiAutomationMode.SAFE_AUTO;
 
     let cursor: string | undefined;

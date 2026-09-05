@@ -9,6 +9,7 @@ export type QuestionAnswerStatus = "QUEUED" | "PROCESSING" | "SENT" | "FAILED"
 export type QuestionAnswerOrigin = "MANUAL" | "AUTOMATION"
 export type QuestionAnswerComposition = "MANUAL" | "AI_UNCHANGED" | "AI_EDITED"
 export type AiDraftTrigger = "MANUAL" | "AUTOMATION"
+export type AiAutomationMode = "OFF" | "SHADOW" | "SAFE_AUTO"
 export type AiDraftOutcome =
   "AVAILABLE" | "SUPERSEDED" | "SELECTED" | "SENT" | "FAILED"
 
@@ -70,6 +71,10 @@ export type AiDraftAttempt = {
   interpretation: string | null
   requestedFacts: ProductAnswerFact[] | null
   detectedFacts: ProductAnswerFact[] | null
+  automationMode: AiAutomationMode
+  autoSendEligible: boolean
+  appliedConfidenceThreshold: number
+  eligibilityReasons: string[]
   selectedAt: string | null
   finalizedAt: string | null
   createdAt: string
@@ -128,6 +133,12 @@ export type ProductQuestionListItem = {
     imageUrl: string | null
   } | null
   answerDelivery: Pick<QuestionAnswerDelivery, "status"> | null
+  draftAttempts: Array<
+    Pick<
+      AiDraftAttempt,
+      "automationMode" | "autoSendEligible" | "appliedConfidenceThreshold"
+    >
+  >
 }
 
 export type ProductQuestionPage = {
@@ -177,6 +188,12 @@ export type DraftedQuestionAnswerResult = {
     missingInformation: string[]
     usedEvidenceIds: string[]
     risks: ProductAnswerRisk[]
+    autoSend: {
+      eligible: boolean
+      mode: AiAutomationMode
+      appliedConfidenceThreshold: number
+      reasons: string[]
+    }
   }
 }
 

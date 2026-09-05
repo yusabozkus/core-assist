@@ -6,6 +6,8 @@ import {
 import {
   ProductQuestionStatus,
   ProductVariantStatus,
+  QuestionAnswerComposition,
+  QuestionAnswerOrigin,
   QuestionAnswerStatus,
   SizeGuideStatus,
 } from '../../generated/prisma/enums';
@@ -200,6 +202,8 @@ export class ProductAnswerContextService {
                 emojiPolicy: true,
                 preferredEmoji: true,
                 emojiEnabled: true,
+                automationMode: true,
+                minimumAutoSendConfidence: true,
               },
             },
             knowledgeFaqs: {
@@ -222,6 +226,27 @@ export class ProductAnswerContextService {
                 exchangePolicy: true,
                 warrantyPolicy: true,
                 additionalInformation: true,
+              },
+            },
+            productQuestions: {
+              where: {
+                id: { not: questionId },
+                status: ProductQuestionStatus.ANSWERED,
+                answer: { not: null },
+                answerDelivery: {
+                  is: {
+                    status: QuestionAnswerStatus.SENT,
+                    origin: QuestionAnswerOrigin.MANUAL,
+                  },
+                },
+              },
+              orderBy: { answeredAt: 'desc' },
+              take: 12,
+              select: {
+                question: true,
+                answer: true,
+                connection: { select: { providerKey: true } },
+                answerDelivery: { select: { composition: true } },
               },
             },
           },
@@ -272,6 +297,12 @@ export class ProductAnswerContextService {
                 id: { not: questionId },
                 status: ProductQuestionStatus.ANSWERED,
                 answer: { not: null },
+                answerDelivery: {
+                  is: {
+                    status: QuestionAnswerStatus.SENT,
+                    origin: QuestionAnswerOrigin.MANUAL,
+                  },
+                },
               },
               orderBy: { answeredAt: 'desc' },
               take: 5,
@@ -342,13 +373,17 @@ export class ProductAnswerContextService {
       },
     });
 
+    const approvedAnswerExamples = buildApprovedAnswerExamples({
+      providerKey: question.connection.providerKey,
+      productExamples: question.product.questions,
+      storeExamples: question.store.productQuestions,
+    });
+
     return applyStoreKnowledge(
       context,
       question.store,
       question.connection.providerKey,
-      question.product.questions.flatMap((item) =>
-        item.answer ? [{ question: item.question, answer: item.answer }] : [],
-      ),
+      approvedAnswerExamples,
     );
   }
 }
@@ -368,6 +403,8 @@ type StoreKnowledgeInput = {
     emojiPolicy: 'NEVER' | 'WHEN_APPROPRIATE' | 'ALWAYS';
     preferredEmoji: string | null;
     emojiEnabled: boolean;
+    automationMode: 'OFF' | 'SHADOW' | 'SAFE_AUTO';
+    minimumAutoSendConfidence: number;
   } | null;
   knowledgeFaqs: Array<{ question: string; answer: string }>;
   aiInstructions: Array<{ content: string }>;
@@ -379,7 +416,63 @@ type StoreKnowledgeInput = {
     warrantyPolicy: string | null;
     additionalInformation: string | null;
   }>;
+  productQuestions: Array<{
+    question: string;
+    answer: string | null;
+    connection: { providerKey: string };
+    answerDelivery: { composition: QuestionAnswerComposition } | null;
+  }>;
 };
+
+function buildApprovedAnswerExamples({
+  providerKey,
+  productExamples,
+  storeExamples,
+}: {
+  providerKey: string;
+  productExamples: Array<{ question: string; answer: string | null }>;
+  storeExamples: StoreKnowledgeInput['productQuestions'];
+}) {
+  const rankedStoreExamples = [...storeExamples].sort((left, right) => {
+    const providerDifference =
+      Number(right.connection.providerKey === providerKey) -
+      Number(left.connection.providerKey === providerKey);
+    if (providerDifference !== 0) return providerDifference;
+
+    return (
+      compositionPriority(right.answerDelivery?.composition) -
+      compositionPriority(left.answerDelivery?.composition)
+    );
+  });
+  const seen = new Set<string>();
+
+  return [...productExamples, ...rankedStoreExamples]
+    .flatMap((item) =>
+      item.answer ? [{ question: item.question, answer: item.answer }] : [],
+    )
+    .filter((item) => {
+      const key = `${item.question.trim()}\u0000${item.answer.trim()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 5);
+}
+
+function compositionPriority(
+  composition: QuestionAnswerComposition | undefined,
+) {
+  switch (composition) {
+    case QuestionAnswerComposition.AI_EDITED:
+      return 3;
+    case QuestionAnswerComposition.MANUAL:
+      return 2;
+    case QuestionAnswerComposition.AI_UNCHANGED:
+      return 1;
+    default:
+      return 0;
+  }
+}
 
 function applyStoreKnowledge(
   context: ProductAnswerContext,
@@ -469,6 +562,8 @@ function applyStoreKnowledge(
     ...context,
     evidence,
     responsePreferences: {
+      automationMode: profile?.automationMode ?? 'OFF',
+      minimumAutoSendConfidence: profile?.minimumAutoSendConfidence ?? 0.85,
       tone: profile?.tone ?? 'PROFESSIONAL',
       responseLength: profile?.responseLength ?? 'BALANCED',
       greetingEnabled: profile?.greetingEnabled ?? true,

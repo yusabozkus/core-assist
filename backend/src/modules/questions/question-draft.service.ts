@@ -7,6 +7,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import {
+  AiAutomationMode,
   AiDraftOutcome,
   AiDraftTrigger,
   ProductQuestionStatus,
@@ -26,6 +27,10 @@ import type {
 } from './product-answer-context.types';
 import { QuestionResponsePolicyService } from './question-response-policy.service';
 import { QuestionReplyDecisionService } from './question-reply-decision.service';
+import {
+  DEFAULT_AUTO_SEND_CONFIDENCE,
+  evaluateAutoSendEligibility,
+} from './ai-auto-send-policy';
 
 type GenerateDraftOptions = {
   trigger?: 'MANUAL' | 'AUTOMATION';
@@ -156,6 +161,16 @@ export class QuestionDraftService {
     const guardedDraft = applyInventoryFreshnessGuard(aiDraft, context);
     const answer = guardedDraft.answer;
     const replyDecision = this.replyDecision.evaluate(guardedDraft);
+    const automationMode =
+      context.responsePreferences?.automationMode ?? AiAutomationMode.OFF;
+    const autoSend = evaluateAutoSendEligibility({
+      draft: guardedDraft,
+      decision: replyDecision,
+      requestedFacts: context.requestedFacts,
+      storeMinimumConfidence:
+        context.responsePreferences?.minimumAutoSendConfidence ??
+        DEFAULT_AUTO_SEND_CONFIDENCE,
+    });
     const draftedAt = new Date();
     const draftAttempt = await this.prisma.$transaction(async (transaction) => {
       await transaction.aiDraftAttempt.updateMany({
@@ -190,6 +205,10 @@ export class QuestionDraftService {
           interpretation: guardedDraft.interpretation,
           requestedFacts: context.requestedFacts,
           detectedFacts: guardedDraft.detectedFacts,
+          automationMode,
+          autoSendEligible: autoSend.eligible,
+          appliedConfidenceThreshold: autoSend.appliedConfidenceThreshold,
+          eligibilityReasons: autoSend.reasons,
         },
         select: { id: true },
       });
@@ -234,6 +253,12 @@ export class QuestionDraftService {
       status: 'DRAFTED',
       context: {
         attemptId: draftAttempt.id,
+        autoSend: {
+          eligible: autoSend.eligible,
+          mode: automationMode,
+          appliedConfidenceThreshold: autoSend.appliedConfidenceThreshold,
+          reasons: autoSend.reasons,
+        },
         requestedFacts: context.requestedFacts,
         matchedColor: context.matchedColor,
         matchedSize: context.matchedSize,

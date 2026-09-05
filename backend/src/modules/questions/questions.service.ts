@@ -50,6 +50,15 @@ const QUESTION_LIST_SELECT = {
   answerDelivery: {
     select: { status: true },
   },
+  draftAttempts: {
+    orderBy: [{ createdAt: 'desc' as const }, { id: 'desc' as const }],
+    take: 1,
+    select: {
+      automationMode: true,
+      autoSendEligible: true,
+      appliedConfidenceThreshold: true,
+    },
+  },
 } satisfies Prisma.ProductQuestionSelect;
 
 const QUESTION_DETAIL_SELECT = {
@@ -159,6 +168,10 @@ const QUESTION_DETAIL_SELECT = {
       interpretation: true,
       requestedFacts: true,
       detectedFacts: true,
+      automationMode: true,
+      autoSendEligible: true,
+      appliedConfidenceThreshold: true,
+      eligibilityReasons: true,
       selectedAt: true,
       finalizedAt: true,
       createdAt: true,
