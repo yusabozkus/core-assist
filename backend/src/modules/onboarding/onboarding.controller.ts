@@ -10,7 +10,10 @@ import {
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.types';
-import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
+import {
+  CompleteOnboardingDto,
+  ProvisionOnboardingDto,
+} from './dto/complete-onboarding.dto';
 import { OnboardingService } from './onboarding.service';
 
 @Controller('onboarding')
@@ -30,5 +33,14 @@ export class OnboardingController {
     @Body() completeOnboardingDto: CompleteOnboardingDto,
   ) {
     return this.onboardingService.complete(user.id, completeOnboardingDto);
+  }
+
+  @Post('provision')
+  @HttpCode(HttpStatus.OK)
+  provision(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() provisionOnboardingDto: ProvisionOnboardingDto,
+  ) {
+    return this.onboardingService.provision(user.id, provisionOnboardingDto);
   }
 }

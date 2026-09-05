@@ -1,17 +1,14 @@
 import { redirect } from "next/navigation"
 
-import {
-  DashboardHeader,
-  type DashboardSyncState,
-} from "@/components/shared/dashboard/dashboard-header"
+import { DashboardHeader } from "@/components/shared/dashboard/dashboard-header"
 import { AppSidebar } from "@/components/shared/sidebar/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { APP_ROUTES } from "@/constants/site"
 import { getServerChannelConnections } from "@/lib/api/channels.server"
 import { getOnboardingStatus } from "@/lib/api/onboarding.server"
+import { getDashboardSyncState } from "@/lib/channels/sync-state"
 import { getCurrentUser } from "@/lib/server-auth"
 import { getActiveStoreContext } from "@/lib/stores/active-store"
-import type { ChannelConnection } from "@/types/channel"
 
 export const dynamic = "force-dynamic"
 
@@ -57,6 +54,7 @@ export default async function DashboardLayout({
       />
       <SidebarInset className="h-[98vh]">
         <DashboardHeader
+          storeId={activeStore.id}
           syncState={syncState}
           isStoreArchived={activeStore.status === "INACTIVE"}
         />
@@ -66,41 +64,4 @@ export default async function DashboardLayout({
       </SidebarInset>
     </SidebarProvider>
   )
-}
-
-function getDashboardSyncState(
-  connections: ChannelConnection[] | null
-): DashboardSyncState {
-  if (!connections) return "unavailable"
-  if (connections.length === 0) return "idle"
-
-  if (connections.some((connection) => connection.processingStartedAt)) {
-    return "syncing"
-  }
-
-  if (
-    connections.some(
-      (connection) => connection.status === "ERROR" || connection.failureReason
-    )
-  ) {
-    return "error"
-  }
-
-  const connectedConnections = connections.filter(
-    (connection) => connection.status === "CONNECTED"
-  )
-
-  if (connectedConnections.length === 0) return "idle"
-
-  if (
-    connectedConnections.some(
-      (connection) =>
-        connection.lastInventorySyncAt !== null ||
-        connection.lastSyncAt !== null
-    )
-  ) {
-    return "current"
-  }
-
-  return "pending"
 }

@@ -11,6 +11,7 @@ import { APP_ROUTES } from "@/constants/site"
 import { getActiveStoreContext } from "@/lib/stores/active-store"
 import { StoreArchiveAction } from "./store-archive-action"
 import { StoreDeleteAction } from "./store-delete-action"
+import { StoreNameForm } from "./store-name-form"
 import { StoreRestoreAction } from "./store-restore-action"
 
 export const dynamic = "force-dynamic"
@@ -41,9 +42,10 @@ export default async function SettingsPage() {
               <p className="text-xs font-medium text-muted-foreground">
                 Seçili mağaza
               </p>
-              <h1 className="mt-1 truncate text-xl font-semibold tracking-[-0.025em] text-foreground">
-                {activeStore.name}
-              </h1>
+              <StoreNameForm
+                storeId={activeStore.id}
+                initialName={activeStore.name}
+              />
             </div>
           </div>
 

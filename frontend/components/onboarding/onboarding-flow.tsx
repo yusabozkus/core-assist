@@ -34,8 +34,7 @@ import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { APP_ROUTES } from "@/constants/site"
-import { updateStoreKnowledge } from "@/lib/api/knowledge"
-import { completeOnboarding } from "@/lib/api/onboarding"
+import { completeOnboarding, provisionOnboarding } from "@/lib/api/onboarding"
 import { signOutCurrentUser } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 import type { AuthUser } from "@/types/auth"
@@ -45,8 +44,9 @@ import type {
   StoreKnowledge,
 } from "@/types/knowledge"
 import type {
-  CompleteOnboardingResponse,
   OnboardingChannel,
+  OnboardingResource,
+  OnboardingStatus,
 } from "@/types/onboarding"
 
 const STEPS = [
@@ -181,6 +181,21 @@ const INITIAL_AI_PROFILE: StoreKnowledge["profile"] = {
 
 type OnboardingFlowProps = {
   user: AuthUser
+  initialStatus: OnboardingStatus
+}
+
+function getInitialStep(status: OnboardingStatus) {
+  if (status.stage === "PREFERENCES") return 3
+  if (status.stage === "CHANNEL") return 2
+  return 1
+}
+
+function getInitialChannel(status: OnboardingStatus): ChannelId | null {
+  const providerKey = status.channelConnections[0]?.providerKey.toLowerCase()
+
+  return CHANNELS.some((channel) => channel.id === providerKey)
+    ? (providerKey as ChannelId)
+    : null
 }
 
 function getInitials(name: string) {
@@ -192,23 +207,36 @@ function getInitials(name: string) {
   return `${parts[0][0]}${parts.at(-1)?.[0] ?? ""}`.toLocaleUpperCase("tr-TR")
 }
 
-export function OnboardingFlow({ user }: OnboardingFlowProps) {
+export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
   const router = useRouter()
-  const [currentStep, setCurrentStep] = React.useState(1)
+  const initialStep = getInitialStep(initialStatus)
+  const [currentStep, setCurrentStep] = React.useState(initialStep)
   const [direction, setDirection] = React.useState(1)
-  const [furthestStep, setFurthestStep] = React.useState(1)
+  const [furthestStep, setFurthestStep] = React.useState(initialStep)
   const [isProvisioning, setIsProvisioning] = React.useState(false)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [syncProgress, setSyncProgress] = React.useState(0)
   const [submitError, setSubmitError] = React.useState<string | null>(null)
-  const [onboardingResult, setOnboardingResult] =
-    React.useState<CompleteOnboardingResponse | null>(null)
+  const [provisionedStore, setProvisionedStore] =
+    React.useState<OnboardingResource | null>(
+      initialStatus.stage === "PREFERENCES" ? initialStatus.store : null
+    )
 
-  const [storeName, setStoreName] = React.useState("")
-  const [profileDraft, setProfileDraft] =
-    React.useState<StoreKnowledge["profile"]>(INITIAL_AI_PROFILE)
+  const [storeName, setStoreName] = React.useState(
+    initialStatus.store?.name ?? ""
+  )
+  const [profileDraft, setProfileDraft] = React.useState<
+    StoreKnowledge["profile"]
+  >(() => ({
+    ...INITIAL_AI_PROFILE,
+    brandDescription: initialStatus.profile?.brandDescription ?? null,
+    tone: initialStatus.profile?.tone ?? INITIAL_AI_PROFILE.tone,
+    responseLength:
+      initialStatus.profile?.responseLength ??
+      INITIAL_AI_PROFILE.responseLength,
+  }))
   const [selectedChannel, setSelectedChannel] =
-    React.useState<ChannelId | null>(null)
+    React.useState<ChannelId | null>(() => getInitialChannel(initialStatus))
   const [credentials, setCredentials] = React.useState<Record<string, string>>(
     {}
   )
@@ -228,7 +256,7 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
       ? storeName.trim().length >= 2
       : currentStep === 2
         ? Boolean(selectedChannel && channelCredentialsComplete)
-        : Boolean(onboardingResult)
+        : Boolean(provisionedStore)
 
   React.useEffect(() => {
     if (!isProvisioning) return
@@ -260,7 +288,7 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
       step < 1 ||
       step > STEPS.length ||
       step > furthestStep ||
-      (onboardingResult && step < 3)
+      (provisionedStore && step < 3)
     ) {
       return
     }
@@ -289,7 +317,7 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
   }
 
   const handleBack = () => {
-    if (currentStep <= 1 || onboardingResult) return
+    if (currentStep <= 1 || provisionedStore) return
 
     setDirection(-1)
     setCurrentStep((step) => step - 1)
@@ -323,7 +351,7 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
       const minimumProgressDuration = new Promise((resolve) =>
         window.setTimeout(resolve, 4_500)
       )
-      const onboardingRequest = completeOnboarding({
+      const onboardingRequest = provisionOnboarding({
         storeName: storeName.trim(),
         selectedChannel: selectedChannel.toUpperCase() as OnboardingChannel,
         environment: "PRODUCTION",
@@ -338,7 +366,7 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
       ])
 
       setSyncProgress(100)
-      setOnboardingResult(result)
+      setProvisionedStore(result.store)
       await new Promise((resolve) => window.setTimeout(resolve, 300))
       advanceToStep(3)
     } catch (error: unknown) {
@@ -353,17 +381,18 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
   }
 
   const handleFinish = async () => {
-    if (!onboardingResult) return
+    if (!provisionedStore) return
 
     setIsSubmitting(true)
     setSubmitError(null)
 
     try {
-      await updateStoreKnowledge(onboardingResult.store.id, {
+      const result = await completeOnboarding({
+        storeId: provisionedStore.id,
         tone: profileDraft.tone,
         responseLength: profileDraft.responseLength,
       })
-      router.replace(onboardingResult.nextPath)
+      router.replace(result.nextPath)
       router.refresh()
     } catch (error: unknown) {
       setSubmitError(
@@ -411,7 +440,7 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
               const isActive = step.id === currentStep
               const isCompleted = step.id < currentStep
               const isReachable =
-                step.id <= furthestStep && (!onboardingResult || step.id === 3)
+                step.id <= furthestStep && (!provisionedStore || step.id === 3)
 
               return (
                 <button
@@ -647,12 +676,12 @@ export function OnboardingFlow({ user }: OnboardingFlowProps) {
                     onClick={handleBack}
                     disabled={
                       currentStep === 1 ||
-                      Boolean(onboardingResult) ||
+                      Boolean(provisionedStore) ||
                       isProvisioning ||
                       isSubmitting
                     }
                     className={
-                      currentStep === 1 || onboardingResult ? "invisible" : ""
+                      currentStep === 1 || provisionedStore ? "invisible" : ""
                     }
                   >
                     <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />

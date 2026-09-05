@@ -16,6 +16,7 @@ import {
   DeleteStoreDto,
   STORE_DELETE_CONFIRMATION,
 } from './dto/delete-store.dto';
+import { UpdateStoreDto } from './dto/update-store.dto';
 import { PrismaService } from '../../database/prisma.service';
 import { createDefaultStoreAiInstructions } from '../knowledge/default-ai-instructions';
 
@@ -116,6 +117,42 @@ export class StoresService {
         members: { some: { userId } },
       },
       orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  async update(id: string, userId: string, updateStoreDto: UpdateStoreDto) {
+    if (updateStoreDto.name === undefined) {
+      throw new BadRequestException('Güncellenecek mağaza adını girin.');
+    }
+
+    const store = await this.prisma.store.findFirst({
+      where: {
+        id,
+        members: {
+          some: {
+            userId,
+            role: { in: [StoreRole.OWNER, StoreRole.ADMIN] },
+          },
+        },
+      },
+      select: { id: true },
+    });
+
+    if (!store) {
+      throw new NotFoundException(
+        'Mağaza bulunamadı veya güncelleme yetkiniz yok.',
+      );
+    }
+
+    return this.prisma.store.update({
+      where: { id: store.id },
+      data: { name: updateStoreDto.name },
       select: {
         id: true,
         name: true,

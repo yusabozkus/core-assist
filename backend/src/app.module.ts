@@ -14,6 +14,7 @@ import { QuestionsModule } from './modules/questions/questions.module';
 import { KnowledgeModule } from './modules/knowledge/knowledge.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { SearchModule } from './modules/search/search.module';
 import { getRedisConnection } from './infrastructure/queue/redis-connection';
 
 @Module({
@@ -31,6 +32,7 @@ import { getRedisConnection } from './infrastructure/queue/redis-connection';
     KnowledgeModule,
     AnalyticsModule,
     DashboardModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [AppService],

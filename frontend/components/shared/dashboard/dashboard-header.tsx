@@ -2,13 +2,9 @@
 
 import {
   ChevronRightIcon,
-  InboxIcon,
   Notification01Icon,
-  Package01Icon,
   RefreshIcon,
   Search01Icon,
-  ShoppingBag01Icon,
-  UserGroupIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
@@ -17,16 +13,6 @@ import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandShortcut,
-} from "@/components/ui/command"
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import {
   Tooltip,
@@ -34,37 +20,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { APP_ROUTES, getDashboardBreadcrumbs } from "@/constants/site"
-
-export type DashboardSyncState =
-  "current" | "error" | "idle" | "pending" | "syncing" | "unavailable"
+import { GlobalSearch } from "@/components/shared/dashboard/global-search"
+import { getChannelConnections } from "@/lib/api/channels"
+import {
+  getDashboardSyncState,
+  type DashboardSyncState,
+} from "@/lib/channels/sync-state"
 
 type DashboardHeaderProps = {
+  storeId: string
   syncState: DashboardSyncState
   isStoreArchived?: boolean
 }
-
-const SEARCH_SCOPES = [
-  {
-    label: "Ürünlerde ara",
-    description: "Ürün adı, SKU veya barkod",
-    icon: Package01Icon,
-  },
-  {
-    label: "Siparişlerde ara",
-    description: "Sipariş numarası veya müşteri",
-    icon: ShoppingBag01Icon,
-  },
-  {
-    label: "Müşterilerde ara",
-    description: "Ad, telefon veya e-posta",
-    icon: UserGroupIcon,
-  },
-  {
-    label: "Mesajlarda ara",
-    description: "Konuşma veya kanal",
-    icon: InboxIcon,
-  },
-] as const
 
 const SYNC_STATE_DETAILS: Record<
   DashboardSyncState,
@@ -97,6 +64,7 @@ const SYNC_STATE_DETAILS: Record<
 }
 
 export function DashboardHeader({
+  storeId,
   syncState,
   isStoreArchived = false,
 }: DashboardHeaderProps) {
@@ -104,6 +72,49 @@ export function DashboardHeader({
   const breadcrumbs = getDashboardBreadcrumbs(pathname)
   const currentPage = breadcrumbs.at(-1)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [liveSyncState, setLiveSyncState] = useState(syncState)
+
+  useEffect(() => {
+    setLiveSyncState(syncState)
+  }, [storeId, syncState])
+
+  useEffect(() => {
+    if (isStoreArchived) return
+
+    let disposed = false
+    let timeoutId: number | undefined
+    let controller: AbortController | undefined
+
+    async function refreshSyncState() {
+      controller = new AbortController()
+
+      try {
+        const connections = await getChannelConnections(
+          storeId,
+          controller.signal
+        )
+        if (disposed) return
+
+        const nextState = getDashboardSyncState(connections)
+        setLiveSyncState(nextState)
+        timeoutId = window.setTimeout(
+          refreshSyncState,
+          nextState === "syncing" || nextState === "pending" ? 2_500 : 20_000
+        )
+      } catch {
+        if (disposed || controller.signal.aborted) return
+        timeoutId = window.setTimeout(refreshSyncState, 10_000)
+      }
+    }
+
+    void refreshSyncState()
+
+    return () => {
+      disposed = true
+      controller?.abort()
+      if (timeoutId) window.clearTimeout(timeoutId)
+    }
+  }, [isStoreArchived, pathname, storeId])
 
   useEffect(() => {
     if (isStoreArchived) return
@@ -217,7 +228,7 @@ export function DashboardHeader({
                 <HugeiconsIcon icon={Search01Icon} className="size-4" />
               </Button>
 
-              <SyncStatusLink state={syncState} />
+              <SyncStatusLink state={liveSyncState} />
 
               <Button
                 asChild
@@ -238,7 +249,11 @@ export function DashboardHeader({
       </header>
 
       {!isStoreArchived ? (
-        <SearchCommand open={isSearchOpen} onOpenChange={setIsSearchOpen} />
+        <GlobalSearch
+          storeId={storeId}
+          open={isSearchOpen}
+          onOpenChange={setIsSearchOpen}
+        />
       ) : null}
     </>
   )
@@ -266,51 +281,5 @@ function SyncStatusLink({ state }: { state: DashboardSyncState }) {
       </span>
       <span className="hidden xl:inline">{details.label}</span>
     </Link>
-  )
-}
-
-function SearchCommand({
-  open,
-  onOpenChange,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}) {
-  return (
-    <ResponsiveDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Genel arama"
-      description="Ürün, sipariş, müşteri ve konuşmalar arasında arama yapın."
-      contentClassName="sm:max-w-xl"
-      bodyClassName="p-0"
-    >
-      <Command className="rounded-none bg-transparent p-0">
-        <CommandInput placeholder="Aramak istediğiniz şeyi yazın..." />
-        <CommandList className="max-h-[min(22rem,48svh)] px-1 pb-2">
-          <CommandEmpty>Sonuç bulunamadı.</CommandEmpty>
-          <CommandGroup heading="Arama alanları">
-            {SEARCH_SCOPES.map((scope) => (
-              <CommandItem
-                key={scope.label}
-                value={`${scope.label} ${scope.description}`}
-                onSelect={() => undefined}
-              >
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                  <HugeiconsIcon icon={scope.icon} className="size-4" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate">{scope.label}</span>
-                  <span className="block truncate text-xs font-normal text-muted-foreground">
-                    {scope.description}
-                  </span>
-                </span>
-                <CommandShortcut>Yakında</CommandShortcut>
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        </CommandList>
-      </Command>
-    </ResponsiveDialog>
   )
 }

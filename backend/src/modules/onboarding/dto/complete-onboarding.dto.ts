@@ -8,6 +8,7 @@ import {
   Length,
   Matches,
   MaxLength,
+  IsUUID,
 } from 'class-validator';
 import {
   AiEmojiPolicy,
@@ -25,15 +26,14 @@ export enum OnboardingChannel {
   HEPSIBURADA = 'HEPSIBURADA',
 }
 
-export class CompleteOnboardingDto {
+export class ProvisionOnboardingDto {
   @Transform(trimString)
   @IsString()
   @Length(2, 80)
   storeName: string;
 
-  @IsOptional()
   @IsEnum(OnboardingChannel)
-  selectedChannel?: OnboardingChannel;
+  selectedChannel: OnboardingChannel;
 
   @IsOptional()
   @IsEnum(IntegrationEnvironment)
@@ -78,4 +78,15 @@ export class CompleteOnboardingDto {
     { message: 'Tercih edilen emoji yalnızca tek bir emoji içermelidir.' },
   )
   preferredEmoji?: string;
+}
+
+export class CompleteOnboardingDto {
+  @IsUUID()
+  storeId: string;
+
+  @IsEnum(AiTone)
+  tone: AiTone;
+
+  @IsEnum(AiResponseLength)
+  responseLength: AiResponseLength;
 }

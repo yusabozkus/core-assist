@@ -8,6 +8,13 @@ export function createStore(input: { name: string }) {
   })
 }
 
+export function updateStore(storeId: string, input: { name: string }) {
+  return apiFetch<StoreSummary>(`/stores/${storeId}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  })
+}
+
 export type ArchiveStoreResult = {
   archived: true
   archivedStoreId: string

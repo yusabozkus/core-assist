@@ -1,10 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import {
   AiEmojiPolicy,
   AiResponseLength,
   AiTone,
+  CatalogSyncKind,
+  CatalogSyncStatus,
+  ChannelConnectionStatus,
   IntegrationEnvironment,
   StoreRole,
+  StoreStatus,
   WorkspaceRole,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
@@ -12,6 +16,7 @@ import { ChannelsService } from '../channels/channels.service';
 import {
   CompleteOnboardingDto,
   OnboardingChannel,
+  ProvisionOnboardingDto,
 } from './dto/complete-onboarding.dto';
 import { createDefaultStoreAiInstructions } from '../knowledge/default-ai-instructions';
 
@@ -35,50 +40,102 @@ export class OnboardingService {
   ) {}
 
   async getStatus(userId: string) {
-    const workspace = await this.prisma.workspace.findFirst({
-      where: {
-        members: {
-          some: { userId },
-        },
-      },
-      orderBy: { createdAt: 'asc' },
-      select: {
-        id: true,
-        name: true,
-        stores: {
-          where: {
-            members: {
-              some: { userId },
-            },
-          },
-          orderBy: { createdAt: 'asc' },
-          take: 1,
-          select: {
-            id: true,
-            name: true,
-            channelConnections: {
-              select: channelConnectionSelect,
-            },
+    const [user, workspace] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { onboardingCompletedAt: true },
+      }),
+      this.prisma.workspace.findFirst({
+        where: {
+          members: {
+            some: { userId },
           },
         },
-      },
-    });
+        orderBy: { createdAt: 'asc' },
+        select: {
+          id: true,
+          name: true,
+          stores: {
+            where: {
+              members: {
+                some: { userId },
+              },
+            },
+            orderBy: { createdAt: 'asc' },
+            take: 1,
+            select: {
+              id: true,
+              name: true,
+              knowledgeProfile: {
+                select: {
+                  brandDescription: true,
+                  tone: true,
+                  responseLength: true,
+                },
+              },
+              channelConnections: {
+                select: {
+                  ...channelConnectionSelect,
+                  syncRuns: {
+                    where: {
+                      kind: CatalogSyncKind.FULL,
+                      status: {
+                        in: [
+                          CatalogSyncStatus.RUNNING,
+                          CatalogSyncStatus.COMPLETED,
+                        ],
+                      },
+                    },
+                    take: 1,
+                    select: { id: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+    ]);
 
     const store = workspace?.stores[0] ?? null;
+    const hasProvisionedChannel = Boolean(
+      store?.channelConnections.some(
+        (connection) =>
+          connection.status === ChannelConnectionStatus.CONNECTED &&
+          connection.syncRuns.length > 0,
+      ),
+    );
+    const completed = Boolean(user?.onboardingCompletedAt && store);
+    const stage = completed
+      ? 'COMPLETED'
+      : !store
+        ? 'STORE'
+        : hasProvisionedChannel
+          ? 'PREFERENCES'
+          : 'CHANNEL';
 
     return {
-      completed: Boolean(workspace && store),
+      completed,
+      completedAt: completed ? (user?.onboardingCompletedAt ?? null) : null,
+      stage,
       store: store
         ? {
             id: store.id,
             name: store.name,
           }
         : null,
-      channelConnections: store?.channelConnections ?? [],
+      profile: store?.knowledgeProfile ?? null,
+      channelConnections:
+        store?.channelConnections.map((connection) => ({
+          id: connection.id,
+          providerKey: connection.providerKey,
+          type: connection.type,
+          status: connection.status,
+        })) ?? [],
     };
   }
 
-  async complete(userId: string, dto: CompleteOnboardingDto) {
+  async provision(userId: string, dto: ProvisionOnboardingDto) {
     const setup = await this.prisma.$transaction(async (transaction) => {
       let workspace = await transaction.workspace.findFirst({
         where: { ownerId: userId },
@@ -211,54 +268,104 @@ export class OnboardingService {
       };
     });
 
-    let channelConnection: Awaited<
-      ReturnType<ChannelsService['create']>
-    > | null = null;
-    let catalogSync: Awaited<
-      ReturnType<ChannelsService['syncCatalog']>
-    > | null = null;
+    const providerKey = CHANNEL_PROVIDER_KEY[dto.selectedChannel];
+    const environment = dto.environment ?? IntegrationEnvironment.PRODUCTION;
+    const credentials = dto.credentials ?? {};
+    const connections = await this.channels.findAll(setup.store.id, userId);
+    const existingConnection = connections.find(
+      (connection) => connection.providerKey === providerKey,
+    );
 
-    if (dto.selectedChannel) {
-      const providerKey = CHANNEL_PROVIDER_KEY[dto.selectedChannel];
-      const environment = dto.environment ?? IntegrationEnvironment.PRODUCTION;
-      const credentials = dto.credentials ?? {};
-      const connections = await this.channels.findAll(setup.store.id, userId);
-      const existingConnection = connections.find(
-        (connection) => connection.providerKey === providerKey,
-      );
+    const channelConnection = existingConnection
+      ? await this.channels.configure(
+          setup.store.id,
+          existingConnection.id,
+          userId,
+          { environment, credentials },
+        )
+      : await this.channels.create(setup.store.id, userId, {
+          providerKey,
+          environment,
+          credentials,
+        });
 
-      const connectedChannel = existingConnection
-        ? await this.channels.configure(
-            setup.store.id,
-            existingConnection.id,
-            userId,
-            { environment, credentials },
-          )
-        : await this.channels.create(setup.store.id, userId, {
-            providerKey,
-            environment,
-            credentials,
-          });
-
-      channelConnection = connectedChannel;
-      catalogSync = await this.channels.syncCatalog(
-        setup.store.id,
-        connectedChannel.id,
-        userId,
-      );
-    }
+    const catalogSync = await this.channels.syncCatalog(
+      setup.store.id,
+      channelConnection.id,
+      userId,
+    );
 
     return {
-      completed: true,
+      completed: false,
       created: {
         store: setup.storeCreated,
       },
       store: setup.store,
       channelConnection,
       catalogSync,
-      nextPath: dto.selectedChannel
-        ? '/dashboard/catalog/products'
-        : '/dashboard',
+      nextStep: 'PREFERENCES' as const,
     };
+  }
+
+  async complete(userId: string, dto: CompleteOnboardingDto) {
+    return this.prisma.$transaction(async (transaction) => {
+      const store = await transaction.store.findFirst({
+        where: {
+          id: dto.storeId,
+          status: StoreStatus.ACTIVE,
+          members: { some: { userId } },
+          channelConnections: {
+            some: {
+              status: ChannelConnectionStatus.CONNECTED,
+              credentialsEncrypted: { not: null },
+              syncRuns: {
+                some: {
+                  kind: CatalogSyncKind.FULL,
+                  status: {
+                    in: [
+                      CatalogSyncStatus.RUNNING,
+                      CatalogSyncStatus.COMPLETED,
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+        select: { id: true, name: true },
+      });
+
+      if (!store) {
+        throw new ConflictException(
+          'Onboarding tamamlanmadan önce kanal bağlantısını ve ilk katalog senkronizasyonunu hazırlayın.',
+        );
+      }
+
+      await transaction.storeKnowledgeProfile.upsert({
+        where: { storeId: store.id },
+        create: {
+          storeId: store.id,
+          tone: dto.tone,
+          responseLength: dto.responseLength,
+        },
+        update: {
+          tone: dto.tone,
+          responseLength: dto.responseLength,
+        },
+      });
+
+      const completedAt = new Date();
+      await transaction.user.update({
+        where: { id: userId },
+        data: { onboardingCompletedAt: completedAt },
+      });
+
+      return {
+        completed: true as const,
+        completedAt,
+        store,
+        nextPath: '/dashboard/catalog/products',
+      };
+    });
   }
 }

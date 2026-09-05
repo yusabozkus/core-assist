@@ -2,9 +2,11 @@ import type { AiEmojiPolicy, AiResponseLength, AiTone } from "@/types/knowledge"
 
 export type OnboardingChannel = "TRENDYOL" | "HEPSIBURADA"
 
-export type CompleteOnboardingPayload = {
+export type OnboardingStage = "STORE" | "CHANNEL" | "PREFERENCES" | "COMPLETED"
+
+export type ProvisionOnboardingPayload = {
   storeName: string
-  selectedChannel?: OnboardingChannel
+  selectedChannel: OnboardingChannel
   environment?: "SANDBOX" | "PRODUCTION"
   credentials?: Record<string, string>
   brandDescription?: string
@@ -16,7 +18,13 @@ export type CompleteOnboardingPayload = {
   preferredEmoji?: string | null
 }
 
-type OnboardingResource = {
+export type CompleteOnboardingPayload = {
+  storeId: string
+  tone: AiTone
+  responseLength: AiResponseLength
+}
+
+export type OnboardingResource = {
   id: string
   name: string
 }
@@ -30,22 +38,36 @@ export type ChannelConnection = {
 
 export type OnboardingStatus = {
   completed: boolean
+  completedAt: string | null
+  stage: OnboardingStage
   store: OnboardingResource | null
+  profile: {
+    brandDescription: string | null
+    tone: AiTone
+    responseLength: AiResponseLength
+  } | null
   channelConnections: ChannelConnection[]
 }
 
-export type CompleteOnboardingResponse = {
-  completed: true
+export type ProvisionOnboardingResponse = {
+  completed: false
   created: {
     store: boolean
   }
   store: OnboardingResource
-  channelConnection: ChannelConnection | null
+  channelConnection: ChannelConnection
   catalogSync: {
     syncRunId: string
     status: "RUNNING"
     queuedAt: string
     kind: "FULL" | "INVENTORY"
-  } | null
+  }
+  nextStep: "PREFERENCES"
+}
+
+export type CompleteOnboardingResponse = {
+  completed: true
+  completedAt: string
+  store: OnboardingResource
   nextPath: string
 }

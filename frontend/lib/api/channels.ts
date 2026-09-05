@@ -23,6 +23,12 @@ type SyncHistoryOptions = {
   signal?: AbortSignal
 }
 
+export function getChannelConnections(storeId: string, signal?: AbortSignal) {
+  return apiFetch<ChannelConnection[]>(`/stores/${storeId}/channels`, {
+    signal,
+  })
+}
+
 export function getChannelSyncRun(storeId: string, syncRunId: string) {
   return apiFetch<SyncHistoryItem>(
     `/stores/${storeId}/channels/sync-runs/${syncRunId}`

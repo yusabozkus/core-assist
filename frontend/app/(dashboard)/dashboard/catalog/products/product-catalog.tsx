@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Search01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
@@ -38,6 +39,9 @@ export function ProductCatalog({
   initialPage,
   providers,
 }: ProductCatalogProps) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [query, setQuery] = useState("")
   const [activeQuery, setActiveQuery] = useState("")
   const [provider, setProvider] = useState("ALL")
@@ -48,11 +52,33 @@ export function ProductCatalog({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedProductId, setSelectedProductId] = useState<string | null>(
-    null
+    searchParams.get("product")
   )
   const loadMoreMarkerRef = useRef<HTMLDivElement | null>(null)
   const requestSequence = useRef(0)
   const lastRequestKey = useRef(`${storeId}|ALL|`)
+
+  useEffect(() => {
+    const linkedProductId = searchParams.get("product")
+    setSelectedProductId(linkedProductId)
+  }, [searchParams])
+
+  function selectProduct(productId: string) {
+    setSelectedProductId(productId)
+    updateProductParam(productId)
+  }
+
+  function updateProductParam(productId: string | null) {
+    const params = new URLSearchParams(searchParams.toString())
+
+    if (productId) params.set("product", productId)
+    else params.delete("product")
+
+    const queryString = params.toString()
+    router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+      scroll: false,
+    })
+  }
 
   useEffect(() => {
     const normalizedQuery = query.trim()
@@ -228,7 +254,7 @@ export function ProductCatalog({
               <ProductCard
                 key={product.id}
                 product={product}
-                onSelect={setSelectedProductId}
+                onSelect={selectProduct}
               />
             ))}
           </div>
@@ -277,7 +303,10 @@ export function ProductCatalog({
         productId={selectedProductId}
         open={selectedProductId !== null}
         onOpenChange={(open) => {
-          if (!open) setSelectedProductId(null)
+          if (!open) {
+            setSelectedProductId(null)
+            updateProductParam(null)
+          }
         }}
       />
     </div>

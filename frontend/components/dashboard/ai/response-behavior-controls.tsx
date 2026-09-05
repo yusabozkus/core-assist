@@ -38,10 +38,10 @@ const responseLengths: Array<{
   label: string
   detail: string
 }> = [
-  { value: "SHORT", label: "Kısa", detail: "1–2 cümle" },
-  { value: "BALANCED", label: "Dengeli", detail: "2–4 cümle" },
-  { value: "DETAILED", label: "Detaylı", detail: "Gerektiğinde 3–5 cümle" },
-]
+    { value: "SHORT", label: "Kısa", detail: "1–2 cümle" },
+    { value: "BALANCED", label: "Dengeli", detail: "2–4 cümle" },
+    { value: "DETAILED", label: "Detaylı", detail: "Gerektiğinde 3–5 cümle" },
+  ]
 
 export function ResponseBehaviorControls({
   profile,
@@ -112,7 +112,7 @@ export function ResponseBehaviorControls({
                   index === 1 && "text-center",
                   index === 2 && "text-right",
                   profile.responseLength === option.value &&
-                    "font-semibold text-primary"
+                  "font-semibold text-primary"
                 )}
               >
                 {option.label}
@@ -122,25 +122,20 @@ export function ResponseBehaviorControls({
         </div>
       </SettingRow>
 
-      <SettingRow
-        title="Mesaj yapısı"
-        description="Cevabın başlangıç ve bitiş biçimini ayrı ayrı yönetin."
-      >
-        <div className="divide-y divide-border border-y border-border">
-          <SettingsSwitchRow
-            title="Selamlama kullan"
-            description="Yanıtı kısa bir selamlama ile başlatır."
-            checked={profile.greetingEnabled}
-            onCheckedChange={(checked) => onChange("greetingEnabled", checked)}
-          />
-          <SettingsSwitchRow
-            title="Kapanış kullan"
-            description="Yanıtı nazik bir kapanış cümlesiyle tamamlar."
-            checked={profile.closingEnabled}
-            onCheckedChange={(checked) => onChange("closingEnabled", checked)}
-          />
-        </div>
-      </SettingRow>
+      <div className="">
+        <SettingsSwitchRow
+          title="Selamlama kullan"
+          description="Yanıtı kısa bir selamlama ile başlatır."
+          checked={profile.greetingEnabled}
+          onCheckedChange={(checked) => onChange("greetingEnabled", checked)}
+        />
+        <SettingsSwitchRow
+          title="Kapanış kullan"
+          description="Yanıtı nazik bir kapanış cümlesiyle tamamlar."
+          checked={profile.closingEnabled}
+          onCheckedChange={(checked) => onChange("closingEnabled", checked)}
+        />
+      </div>
 
       <SettingRow
         title="Emoji kullanımı"
@@ -281,7 +276,7 @@ function SettingsSwitchRow({
   const id = useId()
 
   return (
-    <div className="flex items-center justify-between gap-5 px-4 py-3.5">
+    <div className="flex items-center justify-between gap-5 py-3.5">
       <div className="min-w-0">
         <label htmlFor={id} className="text-sm font-medium text-foreground">
           {title}

@@ -11,6 +11,7 @@ import {
 import { StoresService } from './stores.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { DeleteStoreDto } from './dto/delete-store.dto';
+import { UpdateStoreDto } from './dto/update-store.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.types';
@@ -41,6 +42,15 @@ export class StoresController {
   @Get(':id')
   findOne(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.storesService.findOne(id, user.id);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() updateStoreDto: UpdateStoreDto,
+  ) {
+    return this.storesService.update(id, user.id, updateStoreDto);
   }
 
   @Patch(':id/archive')

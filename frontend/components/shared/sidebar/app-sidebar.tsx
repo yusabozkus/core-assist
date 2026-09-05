@@ -113,7 +113,7 @@ export function AppSidebar({
                           href={item.url}
                           aria-current={isActive ? "page" : undefined}
                         >
-                          <HugeiconsIcon icon={item.icon} />
+                          <HugeiconsIcon strokeWidth={2} icon={item.icon} />
                           <span>{item.title}</span>
                         </Link>
                       </SidebarMenuButton>
