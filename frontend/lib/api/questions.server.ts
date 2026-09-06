@@ -21,7 +21,7 @@ export const getServerProductQuestions = cache(
     storeId: string,
     {
       limit = 30,
-      status = "ALL",
+      status = "PENDING",
       query,
     }: {
       limit?: number

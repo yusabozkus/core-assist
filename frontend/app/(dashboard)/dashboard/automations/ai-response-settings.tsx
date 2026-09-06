@@ -195,7 +195,7 @@ export function AiResponseSettings({
   }
 
   return (
-    <div className="mx-auto w-full max-w-[90rem] px-5 py-7 sm:px-8 sm:py-9 lg:px-10">
+    <div className="mx-auto w-full max-w-[1440px] px-5 py-7 sm:px-8 sm:py-9 lg:px-10">
       <header className="flex flex-col gap-5 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2.5">

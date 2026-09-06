@@ -10,39 +10,46 @@ type ProductThumbnailProps = {
   title: string
   imageUrl: string | null
   className?: string
+  imageClassName?: string
+  sizes?: string
 }
 
 export function ProductThumbnail({
   title,
   imageUrl,
   className,
+  imageClassName,
+  sizes = "96px",
 }: ProductThumbnailProps) {
-  const [failed, setFailed] = useState(false)
+  const [failedUrl, setFailedUrl] = useState<string | null>(null)
   const supportedImageUrl =
     imageUrl?.startsWith("/") || imageUrl?.startsWith("https://")
 
   return (
-    <div
+    <span
       className={cn(
-        "relative h-28 w-22 shrink-0 overflow-hidden rounded-lg border border-border bg-muted sm:h-30 sm:w-24",
+        "relative block h-28 w-22 shrink-0 overflow-hidden rounded-lg border border-border bg-muted sm:h-30 sm:w-24",
         className
       )}
     >
-      {imageUrl && supportedImageUrl && !failed ? (
+      {imageUrl && supportedImageUrl && imageUrl !== failedUrl ? (
         <Image
           src={imageUrl}
           alt={title}
           fill
-          sizes="96px"
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          onError={() => setFailed(true)}
+          sizes={sizes}
+          className={cn(
+            "object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.03]",
+            imageClassName
+          )}
+          onError={() => setFailedUrl(imageUrl)}
         />
       ) : (
-        <div className="flex size-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-muted to-muted/45 text-muted-foreground">
+        <span className="flex size-full flex-col items-center justify-center gap-2 bg-muted text-muted-foreground">
           <HugeiconsIcon icon={Package01Icon} className="size-6" />
           <span className="text-[10px] font-medium">Görsel yok</span>
-        </div>
+        </span>
       )}
-    </div>
+    </span>
   )
 }

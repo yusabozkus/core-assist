@@ -28,7 +28,7 @@ const planFeatures = [
 
 export function BillingOverview() {
   return (
-    <main className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
+    <main className="mx-auto w-full max-w-[1440px] px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
       <header className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-[-0.035em] text-foreground sm:text-3xl">
@@ -68,7 +68,7 @@ export function BillingOverview() {
 
             <div className="sm:text-right">
               <p className="text-3xl font-semibold tracking-[-0.04em]">
-                ₺6.000
+                6.000 ₺
                 <span className="ml-1 text-sm font-normal tracking-normal text-muted-foreground">
                   / ay
                 </span>

@@ -25,7 +25,7 @@ export function SyncHistoryRowsSkeleton({ count = 7 }: { count?: number }) {
 
 export function SyncHistorySkeleton() {
   return (
-    <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
+    <div className="mx-auto w-full max-w-[1440px] px-5 py-10 sm:px-8 lg:px-10">
       <div className="flex items-end justify-between gap-4">
         <div>
           <Skeleton className="h-9 w-56" />

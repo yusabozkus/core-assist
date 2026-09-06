@@ -6,6 +6,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { formatCurrency } from "@/lib/format-currency"
 import { cn } from "@/lib/utils"
 
 export type BillingCycle = "monthly" | "annual"
@@ -20,11 +21,10 @@ export type SubscriptionPlan = {
   current?: boolean
 }
 
-const currencyFormatter = new Intl.NumberFormat("tr-TR", {
-  style: "currency",
-  currency: "TRY",
-  maximumFractionDigits: 0,
-})
+const formatPlanPrice = (value: number) =>
+  formatCurrency(value, "TRY", {
+    maximumFractionDigits: 0,
+  })
 
 export function PlanCard({
   plan,
@@ -77,7 +77,7 @@ export function PlanCard({
         {isAnnual ? (
           <div className="mb-1.5 flex items-center gap-2 text-xs">
             <span className="text-muted-foreground line-through">
-              {currencyFormatter.format(plan.monthlyPrice)}
+              {formatPlanPrice(plan.monthlyPrice)}
             </span>
             <span className="font-semibold text-primary">%10 indirimli</span>
           </div>
@@ -85,14 +85,14 @@ export function PlanCard({
           <div className="mb-1.5 h-4" aria-hidden="true" />
         )}
         <p className="text-3xl font-semibold tracking-[-0.045em] text-foreground">
-          {currencyFormatter.format(displayedMonthlyPrice)}
+          {formatPlanPrice(displayedMonthlyPrice)}
           <span className="ml-1 text-sm font-normal tracking-normal text-muted-foreground">
             / ay
           </span>
         </p>
         <p className="mt-2 min-h-5 text-xs text-muted-foreground">
           {isAnnual
-            ? `${currencyFormatter.format(annualTotal)} yıllık faturalandırılır`
+            ? `${formatPlanPrice(annualTotal)} yıllık faturalandırılır`
             : "Aylık olarak faturalandırılır"}
         </p>
       </div>
@@ -148,10 +148,10 @@ export function getPlanPrice(plan: SubscriptionPlan, cycle: BillingCycle) {
     cycle === "annual" ? plan.monthlyPrice * 0.9 : plan.monthlyPrice
 
   return {
-    monthly: currencyFormatter.format(monthlyPrice),
+    monthly: formatPlanPrice(monthlyPrice),
     billed:
       cycle === "annual"
-        ? `${currencyFormatter.format(monthlyPrice * 12)} / yıl`
-        : `${currencyFormatter.format(monthlyPrice)} / ay`,
+        ? `${formatPlanPrice(monthlyPrice * 12)} / yıl`
+        : `${formatPlanPrice(monthlyPrice)} / ay`,
   }
 }

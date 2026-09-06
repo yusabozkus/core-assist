@@ -29,9 +29,14 @@ export function getChannelConnections(storeId: string, signal?: AbortSignal) {
   })
 }
 
-export function getChannelSyncRun(storeId: string, syncRunId: string) {
+export function getChannelSyncRun(
+  storeId: string,
+  syncRunId: string,
+  signal?: AbortSignal
+) {
   return apiFetch<SyncHistoryItem>(
-    `/stores/${storeId}/channels/sync-runs/${syncRunId}`
+    `/stores/${storeId}/channels/sync-runs/${syncRunId}`,
+    { signal }
   )
 }
 

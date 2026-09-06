@@ -1,12 +1,12 @@
 import {
   Analytics01Icon,
+  BoxesIcon,
   CustomerSupportIcon,
   DashboardSquare01Icon,
   InboxIcon,
   Package01Icon,
   PlugSocketIcon,
   Settings02Icon,
-  ShoppingBag01Icon,
   UserGroupIcon,
   WorkflowSquare01Icon,
 } from "@hugeicons/core-free-icons"
@@ -104,35 +104,14 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
           icon: InboxIcon,
         },
         {
-          title: "Ürün Yönetimi",
-          url: APP_ROUTES.dashboard.catalog.root,
-          icon: Package01Icon,
-          items: [
-            {
-              title: "Stok Takibi",
-              url: APP_ROUTES.dashboard.catalog.inventory,
-            },
-            {
-              title: "Ürünler",
-              url: APP_ROUTES.dashboard.catalog.products,
-            },
-          ],
+          title: "Stok Takibi",
+          url: APP_ROUTES.dashboard.catalog.inventory,
+          icon: BoxesIcon,
         },
         {
-          title: "Siparişler & İadeler",
-          url: APP_ROUTES.dashboard.orders.root,
-          icon: ShoppingBag01Icon,
-          items: [
-            {
-              title: "Tüm Siparişler",
-              url: APP_ROUTES.dashboard.orders.root,
-              exact: true,
-            },
-            {
-              title: "İade ve Talepler",
-              url: APP_ROUTES.dashboard.orders.returns,
-            },
-          ],
+          title: "Ürünler",
+          url: APP_ROUTES.dashboard.catalog.products,
+          icon: Package01Icon,
         },
         {
           title: "Müşteriler",

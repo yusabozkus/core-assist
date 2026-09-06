@@ -21,7 +21,7 @@ export default async function DashboardPlaceholderPage({
   }
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-6xl items-center px-5 py-12 sm:px-8 lg:px-10">
+    <div className="mx-auto flex min-h-full w-full max-w-[1440px] items-center px-5 py-12 sm:px-8 lg:px-10">
       <section className="w-full rounded-2xl border border-border bg-card p-7 shadow-xs sm:p-10">
         <span className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <HugeiconsIcon icon={InformationCircleIcon} className="size-5" />

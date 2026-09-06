@@ -13,6 +13,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
+import { QuestionDraftHistory } from "@/components/dashboard/inbox/question-draft-history"
 import { ApiError } from "@/lib/api/client"
 import {
   answerProductQuestion,
@@ -103,16 +104,17 @@ export function QuestionAnswerComposer({
   if (question.status === "ANSWERED" || delivery?.status === "SENT") {
     return (
       <div className="shrink-0 border-t border-border bg-background px-4 py-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm font-medium text-emerald-600 dark:text-emerald-400">
             <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-4" />
             {delivery?.origin === "AUTOMATION"
               ? "AI tarafından otomatik gönderildi"
               : "Cevap gönderildi"}
           </div>
-          <p className="mt-3 rounded-xl border border-border bg-card p-4 text-sm leading-6 text-foreground">
-            {question.answer ?? delivery?.answer}
-          </p>
+          <QuestionDraftHistory
+            attempts={question.draftAttempts ?? []}
+            delivery={question.answerDelivery}
+          />
         </div>
       </div>
     )
@@ -227,57 +229,67 @@ export function QuestionAnswerComposer({
               </p>
             ) : null}
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={generateDraft}
-              disabled={
-                isDrafting ||
-                isSubmitting ||
-                isQueued ||
-                !question.product ||
-                draftRetrySeconds > 0
-              }
-              title={
-                question.product
-                  ? undefined
-                  : "Taslak için sorunun bir ürünle eşleşmesi gerekir."
-              }
-            >
-              <HugeiconsIcon
-                icon={isDrafting ? RefreshIcon : MagicWand01Icon}
-                className={`size-3.5 ${isDrafting ? "animate-spin" : ""}`}
-              />
-              {isDrafting
-                ? "Hazırlanıyor..."
-                : draftRetrySeconds > 0
-                  ? `${draftRetrySeconds} sn sonra dene`
-                  : question.status === "DRAFTED"
-                    ? "Taslağı yenile"
-                    : "Taslak oluştur"}
-            </Button>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={
-                isSubmitting ||
-                isQueued ||
-                isDrafting ||
-                answer.trim().length < 2
-              }
-            >
-              <HugeiconsIcon
-                icon={isQueued ? RefreshIcon : SendIcon}
-                className={`size-4 ${isQueued ? "animate-spin" : ""}`}
-              />
-              {isQueued
-                ? "Gönderiliyor..."
-                : delivery?.status === "FAILED"
-                  ? "Tekrar gönder"
-                  : "Cevabı gönder"}
-            </Button>
+          <div className="flex flex-row items-center justify-between w-full -ml-4">
+            {question.draftAttempts?.length ? (
+              <div className="flex min-h-8 items-center">
+                <QuestionDraftHistory
+                  attempts={question.draftAttempts}
+                  delivery={question.answerDelivery}
+                />
+              </div>
+            ) : <div className="flex min-h-8 items-center" />}
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={generateDraft}
+                disabled={
+                  isDrafting ||
+                  isSubmitting ||
+                  isQueued ||
+                  !question.product ||
+                  draftRetrySeconds > 0
+                }
+                title={
+                  question.product
+                    ? undefined
+                    : "Taslak için sorunun bir ürünle eşleşmesi gerekir."
+                }
+              >
+                <HugeiconsIcon
+                  icon={isDrafting ? RefreshIcon : MagicWand01Icon}
+                  className={`size-3.5 ${isDrafting ? "animate-spin" : ""}`}
+                />
+                {isDrafting
+                  ? "Hazırlanıyor..."
+                  : draftRetrySeconds > 0
+                    ? `${draftRetrySeconds} sn sonra dene`
+                    : question.status === "DRAFTED"
+                      ? "Taslağı yenile"
+                      : "Taslak oluştur"}
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={
+                  isSubmitting ||
+                  isQueued ||
+                  isDrafting ||
+                  answer.trim().length < 2
+                }
+              >
+                <HugeiconsIcon
+                  icon={isQueued ? RefreshIcon : SendIcon}
+                  className={`size-4 ${isQueued ? "animate-spin" : ""}`}
+                />
+                {isQueued
+                  ? "Gönderiliyor..."
+                  : delivery?.status === "FAILED"
+                    ? "Tekrar gönder"
+                    : "Cevabı gönder"}
+              </Button>
+            </div>
           </div>
         </div>
       </form>
@@ -295,11 +307,10 @@ function DraftReliabilityNotice({
 
   return (
     <div
-      className={`mt-3 rounded-lg border px-3.5 py-3 text-xs ${
-        needsReview
-          ? "border-amber-500/25 bg-amber-500/10 text-amber-950 dark:text-amber-100"
-          : "border-emerald-500/20 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100"
-      }`}
+      className={`mt-3 rounded-lg border px-3.5 py-3 text-xs ${needsReview
+        ? "border-amber-500/25 bg-amber-500/10 text-amber-950 dark:text-amber-100"
+        : "border-emerald-500/20 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100"
+        }`}
       aria-live="polite"
     >
       <div className="flex flex-wrap items-center gap-2">

@@ -80,7 +80,7 @@ export function PlansClient() {
   return (
     <main className="themed-scrollbar fixed inset-0 z-[100] overflow-y-auto bg-background">
       <div className="sticky top-0 z-20 border-b border-border/75 bg-background/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-17 w-full max-w-7xl items-center justify-between px-5 sm:h-19 sm:px-8 lg:px-10">
+        <div className="mx-auto flex h-17 w-full max-w-[1440px] items-center justify-between px-5 sm:h-19 sm:px-8 lg:px-10">
           <AppLogo />
           <Button
             asChild
@@ -98,7 +98,7 @@ export function PlansClient() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-7xl px-5 py-9 sm:px-8 sm:py-12 lg:px-10">
+      <div className="mx-auto w-full max-w-[1440px] px-5 py-9 sm:px-8 sm:py-12 lg:px-10">
         <header className="mx-auto max-w-2xl text-center">
           <Badge variant="outline" className="bg-card px-3 py-1 shadow-xs">
             <HugeiconsIcon icon={CalendarCheck01Icon} className="size-3.5" />
@@ -288,7 +288,7 @@ function PlanSelectionDialog({
           <dl className="divide-y divide-border text-sm">
             <div className="flex items-center justify-between gap-4 py-3 first:pt-0">
               <dt className="text-muted-foreground">Bugün ödenecek</dt>
-              <dd className="font-semibold">₺0</dd>
+              <dd className="font-semibold">0 ₺</dd>
             </div>
             <div className="flex items-center justify-between gap-4 py-3">
               <dt className="text-muted-foreground">Deneme bitişi</dt>

@@ -19,7 +19,6 @@ import type { QuestionAnswerDispatcher } from '../modules/question-answer/questi
 import { MOCK_PRODUCTS_PER_PROVIDER } from '../modules/channels/providers/mock-catalog.connector';
 import {
   MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER,
-  MOCK_REFERENCED_TRENDYOL_QUESTIONS,
   MOCK_TRENDYOL_QUESTIONS,
 } from '../modules/channels/providers/mock-question.connector';
 
@@ -136,7 +135,6 @@ async function run() {
       ignoredEvents,
       questions,
       matchedQuestions,
-      referencedQuestions,
       unmatchedQuestions,
       sentAnswers,
       questionSyncRuns,
@@ -151,13 +149,6 @@ async function run() {
       }),
       prisma.productQuestion.count({
         where: { connectionId: connection.id, productId: { not: null } },
-      }),
-      prisma.productQuestion.count({
-        where: {
-          connectionId: connection.id,
-          referenceAnswer: { not: null },
-          referenceSourceUrl: { not: null },
-        },
       }),
       prisma.productQuestion.findMany({
         where: { connectionId: connection.id, productId: null },
@@ -189,7 +180,6 @@ async function run() {
       ignoredEvents !== MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER ||
       questions !== MOCK_TRENDYOL_QUESTIONS ||
       matchedQuestions !== MOCK_TRENDYOL_QUESTIONS ||
-      referencedQuestions !== MOCK_REFERENCED_TRENDYOL_QUESTIONS ||
       sentAnswers !== 1 ||
       !duplicateAnswerPrevented ||
       questionSyncRuns.length !== 2 ||
@@ -203,12 +193,12 @@ async function run() {
       questionSyncRuns[1]?.questionsProcessed !== 0
     ) {
       throw new Error(
-        `Unexpected question flow: ${products} products, ${events} events, ${ignoredEvents} ignored, ${questions} questions, ${matchedQuestions} matched, ${referencedQuestions} referenced, ${sentAnswers} answers. Unmatched: ${unmatchedQuestions.map((question) => question.externalProductId).join(', ')}.`,
+        `Unexpected question flow: ${products} products, ${events} events, ${ignoredEvents} ignored, ${questions} questions, ${matchedQuestions} matched, ${sentAnswers} answers. Unmatched: ${unmatchedQuestions.map((question) => question.externalProductId).join(', ')}.`,
       );
     }
 
     process.stdout.write(
-      `${JSON.stringify({ syncs: 2, questionSyncHistory: questionSyncRuns.map((run) => ({ kind: run.kind, status: run.status, questionsProcessed: run.questionsProcessed })), products, events, ignoredEvents, questions, matchedQuestions, referencedQuestions, sentAnswers, duplicateSafe: true, duplicateAnswerPrevented })}\n`,
+      `${JSON.stringify({ syncs: 2, questionSyncHistory: questionSyncRuns.map((run) => ({ kind: run.kind, status: run.status, questionsProcessed: run.questionsProcessed })), products, events, ignoredEvents, questions, matchedQuestions, sentAnswers, duplicateSafe: true, duplicateAnswerPrevented })}\n`,
     );
   } finally {
     if (storeId) await prisma.store.deleteMany({ where: { id: storeId } });

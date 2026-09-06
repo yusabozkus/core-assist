@@ -18,7 +18,7 @@ export default async function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-5 py-10 sm:px-8 lg:px-10">
+    <div className="mx-auto w-full max-w-[1440px] px-5 py-10 sm:px-8 lg:px-10">
       <div className="mb-8">
         <p className="text-xs font-semibold tracking-[0.12em] text-primary uppercase">
           Hesap ayarları

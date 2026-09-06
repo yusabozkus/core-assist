@@ -1,297 +1,198 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Search01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
+import { useCallback, useEffect, useRef } from "react"
+import { usePathname, useSearchParams } from "next/navigation"
 
+import { CatalogBadge } from "@/components/dashboard/catalog/products/catalog-badge"
+import { CatalogStockSync } from "@/components/dashboard/catalog/products/catalog-stock-sync"
+import { CatalogToolbar } from "@/components/dashboard/catalog/products/catalog-toolbar"
+import { CompactProductCard } from "@/components/dashboard/catalog/products/compact-product-card"
 import { EmptyCatalog } from "@/components/dashboard/catalog/products/empty-catalog"
 import { NoSearchResults } from "@/components/dashboard/catalog/products/no-search-results"
 import { ProductCard } from "@/components/dashboard/catalog/products/product-card"
 import { ProductDetailDialog } from "@/components/dashboard/catalog/products/product-detail-dialog"
+import { getProviderName } from "@/components/dashboard/catalog/products/product-catalog-utils"
 import { ProductCardGridSkeleton } from "@/components/skeletons/product-catalog-skeleton"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { getCatalogProducts } from "@/lib/api/catalog"
-import type {
-  CatalogProductListItem,
-  CatalogProductPage,
-} from "@/types/product"
-
-const PAGE_SIZE = 12
-const SEARCH_DEBOUNCE_MS = 300
+import { PRODUCT_CATALOG_GRID } from "@/constants/catalog"
+import { useCatalogView } from "@/hooks/use-catalog-view"
+import { useProductCatalog } from "@/hooks/use-product-catalog"
+import type { ChannelConnection } from "@/types/channel"
+import type { CatalogProductPage } from "@/types/product"
 
 export type ProductCatalogProps = {
   storeId: string
   initialPage: CatalogProductPage
-  providers: Array<{ key: string; name: string }>
+  connections: ChannelConnection[]
 }
 
 export function ProductCatalog({
   storeId,
   initialPage,
-  providers,
+  connections,
 }: ProductCatalogProps) {
   const pathname = usePathname()
-  const router = useRouter()
   const searchParams = useSearchParams()
-  const [query, setQuery] = useState("")
-  const [activeQuery, setActiveQuery] = useState("")
-  const [provider, setProvider] = useState("ALL")
-  const [activeProvider, setActiveProvider] = useState("ALL")
-  const [products, setProducts] = useState(initialPage.items)
-  const [nextCursor, setNextCursor] = useState(initialPage.nextCursor)
-  const [total, setTotal] = useState(initialPage.total)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(
-    searchParams.get("product")
-  )
-  const loadMoreMarkerRef = useRef<HTMLDivElement | null>(null)
-  const requestSequence = useRef(0)
-  const lastRequestKey = useRef(`${storeId}|ALL|`)
-
-  useEffect(() => {
-    const linkedProductId = searchParams.get("product")
-    setSelectedProductId(linkedProductId)
-  }, [searchParams])
-
-  function selectProduct(productId: string) {
-    setSelectedProductId(productId)
-    updateProductParam(productId)
-  }
-
-  function updateProductParam(productId: string | null) {
-    const params = new URLSearchParams(searchParams.toString())
-
-    if (productId) params.set("product", productId)
-    else params.delete("product")
-
-    const queryString = params.toString()
-    router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
-      scroll: false,
-    })
-  }
-
-  useEffect(() => {
-    const normalizedQuery = query.trim()
-    const requestKey = `${storeId}|${provider}|${normalizedQuery}`
-
-    if (requestKey === lastRequestKey.current) return
-
-    const controller = new AbortController()
-    const requestId = ++requestSequence.current
-    const timeoutId = window.setTimeout(async () => {
-      lastRequestKey.current = requestKey
-      setIsLoading(true)
-      setError(null)
-
-      try {
-        const page = await getCatalogProducts(storeId, {
-          query: normalizedQuery,
-          provider,
-          limit: PAGE_SIZE,
-          signal: controller.signal,
-        })
-
-        if (requestId !== requestSequence.current) return
-        setActiveQuery(normalizedQuery)
-        setActiveProvider(provider)
-        setProducts(page.items)
-        setNextCursor(page.nextCursor)
-        setTotal(page.total)
-      } catch (caughtError) {
-        if (controller.signal.aborted) return
-        setError(
-          caughtError instanceof Error
-            ? caughtError.message
-            : "Ürünler aranırken bir hata oluştu."
-        )
-      } finally {
-        if (requestId === requestSequence.current) setIsLoading(false)
-      }
-    }, SEARCH_DEBOUNCE_MS)
-
-    return () => {
-      window.clearTimeout(timeoutId)
-      controller.abort()
-    }
-  }, [provider, query, storeId])
-
-  const loadMore = useCallback(async () => {
-    if (
-      !nextCursor ||
-      isLoading ||
-      query.trim() !== activeQuery ||
-      provider !== activeProvider
-    ) {
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const page = await getCatalogProducts(storeId, {
-        cursor: nextCursor,
-        query: activeQuery,
-        provider: activeProvider,
-        limit: PAGE_SIZE,
-      })
-      setProducts((current) => mergeProducts(current, page.items))
-      setNextCursor(page.nextCursor)
-      setTotal(page.total)
-    } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Diğer ürünler yüklenemedi."
-      )
-    } finally {
-      setIsLoading(false)
-    }
-  }, [
-    activeProvider,
-    activeQuery,
-    isLoading,
-    nextCursor,
-    provider,
+  const selectedProductId = searchParams.get("product")
+  const [view, setView] = useCatalogView()
+  const {
     query,
-    storeId,
-  ])
+    setQuery,
+    provider,
+    setProvider,
+    page,
+    loading,
+    error,
+    loadedFilters,
+    loadMore,
+    refresh,
+    revision,
+  } = useProductCatalog(storeId, initialPage)
+  const loadMoreMarkerRef = useRef<HTMLDivElement>(null)
+  const providers = [
+    ...new Set(
+      connections
+        .filter(
+          (connection) =>
+            connection.type === "COMMERCE" && connection.status === "CONNECTED"
+        )
+        .map((connection) => connection.providerKey)
+    ),
+  ].map((key) => ({ key, name: getProviderName(key) }))
+
+  const selectProduct = useCallback(
+    (productId: string | null) => {
+      const params = new URLSearchParams(window.location.search)
+      if (productId) params.set("product", productId)
+      else params.delete("product")
+      const queryString = params.toString()
+      window.history.replaceState(
+        null,
+        "",
+        queryString ? `${pathname}?${queryString}` : pathname
+      )
+    },
+    [pathname]
+  )
 
   useEffect(() => {
     const marker = loadMoreMarkerRef.current
-    if (!marker || !nextCursor) return
-
+    if (!marker || !page.nextCursor || loading || error) return
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) void loadMore()
       },
       { rootMargin: "320px 0px" }
     )
-
     observer.observe(marker)
     return () => observer.disconnect()
-  }, [loadMore, nextCursor])
+  }, [loadMore, page.nextCursor, loading, error, view])
 
-  function handleQueryChange(value: string) {
-    setQuery(value)
-  }
-
-  if (initialPage.summary.products === 0) {
-    return <EmptyCatalog />
-  }
-
-  const isReplacingResults =
-    isLoading && (query.trim() !== activeQuery || provider !== activeProvider)
-  const activeProviderName = providers.find(
-    (item) => item.key === activeProvider
-  )?.name
+  const Card = view === "compact" ? CompactProductCard : ProductCard
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex w-full flex-col gap-2 sm:max-w-xl sm:flex-row">
-          <div className="min-w-0 flex-1">
-            <Input
-              value={query}
-              onChange={(event) => handleQueryChange(event.target.value)}
-              placeholder="Ürün, SKU, barkod, renk veya özellik ara"
-              icon={<HugeiconsIcon icon={Search01Icon} className="size-4" />}
-              className="h-9! border-border bg-card"
-              aria-label="Katalogda ara"
-            />
+    <div className="mx-auto w-full max-w-[1440px] space-y-6 px-5 py-8 sm:px-8 lg:px-10">
+      <div className="flex flex-col justify-between gap-5 border-b border-border/70 pb-6 sm:flex-row sm:items-start">
+        <div className="space-y-3">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-[-0.04em] text-foreground">
+              Ürünler
+            </h1>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Pazaryerlerindeki ürünlerinizi tek bir katalogdan takip edin.
+            </p>
           </div>
-          <Select value={provider} onValueChange={setProvider}>
-            <SelectTrigger
-              size="sm"
-              aria-label="Pazaryerine göre filtrele"
-              className="h-9! w-full rounded-xl border-border bg-card sm:w-44"
-            >
-              <SelectValue placeholder="Tüm pazaryerleri" />
-            </SelectTrigger>
-            <SelectContent align="start">
-              <SelectItem value="ALL">Tüm pazaryerleri</SelectItem>
-              {providers.map((item) => (
-                <SelectItem key={item.key} value={item.key}>
-                  {item.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-wrap gap-2">
+            <CatalogBadge label="Ürün" value={page.summary.products} />
+            <CatalogBadge label="Varyant" value={page.summary.variants} />
+            <CatalogBadge label="Toplam stok" value={page.summary.totalStock} />
+          </div>
         </div>
-        <p className="text-xs text-muted-foreground tabular-nums">
-          {products.length.toLocaleString("tr-TR")} /{" "}
-          {total.toLocaleString("tr-TR")} ürün gösteriliyor
-        </p>
+        <CatalogStockSync
+          storeId={storeId}
+          connections={connections}
+          provider={provider}
+          onCompleted={refresh}
+        />
       </div>
 
-      {isReplacingResults ? (
-        <ProductCardGridSkeleton />
-      ) : products.length === 0 &&
-        (activeQuery || activeProvider !== "ALL") &&
-        !isLoading ? (
-        <NoSearchResults
-          query={activeQuery}
-          providerName={activeProviderName}
-          onClear={() => {
-            setQuery("")
-            setProvider("ALL")
-          }}
-        />
-      ) : (
-        <>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onSelect={selectProduct}
-              />
-            ))}
-          </div>
-          {isLoading && nextCursor ? (
-            <div className="mt-3">
-              <ProductCardGridSkeleton count={3} />
+      <CatalogToolbar
+        query={query}
+        onQueryChange={setQuery}
+        provider={provider}
+        onProviderChange={setProvider}
+        providers={providers}
+        view={view}
+        onViewChange={setView}
+        shown={page.items.length}
+        total={page.total}
+        isLoading={loading === "replace" || loading === "refresh"}
+      />
+
+      <div aria-busy={loading !== null}>
+        {view === null ? (
+          <ProductCardGridSkeleton />
+        ) : loading === "replace" ? (
+          <ProductCardGridSkeleton view={view} />
+        ) : page.summary.products === 0 ? (
+          <EmptyCatalog />
+        ) : page.items.length === 0 && !error ? (
+          <NoSearchResults
+            query={loadedFilters.query}
+            providerName={
+              providers.find((item) => item.key === loadedFilters.provider)
+                ?.name
+            }
+            onClear={() => {
+              setQuery("")
+              setProvider("ALL")
+            }}
+          />
+        ) : (
+          <>
+            <div className={PRODUCT_CATALOG_GRID[view]}>
+              {page.items.map((product) => (
+                <Card
+                  key={product.id}
+                  product={product}
+                  onSelect={selectProduct}
+                />
+              ))}
             </div>
-          ) : null}
-        </>
-      )}
+            {loading === "more" ? (
+              <div className="mt-3">
+                <ProductCardGridSkeleton count={3} view={view} />
+              </div>
+            ) : null}
+          </>
+        )}
+      </div>
 
       <div
         ref={loadMoreMarkerRef}
-        className="flex min-h-14 items-center justify-center"
+        className="flex min-h-12 items-center justify-center"
         aria-live="polite"
       >
-        {isLoading ? (
-          <span className="sr-only">Ürünler yükleniyor...</span>
-        ) : error ? (
+        {error ? (
           <div className="flex flex-col items-center gap-2 text-center">
             <p className="text-xs text-destructive">{error}</p>
-            {nextCursor ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={loadMore}
-              >
-                Tekrar dene
-              </Button>
-            ) : null}
+            <Button type="button" size="sm" variant="outline" onClick={refresh}>
+              Tekrar dene
+            </Button>
           </div>
-        ) : nextCursor ? (
-          <span className="text-xs text-muted-foreground">
-            Daha fazla ürün için aşağı kaydırın
-          </span>
-        ) : products.length > 0 ? (
+        ) : loading ? (
+          <span className="sr-only">Ürünler yükleniyor...</span>
+        ) : page.nextCursor ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="text-xs text-muted-foreground"
+            onClick={loadMore}
+          >
+            Daha fazla ürün göster
+          </Button>
+        ) : page.items.length > 0 ? (
           <span className="text-xs text-muted-foreground">
             Tüm ürünler gösteriliyor
           </span>
@@ -299,27 +200,14 @@ export function ProductCatalog({
       </div>
 
       <ProductDetailDialog
+        key={revision}
         storeId={storeId}
         productId={selectedProductId}
         open={selectedProductId !== null}
         onOpenChange={(open) => {
-          if (!open) {
-            setSelectedProductId(null)
-            updateProductParam(null)
-          }
+          if (!open) selectProduct(null)
         }}
       />
     </div>
   )
-}
-
-function mergeProducts(
-  current: CatalogProductListItem[],
-  incoming: CatalogProductListItem[]
-) {
-  return [
-    ...new Map(
-      [...current, ...incoming].map((product) => [product.id, product])
-    ).values(),
-  ]
 }

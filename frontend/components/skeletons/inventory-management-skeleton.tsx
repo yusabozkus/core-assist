@@ -24,7 +24,7 @@ export function InventoryRowsSkeleton({ count = 8 }: { count?: number }) {
 
 export function InventoryManagementSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
+    <div className="mx-auto w-full max-w-[1440px] px-5 py-10 sm:px-8 lg:px-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <Skeleton className="h-9 w-40" />

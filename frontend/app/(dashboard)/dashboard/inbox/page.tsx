@@ -37,5 +37,5 @@ function parseQuestionFilter(
     normalized === "ANSWERED" ||
     normalized === "IGNORED"
     ? normalized
-    : "ALL"
+    : "PENDING"
 }

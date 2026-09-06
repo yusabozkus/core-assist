@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import {
   AlertCircleIcon,
+  Cancel01Icon,
   CheckmarkCircle01Icon,
   InboxIcon,
   RefreshIcon,
   Search01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { motion } from "motion/react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 import { EmptyInbox } from "@/components/dashboard/inbox/empty-inbox"
@@ -71,11 +73,10 @@ const inboxFilters: Array<{
   value: ProductQuestionFilter
   label: string
 }> = [
-  { value: "ALL", label: "Tümü" },
-  { value: "PENDING", label: "Bekleyen" },
-  { value: "ANSWERED", label: "Yanıtlanan" },
-  { value: "IGNORED", label: "Engellenen" },
-]
+    { value: "PENDING", label: "Bekleyen" },
+    { value: "ANSWERED", label: "Yanıtlanan" },
+    { value: "IGNORED", label: "Engellenen" },
+  ]
 
 export function QuestionInbox({
   storeId,
@@ -362,7 +363,7 @@ export function QuestionInbox({
 
   function changeFilter(nextFilter: ProductQuestionFilter) {
     const params = new URLSearchParams(searchParams.toString())
-    if (nextFilter === "ALL") {
+    if (nextFilter === "PENDING") {
       params.delete("status")
     } else {
       params.set("status", nextFilter.toLowerCase())
@@ -508,7 +509,7 @@ export function QuestionInbox({
 
   const questionListPanel = (
     <aside className="relative flex h-full min-h-0 flex-col border-b border-border bg-background lg:border-b-0">
-      <div className="shrink-0 border-b border-border bg-background p-3.5">
+      <div className="shrink-0 bg-background px-3.5 pt-3.5">
         <div>
           <Input
             value={query}
@@ -516,27 +517,52 @@ export function QuestionInbox({
             placeholder="Müşteri, ürün veya soru ara"
             aria-label="Gelen kutusunda ara"
             icon={<HugeiconsIcon icon={Search01Icon} className="size-4" />}
+            endIcon={
+              query ? (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  aria-label="Aramayı temizle"
+                  className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                >
+                  <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
+                </button>
+              ) : undefined
+            }
             className="h-9! bg-card"
           />
         </div>
 
-        <div className="mt-2.5 grid grid-cols-4 rounded-lg border border-border bg-muted p-1">
+        <div className="mt-2.5 grid grid-cols-3 border-b border-border/70">
           {inboxFilters.map((item) => {
             const count = filterCount(item.value, summary)
+            const isActive = filter === item.value
 
             return (
               <button
                 key={item.value}
                 type="button"
                 onClick={() => changeFilter(item.value)}
-                aria-pressed={filter === item.value}
-                className={`rounded-md px-2 py-1.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
-                  filter === item.value
-                    ? "bg-card text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                aria-pressed={isActive}
+                className={`relative flex items-center justify-center gap-1.5 px-2 py-2.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset ${isActive
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+                  }`}
               >
-                {item.label} {count}
+                <span>{item.label}</span>
+                <span
+                  className={`text-[10px] tabular-nums ${isActive ? "text-primary" : "text-muted-foreground/75"
+                    }`}
+                >
+                  {count}
+                </span>
+                {isActive ? (
+                  <motion.span
+                    layoutId="inbox-filter-indicator"
+                    className="absolute right-2 bottom-[-1px] left-2 h-0.5 rounded-full bg-primary"
+                    transition={{ type: "spring", stiffness: 440, damping: 36 }}
+                  />
+                ) : null}
               </button>
             )
           })}
@@ -738,10 +764,10 @@ export function QuestionInbox({
               description={
                 selectedQuestionSummary
                   ? `${providerName(
-                      selectedQuestionSummary.connection.providerKey
-                    )} · ${inboxDateFormatter.format(
-                      new Date(selectedQuestionSummary.externalCreatedAt)
-                    )}`
+                    selectedQuestionSummary.connection.providerKey
+                  )} · ${inboxDateFormatter.format(
+                    new Date(selectedQuestionSummary.externalCreatedAt)
+                  )}`
                   : "Soru detayları"
               }
               bodyClassName="px-0 py-0"
@@ -782,10 +808,10 @@ function listItemFromDetail(
     connection: question.connection,
     product: question.product
       ? {
-          id: question.product.id,
-          title: question.product.title,
-          imageUrl: question.product.images[0]?.url ?? null,
-        }
+        id: question.product.id,
+        title: question.product.title,
+        imageUrl: question.product.images[0]?.url ?? null,
+      }
       : null,
     answerDelivery: question.answerDelivery
       ? { status: question.answerDelivery.status }
@@ -829,5 +855,5 @@ function parseQuestionFilter(value: string | null): ProductQuestionFilter {
     normalized === "ANSWERED" ||
     normalized === "IGNORED"
     ? normalized
-    : "ALL"
+    : "PENDING"
 }

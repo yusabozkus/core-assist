@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { type MouseEvent, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -26,6 +26,15 @@ export function LandingHeader() {
   const { scrollY } = useScroll()
   const reducedMotion = useReducedMotion()
   const hasSurface = isScrolled || isMenuOpen
+
+  const handleBrandClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault()
+    setIsMenuOpen(false)
+    window.scrollTo({
+      top: 0,
+      behavior: reducedMotion ? "auto" : "smooth",
+    })
+  }
 
   useMotionValueEvent(scrollY, "change", (position) => {
     const nextIsScrolled = position > 25
@@ -125,7 +134,7 @@ export function LandingHeader() {
         )}
       >
         <div className="flex h-16 items-center justify-between gap-3 px-3 sm:px-5">
-          <LandingBrand />
+          <LandingBrand onClick={handleBrandClick} />
 
           <nav
             aria-label="Ana navigasyon"

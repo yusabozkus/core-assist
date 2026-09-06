@@ -5,7 +5,7 @@ export function AiPerformanceSkeleton() {
     <div
       role="status"
       aria-label="AI performansı yükleniyor"
-      className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
+      className="mx-auto w-full max-w-[1440px] space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
     >
       <span className="sr-only">AI performansı yükleniyor…</span>
       <div className="flex flex-wrap justify-between gap-5">

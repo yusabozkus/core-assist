@@ -21,7 +21,7 @@ export function getProductQuestions(
   {
     cursor,
     limit = 30,
-    status = "ALL",
+    status = "PENDING",
     query,
     signal,
   }: GetProductQuestionsOptions = {}

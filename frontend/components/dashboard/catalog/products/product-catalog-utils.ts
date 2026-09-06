@@ -1,4 +1,5 @@
 import type { CatalogProductVariant } from "@/types/product"
+import { formatCurrency } from "@/lib/format-currency"
 
 export function getVariantAvailability(variant: CatalogProductVariant): {
   label: string
@@ -23,11 +24,9 @@ export function formatPriceRange(variants: CatalogProductVariant[]) {
 }
 
 export function formatPrice(price: number, currency: string) {
-  return new Intl.NumberFormat("tr-TR", {
-    style: "currency",
-    currency,
+  return formatCurrency(price, currency, {
     maximumFractionDigits: 2,
-  }).format(price)
+  })
 }
 
 export function formatCatalogDate(value: string) {

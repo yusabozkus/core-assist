@@ -1,18 +1,15 @@
 "use client"
 
-import {
-  ArrowDown01Icon,
-  Clock01Icon,
-  MagicWand01Icon,
-} from "@hugeicons/core-free-icons"
+import { Clock01Icon, MagicWand01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import type { AiDraftAttempt, QuestionAnswerDelivery } from "@/types/question"
 
@@ -31,32 +28,36 @@ export function QuestionDraftHistory({
   if (attempts.length === 0) return null
 
   return (
-    <Collapsible className="group/history overflow-hidden rounded-xl border border-border bg-card">
-      <CollapsibleTrigger className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset sm:px-5">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <HugeiconsIcon icon={MagicWand01Icon} className="size-4" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-foreground">
-              AI taslak geçmişi
-            </span>
-            <Badge variant="secondary" className="h-5 px-2 text-[10px]">
-              {attempts.length}
-            </Badge>
-          </span>
-          <span className="mt-0.5 block text-xs text-muted-foreground">
-            Üretilen taslakları ve gönderim sonucunu inceleyin.
-          </span>
-        </span>
-        <HugeiconsIcon
-          icon={ArrowDown01Icon}
-          className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]/history:rotate-180"
-        />
-      </CollapsibleTrigger>
-
-      <CollapsibleContent>
-        <div className="border-t border-border">
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="h-8 gap-1.5 px-2 text-xs text-muted-foreground"
+        >
+          <HugeiconsIcon icon={MagicWand01Icon} className="size-3.5" />
+          Taslak geçmişi
+          <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+            {attempts.length}
+          </Badge>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        side="top"
+        align="start"
+        sideOffset={8}
+        className="w-[min(32rem,calc(100vw-2rem))] gap-0 overflow-hidden rounded-xl border border-border p-0"
+      >
+        <div className="border-b border-border px-4 py-3.5">
+          <p className="text-sm font-semibold text-foreground">
+            AI taslak geçmişi
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Üretilen taslakları ve gönderim sonuçlarını inceleyin.
+          </p>
+        </div>
+        <div className="themed-scrollbar max-h-80 overflow-y-auto">
           {attempts.map((attempt, index) => {
             const outcome = resolveOutcome(attempt, delivery)
 
@@ -115,8 +116,8 @@ export function QuestionDraftHistory({
             )
           })}
         </div>
-      </CollapsibleContent>
-    </Collapsible>
+      </PopoverContent>
+    </Popover>
   )
 }
 

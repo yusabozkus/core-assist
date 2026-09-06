@@ -191,7 +191,7 @@ export function KnowledgeBaseSettings({
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-5 py-7 sm:px-8 sm:py-9 lg:px-10">
+    <div className="mx-auto w-full max-w-[1440px] px-5 py-7 sm:px-8 sm:py-9 lg:px-10">
       <SettingsPageHeader
         title="Bilgi tabanı"
         description="AI'ın katalog dışında kullanabileceği doğrulanmış mağaza politikalarını, sık sorulan soruları ve kanal farklılıklarını yönetin."

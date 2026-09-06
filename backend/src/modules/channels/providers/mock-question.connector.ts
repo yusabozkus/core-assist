@@ -12,12 +12,6 @@ export const MOCK_TRENDYOL_QUESTIONS = DEFACTO_QUESTION_SEEDS.filter(
 export const MOCK_HEPSIBURADA_QUESTIONS = DEFACTO_QUESTION_SEEDS.filter(
   (seed) => seed.targetProvider === 'hepsiburada',
 ).length;
-export const MOCK_REFERENCED_TRENDYOL_QUESTIONS = DEFACTO_QUESTION_SEEDS.filter(
-  (seed) =>
-    seed.targetProvider === 'trendyol' &&
-    seed.referenceAnswer &&
-    seed.referenceSourceUrl,
-).length;
 export const MOCK_ABUSIVE_QUESTIONS = DEFACTO_QUESTION_SEEDS.filter(
   (seed) => seed.scenario === 'ABUSIVE',
 ).length;
@@ -110,9 +104,6 @@ function createMockQuestions(
       externalCustomerId: `mock-${providerKey}-customer-${customerIndex + 1}`,
       customerName: MOCK_CUSTOMER_NAMES[customerIndex],
       text: seed.text,
-      referenceAnswer: seed.referenceAnswer,
-      referenceSourceUrl: seed.referenceSourceUrl,
-      referenceSourceProvider: seed.referenceSourceProvider,
       createdAt: afterConnection(createdAfter, index + 1),
       rawPayload: {
         fixture: true,
@@ -120,8 +111,6 @@ function createMockQuestions(
         scenario: seed.scenario ?? 'PRODUCT',
         provider: providerKey,
         sourceAskedAt: seed.sourceAskedAt,
-        referenceSourceProvider: seed.referenceSourceProvider,
-        referenceSourceUrl: seed.referenceSourceUrl,
       },
     };
   });

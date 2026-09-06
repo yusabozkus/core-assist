@@ -1,70 +1,59 @@
-import { ProductThumbnail } from "@/components/dashboard/catalog/products/product-thumbnail"
-import { formatPrice } from "@/components/dashboard/catalog/products/product-catalog-utils"
-import type { CatalogProductListItem } from "@/types/product"
-import { ProviderLogo } from "../../channels/provider-logo"
+import { memo } from "react"
 
-type ProductCardProps = {
-  product: CatalogProductListItem
-  onSelect: (productId: string) => void
-}
+import { ProductThumbnail } from "./product-thumbnail"
+import {
+  ProductCardInventory,
+  ProductCardPrice,
+  ProductCardProviders,
+  type ProductCardProps,
+} from "./product-card-meta"
 
-export function ProductCard({ product, onSelect }: ProductCardProps) {
+export const ProductCard = memo(function ProductCard({
+  product,
+  onSelect,
+}: ProductCardProps) {
   return (
     <button
       type="button"
       onClick={() => onSelect(product.id)}
-      className="group flex min-w-0 items-stretch gap-3 rounded-xl border border-border bg-card p-3 text-left shadow-xs transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-foreground/15 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      className="group flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card text-left shadow-xs transition-[border-color,box-shadow] hover:border-primary/35 hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
       aria-label={`${product.title} detaylarını görüntüle`}
     >
-      <ProductThumbnail title={product.title} imageUrl={product.imageUrl} />
-      <span className="flex min-w-0 flex-1 flex-col py-0.5">
-        <span className="flex min-w-0 items-start justify-between gap-2">
-          <span className="line-clamp-2 text-sm leading-5 font-semibold text-foreground">
-            {product.title}
+      <span className="relative block w-full border-b border-border/70 bg-muted/30 p-3">
+        <ProductThumbnail
+          title={product.title}
+          imageUrl={product.imageUrl}
+          sizes="(max-width: 640px) 90vw, (max-width: 1200px) 40vw, 360px"
+          className="aspect-[4/3] h-auto w-full rounded-lg border-0 bg-white sm:h-auto sm:w-full"
+          imageClassName="object-contain"
+        />
+      </span>
+      <span className="flex w-full min-w-0 flex-1 flex-col gap-3 p-4">
+        <span className="flex items-center justify-between gap-3">
+          <span
+            className="truncate text-xs font-medium text-muted-foreground"
+            title={[product.brand, product.category]
+              .filter(Boolean)
+              .join(" · ")}
+          >
+            {[product.brand, product.category].filter(Boolean).join(" · ") ||
+              "Kategori belirtilmemiş"}
           </span>
-          <ProviderLogo
-            provider={product.providers[0].providerKey}
-            className="size-6!"
-          />
+          <ProductCardProviders product={product} />
         </span>
-        <span className="mt-1 truncate text-xs text-muted-foreground">
-          {[product.brand, product.category].filter(Boolean).join(" · ") ||
-            "Kategori bilgisi bulunmuyor"}
+        <span
+          className="line-clamp-2 min-h-10 text-sm leading-5 font-semibold text-foreground"
+          title={product.title}
+        >
+          {product.title}
         </span>
-
-        <span className="mt-auto grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 pt-3">
-          <span className="min-w-0">
-            <span className="block text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-              Fiyat
-            </span>
-            <span className="block truncate text-sm font-semibold text-foreground tabular-nums">
-              {formatListPrice(product)}
-            </span>
-          </span>
-          <span className="text-right text-xs text-muted-foreground">
-            <span className="block whitespace-nowrap">
-              {product.variantCount} varyant
-            </span>
-            <span
-              className={`block font-medium whitespace-nowrap tabular-nums ${product.totalStock > 0
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-amber-600 dark:text-amber-400"
-                }`}
-            >
-              {product.totalStock} stok
-            </span>
-          </span>
+        <span className="mt-auto block">
+          <ProductCardPrice product={product} />
+        </span>
+        <span className="block border-t border-border/70 pt-3">
+          <ProductCardInventory product={product} />
         </span>
       </span>
     </button>
   )
-}
-
-function formatListPrice(product: CatalogProductListItem) {
-  if (product.minimumPrice === null || product.maximumPrice === null) return "—"
-
-  const minimum = formatPrice(product.minimumPrice, product.currency)
-  if (product.minimumPrice === product.maximumPrice) return minimum
-
-  return `${minimum} – ${formatPrice(product.maximumPrice, product.currency)}`
-}
+})

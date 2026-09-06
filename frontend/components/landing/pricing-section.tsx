@@ -9,6 +9,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { APP_ROUTES } from "@/constants/site"
+import { formatCurrency } from "@/lib/format-currency"
 import { cn } from "@/lib/utils"
 import { LandingReveal } from "./landing-reveal"
 import styles from "./landing.module.css"
@@ -48,11 +49,8 @@ const plans = [
     featured: false,
   },
 ]
-const currency = new Intl.NumberFormat("tr-TR", {
-  style: "currency",
-  currency: "TRY",
-  maximumFractionDigits: 0,
-})
+const formatPlanPrice = (value: number) =>
+  formatCurrency(value, "TRY", { maximumFractionDigits: 0 })
 
 type BillingCycle = "monthly" | "annual"
 
@@ -250,10 +248,10 @@ export function PricingSection() {
                   <span className="text-[42px] font-medium tracking-[-.07em] tabular-nums">
                     <AnimatedPrice
                       cycle={billingCycle}
-                      value={currency.format(plan.price * (annual ? 0.9 : 1))}
+                      value={formatPlanPrice(plan.price * (annual ? 0.9 : 1))}
                     />
                     <span className="sr-only">
-                      {currency.format(plan.price * (annual ? 0.9 : 1))}
+                      {formatPlanPrice(plan.price * (annual ? 0.9 : 1))}
                     </span>
                   </span>
                   <span className="text-xs text-[#879476]">/ ay</span>
@@ -261,7 +259,7 @@ export function PricingSection() {
                 <p className="mt-2 min-h-5 text-[11px] text-[#829071]">
                   <AnimatedBillingNote cycle={billingCycle}>
                     {annual
-                      ? `Yıllık ${currency.format(plan.price * 12 * 0.9)} olarak ödenir`
+                      ? `Yıllık ${formatPlanPrice(plan.price * 12 * 0.9)} olarak ödenir`
                       : "Aylık faturalandırılır"}
                   </AnimatedBillingNote>
                 </p>

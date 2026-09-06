@@ -3,6 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { formatCurrency } from "@/lib/format-currency"
 
 export type InvoiceStatus = "paid" | "refunded"
 
@@ -19,12 +20,6 @@ export type InvoiceRecord = {
   status: InvoiceStatus
   paymentMethod: string
 }
-
-const currencyFormatter = new Intl.NumberFormat("tr-TR", {
-  style: "currency",
-  currency: "TRY",
-  maximumFractionDigits: 0,
-})
 
 export function InvoiceHistory({
   invoices,
@@ -84,7 +79,7 @@ export function InvoiceHistory({
                   {invoice.issuedAt}
                 </td>
                 <td className="px-4 py-4 text-right text-sm font-semibold text-foreground tabular-nums">
-                  {currencyFormatter.format(invoice.total)}
+                  {formatInvoiceAmount(invoice.total)}
                 </td>
                 <td className="px-4 py-4">
                   <InvoiceStatusBadge status={invoice.status} />
@@ -127,7 +122,7 @@ export function InvoiceHistory({
             </span>
             <span className="shrink-0 text-right">
               <span className="block text-sm font-semibold text-foreground tabular-nums">
-                {currencyFormatter.format(invoice.total)}
+                {formatInvoiceAmount(invoice.total)}
               </span>
               <span className="mt-1 flex justify-end">
                 <InvoiceStatusBadge status={invoice.status} />
@@ -155,5 +150,5 @@ export function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
 }
 
 export function formatInvoiceAmount(amount: number) {
-  return currencyFormatter.format(amount)
+  return formatCurrency(amount, "TRY", { maximumFractionDigits: 0 })
 }

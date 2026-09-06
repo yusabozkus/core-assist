@@ -1,69 +1,129 @@
-import { Skeleton } from "@/components/ui/skeleton"
+"use client"
 
-export function ProductCardSkeleton() {
-  return (
-    <div className="flex min-w-0 items-stretch gap-3 rounded-xl border border-border bg-card p-3 shadow-xs">
-      <Skeleton className="h-28 w-22 shrink-0 rounded-lg sm:h-30 sm:w-24" />
-      <div className="flex min-w-0 flex-1 flex-col py-0.5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1 space-y-2">
-            <Skeleton className="h-4 w-4/5" />
-            <Skeleton className="h-4 w-3/5" />
-          </div>
-          <Skeleton className="h-5 w-16 shrink-0 rounded-full" />
+import { Skeleton } from "@/components/ui/skeleton"
+import { useCatalogView } from "@/hooks/use-catalog-view"
+import {
+  PRODUCT_CATALOG_GRID,
+  type ProductCatalogView,
+} from "@/constants/catalog"
+
+export function ProductCardSkeleton({
+  view = null,
+}: {
+  view?: ProductCatalogView | null
+}) {
+  if (view === null) {
+    return (
+      <div className="flex min-h-36 gap-3 rounded-xl border border-border bg-card p-3">
+        <Skeleton className="h-28 w-22 shrink-0 rounded-lg" />
+        <div className="flex min-w-0 flex-1 flex-col gap-2 py-1">
+          <Skeleton className="h-3 w-2/5" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-4/5" />
+          <Skeleton className="mt-auto h-4 w-3/5" />
         </div>
-        <Skeleton className="mt-2 h-3 w-2/3" />
-        <div className="mt-auto flex items-end justify-between gap-4 pt-3">
-          <div className="space-y-1.5">
-            <Skeleton className="h-2.5 w-10" />
-            <Skeleton className="h-4 w-24" />
+      </div>
+    )
+  }
+
+  if (view === "compact") {
+    return (
+      <div className="rounded-xl border border-border bg-card p-3">
+        <div className="flex gap-3">
+          <Skeleton className="h-24 w-18 shrink-0 rounded-lg" />
+          <div className="flex flex-1 flex-col gap-2 py-1">
+            <Skeleton className="h-3.5 w-full" />
+            <Skeleton className="h-3.5 w-4/5" />
+            <Skeleton className="h-3 w-1/2" />
+            <Skeleton className="mt-auto h-4 w-3/4" />
           </div>
-          <div className="space-y-1.5">
-            <Skeleton className="h-3 w-14" />
-            <Skeleton className="h-3 w-12" />
-          </div>
+        </div>
+        <div className="mt-3 flex items-center justify-between border-t border-border/70 pt-2.5">
+          <Skeleton className="size-6 rounded-md" />
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-3 w-20" />
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="border-b border-border/70 p-3">
+        <Skeleton className="aspect-[4/3] w-full rounded-lg" />
+      </div>
+      <div className="space-y-3 p-4">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-3 w-1/2" />
+          <Skeleton className="size-6 rounded-md" />
+        </div>
+        <div className="min-h-10 space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+        <Skeleton className="h-5 w-3/5" />
+        <div className="flex justify-between border-t border-border/70 pt-3">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-24" />
         </div>
       </div>
     </div>
   )
 }
 
-export function ProductCardGridSkeleton({ count = 6 }: { count?: number }) {
+export function ProductCardGridSkeleton({
+  count = 6,
+  view = null,
+}: {
+  count?: number
+  view?: ProductCatalogView | null
+}) {
   return (
     <div
-      className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+      className={
+        view === null
+          ? "grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+          : PRODUCT_CATALOG_GRID[view]
+      }
       aria-hidden="true"
     >
       {Array.from({ length: count }, (_, index) => (
-        <ProductCardSkeleton key={index} />
+        <ProductCardSkeleton key={index} view={view} />
       ))}
     </div>
   )
 }
 
 export function ProductCatalogSkeleton() {
+  const [view] = useCatalogView()
   return (
-    <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+    <div
+      className="mx-auto w-full max-w-[1440px] space-y-6 px-5 py-8 sm:px-8 lg:px-10"
+      aria-label="Ürünler yükleniyor"
+      aria-busy="true"
+    >
+      <div className="flex flex-col justify-between gap-5 border-b border-border/70 pb-6 sm:flex-row">
+        <div className="space-y-3">
           <Skeleton className="h-9 w-36" />
-          <div className="mt-3 flex gap-2">
+          <Skeleton className="h-4 w-64" />
+          <div className="flex flex-wrap gap-2">
             <Skeleton className="h-7 w-24 rounded-full" />
             <Skeleton className="h-7 w-28 rounded-full" />
             <Skeleton className="h-7 w-32 rounded-full" />
           </div>
-          <Skeleton className="mt-3 h-3 w-44" />
         </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-9 w-36 rounded-xl" />
-          <Skeleton className="h-9 w-28 rounded-xl" />
+        <div className="flex flex-col gap-2 sm:items-end">
+          <Skeleton className="h-10 w-40 rounded-lg" />
+          <Skeleton className="h-3 w-44" />
         </div>
       </div>
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <Skeleton className="h-9 w-full max-w-sm rounded-xl" />
-        <Skeleton className="hidden h-3 w-32 sm:block" />
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Skeleton className="h-10 w-full max-w-2xl rounded-xl" />
+          <Skeleton className="h-10 w-52 rounded-xl" />
+        </div>
+        <Skeleton className="h-4 w-36" />
       </div>
-      <ProductCardGridSkeleton />
+      <ProductCardGridSkeleton view={view} />
     </div>
   )
 }

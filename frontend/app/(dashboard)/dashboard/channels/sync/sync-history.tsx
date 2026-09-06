@@ -245,7 +245,7 @@ export function SyncHistory({
   const hasAnyHistory = initialPage.providers.length > 0
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 lg:px-10">
+    <div className="mx-auto w-full max-w-[1440px] px-5 py-10 sm:px-8 lg:px-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-3xl font-semibold tracking-[-0.04em] text-foreground">

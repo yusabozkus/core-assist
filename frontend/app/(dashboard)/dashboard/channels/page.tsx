@@ -16,7 +16,7 @@ export default async function ChannelsPage() {
   ])
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 lg:px-10">
+    <div className="mx-auto w-full max-w-[1440px] px-5 py-10 sm:px-8 lg:px-10">
       <ChannelManagement
         storeId={activeStore.id}
         storeName={activeStore.name}

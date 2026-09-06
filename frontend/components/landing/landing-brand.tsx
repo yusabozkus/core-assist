@@ -1,4 +1,5 @@
 import Link from "next/link"
+import type { MouseEventHandler } from "react"
 import { Layers01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
@@ -7,14 +8,17 @@ import { cn } from "@/lib/utils"
 export function LandingBrand({
   compact = false,
   className,
+  onClick,
 }: {
   compact?: boolean
   className?: string
+  onClick?: MouseEventHandler<HTMLAnchorElement>
 }) {
   return (
     <Link
       href="/"
       aria-label="CoreAssist ana sayfa"
+      onClick={onClick}
       className={cn(
         "inline-flex items-center gap-2.5 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[#245d46]/30",
         className

@@ -72,6 +72,27 @@ function ResponsiveDialog({
   const isMobile = useIsMobile()
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen)
   const resolvedOpen = open ?? internalOpen
+  const currentContent = {
+    title,
+    description,
+    children,
+    footer,
+    headerActions,
+  }
+  const [lastOpenContent, setLastOpenContent] = React.useState(currentContent)
+
+  if (
+    resolvedOpen &&
+    (lastOpenContent.title !== title ||
+      lastOpenContent.description !== description ||
+      lastOpenContent.children !== children ||
+      lastOpenContent.footer !== footer ||
+      lastOpenContent.headerActions !== headerActions)
+  ) {
+    setLastOpenContent(currentContent)
+  }
+
+  const displayedContent = resolvedOpen ? currentContent : lastOpenContent
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen && preventClose) return
@@ -115,14 +136,14 @@ function ResponsiveDialog({
             </DrawerClose>
           ) : null}
 
-          {headerActions ? (
+          {displayedContent.headerActions ? (
             <div
               className={cn(
                 "absolute top-6 z-10 flex items-center",
                 showCloseButton && !preventClose ? "right-16" : "right-6"
               )}
             >
-              {renderSlot(headerActions, controls)}
+              {renderSlot(displayedContent.headerActions, controls)}
             </div>
           ) : null}
 
@@ -134,27 +155,27 @@ function ResponsiveDialog({
               )}
             >
               <DrawerTitle className="text-lg tracking-[-0.02em]">
-                {title}
+                {displayedContent.title}
               </DrawerTitle>
-              {description ? (
+              {displayedContent.description ? (
                 <DrawerDescription className="mt-1 leading-5">
-                  {description}
+                  {displayedContent.description}
                 </DrawerDescription>
               ) : null}
             </DrawerHeader>
 
             <div className={cn("px-3 py-4", bodyClassName)}>
-              {renderSlot(children, controls)}
+              {renderSlot(displayedContent.children, controls)}
             </div>
 
-            {footer ? (
+            {displayedContent.footer ? (
               <DrawerFooter
                 className={cn(
                   "border-t bg-secondary/35 px-3 py-3",
                   footerClassName
                 )}
               >
-                {renderSlot(footer, controls)}
+                {renderSlot(displayedContent.footer, controls)}
               </DrawerFooter>
             ) : null}
           </div>
@@ -173,23 +194,27 @@ function ResponsiveDialog({
           contentClassName
         )}
       >
-        {headerActions ? (
+        {displayedContent.headerActions ? (
           <div
             className={cn(
               "absolute top-4 z-10 flex items-center",
               showCloseButton && !preventClose ? "right-14" : "right-4"
             )}
           >
-            {renderSlot(headerActions, controls)}
+            {renderSlot(displayedContent.headerActions, controls)}
           </div>
         ) : null}
 
         <DialogHeader
           className={cn("shrink-0 border-b px-5 py-4 pr-14", headerClassName)}
         >
-          <DialogTitle className="tracking-[-0.02em]">{title}</DialogTitle>
-          {description ? (
-            <DialogDescription className="">{description}</DialogDescription>
+          <DialogTitle className="tracking-[-0.02em]">
+            {displayedContent.title}
+          </DialogTitle>
+          {displayedContent.description ? (
+            <DialogDescription className="">
+              {displayedContent.description}
+            </DialogDescription>
           ) : null}
         </DialogHeader>
 
@@ -199,17 +224,17 @@ function ResponsiveDialog({
             bodyClassName
           )}
         >
-          {renderSlot(children, controls)}
+          {renderSlot(displayedContent.children, controls)}
         </div>
 
-        {footer ? (
+        {displayedContent.footer ? (
           <DialogFooter
             className={cn(
               "shrink-0 border-t bg-secondary/35 px-5 py-3",
               footerClassName
             )}
           >
-            {renderSlot(footer, controls)}
+            {renderSlot(displayedContent.footer, controls)}
           </DialogFooter>
         ) : null}
       </DialogContent>

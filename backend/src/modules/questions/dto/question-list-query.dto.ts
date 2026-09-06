@@ -35,7 +35,7 @@ export class QuestionListQueryDto {
 
   @IsOptional()
   @IsEnum(QuestionListStatusFilter)
-  status: QuestionListStatusFilter = QuestionListStatusFilter.ALL;
+  status: QuestionListStatusFilter = QuestionListStatusFilter.PENDING;
 
   @IsOptional()
   @Transform(trimString)
