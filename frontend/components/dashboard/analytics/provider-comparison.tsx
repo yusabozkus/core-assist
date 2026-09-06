@@ -16,10 +16,10 @@ export function ProviderComparison({
     >
       <header className="p-5 sm:p-6">
         <h2 id="provider-comparison-title" className="text-sm font-semibold">
-          Pazaryeri karşılaştırması
+          Pazaryerlerine göre sonuçlar
         </h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          Seçili dönemin kanal bazında sonuçları
+          Kanalların aynı dönemdeki kısa özeti
         </p>
       </header>
       <div className="divide-y divide-border/70 border-t border-border/70">
@@ -27,17 +27,19 @@ export function ProviderComparison({
           const reviewed = provider.acceptedUnchanged + provider.editedAnswers
           const stats = [
             {
-              label: "Üretilen taslak",
-              value: formatCount(provider.totalDrafts),
+              label: "Ortalama AI güveni",
+              value: provider.totalDrafts
+                ? formatPercent(provider.averageConfidence * 100)
+                : "—",
             },
             {
-              label: "İnceleme kararı",
+              label: "Kontrol gereken",
               value: provider.totalDrafts
                 ? formatPercent(provider.needsReviewRate)
                 : "—",
             },
             {
-              label: "Değiştirilmeden onay",
+              label: "Değişmeden onay",
               value: reviewed
                 ? formatPercent((provider.acceptedUnchanged / reviewed) * 100)
                 : "—",
@@ -48,10 +50,7 @@ export function ProviderComparison({
             },
           ]
           return (
-            <div
-              key={provider.providerKey}
-              className="grid gap-5 px-5 py-5 sm:px-6 lg:grid-cols-[minmax(10rem,1.2fr)_3fr] lg:items-center"
-            >
+            <div key={provider.providerKey} className="px-5 py-5 sm:px-6">
               <div className="flex min-w-0 items-center gap-3">
                 <ProviderLogo
                   provider={provider.providerKey}
@@ -63,11 +62,12 @@ export function ProviderComparison({
                     {getProviderName(provider.providerKey)}
                   </h3>
                   <p className="mt-1 text-[10px] text-muted-foreground">
-                    {formatCount(provider.sentAnswers)} toplam yanıt
+                    {formatCount(provider.totalDrafts)} taslak ·{" "}
+                    {formatCount(provider.sentAnswers)} gönderilen yanıt
                   </p>
                 </div>
               </div>
-              <dl className="grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-4">
+              <dl className="mt-5 grid grid-cols-2 gap-x-5 gap-y-4 border-t border-border/60 pt-4">
                 {stats.map((stat) => (
                   <div key={stat.label}>
                     <dt className="text-[10px] leading-4 text-muted-foreground">

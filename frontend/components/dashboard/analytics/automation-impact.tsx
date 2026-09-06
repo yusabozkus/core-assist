@@ -33,7 +33,7 @@ export function AutomationImpact({ data }: { data: AiPerformance }) {
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="automation-impact-title" className="text-sm font-semibold">
-          Otomasyonun katkısı
+          Yanıtları kim gönderdi?
         </h2>
         <Link
           href={APP_ROUTES.dashboard.automations.root}
@@ -108,7 +108,7 @@ export function AutomationImpact({ data }: { data: AiPerformance }) {
       <dl className="my-5 grid grid-cols-2 gap-5 border-y border-border py-4">
         <div>
           <dt className="text-[11px] text-muted-foreground">
-            Politikayı geçen taslak
+            Otomatik gönderime uygun
           </dt>
           <dd className="mt-1.5 text-lg font-semibold tabular-nums">
             {formatCount(data.automation.eligible)}
@@ -119,7 +119,7 @@ export function AutomationImpact({ data }: { data: AiPerformance }) {
         </div>
         <div>
           <dt className="text-[11px] text-muted-foreground">
-            Gönderime uygun olmayan
+            Kontrole bırakılan
           </dt>
           <dd className="mt-1.5 text-lg font-semibold tabular-nums">
             {formatCount(data.automation.withheld)}
@@ -128,10 +128,10 @@ export function AutomationImpact({ data }: { data: AiPerformance }) {
       </dl>
       <p className="text-[11px] leading-5 text-muted-foreground">
         {data.shadow.evaluated
-          ? `${formatCount(data.shadow.evaluated)} otomatik taslağın ${formatCount(data.shadow.wouldAutoSend)} adedi gönderim koşullarını geçti. Bu modda gönderim kullanıcı onayı bekler.`
+          ? `${formatCount(data.shadow.evaluated)} taslağın ${formatCount(data.shadow.wouldAutoSend)} adedi otomatik gönderim koşullarını geçti. Test modunda oldukları için yine kullanıcı onayı beklediler.`
           : data.automation.evaluated
-            ? "Uygunluk, taslak üretilirken mağazanın güven ve kanıt kurallarıyla değerlendirilir."
-            : "Otomasyonla taslak üretildiğinde uygunluk sonuçları burada görünür."}
+            ? "AI; güven, kanıt ve risk kurallarını geçen yanıtları otomatik gönderime uygun sayar."
+            : "Otomatik taslak veya gönderim çalıştığında sonuçlar burada görünür."}
       </p>
       <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-5 text-[11px] text-muted-foreground">
         <span>

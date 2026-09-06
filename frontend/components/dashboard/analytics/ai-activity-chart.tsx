@@ -18,8 +18,8 @@ const compactNumber = new Intl.NumberFormat("tr-TR", {
   maximumFractionDigits: 1,
 })
 const chartConfig = {
-  drafts: { label: "Taslak", color: "var(--primary)" },
-  sent: { label: "AI destekli gönderim", color: "var(--chart-4)" },
+  drafts: { label: "Üretilen taslak", color: "var(--primary)" },
+  sent: { label: "Müşteriye gönderilen", color: "var(--chart-4)" },
 } satisfies ChartConfig
 
 function safeCount(value: number) {
@@ -85,11 +85,11 @@ export function AiActivityChart({
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 id={`${id}-title`} className="text-sm font-semibold">
-            Üretim ve gönderim
+            Günlere göre hareket
           </h2>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            {granularity === "month" ? "Aylık" : "Günlük"} taslak üretimi ve AI
-            destekli gönderimler
+            {granularity === "month" ? "Aylık" : "Günlük"} üretilen taslak ve
+            müşteriye ulaşan AI yanıtı
           </p>
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
@@ -98,7 +98,7 @@ export function AiActivityChart({
               aria-hidden="true"
               className="h-0.5 w-4 rounded-full bg-primary"
             />
-            Taslak
+            Üretilen
             <strong className="font-semibold text-foreground tabular-nums">
               {number.format(chart.drafts)}
             </strong>
@@ -108,7 +108,7 @@ export function AiActivityChart({
               aria-hidden="true"
               className="w-4 border-t-2 border-dashed border-chart-4"
             />
-            Gönderim
+            Gönderilen
             <strong className="font-semibold text-foreground tabular-nums">
               {number.format(chart.sent)}
             </strong>
@@ -173,7 +173,9 @@ export function AiActivityChart({
                         style={{ backgroundColor: item.color }}
                       />
                       <span className="text-muted-foreground">
-                        {name === "drafts" ? "Taslak" : "AI destekli gönderim"}
+                        {name === "drafts"
+                          ? "Üretilen taslak"
+                          : "Müşteriye gönderilen"}
                       </span>
                       <strong className="ml-auto pl-3 font-medium tabular-nums">
                         {number.format(safeCount(Number(value)))}
@@ -213,8 +215,8 @@ export function AiActivityChart({
 
       <div className="mt-5 flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-t border-border pt-4">
         <p className="max-w-lg text-[11px] leading-5 text-muted-foreground">
-          AI destekli gönderimler, gönderildikleri tarihte sayılır; önceki
-          dönemlerde üretilen taslakları da içerebilir.
+          Taslak üretildiği güne, yanıt ise müşteriye gönderildiği güne yazılır.
+          Bu nedenle iki çizginin aynı olması gerekmez.
         </p>
         {chart.points.length > 0 && (
           <details className="w-full text-xs">

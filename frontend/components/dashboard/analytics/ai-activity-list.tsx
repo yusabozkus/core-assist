@@ -28,10 +28,10 @@ export function AiActivityList({
       <header className="flex items-center justify-between gap-4 p-5 sm:p-6">
         <div>
           <h2 id="ai-activity-title" className="text-sm font-semibold">
-            Son taslaklar ve sonuçları
+            Son AI işlemleri
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Soruyu açarak yanıtı ve kullanılan bilgileri inceleyin.
+            Taslağın son durumunu görün; ayrıntı için soruyu açın.
           </p>
         </div>
         <Link

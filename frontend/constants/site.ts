@@ -1,11 +1,11 @@
 import {
   Analytics01Icon,
   BoxesIcon,
-  CustomerSupportIcon,
   DashboardSquare01Icon,
   InboxIcon,
   Package01Icon,
   PlugSocketIcon,
+  RefreshIcon,
   Settings02Icon,
   UserGroupIcon,
   WorkflowSquare01Icon,
@@ -62,6 +62,7 @@ export type DashboardNavigationItem = Readonly<{
   title: string
   url: string
   icon: IconSvgElement
+  exact?: boolean
   items?: ReadonlyArray<DashboardNavigationSubItem>
 }>
 
@@ -89,9 +90,10 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
   primaryItems: [],
   footerItems: [
     {
-      title: "Yardım Merkezi",
-      url: APP_ROUTES.dashboard.support,
-      icon: CustomerSupportIcon,
+      title: "Mağaza Ayarları",
+      url: APP_ROUTES.dashboard.settings.root,
+      icon: Settings02Icon,
+      exact: true,
     },
   ],
   navGroups: [
@@ -124,20 +126,15 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
       label: "Kanallar ve AI",
       items: [
         {
-          title: "Satış Kanalları",
+          title: "Bağlı Kanallar",
           url: APP_ROUTES.dashboard.channels.root,
           icon: PlugSocketIcon,
-          items: [
-            {
-              title: "Bağlı Kanallar",
-              url: APP_ROUTES.dashboard.channels.root,
-              exact: true,
-            },
-            {
-              title: "Senkron Geçmişi",
-              url: APP_ROUTES.dashboard.channels.sync,
-            },
-          ],
+          exact: true,
+        },
+        {
+          title: "Senkron Geçmişi",
+          url: APP_ROUTES.dashboard.channels.sync,
+          icon: RefreshIcon,
         },
         {
           title: "AI Yönetimi",
@@ -158,17 +155,12 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
       ],
     },
     {
-      label: "Analiz ve Yönetim",
+      label: "Analiz",
       items: [
         {
           title: "AI Performansı",
           url: APP_ROUTES.dashboard.analytics,
           icon: Analytics01Icon,
-        },
-        {
-          title: "Ayarlar",
-          url: APP_ROUTES.dashboard.settings.root,
-          icon: Settings02Icon,
         },
       ],
     },

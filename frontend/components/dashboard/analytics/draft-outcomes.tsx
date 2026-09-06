@@ -27,7 +27,7 @@ export function DraftOutcomes({ data }: { data: AiPerformance }) {
     },
     {
       key: "review",
-      label: "İnceleme gerekli",
+      label: "Kontrol edilmeli",
       value: data.draftDecisions.needsReview,
       color: "var(--chart-3)",
     },
@@ -48,10 +48,10 @@ export function DraftOutcomes({ data }: { data: AiPerformance }) {
       className="flex min-w-0 flex-col rounded-xl border border-border bg-card p-5 sm:p-6"
     >
       <h2 id="draft-outcomes-title" className="text-sm font-semibold">
-        Taslak kararları
+        Taslakların ilk kararı
       </h2>
       <p className="mt-1 text-xs text-muted-foreground">
-        Oluşturulduğu andaki değerlendirme
+        Bilgi ve güven kontrollerinden sonraki dağılım
       </p>
       <div className="relative mx-auto my-5 size-44">
         <ChartContainer
@@ -116,8 +116,8 @@ export function DraftOutcomes({ data }: { data: AiPerformance }) {
         ))}
       </dl>
       <p className="mt-5 border-t border-border pt-4 text-[10px] leading-5 text-muted-foreground">
-        {formatCount(data.summary.uniqueQuestions)} farklı soru için üretildi.
-        Aynı sorunun yeniden üretilen taslakları da sayılır.
+        Bir taslak “gönderime hazır” olsa bile aktif yanıt moduna göre kullanıcı
+        onayı bekleyebilir.
       </p>
     </section>
   )

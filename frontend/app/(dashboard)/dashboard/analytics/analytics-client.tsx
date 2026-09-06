@@ -20,6 +20,7 @@ import { ReviewReasons } from "@/components/dashboard/analytics/review-reasons"
 import { IntentAnalysis } from "@/components/dashboard/analytics/intent-analysis"
 import { ProviderComparison } from "@/components/dashboard/analytics/provider-comparison"
 import { AiActivityList } from "@/components/dashboard/analytics/ai-activity-list"
+import { PerformanceOverview } from "@/components/dashboard/analytics/performance-overview"
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import { getProviderName } from "@/components/dashboard/catalog/products/product-catalog-utils"
 import { Button } from "@/components/ui/button"
@@ -46,6 +47,23 @@ const ranges: Array<{ value: AiPerformanceRange; label: string }> = [
   { value: "90D", label: "90 gün" },
   { value: "ALL", label: "Tüm zamanlar" },
 ]
+
+function SectionHeading({
+  title,
+  description,
+}: {
+  title: string
+  description: string
+}) {
+  return (
+    <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+      <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
+      <p className="max-w-2xl text-[11px] leading-5 text-muted-foreground sm:text-right">
+        {description}
+      </p>
+    </div>
+  )
+}
 
 export function AnalyticsClient({
   activeStore,
@@ -107,8 +125,8 @@ export function AnalyticsClient({
             AI Performansı
           </h1>
           <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-            Yanıtların kalitesini, kullanıcı onaylarını ve otomasyonun katkısını
-            izleyin.
+            AI yanıtlarının ne kadar kullanıldığını, nerede insan kontrolü
+            gerektiğini ve otomasyonun sonucunu görün.
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -199,7 +217,7 @@ export function AnalyticsClient({
             {performance.from
               ? `${dateFormatter.format(new Date(performance.from))} – ${dateFormatter.format(new Date(performance.generatedAt))}`
               : "Tüm kayıtlar"}{" "}
-            · {performance.timezone}
+            · <span title={performance.timezone}>Yerel saat</span>
           </p>
         )}
       </div>
@@ -239,20 +257,41 @@ export function AnalyticsClient({
             pending && "pointer-events-none opacity-60"
           )}
         >
-          <AnalyticsSummary data={performance} />
-          <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.8fr)_minmax(18rem,1fr)]">
-            <AiActivityChart
-              trend={performance.trend}
-              granularity={performance.trendGranularity}
+          <PerformanceOverview data={performance} />
+          <div className="space-y-3">
+            <SectionHeading
+              title="Temel sonuçlar"
+              description="Seçili dönemde AI'ın ürettiği, müşteriye ulaştırdığı ve kullanıcı kontrolüne bıraktığı yanıtların özeti."
             />
-            <DraftOutcomes data={performance} />
+            <AnalyticsSummary data={performance} />
           </div>
-          <div className="grid items-stretch gap-5 lg:grid-cols-2">
-            <AutomationImpact data={performance} />
-            <ReviewReasons data={performance} />
+          <div className="space-y-3">
+            <SectionHeading
+              title="Taslaklardan müşteri yanıtına"
+              description="Üretim hacmini ve her taslak için verilen ilk kararı birlikte değerlendirin."
+            />
+            <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.8fr)_minmax(18rem,1fr)]">
+              <AiActivityChart
+                trend={performance.trend}
+                granularity={performance.trendGranularity}
+              />
+              <DraftOutcomes data={performance} />
+            </div>
           </div>
-          <IntentAnalysis intents={performance.intents} />
-          <ProviderComparison providers={performance.providers} />
+          <div className="space-y-3">
+            <SectionHeading
+              title="Otomasyon ve insan kontrolü"
+              description="Hangi yanıtların otomatik ilerlediğini ve diğerlerinin neden kullanıcıya bırakıldığını görün."
+            />
+            <div className="grid items-stretch gap-5 lg:grid-cols-2">
+              <AutomationImpact data={performance} />
+              <ReviewReasons data={performance} />
+            </div>
+          </div>
+          <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(0,2fr)]">
+            <ProviderComparison providers={performance.providers} />
+            <IntentAnalysis intents={performance.intents} />
+          </div>
           <AiActivityList
             activity={performance.recentActivity}
             timezone={performance.timezone}

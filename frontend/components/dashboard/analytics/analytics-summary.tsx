@@ -1,67 +1,67 @@
 import {
-  AiSparklesIcon,
   AiEditingIcon,
-  SentIcon,
+  AiSparklesIcon,
   CheckmarkCircle01Icon,
+  SentIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
 import type { AiPerformance } from "@/types/ai-performance"
 import { formatCount, formatPercent } from "./analytics-format"
 
 export function AnalyticsSummary({ data }: { data: AiPerformance }) {
   const items = [
     {
-      title: "AI destekli yanıt",
-      value: formatCount(data.answers.aiAssisted),
-      icon: SentIcon,
-      detail: data.answers.totalSent
-        ? `${formatCount(data.answers.totalSent)} gönderilen yanıtın ${formatPercent(data.summary.aiCoverageRate)}’i`
-        : "Henüz gönderilen yanıt yok",
-      caption: "Müşteriye gönderilen",
+      title: "Üretilen AI taslağı",
+      value: formatCount(data.summary.totalDrafts),
+      icon: AiSparklesIcon,
+      description: `${formatCount(data.summary.uniqueQuestions)} farklı müşteri sorusu için üretildi.`,
+      note: "Aynı soru için yeniden oluşturulan taslaklar ayrı sayılır.",
       tone: "text-primary",
     },
     {
-      title: "Değiştirilmeden onay",
+      title: "Müşteriye ulaşan AI yanıtı",
+      value: formatCount(data.answers.aiAssisted),
+      icon: SentIcon,
+      description: data.answers.totalSent
+        ? `Gönderilen tüm yanıtların ${formatPercent(data.summary.aiCoverageRate)}’i AI desteği kullandı.`
+        : "Henüz müşteriye gönderilmiş bir yanıt yok.",
+      note: "Otomatik ve kullanıcı onaylı gönderimler dahildir.",
+      tone: "text-primary",
+    },
+    {
+      title: "Değişikliksiz kullanılan",
       value: data.summary.reviewedAnswers
         ? formatPercent(data.summary.acceptanceRate)
         : "—",
       icon: CheckmarkCircle01Icon,
-      detail: data.summary.reviewedAnswers
-        ? `${formatCount(data.summary.reviewedAnswers)} kullanıcı onayının ${formatCount(data.answers.acceptedUnchanged)} adedi`
-        : "Kullanıcı onayıyla gönderim bekleniyor",
-      caption: "Kullanıcının gönderdiği AI yanıtları",
+      description: data.summary.reviewedAnswers
+        ? `${formatCount(data.summary.reviewedAnswers)} kullanıcı gönderiminin ${formatCount(data.answers.acceptedUnchanged)} tanesi olduğu gibi onaylandı.`
+        : "Bu oran için henüz kullanıcı onaylı gönderim yok.",
+      note: "Yüksek oran, taslakların daha az düzenleme istediğini gösterir.",
       tone: "text-primary",
     },
     {
-      title: "İnceleme kararı",
+      title: "İnceleme gerektiren",
       value: data.summary.totalDrafts
         ? formatPercent(data.summary.needsReviewRate)
         : "—",
       icon: AiEditingIcon,
-      detail: `${formatCount(data.draftDecisions.needsReview)} taslak için inceleme istendi`,
-      caption: "Seçili dönemde üretilen taslaklar",
+      description: `${formatCount(data.draftDecisions.needsReview)} taslak kullanıcı kontrolüne bırakıldı.`,
+      note: "Eksik veya riskli bilgiler otomatik gönderilmez.",
       tone: "text-amber-600 dark:text-amber-400",
     },
-    {
-      title: "Ortalama güven",
-      value: data.summary.totalDrafts
-        ? formatPercent(data.summary.averageConfidence * 100)
-        : "—",
-      icon: AiSparklesIcon,
-      detail: `${formatCount(data.summary.totalDrafts)} taslağın güven puanı ortalaması`,
-      caption: "AI tahmini · doğruluk ölçümü değildir",
-      tone: "text-muted-foreground",
-    },
   ]
+
   return (
     <section
-      aria-label="AI performans özeti"
+      aria-label="Temel AI performans göstergeleri"
       className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
     >
       {items.map((item) => (
         <div
           key={item.title}
-          className="min-w-0 rounded-xl border border-border bg-card p-5"
+          className="flex min-w-0 flex-col rounded-xl border border-border bg-card p-5"
         >
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-xs font-medium text-muted-foreground">
@@ -76,10 +76,10 @@ export function AnalyticsSummary({ data }: { data: AiPerformance }) {
             {item.value}
           </p>
           <p className="mt-3 text-[11px] leading-5 text-foreground">
-            {item.detail}
+            {item.description}
           </p>
-          <p className="mt-3 border-t border-border/60 pt-3 text-[10px] leading-4 text-muted-foreground">
-            {item.caption}
+          <p className="mt-auto border-t border-border/60 pt-3 text-[10px] leading-4 text-muted-foreground">
+            {item.note}
           </p>
         </div>
       ))}

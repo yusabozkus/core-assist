@@ -47,14 +47,14 @@ export function ReviewReasons({ data }: { data: AiPerformance }) {
     >
       <header className="flex items-center justify-between gap-3">
         <h2 id="review-reasons-title" className="text-sm font-semibold">
-          İnceleme nedenleri
+          Neden kontrol gerekiyor?
         </h2>
         <span className="text-xs text-muted-foreground">
           {formatCount(data.draftDecisions.needsReview)} taslak
         </span>
       </header>
       <p className="mt-1 text-xs leading-5 text-muted-foreground">
-        Yanıtları iyileştirmek için öne çıkan noktalar
+        AI’ın kullanıcıya bıraktığı taslaklarda en sık karşılaşılan nedenler
       </p>
       {reasons.length ? (
         <div className="mt-5">
@@ -137,7 +137,7 @@ export function ReviewReasons({ data }: { data: AiPerformance }) {
             href={APP_ROUTES.dashboard.automations.knowledge}
             className="inline-flex items-center gap-1.5 text-[11px] font-medium text-primary hover:underline"
           >
-            Bilgi merkezini aç
+            Eksik bilgileri tamamla
             <HugeiconsIcon icon={ArrowRight01Icon} className="size-3" />
           </Link>
         </div>

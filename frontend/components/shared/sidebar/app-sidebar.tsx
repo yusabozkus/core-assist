@@ -52,9 +52,10 @@ export function AppSidebar({
   const primaryItems = [overview, ...DASHBOARD_NAVIGATION.primaryItems]
   const activeShop = shops.find((shop) => shop.id === activeShopId)
   const isStoreArchived = activeShop?.status === "INACTIVE"
-  const settingsItem = DASHBOARD_NAVIGATION.navGroups
-    .flatMap((group) => group.items)
-    .find((item) => item.url === APP_ROUTES.dashboard.settings.root)
+  const settingsItem = [
+    ...DASHBOARD_NAVIGATION.footerItems,
+    ...DASHBOARD_NAVIGATION.navGroups.flatMap((group) => group.items),
+  ].find((item) => item.url === APP_ROUTES.dashboard.settings.root)
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -129,7 +130,7 @@ export function AppSidebar({
                 <SidebarMenu>
                   {group.items.map((item) => {
                     const isActive =
-                      isPathActive(pathname, item.url) ||
+                      isPathActive(pathname, item.url, item.exact) ||
                       Boolean(
                         item.items?.some((subItem) =>
                           isPathActive(pathname, subItem.url, subItem.exact)
@@ -176,7 +177,7 @@ export function AppSidebar({
         {!isStoreArchived ? (
           <SidebarMenu>
             {DASHBOARD_NAVIGATION.footerItems.map((item) => {
-              const isActive = isPathActive(pathname, item.url)
+              const isActive = isPathActive(pathname, item.url, item.exact)
 
               return (
                 <SidebarMenuItem key={item.url}>
