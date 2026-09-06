@@ -108,6 +108,11 @@
   transform: translateY(-2px);
 }
 
+.primaryLink:active {
+  background: #2c664e;
+  transform: translateY(0) scale(0.97);
+}
+
 .linkArrow {
   display: flex;
   width: 36px;
@@ -126,6 +131,10 @@
 
   .primaryLink:hover .linkArrow {
     transform: rotate(-35deg);
+  }
+
+  .primaryLink:active .linkArrow {
+    transform: rotate(-35deg) translateX(2px);
   }
 }
 

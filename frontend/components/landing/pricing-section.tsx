@@ -7,6 +7,7 @@ import {
   CheckmarkCircle01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { APP_ROUTES } from "@/constants/site"
 import { cn } from "@/lib/utils"
 import { LandingReveal } from "./landing-reveal"
@@ -53,10 +54,142 @@ const currency = new Intl.NumberFormat("tr-TR", {
   maximumFractionDigits: 0,
 })
 
-export function PricingSection() {
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">(
-    "monthly"
+type BillingCycle = "monthly" | "annual"
+
+function BillingCycleToggle({
+  value,
+  onChange,
+}: {
+  value: BillingCycle
+  onChange: (value: BillingCycle) => void
+}) {
+  const annual = value === "annual"
+  const reduceMotion = useReducedMotion()
+
+  return (
+    <div
+      className="relative grid w-[238px] grid-cols-2 rounded-full border border-[#dce3d3] bg-white p-1 shadow-[0_1px_2px_rgba(23,40,31,0.04)]"
+      role="group"
+      aria-label="Faturalama dönemi"
+    >
+      <motion.span
+        aria-hidden="true"
+        className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full bg-[#243d2c] shadow-[0_5px_14px_rgba(36,61,44,0.18)]"
+        animate={{ x: annual ? "100%" : "0%" }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : { type: "spring", stiffness: 410, damping: 34, mass: 0.72 }
+        }
+      />
+      <button
+        type="button"
+        onClick={() => onChange("monthly")}
+        aria-pressed={!annual}
+        className={cn(
+          "relative z-10 rounded-full px-3 py-2.5 text-xs font-medium transition-[color,transform] duration-300 active:scale-[0.96]",
+          !annual ? "text-white" : "text-[#78836c]"
+        )}
+      >
+        Aylık
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange("annual")}
+        aria-pressed={annual}
+        className={cn(
+          "relative z-10 flex items-center justify-center gap-1.5 rounded-full px-2 py-2.5 text-xs font-medium transition-[color,transform] duration-300 active:scale-[0.96]",
+          annual ? "text-white" : "text-[#78836c]"
+        )}
+      >
+        Yıllık
+        <motion.span
+          animate={
+            annual && !reduceMotion
+              ? { opacity: [0.72, 1, 1], scale: [0.9, 1.13, 1], y: [1, -1, 0] }
+              : { opacity: 1, scale: 1, y: 0 }
+          }
+          transition={{
+            duration: reduceMotion ? 0 : 0.42,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className={cn(
+            "rounded-full px-1.5 py-0.5 text-[9px] font-semibold transition-colors duration-300",
+            annual
+              ? "bg-white/14 text-[#e0f0c8]"
+              : "bg-[#eaf2dc] text-[#648142]"
+          )}
+        >
+          −%10
+        </motion.span>
+      </button>
+    </div>
   )
+}
+
+function AnimatedPrice({
+  value,
+  cycle,
+}: {
+  value: string
+  cycle: BillingCycle
+}) {
+  const reduceMotion = useReducedMotion()
+
+  return (
+    <span className="relative inline-grid overflow-hidden pb-[0.08em] leading-none">
+      <AnimatePresence initial={false} mode="popLayout">
+        <motion.span
+          key={cycle}
+          aria-hidden="true"
+          className="[grid-area:1/1]"
+          initial={reduceMotion ? { opacity: 1 } : { y: "-82%", opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={reduceMotion ? { opacity: 0 } : { y: "82%", opacity: 0 }}
+          transition={{
+            duration: reduceMotion ? 0 : 0.42,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+        >
+          {value}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  )
+}
+
+function AnimatedBillingNote({
+  cycle,
+  children,
+}: {
+  cycle: BillingCycle
+  children: string
+}) {
+  const reduceMotion = useReducedMotion()
+
+  return (
+    <span className="relative inline-grid overflow-hidden align-top">
+      <AnimatePresence initial={false} mode="popLayout">
+        <motion.span
+          key={cycle}
+          className="[grid-area:1/1]"
+          initial={reduceMotion ? { opacity: 1 } : { y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={reduceMotion ? { opacity: 0 } : { y: 10, opacity: 0 }}
+          transition={{
+            duration: reduceMotion ? 0 : 0.32,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+        >
+          {children}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  )
+}
+
+export function PricingSection() {
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly")
   const annual = billingCycle === "annual"
 
   return (
@@ -79,44 +212,7 @@ export function PricingSection() {
               Her planda 7 gün ücretsiz deneme.
             </p>
           </div>
-          <div
-            className="inline-flex w-fit items-center gap-1 rounded-full border border-[#dce3d3] bg-white p-1"
-            role="group"
-            aria-label="Faturalama dönemi"
-          >
-            <button
-              type="button"
-              onClick={() => setBillingCycle("monthly")}
-              aria-pressed={!annual}
-              className={cn(
-                "rounded-full px-5 py-2.5 text-xs transition-colors",
-                !annual ? "bg-[#243d2c] text-white" : "text-[#78836c]"
-              )}
-            >
-              Aylık
-            </button>
-            <button
-              type="button"
-              onClick={() => setBillingCycle("annual")}
-              aria-pressed={annual}
-              className={cn(
-                "flex items-center gap-2 rounded-full px-4 py-2.5 text-xs transition-colors",
-                annual ? "bg-[#243d2c] text-white" : "text-[#78836c]"
-              )}
-            >
-              Yıllık{" "}
-              <span
-                className={cn(
-                  "rounded-full px-1.5 py-0.5 text-[10px]",
-                  annual
-                    ? "bg-white/15 text-[#e0f0c8]"
-                    : "bg-[#eaf2dc] text-[#648142]"
-                )}
-              >
-                −%10
-              </span>
-            </button>
-          </div>
+          <BillingCycleToggle value={billingCycle} onChange={setBillingCycle} />
         </LandingReveal>
         <div className="grid items-stretch gap-4 lg:grid-cols-3">
           {plans.map((plan, index) => (
@@ -128,9 +224,10 @@ export function PricingSection() {
               <article
                 className={cn(
                   "relative flex h-full flex-col rounded-2xl border p-6 sm:p-8",
+                  "transition-[transform,border-color,box-shadow] duration-300 ease-out active:scale-[0.995] motion-safe:hover:-translate-y-1",
                   plan.featured
-                    ? "border-[#97b575] bg-[#e2efcd]"
-                    : "border-[#dde4d5] bg-white"
+                    ? "border-[#97b575] bg-[#e2efcd] hover:border-[#789c58] hover:shadow-[0_22px_46px_-32px_rgba(36,93,70,0.45)]"
+                    : "border-[#dde4d5] bg-white hover:border-[#b7c7ac] hover:shadow-[0_22px_46px_-32px_rgba(23,40,31,0.34)]"
                 )}
               >
                 <div className="flex items-center justify-between">
@@ -151,26 +248,37 @@ export function PricingSection() {
                   aria-live="polite"
                 >
                   <span className="text-[42px] font-medium tracking-[-.07em] tabular-nums">
-                    {currency.format(plan.price * (annual ? 0.9 : 1))}
+                    <AnimatedPrice
+                      cycle={billingCycle}
+                      value={currency.format(plan.price * (annual ? 0.9 : 1))}
+                    />
+                    <span className="sr-only">
+                      {currency.format(plan.price * (annual ? 0.9 : 1))}
+                    </span>
                   </span>
                   <span className="text-xs text-[#879476]">/ ay</span>
                 </div>
                 <p className="mt-2 min-h-5 text-[11px] text-[#829071]">
-                  {annual
-                    ? `Yıllık ${currency.format(plan.price * 12 * 0.9)} olarak ödenir`
-                    : "Aylık faturalandırılır"}
+                  <AnimatedBillingNote cycle={billingCycle}>
+                    {annual
+                      ? `Yıllık ${currency.format(plan.price * 12 * 0.9)} olarak ödenir`
+                      : "Aylık faturalandırılır"}
+                  </AnimatedBillingNote>
                 </p>
                 <Link
                   href={APP_ROUTES.login}
                   className={cn(
-                    "mt-7 flex h-11 items-center justify-between rounded-full px-5 text-xs font-medium transition-colors",
+                    "group mt-7 flex h-11 items-center justify-between rounded-full px-5 text-xs font-medium transition-[background-color,transform] active:scale-[0.98]",
                     plan.featured
                       ? "bg-[#243e2b] text-white hover:bg-[#32563a]"
                       : "border border-[#dde5d2] hover:bg-[#f2f6eb]"
                   )}
                 >
                   Ücretsiz deneyin{" "}
-                  <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" />
+                  <HugeiconsIcon
+                    icon={ArrowRight01Icon}
+                    className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 group-active:translate-x-1"
+                  />
                 </Link>
                 <div className="mt-7 border-t border-[#c7d7b8]/60 pt-6">
                   <p className="text-sm font-medium">

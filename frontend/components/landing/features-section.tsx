@@ -210,7 +210,7 @@ function VoicePreview() {
             aria-pressed={toneId === option.id}
             onClick={() => setToneId(option.id)}
             className={cn(
-              "rounded-full border px-3 py-2 text-[11px] transition-colors",
+              "rounded-full border px-3 py-2 text-[11px] transition-[color,background-color,border-color,transform] active:scale-[0.95]",
               toneId === option.id
                 ? "border-[#233d2b] bg-[#233d2b] text-white"
                 : "border-[#dfe5d6] bg-white text-[#717c68] hover:border-[#94aa82]"

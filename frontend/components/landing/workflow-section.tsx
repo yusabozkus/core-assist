@@ -166,6 +166,31 @@ function WorkflowStage({
     [0.8, 1.65, 1.2]
   )
   const connectorScale = useTransform(scrollYProgress, [0.12, 0.4], [0, 1])
+  const stageFocus = useTransform(
+    scrollYProgress,
+    [0, 0.2, 0.48, 0.8, 1],
+    [0.46, 0.76, 1, 0.76, 0.5]
+  )
+  const stageScale = useTransform(
+    scrollYProgress,
+    [0, 0.48, 1],
+    [0.985, 1, 0.99]
+  )
+  const sceneFocus = useTransform(
+    scrollYProgress,
+    [0, 0.2, 0.48, 0.82, 1],
+    [0.7, 0.9, 1, 0.9, 0.72]
+  )
+  const titleColor = useTransform(
+    scrollYProgress,
+    [0, 0.26, 0.48, 0.78, 1],
+    ["#7b867e", "#34463b", "#182820", "#445249", "#7b867e"]
+  )
+  const accentColor = useTransform(
+    scrollYProgress,
+    [0, 0.26, 0.48, 0.78, 1],
+    ["#87918a", "#4f765f", "#245d46", "#5f7d69", "#87918a"]
+  )
 
   return (
     <article
@@ -181,7 +206,11 @@ function WorkflowStage({
         )}
       >
         <motion.div
-          style={{ scaleX: reduceMotion ? 1 : connectorScale }}
+          style={
+            reduceMotion
+              ? { scaleX: 1 }
+              : { scaleX: connectorScale, opacity: stageFocus }
+          }
           className={cn(
             "h-full bg-[#6e9468]",
             isReversed ? "origin-right" : "origin-left"
@@ -190,7 +219,11 @@ function WorkflowStage({
       </div>
       <motion.span
         aria-hidden="true"
-        style={{ scale: reduceMotion ? 1 : markerScale }}
+        style={
+          reduceMotion
+            ? { scale: 1 }
+            : { scale: markerScale, opacity: stageFocus }
+        }
         className="absolute top-2 left-0 flex size-6 items-center justify-center rounded-full border border-[#cad7c8] bg-[#f7f8f4] lg:top-1/2 lg:-left-3 lg:ml-[50%] lg:-translate-y-8"
       >
         <motion.span
@@ -205,43 +238,59 @@ function WorkflowStage({
       </motion.span>
 
       <motion.div
-        initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.35 }}
-        transition={revealTransition}
+        style={
+          reduceMotion ? undefined : { opacity: stageFocus, scale: stageScale }
+        }
         className={cn(
           "max-w-md",
           isReversed && "lg:col-start-2 lg:row-start-1"
         )}
       >
-        <p className="flex items-center gap-3 text-[10px] font-semibold tracking-[0.13em] text-[#6a786d] uppercase">
-          <span className="text-[#245d46]">{step.number}</span>
-          <span className="h-px w-6 bg-[#c6d0c3]" />
-          {step.label}
-        </p>
-        <h3
-          id={`workflow-${step.id}-title`}
-          className="mt-4 text-[29px] leading-[1.14] font-semibold tracking-[-0.045em] whitespace-pre-line text-[#182820] sm:text-[35px] lg:text-[39px]"
+        <motion.div
+          initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.35 }}
+          transition={revealTransition}
         >
-          {step.title}
-        </h3>
-        <p className="mt-5 max-w-sm text-[14px] leading-7 text-[#6b776f]">
-          {step.description}
-        </p>
-        <p className="mt-6 flex max-w-sm items-start gap-2.5 text-[11px] leading-5 text-[#476451]">
-          <HugeiconsIcon
-            icon={CheckmarkCircle01Icon}
-            className="mt-0.5 size-3.5 shrink-0"
-          />
-          {step.note}
-        </p>
+          <p className="flex items-center gap-3 text-[10px] font-semibold tracking-[0.13em] text-[#6a786d] uppercase">
+            <motion.span
+              style={reduceMotion ? undefined : { color: accentColor }}
+            >
+              {step.number}
+            </motion.span>
+            <span className="h-px w-6 bg-[#c6d0c3]" />
+            {step.label}
+          </p>
+          <motion.h3
+            id={`workflow-${step.id}-title`}
+            style={reduceMotion ? undefined : { color: titleColor }}
+            className="mt-4 text-[29px] leading-[1.14] font-semibold tracking-[-0.045em] whitespace-pre-line text-[#182820] sm:text-[35px] lg:text-[39px]"
+          >
+            {step.title}
+          </motion.h3>
+          <p className="mt-5 max-w-sm text-[14px] leading-7 text-[#6b776f]">
+            {step.description}
+          </p>
+          <p className="mt-6 flex max-w-sm items-start gap-2.5 text-[11px] leading-5 text-[#476451]">
+            <HugeiconsIcon
+              icon={CheckmarkCircle01Icon}
+              className="mt-0.5 size-3.5 shrink-0"
+            />
+            {step.note}
+          </p>
+        </motion.div>
       </motion.div>
 
       <motion.div
         style={
           reduceMotion
             ? undefined
-            : { y: visualY, rotate: visualRotate, scale: visualScale }
+            : {
+                y: visualY,
+                rotate: visualRotate,
+                scale: visualScale,
+                opacity: sceneFocus,
+              }
         }
         className={cn(
           "min-w-0 py-2 lg:py-5",

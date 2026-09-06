@@ -1,7 +1,12 @@
 "use client"
 
 import { useCallback, useRef, useState } from "react"
-import { motion, useInView, useReducedMotion } from "motion/react"
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useReducedMotion,
+} from "motion/react"
 import { PauseIcon, PlayIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
@@ -23,6 +28,7 @@ export function ProductTourSection({
   const [isHovered, setIsHovered] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [isKeyboardFocused, setIsKeyboardFocused] = useState(false)
+  const [slideDirection, setSlideDirection] = useState(1)
   const panelRef = useRef<HTMLDivElement>(null)
   const inView = useInView(panelRef, { amount: 0.2 })
   const reducedMotion = useReducedMotion()
@@ -30,6 +36,7 @@ export function ProductTourSection({
     screenshots.find((screenshot) => screenshot.id === selectedId) ??
     screenshots[0]
   const advanceSlide = useCallback(() => {
+    setSlideDirection(1)
     setSelectedId((current) => {
       const currentIndex = screenshots.findIndex(
         (screenshot) => screenshot.id === current
@@ -37,6 +44,17 @@ export function ProductTourSection({
       return screenshots[(currentIndex + 1) % screenshots.length].id
     })
   }, [screenshots])
+  const selectSlide = (nextId: string) => {
+    const currentIndex = screenshots.findIndex(
+      (screenshot) => screenshot.id === selectedId
+    )
+    const nextIndex = screenshots.findIndex(
+      (screenshot) => screenshot.id === nextId
+    )
+
+    setSlideDirection(nextIndex >= currentIndex ? 1 : -1)
+    setSelectedId(nextId)
+  }
   const autoplayEnabled = screenshots.length > 1 && reducedMotion === false
   const { progress, resetProgress } = useScreenshotPlayback({
     activeId: selectedId,
@@ -100,10 +118,10 @@ export function ProductTourSection({
                     aria-controls="product-tour-screen"
                     onClick={() => {
                       resetProgress()
-                      setSelectedId(screenshot.id)
+                      selectSlide(screenshot.id)
                     }}
                     className={cn(
-                      "relative -mb-px flex min-h-12 items-center justify-center gap-2 px-1 pt-2 pb-3 text-[11px] font-medium transition-colors sm:justify-start sm:gap-3 sm:pb-4 sm:text-sm",
+                      "relative -mb-px flex min-h-12 items-center justify-center gap-2 px-1 pt-2 pb-3 text-[11px] font-medium transition-[color,transform] active:scale-[0.97] sm:justify-start sm:gap-3 sm:pb-4 sm:text-sm",
                       selectedId === screenshot.id
                         ? "text-[#283f1e]"
                         : "text-[#7b896e] hover:text-[#395729]"
@@ -141,7 +159,7 @@ export function ProductTourSection({
                       ? "Otomatik geçişi başlat"
                       : "Otomatik geçişi duraklat"
                   }
-                  className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#d6dfcd] text-[#617752] transition-colors hover:bg-white/70"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[#d6dfcd] text-[#617752] transition-[background-color,transform] hover:bg-white/70 active:scale-90"
                 >
                   <HugeiconsIcon
                     icon={isPaused ? PlayIcon : PauseIcon}
@@ -165,10 +183,36 @@ export function ProductTourSection({
               onPointerLeave={() => setIsHovered(false)}
               onPointerCancel={() => setIsHovered(false)}
             >
-              <AppScreenshot
-                screenshot={selectedScreenshot}
-                onReady={setReadySrc}
-              />
+              <AnimatePresence
+                initial={false}
+                mode="popLayout"
+                custom={slideDirection}
+              >
+                <motion.div
+                  key={selectedScreenshot.id}
+                  custom={slideDirection}
+                  initial={
+                    reducedMotion
+                      ? { opacity: 1 }
+                      : { opacity: 0, x: slideDirection * 34, scale: 0.985 }
+                  }
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={
+                    reducedMotion
+                      ? { opacity: 0 }
+                      : { opacity: 0, x: slideDirection * -24, scale: 0.982 }
+                  }
+                  transition={{
+                    duration: reducedMotion ? 0 : 0.46,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                >
+                  <AppScreenshot
+                    screenshot={selectedScreenshot}
+                    onReady={setReadySrc}
+                  />
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </LandingReveal>

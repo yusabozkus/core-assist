@@ -59,12 +59,12 @@ export function LandingHero() {
               </Link>
               <a
                 href="#workflow"
-                className="group inline-flex items-center gap-2 border-b border-[#b6c1b2] pb-1 text-[13px] font-medium"
+                className="group inline-flex items-center gap-2 border-b border-[#b6c1b2] pb-1 text-[13px] font-medium transition-[color,transform] active:translate-y-0.5 active:text-[#245d46]"
               >
                 Akışı keşfedin
                 <HugeiconsIcon
                   icon={ArrowDown01Icon}
-                  className="size-3.5 transition-transform group-hover:translate-y-0.5"
+                  className="size-3.5 transition-transform group-hover:translate-y-0.5 group-active:translate-y-1"
                 />
               </a>
             </div>

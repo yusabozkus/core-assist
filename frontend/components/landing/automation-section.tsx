@@ -82,7 +82,7 @@ export function AutomationSection() {
                 aria-pressed={modeId === item.id}
                 onClick={() => setModeId(item.id)}
                 className={cn(
-                  "flex w-full items-start gap-4 rounded-xl border p-4 text-left transition-colors",
+                  "flex w-full items-start gap-4 rounded-xl border p-4 text-left transition-[color,background-color,border-color,transform] active:scale-[0.985]",
                   modeId === item.id
                     ? "border-[#687a53] bg-[#263a2b]"
                     : "border-transparent hover:bg-white/5"
