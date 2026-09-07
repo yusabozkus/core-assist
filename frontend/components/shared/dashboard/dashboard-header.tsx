@@ -68,15 +68,26 @@ export function DashboardHeader({
   syncState,
   isStoreArchived = false,
 }: DashboardHeaderProps) {
+  return (
+    <DashboardHeaderContent
+      key={`${storeId}:${syncState}`}
+      storeId={storeId}
+      syncState={syncState}
+      isStoreArchived={isStoreArchived}
+    />
+  )
+}
+
+function DashboardHeaderContent({
+  storeId,
+  syncState,
+  isStoreArchived = false,
+}: DashboardHeaderProps) {
   const pathname = usePathname()
   const breadcrumbs = getDashboardBreadcrumbs(pathname)
   const currentPage = breadcrumbs.at(-1)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [liveSyncState, setLiveSyncState] = useState(syncState)
-
-  useEffect(() => {
-    setLiveSyncState(syncState)
-  }, [storeId, syncState])
 
   useEffect(() => {
     if (isStoreArchived) return
@@ -122,7 +133,7 @@ export function DashboardHeader({
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault()
-        setIsSearchOpen((open) => !open)
+        setIsSearchOpen(true)
       }
     }
 

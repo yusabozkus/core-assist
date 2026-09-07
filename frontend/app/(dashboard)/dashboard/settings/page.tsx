@@ -43,6 +43,7 @@ export default async function SettingsPage() {
                 Seçili mağaza
               </p>
               <StoreNameForm
+                key={`${activeStore.id}:${activeStore.name}`}
                 storeId={activeStore.id}
                 initialName={activeStore.name}
               />

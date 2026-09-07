@@ -29,13 +29,6 @@ export function StoreNameForm({ storeId, initialName }: StoreNameFormProps) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setName(initialName)
-    setSavedName(initialName)
-    setIsEditing(false)
-    setError(null)
-  }, [storeId, initialName])
-
-  useEffect(() => {
     if (!isEditing) return
 
     inputRef.current?.focus()

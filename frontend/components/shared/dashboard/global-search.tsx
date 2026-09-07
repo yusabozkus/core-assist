@@ -128,6 +128,13 @@ type GlobalSearchProps = {
   onOpenChange: (open: boolean) => void
 }
 
+type RemoteSearchState = {
+  query: string
+  status: "searching" | "success" | "error"
+  results: GlobalSearchResponse | null
+  error: string | null
+}
+
 export function GlobalSearch({
   storeId,
   open,
@@ -135,10 +142,18 @@ export function GlobalSearch({
 }: GlobalSearchProps) {
   const router = useRouter()
   const [query, setQuery] = useState("")
-  const [results, setResults] = useState<GlobalSearchResponse | null>(null)
-  const [isSearching, setIsSearching] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [remoteSearch, setRemoteSearch] = useState<RemoteSearchState | null>(
+    null
+  )
   const normalizedQuery = normalizeSearchText(query)
+  const searchQuery = query.trim()
+  const canSearch = open && searchQuery.length >= 2
+  const currentSearch =
+    canSearch && remoteSearch?.query === searchQuery ? remoteSearch : null
+  const results = currentSearch?.results ?? null
+  const error = currentSearch?.error ?? null
+  const isSearching =
+    canSearch && (!currentSearch || currentSearch.status === "searching")
 
   const pageResults = useMemo(() => {
     if (!normalizedQuery) return SEARCH_PAGES.slice(0, 6)
@@ -151,29 +166,18 @@ export function GlobalSearch({
   }, [normalizedQuery])
 
   useEffect(() => {
-    if (open) return
-
-    setQuery("")
-    setResults(null)
-    setIsSearching(false)
-    setError(null)
-  }, [open])
-
-  useEffect(() => {
-    const searchQuery = query.trim()
-
-    if (!open || searchQuery.length < 2) {
-      setResults(null)
-      setIsSearching(false)
-      setError(null)
-      return
-    }
+    if (!canSearch) return
 
     const controller = new AbortController()
-    setIsSearching(true)
-    setError(null)
 
     const timeoutId = window.setTimeout(async () => {
+      setRemoteSearch({
+        query: searchQuery,
+        status: "searching",
+        results: null,
+        error: null,
+      })
+
       try {
         const response = await globalSearch(
           storeId,
@@ -181,17 +185,25 @@ export function GlobalSearch({
           controller.signal
         )
 
-        if (!controller.signal.aborted) setResults(response)
+        if (!controller.signal.aborted) {
+          setRemoteSearch({
+            query: searchQuery,
+            status: "success",
+            results: response,
+            error: null,
+          })
+        }
       } catch (caughtError) {
         if (controller.signal.aborted) return
-        setResults(null)
-        setError(
-          caughtError instanceof Error
-            ? caughtError.message
-            : "Arama şu anda tamamlanamadı."
-        )
-      } finally {
-        if (!controller.signal.aborted) setIsSearching(false)
+        setRemoteSearch({
+          query: searchQuery,
+          status: "error",
+          results: null,
+          error:
+            caughtError instanceof Error
+              ? caughtError.message
+              : "Arama şu anda tamamlanamadı.",
+        })
       }
     }, SEARCH_DEBOUNCE_MS)
 
@@ -199,10 +211,19 @@ export function GlobalSearch({
       window.clearTimeout(timeoutId)
       controller.abort()
     }
-  }, [open, query, storeId])
+  }, [canSearch, searchQuery, storeId])
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      setQuery("")
+      setRemoteSearch(null)
+    }
+
+    onOpenChange(nextOpen)
+  }
 
   function navigate(url: string) {
-    onOpenChange(false)
+    handleOpenChange(false)
     router.push(url)
   }
 
@@ -219,7 +240,7 @@ export function GlobalSearch({
   return (
     <ResponsiveDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       title="Genel arama"
       description="Sayfalara ulaşın; ürün, SKU, barkod veya müşteri sorusu arayın."
       contentClassName="sm:max-w-2xl"
