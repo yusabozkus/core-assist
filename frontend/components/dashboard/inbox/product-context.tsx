@@ -12,21 +12,35 @@ export function ProductContext({ question }: { question: ProductQuestion }) {
   const product = question.product
 
   if (!product) {
+    const snapshot = question.productSnapshot
+
     return (
       <div className="rounded-xl border border-dashed border-border bg-card p-4">
         <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
           İlgili ürün
         </p>
         <div className="mt-3 flex items-center gap-3">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground">
-            <HugeiconsIcon icon={Package01Icon} className="size-5" />
+          <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-card text-muted-foreground">
+            {snapshot?.imageUrl ? (
+              <Image
+                src={snapshot.imageUrl}
+                alt={snapshot.title}
+                fill
+                sizes="48px"
+                className="object-cover"
+              />
+            ) : (
+              <HugeiconsIcon icon={Package01Icon} className="size-5" />
+            )}
           </span>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-foreground">
-              Ürün eşleştirilemedi
+              {snapshot?.title ?? "Ürün eşleştirilemedi"}
             </p>
             <p className="mt-1 truncate text-xs text-muted-foreground">
-              Platform ürün kodu: {question.externalProductId}
+              {snapshot
+                ? "Kanal kaldırıldığı için güncel ürün detayları artık mevcut değil."
+                : `Platform ürün kodu: ${question.externalProductId}`}
             </p>
           </div>
         </div>

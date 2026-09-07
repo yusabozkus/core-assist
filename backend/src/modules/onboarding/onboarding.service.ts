@@ -74,6 +74,7 @@ export class OnboardingService {
                 },
               },
               channelConnections: {
+                where: { removedAt: null },
                 select: {
                   ...channelConnectionSelect,
                   syncRuns: {
@@ -177,6 +178,7 @@ export class OnboardingService {
             take: 1,
             include: {
               channelConnections: {
+                where: { removedAt: null },
                 select: channelConnectionSelect,
               },
             },
@@ -209,6 +211,7 @@ export class OnboardingService {
               take: 1,
               include: {
                 channelConnections: {
+                  where: { removedAt: null },
                   select: channelConnectionSelect,
                 },
               },
@@ -236,6 +239,7 @@ export class OnboardingService {
           },
           include: {
             channelConnections: {
+              where: { removedAt: null },
               select: channelConnectionSelect,
             },
           },
@@ -342,6 +346,7 @@ export class OnboardingService {
           members: { some: { userId } },
           channelConnections: {
             some: {
+              removedAt: null,
               status: ChannelConnectionStatus.CONNECTED,
               credentialsEncrypted: { not: null },
               syncRuns: {

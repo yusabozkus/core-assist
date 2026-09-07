@@ -514,7 +514,7 @@ export function ChannelManagement({
         open={Boolean(connectionToRemove)}
         onOpenChange={handleRemoveDialogChange}
         title={`${removalProvider?.name ?? "Pazaryeri"} kaldırılsın mı?`}
-        description="Bağlantı ve senkronizasyon geçmişi mağazadan kaldırılacak. İçeri aktarılan katalog ürünleri korunur."
+        description="API bilgileri ve yalnızca bu kanaldan gelen katalog verileri kalıcı olarak silinecek. Soru ve cevap geçmişiniz korunacak."
         contentClassName="sm:max-w-md"
         footer={({ close }) => (
           <>
@@ -539,8 +539,9 @@ export function ChannelManagement({
         )}
       >
         <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm leading-6 text-muted-foreground">
-          Şifrelenmiş API bilgileri kalıcı olarak silinecektir. Pazaryeri
-          hesabınızdaki veriler etkilenmez.
+          Başka bir bağlı pazaryerinde karşılığı bulunan ürünler korunur.
+          Yalnızca bu kanala ait ürünler, varyantlar ve beden tabloları silinir.
+          Pazaryeri hesabınızdaki veriler etkilenmez.
         </div>
         <div className="mt-4 min-h-5 text-sm" aria-live="polite">
           {dialogError ? (

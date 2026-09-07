@@ -10,6 +10,8 @@ import {
   CatalogSyncStage,
   CatalogSyncStatus,
   ChannelConnectionStatus,
+  ProductQuestionStatus,
+  QuestionAnswerStatus,
   StoreRole,
   StoreStatus,
 } from '../../generated/prisma/enums';
@@ -52,7 +54,7 @@ export class ChannelsService {
     await this.requireStoreMembership(storeId, userId);
 
     return this.prisma.channelConnection.findMany({
-      where: { storeId },
+      where: { storeId, removedAt: null },
       orderBy: { createdAt: 'asc' },
       select: channelConnectionSelect,
     });
@@ -369,10 +371,10 @@ export class ChannelsService {
           providerKey: dto.providerKey,
         },
       },
-      select: { id: true },
+      select: { id: true, removedAt: true },
     });
 
-    if (existingConnection) {
+    if (existingConnection && !existingConnection.removedAt) {
       throw new ConflictException('Bu satış kanalı mağazaya zaten eklenmiş.');
     }
 
@@ -380,6 +382,29 @@ export class ChannelsService {
       environment: dto.environment,
       credentials,
     });
+
+    if (existingConnection) {
+      return this.prisma.channelConnection.update({
+        where: { id: existingConnection.id },
+        data: {
+          type: manifest.type,
+          environment: dto.environment,
+          credentialsEncrypted: this.encryption.encrypt(credentials),
+          credentialSchemaVersion: 1,
+          status: ChannelConnectionStatus.CONNECTED,
+          connectedAt: new Date(),
+          processingStartedAt: null,
+          lastSyncAt: null,
+          lastInventorySyncAt: null,
+          failureReason: null,
+          questionSyncStartedAt: null,
+          lastQuestionSyncAt: null,
+          questionSyncFailureReason: null,
+          removedAt: null,
+        },
+        select: channelConnectionSelect,
+      });
+    }
 
     return this.prisma.channelConnection.create({
       data: {
@@ -499,10 +524,148 @@ export class ChannelsService {
 
   async remove(storeId: string, connectionId: string, userId: string) {
     await this.requireStoreManagement(storeId, userId);
-    await this.requireConnection(storeId, connectionId);
+    const connection = await this.prisma.channelConnection.findFirst({
+      where: { id: connectionId, storeId, removedAt: null },
+      select: {
+        id: true,
+        processingStartedAt: true,
+        questionSyncStartedAt: true,
+        syncRuns: {
+          where: { status: CatalogSyncStatus.RUNNING },
+          take: 1,
+          select: { id: true },
+        },
+        questionAnswers: {
+          where: { status: QuestionAnswerStatus.PROCESSING },
+          take: 1,
+          select: { id: true },
+        },
+      },
+    });
 
-    await this.prisma.channelConnection.delete({
-      where: { id: connectionId },
+    if (!connection) {
+      throw new NotFoundException('Satış kanalı bağlantısı bulunamadı.');
+    }
+
+    if (
+      connection.processingStartedAt ||
+      connection.questionSyncStartedAt ||
+      connection.syncRuns.length > 0 ||
+      connection.questionAnswers.length > 0
+    ) {
+      throw new ConflictException(
+        'Devam eden senkronizasyon veya cevap gönderimi tamamlandıktan sonra kanalı kaldırabilirsiniz.',
+      );
+    }
+
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.$executeRaw`
+        UPDATE "product_question" AS question
+        SET
+          "productTitleSnapshot" = COALESCE(question."productTitleSnapshot", product."title"),
+          "productImageUrlSnapshot" = COALESCE(
+            question."productImageUrlSnapshot",
+            (
+              SELECT image."url"
+              FROM "product_image" AS image
+              WHERE image."productId" = product."id"
+              ORDER BY image."position" ASC, image."createdAt" ASC
+              LIMIT 1
+            )
+          )
+        FROM "product" AS product
+        WHERE
+          question."connectionId" = ${connectionId}
+          AND question."productId" = product."id"
+      `;
+
+      await transaction.questionAnswer.updateMany({
+        where: {
+          connectionId,
+          status: QuestionAnswerStatus.QUEUED,
+        },
+        data: {
+          status: QuestionAnswerStatus.FAILED,
+          processingStartedAt: null,
+          lastError: 'Kanal bağlantısı kaldırıldığı için cevap gönderilmedi.',
+        },
+      });
+
+      await transaction.productQuestion.updateMany({
+        where: { connectionId },
+        data: {
+          productId: null,
+          externalProductRecordId: null,
+          draftProcessingStatus: null,
+          draftProcessingError: null,
+          draftQueuedAt: null,
+          draftProcessingStartedAt: null,
+        },
+      });
+      await transaction.productQuestion.updateMany({
+        where: {
+          connectionId,
+          status: {
+            in: [ProductQuestionStatus.PENDING, ProductQuestionStatus.DRAFTED],
+          },
+        },
+        data: { status: ProductQuestionStatus.IGNORED },
+      });
+
+      const externalProducts = await transaction.externalProduct.findMany({
+        where: { connectionId },
+        select: {
+          productId: true,
+          variants: { select: { productVariantId: true } },
+        },
+      });
+      const productIds = [
+        ...new Set(externalProducts.map((product) => product.productId)),
+      ];
+      const variantIds = [
+        ...new Set(
+          externalProducts.flatMap((product) =>
+            product.variants.map((variant) => variant.productVariantId),
+          ),
+        ),
+      ];
+
+      await transaction.productSizeGuide.deleteMany({
+        where: { externalProduct: { connectionId } },
+      });
+      await transaction.externalProduct.deleteMany({
+        where: { connectionId },
+      });
+
+      if (variantIds.length > 0) {
+        await transaction.productVariant.deleteMany({
+          where: {
+            id: { in: variantIds },
+            externalVariants: { none: {} },
+          },
+        });
+      }
+      if (productIds.length > 0) {
+        await transaction.product.deleteMany({
+          where: {
+            id: { in: productIds },
+            externalProducts: { none: {} },
+          },
+        });
+      }
+
+      await transaction.channelConnection.update({
+        where: { id: connectionId },
+        data: {
+          status: ChannelConnectionStatus.DISCONNECTED,
+          credentialsEncrypted: null,
+          processingStartedAt: null,
+          failureReason: null,
+          questionSyncStartedAt: null,
+          questionSyncFailureReason: null,
+          removedAt: new Date(),
+        },
+      });
     });
 
     return { deleted: true };
@@ -542,7 +705,7 @@ export class ChannelsService {
 
   private async requireConnection(storeId: string, connectionId: string) {
     const connection = await this.prisma.channelConnection.findFirst({
-      where: { id: connectionId, storeId },
+      where: { id: connectionId, storeId, removedAt: null },
       select: { id: true },
     });
 
@@ -553,7 +716,7 @@ export class ChannelsService {
 
   private async getConnection(storeId: string, connectionId: string) {
     const connection = await this.prisma.channelConnection.findFirst({
-      where: { id: connectionId, storeId },
+      where: { id: connectionId, storeId, removedAt: null },
       select: {
         id: true,
         providerKey: true,

@@ -116,7 +116,7 @@ export function SidebarUser({ user }: { user: SidebarUserData }) {
               <DropdownMenuItem asChild>
                 <Link href={APP_ROUTES.dashboard.settings.profile}>
                   <HugeiconsIcon icon={UserCircleIcon} />
-                  Hesap bilgileri
+                  Hesap ve güvenlik
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>

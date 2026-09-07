@@ -237,7 +237,7 @@ export function getDashboardBreadcrumbs(
 }
 
 const DASHBOARD_AUXILIARY_TITLES: Readonly<Record<string, string>> = {
-  [APP_ROUTES.dashboard.settings.profile]: "Hesap bilgileri",
+  [APP_ROUTES.dashboard.settings.profile]: "Hesap ve güvenlik",
   [APP_ROUTES.dashboard.settings.notifications]: "Bildirimler",
   [APP_ROUTES.dashboard.settings.billing]: "Plan ve Faturalama",
   [APP_ROUTES.dashboard.settings.plans]: "Planlar",

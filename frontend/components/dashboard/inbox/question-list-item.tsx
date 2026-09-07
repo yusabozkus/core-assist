@@ -21,7 +21,8 @@ export function QuestionListItem({
   selected,
   onSelect,
 }: QuestionListItemProps) {
-  const imageUrl = question.product?.imageUrl
+  const productSummary = question.product ?? question.productSnapshot
+  const imageUrl = productSummary?.imageUrl
   const latestDraft = question.draftAttempts?.[0]
 
   return (
@@ -40,11 +41,11 @@ export function QuestionListItem({
       ) : null}
 
       <span className="flex items-start gap-3">
-        <span className="relative flex w-11 h-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted text-muted-foreground">
+        <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted text-muted-foreground">
           {imageUrl ? (
             <Image
               src={imageUrl}
-              alt={question.product?.title ?? "Ürün"}
+              alt={productSummary?.title ?? "Ürün"}
               fill
               sizes="44px"
               className="object-cover"
@@ -72,7 +73,7 @@ export function QuestionListItem({
       <span className="mt-3 flex items-center justify-between gap-3 pl-14">
         <span className="min-w-0">
           <span className="block truncate text-[11px] font-medium text-foreground/75">
-            {question.product?.title ??
+            {productSummary?.title ??
               `Ürün kodu: ${question.externalProductId}`}
           </span>
           <div className="flex flex-row items-center gap-1">

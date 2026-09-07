@@ -1,6 +1,10 @@
 import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
-import type { AuthenticatedUser } from '../auth/auth.types';
+import type {
+  AuthenticatedSession,
+  AuthenticatedUser,
+} from '../auth/auth.types';
+import { CurrentSession } from '../auth/current-session.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UsersService } from './users.service';
@@ -21,5 +25,18 @@ export class UsersController {
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
     return this.usersService.updateProfile(user.id, updateProfileDto);
+  }
+
+  @Get('me/account-overview')
+  getAccountOverview(
+    @CurrentUser() user: AuthenticatedUser,
+    @CurrentSession() session: AuthenticatedSession,
+  ) {
+    return this.usersService.getAccountOverview(user.id, session.id);
+  }
+
+  @Get('me/export')
+  exportAccountData(@CurrentUser() user: AuthenticatedUser) {
+    return this.usersService.exportAccountData(user.id);
   }
 }

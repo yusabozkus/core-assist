@@ -120,8 +120,11 @@ export function LoginForm({
     errorMessage ??
     (reason === "session_expired"
       ? "Oturumunuzun süresi doldu. Devam etmek için yeniden giriş yapın."
-      : null)
+      : reason === "account_deleted"
+        ? "CoreAssist hesabınız ve hesabınıza ait veriler kalıcı olarak silindi."
+        : null)
   const isError = Boolean(errorMessage)
+  const isSuccess = !isError && reason === "account_deleted"
 
   return (
     <div className="w-full">
@@ -146,7 +149,9 @@ export function LoginForm({
           className={
             isError
               ? "mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm leading-5 text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-300"
-              : "mb-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-sm leading-5 text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200"
+              : isSuccess
+                ? "mb-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-sm leading-5 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300"
+                : "mb-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-sm leading-5 text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200"
           }
         >
           <HugeiconsIcon

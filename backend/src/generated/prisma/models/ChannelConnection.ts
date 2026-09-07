@@ -51,6 +51,7 @@ export type ChannelConnectionMinAggregateOutputType = {
   questionSyncStartedAt: Date | null
   lastQuestionSyncAt: Date | null
   questionSyncFailureReason: string | null
+  removedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -72,6 +73,7 @@ export type ChannelConnectionMaxAggregateOutputType = {
   questionSyncStartedAt: Date | null
   lastQuestionSyncAt: Date | null
   questionSyncFailureReason: string | null
+  removedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -93,6 +95,7 @@ export type ChannelConnectionCountAggregateOutputType = {
   questionSyncStartedAt: number
   lastQuestionSyncAt: number
   questionSyncFailureReason: number
+  removedAt: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -124,6 +127,7 @@ export type ChannelConnectionMinAggregateInputType = {
   questionSyncStartedAt?: true
   lastQuestionSyncAt?: true
   questionSyncFailureReason?: true
+  removedAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -145,6 +149,7 @@ export type ChannelConnectionMaxAggregateInputType = {
   questionSyncStartedAt?: true
   lastQuestionSyncAt?: true
   questionSyncFailureReason?: true
+  removedAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -166,6 +171,7 @@ export type ChannelConnectionCountAggregateInputType = {
   questionSyncStartedAt?: true
   lastQuestionSyncAt?: true
   questionSyncFailureReason?: true
+  removedAt?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -274,6 +280,7 @@ export type ChannelConnectionGroupByOutputType = {
   questionSyncStartedAt: Date | null
   lastQuestionSyncAt: Date | null
   questionSyncFailureReason: string | null
+  removedAt: Date | null
   createdAt: Date
   updatedAt: Date
   _count: ChannelConnectionCountAggregateOutputType | null
@@ -318,6 +325,7 @@ export type ChannelConnectionWhereInput = {
   questionSyncStartedAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
   lastQuestionSyncAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
   questionSyncFailureReason?: Prisma.StringNullableFilter<"ChannelConnection"> | string | null
+  removedAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ChannelConnection"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ChannelConnection"> | Date | string
   store?: Prisma.XOR<Prisma.StoreScalarRelationFilter, Prisma.StoreWhereInput>
@@ -345,6 +353,7 @@ export type ChannelConnectionOrderByWithRelationInput = {
   questionSyncStartedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastQuestionSyncAt?: Prisma.SortOrderInput | Prisma.SortOrder
   questionSyncFailureReason?: Prisma.SortOrderInput | Prisma.SortOrder
+  removedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   store?: Prisma.StoreOrderByWithRelationInput
@@ -376,6 +385,7 @@ export type ChannelConnectionWhereUniqueInput = Prisma.AtLeast<{
   questionSyncStartedAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
   lastQuestionSyncAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
   questionSyncFailureReason?: Prisma.StringNullableFilter<"ChannelConnection"> | string | null
+  removedAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ChannelConnection"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ChannelConnection"> | Date | string
   store?: Prisma.XOR<Prisma.StoreScalarRelationFilter, Prisma.StoreWhereInput>
@@ -403,6 +413,7 @@ export type ChannelConnectionOrderByWithAggregationInput = {
   questionSyncStartedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastQuestionSyncAt?: Prisma.SortOrderInput | Prisma.SortOrder
   questionSyncFailureReason?: Prisma.SortOrderInput | Prisma.SortOrder
+  removedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.ChannelConnectionCountOrderByAggregateInput
@@ -432,6 +443,7 @@ export type ChannelConnectionScalarWhereWithAggregatesInput = {
   questionSyncStartedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ChannelConnection"> | Date | string | null
   lastQuestionSyncAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ChannelConnection"> | Date | string | null
   questionSyncFailureReason?: Prisma.StringNullableWithAggregatesFilter<"ChannelConnection"> | string | null
+  removedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ChannelConnection"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"ChannelConnection"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"ChannelConnection"> | Date | string
 }
@@ -452,6 +464,7 @@ export type ChannelConnectionCreateInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   store: Prisma.StoreCreateNestedOneWithoutChannelConnectionsInput
@@ -479,6 +492,7 @@ export type ChannelConnectionUncheckedCreateInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   externalProducts?: Prisma.ExternalProductUncheckedCreateNestedManyWithoutConnectionInput
@@ -504,6 +518,7 @@ export type ChannelConnectionUpdateInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   store?: Prisma.StoreUpdateOneRequiredWithoutChannelConnectionsNestedInput
@@ -531,6 +546,7 @@ export type ChannelConnectionUncheckedUpdateInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   externalProducts?: Prisma.ExternalProductUncheckedUpdateManyWithoutConnectionNestedInput
@@ -557,6 +573,7 @@ export type ChannelConnectionCreateManyInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -577,6 +594,7 @@ export type ChannelConnectionUpdateManyMutationInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -598,6 +616,7 @@ export type ChannelConnectionUncheckedUpdateManyInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -634,6 +653,7 @@ export type ChannelConnectionCountOrderByAggregateInput = {
   questionSyncStartedAt?: Prisma.SortOrder
   lastQuestionSyncAt?: Prisma.SortOrder
   questionSyncFailureReason?: Prisma.SortOrder
+  removedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -659,6 +679,7 @@ export type ChannelConnectionMaxOrderByAggregateInput = {
   questionSyncStartedAt?: Prisma.SortOrder
   lastQuestionSyncAt?: Prisma.SortOrder
   questionSyncFailureReason?: Prisma.SortOrder
+  removedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -680,6 +701,7 @@ export type ChannelConnectionMinOrderByAggregateInput = {
   questionSyncStartedAt?: Prisma.SortOrder
   lastQuestionSyncAt?: Prisma.SortOrder
   questionSyncFailureReason?: Prisma.SortOrder
+  removedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -833,6 +855,7 @@ export type ChannelConnectionCreateWithoutStoreInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   externalProducts?: Prisma.ExternalProductCreateNestedManyWithoutConnectionInput
@@ -858,6 +881,7 @@ export type ChannelConnectionUncheckedCreateWithoutStoreInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   externalProducts?: Prisma.ExternalProductUncheckedCreateNestedManyWithoutConnectionInput
@@ -913,6 +937,7 @@ export type ChannelConnectionScalarWhereInput = {
   questionSyncStartedAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
   lastQuestionSyncAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
   questionSyncFailureReason?: Prisma.StringNullableFilter<"ChannelConnection"> | string | null
+  removedAt?: Prisma.DateTimeNullableFilter<"ChannelConnection"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ChannelConnection"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"ChannelConnection"> | Date | string
 }
@@ -933,6 +958,7 @@ export type ChannelConnectionCreateWithoutExternalProductsInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   store: Prisma.StoreCreateNestedOneWithoutChannelConnectionsInput
@@ -959,6 +985,7 @@ export type ChannelConnectionUncheckedCreateWithoutExternalProductsInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   syncRuns?: Prisma.CatalogSyncRunUncheckedCreateNestedManyWithoutConnectionInput
@@ -999,6 +1026,7 @@ export type ChannelConnectionUpdateWithoutExternalProductsInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   store?: Prisma.StoreUpdateOneRequiredWithoutChannelConnectionsNestedInput
@@ -1025,6 +1053,7 @@ export type ChannelConnectionUncheckedUpdateWithoutExternalProductsInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   syncRuns?: Prisma.CatalogSyncRunUncheckedUpdateManyWithoutConnectionNestedInput
@@ -1049,6 +1078,7 @@ export type ChannelConnectionCreateWithoutSyncRunsInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   store: Prisma.StoreCreateNestedOneWithoutChannelConnectionsInput
@@ -1075,6 +1105,7 @@ export type ChannelConnectionUncheckedCreateWithoutSyncRunsInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   externalProducts?: Prisma.ExternalProductUncheckedCreateNestedManyWithoutConnectionInput
@@ -1115,6 +1146,7 @@ export type ChannelConnectionUpdateWithoutSyncRunsInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   store?: Prisma.StoreUpdateOneRequiredWithoutChannelConnectionsNestedInput
@@ -1141,6 +1173,7 @@ export type ChannelConnectionUncheckedUpdateWithoutSyncRunsInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   externalProducts?: Prisma.ExternalProductUncheckedUpdateManyWithoutConnectionNestedInput
@@ -1165,6 +1198,7 @@ export type ChannelConnectionCreateWithoutIncomingEventsInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   store: Prisma.StoreCreateNestedOneWithoutChannelConnectionsInput
@@ -1191,6 +1225,7 @@ export type ChannelConnectionUncheckedCreateWithoutIncomingEventsInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   externalProducts?: Prisma.ExternalProductUncheckedCreateNestedManyWithoutConnectionInput
@@ -1231,6 +1266,7 @@ export type ChannelConnectionUpdateWithoutIncomingEventsInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   store?: Prisma.StoreUpdateOneRequiredWithoutChannelConnectionsNestedInput
@@ -1257,6 +1293,7 @@ export type ChannelConnectionUncheckedUpdateWithoutIncomingEventsInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   externalProducts?: Prisma.ExternalProductUncheckedUpdateManyWithoutConnectionNestedInput
@@ -1281,6 +1318,7 @@ export type ChannelConnectionCreateWithoutProductQuestionsInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   store: Prisma.StoreCreateNestedOneWithoutChannelConnectionsInput
@@ -1307,6 +1345,7 @@ export type ChannelConnectionUncheckedCreateWithoutProductQuestionsInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   externalProducts?: Prisma.ExternalProductUncheckedCreateNestedManyWithoutConnectionInput
@@ -1347,6 +1386,7 @@ export type ChannelConnectionUpdateWithoutProductQuestionsInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   store?: Prisma.StoreUpdateOneRequiredWithoutChannelConnectionsNestedInput
@@ -1373,6 +1413,7 @@ export type ChannelConnectionUncheckedUpdateWithoutProductQuestionsInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   externalProducts?: Prisma.ExternalProductUncheckedUpdateManyWithoutConnectionNestedInput
@@ -1397,6 +1438,7 @@ export type ChannelConnectionCreateWithoutQuestionAnswersInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   store: Prisma.StoreCreateNestedOneWithoutChannelConnectionsInput
@@ -1423,6 +1465,7 @@ export type ChannelConnectionUncheckedCreateWithoutQuestionAnswersInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   externalProducts?: Prisma.ExternalProductUncheckedCreateNestedManyWithoutConnectionInput
@@ -1463,6 +1506,7 @@ export type ChannelConnectionUpdateWithoutQuestionAnswersInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   store?: Prisma.StoreUpdateOneRequiredWithoutChannelConnectionsNestedInput
@@ -1489,6 +1533,7 @@ export type ChannelConnectionUncheckedUpdateWithoutQuestionAnswersInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   externalProducts?: Prisma.ExternalProductUncheckedUpdateManyWithoutConnectionNestedInput
@@ -1513,6 +1558,7 @@ export type ChannelConnectionCreateManyStoreInput = {
   questionSyncStartedAt?: Date | string | null
   lastQuestionSyncAt?: Date | string | null
   questionSyncFailureReason?: string | null
+  removedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1533,6 +1579,7 @@ export type ChannelConnectionUpdateWithoutStoreInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   externalProducts?: Prisma.ExternalProductUpdateManyWithoutConnectionNestedInput
@@ -1558,6 +1605,7 @@ export type ChannelConnectionUncheckedUpdateWithoutStoreInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   externalProducts?: Prisma.ExternalProductUncheckedUpdateManyWithoutConnectionNestedInput
@@ -1583,6 +1631,7 @@ export type ChannelConnectionUncheckedUpdateManyWithoutStoreInput = {
   questionSyncStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastQuestionSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   questionSyncFailureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  removedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1671,6 +1720,7 @@ export type ChannelConnectionSelect<ExtArgs extends runtime.Types.Extensions.Int
   questionSyncStartedAt?: boolean
   lastQuestionSyncAt?: boolean
   questionSyncFailureReason?: boolean
+  removedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
@@ -1699,6 +1749,7 @@ export type ChannelConnectionSelectCreateManyAndReturn<ExtArgs extends runtime.T
   questionSyncStartedAt?: boolean
   lastQuestionSyncAt?: boolean
   questionSyncFailureReason?: boolean
+  removedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
@@ -1721,6 +1772,7 @@ export type ChannelConnectionSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   questionSyncStartedAt?: boolean
   lastQuestionSyncAt?: boolean
   questionSyncFailureReason?: boolean
+  removedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
@@ -1743,11 +1795,12 @@ export type ChannelConnectionSelectScalar = {
   questionSyncStartedAt?: boolean
   lastQuestionSyncAt?: boolean
   questionSyncFailureReason?: boolean
+  removedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ChannelConnectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "storeId" | "providerKey" | "type" | "environment" | "status" | "credentialsEncrypted" | "credentialSchemaVersion" | "connectedAt" | "processingStartedAt" | "lastSyncAt" | "lastInventorySyncAt" | "failureReason" | "questionSyncStartedAt" | "lastQuestionSyncAt" | "questionSyncFailureReason" | "createdAt" | "updatedAt", ExtArgs["result"]["channelConnection"]>
+export type ChannelConnectionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "storeId" | "providerKey" | "type" | "environment" | "status" | "credentialsEncrypted" | "credentialSchemaVersion" | "connectedAt" | "processingStartedAt" | "lastSyncAt" | "lastInventorySyncAt" | "failureReason" | "questionSyncStartedAt" | "lastQuestionSyncAt" | "questionSyncFailureReason" | "removedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["channelConnection"]>
 export type ChannelConnectionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
   externalProducts?: boolean | Prisma.ChannelConnection$externalProductsArgs<ExtArgs>
@@ -1791,6 +1844,7 @@ export type $ChannelConnectionPayload<ExtArgs extends runtime.Types.Extensions.I
     questionSyncStartedAt: Date | null
     lastQuestionSyncAt: Date | null
     questionSyncFailureReason: string | null
+    removedAt: Date | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["channelConnection"]>
@@ -2238,6 +2292,7 @@ export interface ChannelConnectionFieldRefs {
   readonly questionSyncStartedAt: Prisma.FieldRef<"ChannelConnection", 'DateTime'>
   readonly lastQuestionSyncAt: Prisma.FieldRef<"ChannelConnection", 'DateTime'>
   readonly questionSyncFailureReason: Prisma.FieldRef<"ChannelConnection", 'String'>
+  readonly removedAt: Prisma.FieldRef<"ChannelConnection", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"ChannelConnection", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"ChannelConnection", 'DateTime'>
 }

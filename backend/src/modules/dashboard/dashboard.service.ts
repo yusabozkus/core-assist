@@ -128,7 +128,7 @@ export class DashboardService {
           ORDER BY CASE w.state WHEN 'FAILED' THEN 0 WHEN 'UNMATCHED' THEN 1 WHEN 'REVIEW' THEN 2 ELSE 3 END, w."externalCreatedAt", w.id LIMIT 5
         `),
           db.channelConnection.findMany({
-            where: { storeId },
+            where: { storeId, removedAt: null },
             orderBy: { createdAt: 'asc' },
             select: {
               id: true,

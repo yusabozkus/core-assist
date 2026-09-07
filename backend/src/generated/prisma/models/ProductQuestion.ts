@@ -45,6 +45,8 @@ export type ProductQuestionMinAggregateOutputType = {
   externalProductId: string | null
   externalCustomerId: string | null
   customerName: string | null
+  productTitleSnapshot: string | null
+  productImageUrlSnapshot: string | null
   question: string | null
   status: $Enums.ProductQuestionStatus | null
   answer: string | null
@@ -74,6 +76,8 @@ export type ProductQuestionMaxAggregateOutputType = {
   externalProductId: string | null
   externalCustomerId: string | null
   customerName: string | null
+  productTitleSnapshot: string | null
+  productImageUrlSnapshot: string | null
   question: string | null
   status: $Enums.ProductQuestionStatus | null
   answer: string | null
@@ -103,6 +107,8 @@ export type ProductQuestionCountAggregateOutputType = {
   externalProductId: number
   externalCustomerId: number
   customerName: number
+  productTitleSnapshot: number
+  productImageUrlSnapshot: number
   question: number
   status: number
   answer: number
@@ -145,6 +151,8 @@ export type ProductQuestionMinAggregateInputType = {
   externalProductId?: true
   externalCustomerId?: true
   customerName?: true
+  productTitleSnapshot?: true
+  productImageUrlSnapshot?: true
   question?: true
   status?: true
   answer?: true
@@ -174,6 +182,8 @@ export type ProductQuestionMaxAggregateInputType = {
   externalProductId?: true
   externalCustomerId?: true
   customerName?: true
+  productTitleSnapshot?: true
+  productImageUrlSnapshot?: true
   question?: true
   status?: true
   answer?: true
@@ -203,6 +213,8 @@ export type ProductQuestionCountAggregateInputType = {
   externalProductId?: true
   externalCustomerId?: true
   customerName?: true
+  productTitleSnapshot?: true
+  productImageUrlSnapshot?: true
   question?: true
   status?: true
   answer?: true
@@ -322,6 +334,8 @@ export type ProductQuestionGroupByOutputType = {
   externalProductId: string
   externalCustomerId: string | null
   customerName: string | null
+  productTitleSnapshot: string | null
+  productImageUrlSnapshot: string | null
   question: string
   status: $Enums.ProductQuestionStatus
   answer: string | null
@@ -377,6 +391,8 @@ export type ProductQuestionWhereInput = {
   externalProductId?: Prisma.StringFilter<"ProductQuestion"> | string
   externalCustomerId?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
   customerName?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
+  productTitleSnapshot?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
+  productImageUrlSnapshot?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
   question?: Prisma.StringFilter<"ProductQuestion"> | string
   status?: Prisma.EnumProductQuestionStatusFilter<"ProductQuestion"> | $Enums.ProductQuestionStatus
   answer?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
@@ -416,6 +432,8 @@ export type ProductQuestionOrderByWithRelationInput = {
   externalProductId?: Prisma.SortOrder
   externalCustomerId?: Prisma.SortOrderInput | Prisma.SortOrder
   customerName?: Prisma.SortOrderInput | Prisma.SortOrder
+  productTitleSnapshot?: Prisma.SortOrderInput | Prisma.SortOrder
+  productImageUrlSnapshot?: Prisma.SortOrderInput | Prisma.SortOrder
   question?: Prisma.SortOrder
   status?: Prisma.SortOrder
   answer?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -459,6 +477,8 @@ export type ProductQuestionWhereUniqueInput = Prisma.AtLeast<{
   externalProductId?: Prisma.StringFilter<"ProductQuestion"> | string
   externalCustomerId?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
   customerName?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
+  productTitleSnapshot?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
+  productImageUrlSnapshot?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
   question?: Prisma.StringFilter<"ProductQuestion"> | string
   status?: Prisma.EnumProductQuestionStatusFilter<"ProductQuestion"> | $Enums.ProductQuestionStatus
   answer?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
@@ -498,6 +518,8 @@ export type ProductQuestionOrderByWithAggregationInput = {
   externalProductId?: Prisma.SortOrder
   externalCustomerId?: Prisma.SortOrderInput | Prisma.SortOrder
   customerName?: Prisma.SortOrderInput | Prisma.SortOrder
+  productTitleSnapshot?: Prisma.SortOrderInput | Prisma.SortOrder
+  productImageUrlSnapshot?: Prisma.SortOrderInput | Prisma.SortOrder
   question?: Prisma.SortOrder
   status?: Prisma.SortOrder
   answer?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -538,6 +560,8 @@ export type ProductQuestionScalarWhereWithAggregatesInput = {
   externalProductId?: Prisma.StringWithAggregatesFilter<"ProductQuestion"> | string
   externalCustomerId?: Prisma.StringNullableWithAggregatesFilter<"ProductQuestion"> | string | null
   customerName?: Prisma.StringNullableWithAggregatesFilter<"ProductQuestion"> | string | null
+  productTitleSnapshot?: Prisma.StringNullableWithAggregatesFilter<"ProductQuestion"> | string | null
+  productImageUrlSnapshot?: Prisma.StringNullableWithAggregatesFilter<"ProductQuestion"> | string | null
   question?: Prisma.StringWithAggregatesFilter<"ProductQuestion"> | string
   status?: Prisma.EnumProductQuestionStatusWithAggregatesFilter<"ProductQuestion"> | $Enums.ProductQuestionStatus
   answer?: Prisma.StringNullableWithAggregatesFilter<"ProductQuestion"> | string | null
@@ -565,6 +589,8 @@ export type ProductQuestionCreateInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -604,6 +630,8 @@ export type ProductQuestionUncheckedCreateInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -633,6 +661,8 @@ export type ProductQuestionUpdateInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -672,6 +702,8 @@ export type ProductQuestionUncheckedUpdateInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -706,6 +738,8 @@ export type ProductQuestionCreateManyInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -733,6 +767,8 @@ export type ProductQuestionUpdateManyMutationInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -765,6 +801,8 @@ export type ProductQuestionUncheckedUpdateManyInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -817,6 +855,8 @@ export type ProductQuestionCountOrderByAggregateInput = {
   externalProductId?: Prisma.SortOrder
   externalCustomerId?: Prisma.SortOrder
   customerName?: Prisma.SortOrder
+  productTitleSnapshot?: Prisma.SortOrder
+  productImageUrlSnapshot?: Prisma.SortOrder
   question?: Prisma.SortOrder
   status?: Prisma.SortOrder
   answer?: Prisma.SortOrder
@@ -853,6 +893,8 @@ export type ProductQuestionMaxOrderByAggregateInput = {
   externalProductId?: Prisma.SortOrder
   externalCustomerId?: Prisma.SortOrder
   customerName?: Prisma.SortOrder
+  productTitleSnapshot?: Prisma.SortOrder
+  productImageUrlSnapshot?: Prisma.SortOrder
   question?: Prisma.SortOrder
   status?: Prisma.SortOrder
   answer?: Prisma.SortOrder
@@ -882,6 +924,8 @@ export type ProductQuestionMinOrderByAggregateInput = {
   externalProductId?: Prisma.SortOrder
   externalCustomerId?: Prisma.SortOrder
   customerName?: Prisma.SortOrder
+  productTitleSnapshot?: Prisma.SortOrder
+  productImageUrlSnapshot?: Prisma.SortOrder
   question?: Prisma.SortOrder
   status?: Prisma.SortOrder
   answer?: Prisma.SortOrder
@@ -1155,6 +1199,8 @@ export type ProductQuestionCreateWithoutStoreInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -1192,6 +1238,8 @@ export type ProductQuestionUncheckedCreateWithoutStoreInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -1255,6 +1303,8 @@ export type ProductQuestionScalarWhereInput = {
   externalProductId?: Prisma.StringFilter<"ProductQuestion"> | string
   externalCustomerId?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
   customerName?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
+  productTitleSnapshot?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
+  productImageUrlSnapshot?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
   question?: Prisma.StringFilter<"ProductQuestion"> | string
   status?: Prisma.EnumProductQuestionStatusFilter<"ProductQuestion"> | $Enums.ProductQuestionStatus
   answer?: Prisma.StringNullableFilter<"ProductQuestion"> | string | null
@@ -1282,6 +1332,8 @@ export type ProductQuestionCreateWithoutConnectionInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -1319,6 +1371,8 @@ export type ProductQuestionUncheckedCreateWithoutConnectionInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -1374,6 +1428,8 @@ export type ProductQuestionCreateWithoutProductInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -1411,6 +1467,8 @@ export type ProductQuestionUncheckedCreateWithoutProductInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -1466,6 +1524,8 @@ export type ProductQuestionCreateWithoutExternalProductInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -1503,6 +1563,8 @@ export type ProductQuestionUncheckedCreateWithoutExternalProductInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -1558,6 +1620,8 @@ export type ProductQuestionCreateWithoutIncomingEventInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -1595,6 +1659,8 @@ export type ProductQuestionUncheckedCreateWithoutIncomingEventInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -1640,6 +1706,8 @@ export type ProductQuestionUpdateWithoutIncomingEventInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1677,6 +1745,8 @@ export type ProductQuestionUncheckedUpdateWithoutIncomingEventInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1706,6 +1776,8 @@ export type ProductQuestionCreateWithoutDraftAttemptsInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -1744,6 +1816,8 @@ export type ProductQuestionUncheckedCreateWithoutDraftAttemptsInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -1788,6 +1862,8 @@ export type ProductQuestionUpdateWithoutDraftAttemptsInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1826,6 +1902,8 @@ export type ProductQuestionUncheckedUpdateWithoutDraftAttemptsInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1854,6 +1932,8 @@ export type ProductQuestionCreateWithoutAnswerDeliveryInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -1892,6 +1972,8 @@ export type ProductQuestionUncheckedCreateWithoutAnswerDeliveryInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -1936,6 +2018,8 @@ export type ProductQuestionUpdateWithoutAnswerDeliveryInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1974,6 +2058,8 @@ export type ProductQuestionUncheckedUpdateWithoutAnswerDeliveryInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2006,6 +2092,8 @@ export type ProductQuestionCreateManyStoreInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -2033,6 +2121,8 @@ export type ProductQuestionUpdateWithoutStoreInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2070,6 +2160,8 @@ export type ProductQuestionUncheckedUpdateWithoutStoreInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2103,6 +2195,8 @@ export type ProductQuestionUncheckedUpdateManyWithoutStoreInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2134,6 +2228,8 @@ export type ProductQuestionCreateManyConnectionInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -2161,6 +2257,8 @@ export type ProductQuestionUpdateWithoutConnectionInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2198,6 +2296,8 @@ export type ProductQuestionUncheckedUpdateWithoutConnectionInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2231,6 +2331,8 @@ export type ProductQuestionUncheckedUpdateManyWithoutConnectionInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2262,6 +2364,8 @@ export type ProductQuestionCreateManyProductInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -2289,6 +2393,8 @@ export type ProductQuestionUpdateWithoutProductInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2326,6 +2432,8 @@ export type ProductQuestionUncheckedUpdateWithoutProductInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2359,6 +2467,8 @@ export type ProductQuestionUncheckedUpdateManyWithoutProductInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2390,6 +2500,8 @@ export type ProductQuestionCreateManyExternalProductInput = {
   externalProductId: string
   externalCustomerId?: string | null
   customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
   question: string
   status?: $Enums.ProductQuestionStatus
   answer?: string | null
@@ -2417,6 +2529,8 @@ export type ProductQuestionUpdateWithoutExternalProductInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2454,6 +2568,8 @@ export type ProductQuestionUncheckedUpdateWithoutExternalProductInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2487,6 +2603,8 @@ export type ProductQuestionUncheckedUpdateManyWithoutExternalProductInput = {
   externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
   externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   question?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2550,6 +2668,8 @@ export type ProductQuestionSelect<ExtArgs extends runtime.Types.Extensions.Inter
   externalProductId?: boolean
   externalCustomerId?: boolean
   customerName?: boolean
+  productTitleSnapshot?: boolean
+  productImageUrlSnapshot?: boolean
   question?: boolean
   status?: boolean
   answer?: boolean
@@ -2590,6 +2710,8 @@ export type ProductQuestionSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   externalProductId?: boolean
   externalCustomerId?: boolean
   customerName?: boolean
+  productTitleSnapshot?: boolean
+  productImageUrlSnapshot?: boolean
   question?: boolean
   status?: boolean
   answer?: boolean
@@ -2627,6 +2749,8 @@ export type ProductQuestionSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   externalProductId?: boolean
   externalCustomerId?: boolean
   customerName?: boolean
+  productTitleSnapshot?: boolean
+  productImageUrlSnapshot?: boolean
   question?: boolean
   status?: boolean
   answer?: boolean
@@ -2664,6 +2788,8 @@ export type ProductQuestionSelectScalar = {
   externalProductId?: boolean
   externalCustomerId?: boolean
   customerName?: boolean
+  productTitleSnapshot?: boolean
+  productImageUrlSnapshot?: boolean
   question?: boolean
   status?: boolean
   answer?: boolean
@@ -2685,7 +2811,7 @@ export type ProductQuestionSelectScalar = {
   updatedAt?: boolean
 }
 
-export type ProductQuestionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "storeId" | "connectionId" | "incomingEventId" | "productId" | "externalProductRecordId" | "externalQuestionId" | "externalProductId" | "externalCustomerId" | "customerName" | "question" | "status" | "answer" | "draftDecision" | "draftConfidence" | "draftAnswerability" | "draftRisks" | "draftMissingInformation" | "draftEvidenceIds" | "draftModel" | "draftedAt" | "draftProcessingStatus" | "draftProcessingError" | "draftQueuedAt" | "draftProcessingStartedAt" | "externalCreatedAt" | "answeredAt" | "createdAt" | "updatedAt", ExtArgs["result"]["productQuestion"]>
+export type ProductQuestionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "storeId" | "connectionId" | "incomingEventId" | "productId" | "externalProductRecordId" | "externalQuestionId" | "externalProductId" | "externalCustomerId" | "customerName" | "productTitleSnapshot" | "productImageUrlSnapshot" | "question" | "status" | "answer" | "draftDecision" | "draftConfidence" | "draftAnswerability" | "draftRisks" | "draftMissingInformation" | "draftEvidenceIds" | "draftModel" | "draftedAt" | "draftProcessingStatus" | "draftProcessingError" | "draftQueuedAt" | "draftProcessingStartedAt" | "externalCreatedAt" | "answeredAt" | "createdAt" | "updatedAt", ExtArgs["result"]["productQuestion"]>
 export type ProductQuestionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
   connection?: boolean | Prisma.ChannelConnectionDefaultArgs<ExtArgs>
@@ -2733,6 +2859,8 @@ export type $ProductQuestionPayload<ExtArgs extends runtime.Types.Extensions.Int
     externalProductId: string
     externalCustomerId: string | null
     customerName: string | null
+    productTitleSnapshot: string | null
+    productImageUrlSnapshot: string | null
     question: string
     status: $Enums.ProductQuestionStatus
     answer: string | null
@@ -3192,6 +3320,8 @@ export interface ProductQuestionFieldRefs {
   readonly externalProductId: Prisma.FieldRef<"ProductQuestion", 'String'>
   readonly externalCustomerId: Prisma.FieldRef<"ProductQuestion", 'String'>
   readonly customerName: Prisma.FieldRef<"ProductQuestion", 'String'>
+  readonly productTitleSnapshot: Prisma.FieldRef<"ProductQuestion", 'String'>
+  readonly productImageUrlSnapshot: Prisma.FieldRef<"ProductQuestion", 'String'>
   readonly question: Prisma.FieldRef<"ProductQuestion", 'String'>
   readonly status: Prisma.FieldRef<"ProductQuestion", 'ProductQuestionStatus'>
   readonly answer: Prisma.FieldRef<"ProductQuestion", 'String'>

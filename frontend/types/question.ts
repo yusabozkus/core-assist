@@ -108,6 +108,10 @@ export type ProductQuestion = {
     providerKey: string
   }
   product: CatalogProduct | null
+  productSnapshot: {
+    title: string
+    imageUrl: string | null
+  } | null
   draftAttempts: AiDraftAttempt[]
   answerDelivery: QuestionAnswerDelivery | null
 }
@@ -126,6 +130,10 @@ export type ProductQuestionListItem = {
   }
   product: {
     id: string
+    title: string
+    imageUrl: string | null
+  } | null
+  productSnapshot: {
     title: string
     imageUrl: string | null
   } | null

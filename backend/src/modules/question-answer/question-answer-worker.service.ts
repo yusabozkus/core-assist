@@ -82,6 +82,49 @@ export class QuestionAnswerWorkerService {
       delivery.status === QuestionAnswerStatus.FAILED
     )
       return;
+
+    const claimed = await this.prisma.$transaction(async (transaction) => {
+      await transaction.$queryRaw`
+        SELECT "id"
+        FROM "store"
+        WHERE "id" = ${data.storeId}
+        FOR UPDATE
+      `;
+
+      const store = await transaction.store.findUnique({
+        where: { id: data.storeId },
+        select: { status: true },
+      });
+      if (store?.status !== StoreStatus.ACTIVE) return false;
+
+      const updated = await transaction.questionAnswer.updateMany({
+        where: {
+          id: delivery.id,
+          storeId: data.storeId,
+          status: {
+            in: [QuestionAnswerStatus.QUEUED, QuestionAnswerStatus.PROCESSING],
+          },
+        },
+        data: {
+          status: QuestionAnswerStatus.PROCESSING,
+          attempts: { increment: 1 },
+          processingStartedAt: new Date(),
+          lastError: null,
+        },
+      });
+
+      return updated.count === 1;
+    });
+
+    if (!claimed) {
+      await this.failPendingDelivery(
+        data,
+        delivery.draftAttemptId,
+        'Mağaza aktif olmadığı için cevap gönderilmedi.',
+      );
+      return;
+    }
+
     if (delivery.connection.status !== ChannelConnectionStatus.CONNECTED) {
       throw new Error('Question channel connection is not active.');
     }
@@ -110,16 +153,6 @@ export class QuestionAnswerWorkerService {
       );
       return;
     }
-
-    await this.prisma.questionAnswer.update({
-      where: { id: delivery.id },
-      data: {
-        status: QuestionAnswerStatus.PROCESSING,
-        attempts: { increment: 1 },
-        processingStartedAt: new Date(),
-        lastError: null,
-      },
-    });
 
     if (delivery.origin === QuestionAnswerOrigin.AUTOMATION) {
       const draft = delivery.question.draftAttempts[0];
@@ -341,6 +374,38 @@ export class QuestionAnswerWorkerService {
           },
         });
       }
+    });
+  }
+
+  private async failPendingDelivery(
+    data: QuestionAnswerJobData,
+    draftAttemptId: string | null,
+    message: string,
+  ) {
+    await this.prisma.$transaction(async (transaction) => {
+      const updated = await transaction.questionAnswer.updateMany({
+        where: {
+          id: data.answerId,
+          storeId: data.storeId,
+          status: {
+            in: [QuestionAnswerStatus.QUEUED, QuestionAnswerStatus.PROCESSING],
+          },
+        },
+        data: {
+          status: QuestionAnswerStatus.FAILED,
+          processingStartedAt: null,
+          lastError: message,
+        },
+      });
+      if (updated.count !== 1 || !draftAttemptId) return;
+
+      await transaction.aiDraftAttempt.updateMany({
+        where: { id: draftAttemptId, storeId: data.storeId },
+        data: {
+          outcome: AiDraftOutcome.FAILED,
+          finalizedAt: new Date(),
+        },
+      });
     });
   }
 }

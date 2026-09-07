@@ -163,61 +163,77 @@ export class StoresService {
   }
 
   async archive(id: string, userId: string) {
-    const store = await this.prisma.store.findFirst({
-      where: {
-        id,
-        status: StoreStatus.ACTIVE,
-        members: {
-          some: {
-            userId,
-            role: { in: [StoreRole.OWNER, StoreRole.ADMIN] },
+    return this.prisma.$transaction(async (transaction) => {
+      await transaction.$queryRaw`
+        SELECT "id"
+        FROM "store"
+        WHERE "id" = ${id}
+        FOR UPDATE
+      `;
+
+      const store = await transaction.store.findFirst({
+        where: {
+          id,
+          status: StoreStatus.ACTIVE,
+          members: {
+            some: {
+              userId,
+              role: { in: [StoreRole.OWNER, StoreRole.ADMIN] },
+            },
           },
         },
-      },
-      select: {
-        id: true,
-        channelConnections: {
-          where: {
-            OR: [
-              { processingStartedAt: { not: null } },
-              { questionSyncStartedAt: { not: null } },
-            ],
+        select: {
+          id: true,
+          channelConnections: {
+            where: {
+              OR: [
+                { processingStartedAt: { not: null } },
+                { questionSyncStartedAt: { not: null } },
+              ],
+            },
+            take: 1,
+            select: { id: true },
           },
-          take: 1,
-          select: { id: true },
+          questionAnswers: {
+            where: {
+              status: {
+                in: [
+                  QuestionAnswerStatus.QUEUED,
+                  QuestionAnswerStatus.PROCESSING,
+                ],
+              },
+            },
+            take: 1,
+            select: { id: true },
+          },
         },
-        questionAnswers: {
-          where: { status: QuestionAnswerStatus.PROCESSING },
-          take: 1,
-          select: { id: true },
-        },
-      },
+      });
+
+      if (!store) {
+        throw new NotFoundException(
+          'Mağaza bulunamadı, zaten arşivlenmiş veya yetkiniz yok.',
+        );
+      }
+
+      if (
+        store.channelConnections.length > 0 ||
+        store.questionAnswers.length > 0
+      ) {
+        throw new ConflictException(
+          'Kuyruktaki işlemler, senkronizasyonlar veya cevap gönderimleri tamamlanmadan mağaza arşivlenemez.',
+        );
+      }
+
+      await transaction.store.update({
+        where: { id },
+        data: { status: StoreStatus.INACTIVE },
+      });
+
+      return {
+        archived: true as const,
+        archivedStoreId: id,
+      };
     });
-
-    if (!store) {
-      throw new NotFoundException(
-        'Mağaza bulunamadı, zaten arşivlenmiş veya yetkiniz yok.',
-      );
-    }
-
-    if (
-      store.channelConnections.length > 0 ||
-      store.questionAnswers.length > 0
-    ) {
-      throw new ConflictException(
-        'Devam eden senkronizasyon veya cevap gönderimi tamamlanmadan mağaza arşivlenemez.',
-      );
-    }
-
-    await this.prisma.store.update({
-      where: { id },
-      data: { status: StoreStatus.INACTIVE },
-    });
-
-    return {
-      archived: true as const,
-      archivedStoreId: id,
-    };
   }
 
   async restore(id: string, userId: string) {
@@ -254,75 +270,93 @@ export class StoresService {
   }
 
   async remove(id: string, userId: string, deleteStoreDto: DeleteStoreDto) {
-    const store = await this.prisma.store.findFirst({
-      where: {
-        id,
-        members: {
-          some: {
-            userId,
-            role: { in: [StoreRole.OWNER, StoreRole.ADMIN] },
-          },
-        },
-      },
-      select: {
-        id: true,
-        channelConnections: {
-          where: {
-            OR: [
-              { processingStartedAt: { not: null } },
-              { questionSyncStartedAt: { not: null } },
-            ],
-          },
-          take: 1,
-          select: { id: true },
-        },
-        questionAnswers: {
-          where: { status: QuestionAnswerStatus.PROCESSING },
-          take: 1,
-          select: { id: true },
-        },
-      },
-    });
-
-    if (!store) {
-      throw new NotFoundException('Mağaza bulunamadı veya silme yetkiniz yok.');
-    }
-
     if (deleteStoreDto.confirmation !== STORE_DELETE_CONFIRMATION) {
       throw new BadRequestException(
         `Silme onayı birebir "${STORE_DELETE_CONFIRMATION}" olmalıdır.`,
       );
     }
 
-    if (
-      store.channelConnections.length > 0 ||
-      store.questionAnswers.length > 0
-    ) {
-      throw new ConflictException(
-        'Devam eden senkronizasyon veya cevap gönderimi tamamlanmadan mağaza silinemez.',
-      );
-    }
+    return this.prisma.$transaction(async (transaction) => {
+      await transaction.$queryRaw`
+        SELECT "id"
+        FROM "store"
+        WHERE "id" = ${id}
+        FOR UPDATE
+      `;
 
-    const nextStore = await this.prisma.store.findFirst({
-      where: {
-        id: { not: id },
-        members: { some: { userId } },
-      },
-      orderBy: [{ status: 'asc' }, { createdAt: 'asc' }],
-      select: {
-        id: true,
-        name: true,
-        status: true,
-        createdAt: true,
-      },
+      const store = await transaction.store.findFirst({
+        where: {
+          id,
+          members: {
+            some: {
+              userId,
+              role: { in: [StoreRole.OWNER, StoreRole.ADMIN] },
+            },
+          },
+        },
+        select: {
+          id: true,
+          channelConnections: {
+            where: {
+              OR: [
+                { processingStartedAt: { not: null } },
+                { questionSyncStartedAt: { not: null } },
+              ],
+            },
+            take: 1,
+            select: { id: true },
+          },
+          questionAnswers: {
+            where: {
+              status: {
+                in: [
+                  QuestionAnswerStatus.QUEUED,
+                  QuestionAnswerStatus.PROCESSING,
+                ],
+              },
+            },
+            take: 1,
+            select: { id: true },
+          },
+        },
+      });
+
+      if (!store) {
+        throw new NotFoundException(
+          'Mağaza bulunamadı veya silme yetkiniz yok.',
+        );
+      }
+
+      if (
+        store.channelConnections.length > 0 ||
+        store.questionAnswers.length > 0
+      ) {
+        throw new ConflictException(
+          'Kuyruktaki işlemler, senkronizasyonlar veya cevap gönderimleri tamamlanmadan mağaza silinemez.',
+        );
+      }
+
+      const nextStore = await transaction.store.findFirst({
+        where: {
+          id: { not: id },
+          members: { some: { userId } },
+        },
+        orderBy: [{ status: 'asc' }, { createdAt: 'asc' }],
+        select: {
+          id: true,
+          name: true,
+          status: true,
+          createdAt: true,
+        },
+      });
+
+      await transaction.store.delete({ where: { id: store.id } });
+
+      return {
+        deleted: true as const,
+        deletedStoreId: store.id,
+        nextStore,
+      };
     });
-
-    await this.prisma.store.delete({ where: { id: store.id } });
-
-    return {
-      deleted: true as const,
-      deletedStoreId: store.id,
-      nextStore,
-    };
   }
 }

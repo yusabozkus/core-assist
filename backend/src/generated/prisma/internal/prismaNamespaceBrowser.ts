@@ -275,6 +275,7 @@ export const ChannelConnectionScalarFieldEnum = {
   questionSyncStartedAt: 'questionSyncStartedAt',
   lastQuestionSyncAt: 'lastQuestionSyncAt',
   questionSyncFailureReason: 'questionSyncFailureReason',
+  removedAt: 'removedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -468,6 +469,8 @@ export const ProductQuestionScalarFieldEnum = {
   externalProductId: 'externalProductId',
   externalCustomerId: 'externalCustomerId',
   customerName: 'customerName',
+  productTitleSnapshot: 'productTitleSnapshot',
+  productImageUrlSnapshot: 'productImageUrlSnapshot',
   question: 'question',
   status: 'status',
   answer: 'answer',

@@ -274,6 +274,7 @@ model ChannelConnection {
   questionSyncStartedAt     DateTime?
   lastQuestionSyncAt        DateTime?
   questionSyncFailureReason String?
+  removedAt                 DateTime?
   createdAt                 DateTime                @default(now())
   updatedAt                 DateTime                @updatedAt
 
@@ -286,6 +287,7 @@ model ChannelConnection {
 
   @@unique([storeId, providerKey])
   @@index([storeId, status])
+  @@index([storeId, removedAt])
   @@map("channel_connection")
 }
 
@@ -641,6 +643,8 @@ model ProductQuestion {
   externalProductId        String
   externalCustomerId       String?
   customerName             String?
+  productTitleSnapshot     String?
+  productImageUrlSnapshot  String?
   question                 String
   status                   ProductQuestionStatus          @default(PENDING)
   answer                   String?

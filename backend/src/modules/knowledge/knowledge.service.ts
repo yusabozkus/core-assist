@@ -63,7 +63,11 @@ export class KnowledgeService {
     }
     if (providerKeys.length > 0) {
       const connectedProviderCount = await this.prisma.channelConnection.count({
-        where: { storeId, providerKey: { in: providerKeys } },
+        where: {
+          storeId,
+          providerKey: { in: providerKeys },
+          removedAt: null,
+        },
       });
       if (connectedProviderCount !== providerKeys.length) {
         throw new NotFoundException(
@@ -213,7 +217,7 @@ export class KnowledgeService {
           },
         }),
         this.prisma.channelConnection.findMany({
-          where: { storeId },
+          where: { storeId, removedAt: null },
           orderBy: { providerKey: 'asc' },
           select: { providerKey: true, status: true },
         }),

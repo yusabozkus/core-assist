@@ -291,6 +291,9 @@ export class QuestionSyncWorkerService {
             incomingEventId: event.id,
             productId: externalProduct?.productId,
             externalProductRecordId: externalProduct?.id,
+            productTitleSnapshot: externalProduct?.product.title,
+            productImageUrlSnapshot:
+              externalProduct?.product.images[0]?.url ?? null,
             externalQuestionId: question.externalId,
             externalProductId: question.externalProductId,
             externalCustomerId: question.externalCustomerId,
@@ -337,7 +340,20 @@ export class QuestionSyncWorkerService {
           externalId: externalProductId,
         },
       },
-      select: { id: true, productId: true },
+      select: {
+        id: true,
+        productId: true,
+        product: {
+          select: {
+            title: true,
+            images: {
+              orderBy: { position: 'asc' },
+              take: 1,
+              select: { url: true },
+            },
+          },
+        },
+      },
     });
 
     if (exactProduct) return exactProduct;
@@ -352,7 +368,22 @@ export class QuestionSyncWorkerService {
         ],
       },
       select: {
-        externalProduct: { select: { id: true, productId: true } },
+        externalProduct: {
+          select: {
+            id: true,
+            productId: true,
+            product: {
+              select: {
+                title: true,
+                images: {
+                  orderBy: { position: 'asc' },
+                  take: 1,
+                  select: { url: true },
+                },
+              },
+            },
+          },
+        },
       },
     });
 

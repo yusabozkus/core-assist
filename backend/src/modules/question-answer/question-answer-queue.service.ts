@@ -15,7 +15,9 @@ import {
   QuestionAnswerOrigin,
   QuestionAnswerStatus,
   QuestionReplyDecision,
+  StoreStatus,
 } from '../../generated/prisma/enums';
+import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
 import {
@@ -178,6 +180,8 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
       }
 
       const updated = await this.prisma.$transaction(async (transaction) => {
+        await this.ensureStoreAcceptsAnswers(transaction, input.storeId);
+
         const deliveryUpdate = await transaction.questionAnswer.updateMany({
           where: { id: existing.id, status: QuestionAnswerStatus.FAILED },
           data: {
@@ -213,6 +217,8 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
     } else {
       try {
         const delivery = await this.prisma.$transaction(async (transaction) => {
+          await this.ensureStoreAcceptsAnswers(transaction, input.storeId);
+
           const created = await transaction.questionAnswer.create({
             data: {
               storeId: input.storeId,
@@ -289,6 +295,29 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
     }
 
     return { id: answerId, status: 'QUEUED', queuedAt };
+  }
+
+  private async ensureStoreAcceptsAnswers(
+    transaction: Prisma.TransactionClient,
+    storeId: string,
+  ) {
+    await transaction.$queryRaw`
+      SELECT "id"
+      FROM "store"
+      WHERE "id" = ${storeId}
+      FOR UPDATE
+    `;
+
+    const store = await transaction.store.findUnique({
+      where: { id: storeId },
+      select: { status: true },
+    });
+
+    if (store?.status !== StoreStatus.ACTIVE) {
+      throw new ConflictException(
+        'Arşivlenmiş veya silinmiş bir mağaza için cevap gönderilemez.',
+      );
+    }
   }
 }
 

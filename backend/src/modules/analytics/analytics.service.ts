@@ -349,7 +349,7 @@ export class AnalyticsService {
           },
         });
         const connections = await db.channelConnection.findMany({
-          where: { storeId },
+          where: { storeId, removedAt: null },
           select: { providerKey: true },
           orderBy: { providerKey: 'asc' },
         });

@@ -27,6 +27,8 @@ import {
 const QUESTION_LIST_SELECT = {
   id: true,
   externalProductId: true,
+  productTitleSnapshot: true,
+  productImageUrlSnapshot: true,
   customerName: true,
   question: true,
   status: true,
@@ -66,6 +68,8 @@ const QUESTION_DETAIL_SELECT = {
   externalQuestionId: true,
   externalProductId: true,
   externalProductRecordId: true,
+  productTitleSnapshot: true,
+  productImageUrlSnapshot: true,
   customerName: true,
   question: true,
   status: true,
@@ -230,6 +234,12 @@ export class QuestionsService {
               },
             },
             {
+              productTitleSnapshot: {
+                contains: search,
+                mode: 'insensitive',
+              },
+            },
+            {
               connection: {
                 providerKey: { contains: search, mode: 'insensitive' },
               },
@@ -291,6 +301,12 @@ export class QuestionsService {
               imageUrl: question.product.images[0]?.url ?? null,
             }
           : null,
+        productSnapshot: question.productTitleSnapshot
+          ? {
+              title: question.productTitleSnapshot,
+              imageUrl: question.productImageUrlSnapshot,
+            }
+          : null,
       })),
       nextCursor: hasNextPage ? (pageItems.at(-1)?.id ?? null) : null,
       total: filteredTotal,
@@ -317,6 +333,12 @@ export class QuestionsService {
 
     return {
       ...question,
+      productSnapshot: question.productTitleSnapshot
+        ? {
+            title: question.productTitleSnapshot,
+            imageUrl: question.productImageUrlSnapshot,
+          }
+        : null,
       product: question.product
         ? {
             ...question.product,
