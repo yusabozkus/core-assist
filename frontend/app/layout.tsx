@@ -37,7 +37,7 @@ export default function RootLayout({
         geist.variable
       )}
     >
-      <body>
+      <body className="bg-amber-400 overflow-y-hidden">
         <ThemeProvider>
           <TooltipProvider>{children}</TooltipProvider>
         </ThemeProvider>

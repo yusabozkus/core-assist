@@ -182,6 +182,7 @@ export class ProductAnswerContextService {
         id: true,
         question: true,
         status: true,
+        externalProductRecordId: true,
         connection: {
           select: { providerKey: true },
         },
@@ -277,6 +278,9 @@ export class ProductAnswerContextService {
                 stock: true,
                 status: true,
                 lastSyncedAt: true,
+                externalVariants: {
+                  select: { externalProductId: true },
+                },
               },
             },
             sizeGuides: {
@@ -290,6 +294,7 @@ export class ProductAnswerContextService {
                 sourceUrl: true,
                 normalizedText: true,
                 confidence: true,
+                externalProductId: true,
               },
             },
             questions: {
@@ -306,7 +311,11 @@ export class ProductAnswerContextService {
               },
               orderBy: { answeredAt: 'desc' },
               take: 5,
-              select: { question: true, answer: true },
+              select: {
+                question: true,
+                answer: true,
+                connection: { select: { providerKey: true } },
+              },
             },
           },
         },
@@ -348,11 +357,27 @@ export class ProductAnswerContextService {
       );
     }
 
-    const variants = question.product.variants.map((variant) => ({
-      ...variant,
-      price: Number(variant.price),
-      lastSyncedAt: variant.lastSyncedAt?.toISOString() ?? null,
-    }));
+    const variants = question.product.variants
+      .filter(
+        (variant) =>
+          !question.externalProductRecordId ||
+          variant.externalVariants.some(
+            (externalVariant) =>
+              externalVariant.externalProductId ===
+              question.externalProductRecordId,
+          ),
+      )
+      .map((variant) => ({
+        title: variant.title,
+        sku: variant.sku,
+        color: variant.color,
+        size: variant.size,
+        price: Number(variant.price),
+        currency: variant.currency,
+        stock: variant.stock,
+        status: variant.status,
+        lastSyncedAt: variant.lastSyncedAt?.toISOString() ?? null,
+      }));
     const context = analyzeProductQuestion({
       questionId: question.id,
       question: question.question,
@@ -365,11 +390,23 @@ export class ProductAnswerContextService {
         category: question.product.category,
         attributes: question.product.attributes,
         variants,
-        sizeGuides: question.product.sizeGuides.flatMap((guide) =>
-          guide.normalizedText
-            ? [{ ...guide, normalizedText: guide.normalizedText }]
-            : [],
-        ),
+        sizeGuides: question.product.sizeGuides.flatMap((guide) => {
+          const belongsToQuestionSource =
+            !question.externalProductRecordId ||
+            !guide.externalProductId ||
+            guide.externalProductId === question.externalProductRecordId;
+
+          if (!belongsToQuestionSource || !guide.normalizedText) return [];
+
+          return [
+            {
+              id: guide.id,
+              sourceUrl: guide.sourceUrl,
+              normalizedText: guide.normalizedText,
+              confidence: guide.confidence,
+            },
+          ];
+        }),
       },
     });
 
@@ -430,7 +467,11 @@ function buildApprovedAnswerExamples({
   storeExamples,
 }: {
   providerKey: string;
-  productExamples: Array<{ question: string; answer: string | null }>;
+  productExamples: Array<{
+    question: string;
+    answer: string | null;
+    connection: { providerKey: string };
+  }>;
   storeExamples: StoreKnowledgeInput['productQuestions'];
 }) {
   const rankedStoreExamples = [...storeExamples].sort((left, right) => {
@@ -446,7 +487,11 @@ function buildApprovedAnswerExamples({
   });
   const seen = new Set<string>();
 
-  return [...productExamples, ...rankedStoreExamples]
+  const providerProductExamples = productExamples.filter(
+    (item) => item.connection.providerKey === providerKey,
+  );
+
+  return [...providerProductExamples, ...rankedStoreExamples]
     .flatMap((item) =>
       item.answer ? [{ question: item.question, answer: item.answer }] : [],
     )

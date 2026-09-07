@@ -64,6 +64,7 @@ export const ModelName = {
   ChannelKnowledgeOverride: 'ChannelKnowledgeOverride',
   ChannelConnection: 'ChannelConnection',
   Product: 'Product',
+  ProductIdentity: 'ProductIdentity',
   ProductVariant: 'ProductVariant',
   ProductAttribute: 'ProductAttribute',
   ProductImage: 'ProductImage',
@@ -294,6 +295,18 @@ export const ProductScalarFieldEnum = {
 } as const
 
 export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
+
+
+export const ProductIdentityScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  productId: 'productId',
+  type: 'type',
+  value: 'value',
+  createdAt: 'createdAt'
+} as const
+
+export type ProductIdentityScalarFieldEnum = (typeof ProductIdentityScalarFieldEnum)[keyof typeof ProductIdentityScalarFieldEnum]
 
 
 export const ProductVariantScalarFieldEnum = {

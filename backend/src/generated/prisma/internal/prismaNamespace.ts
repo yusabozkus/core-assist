@@ -410,6 +410,7 @@ export const ModelName = {
   ChannelKnowledgeOverride: 'ChannelKnowledgeOverride',
   ChannelConnection: 'ChannelConnection',
   Product: 'Product',
+  ProductIdentity: 'ProductIdentity',
   ProductVariant: 'ProductVariant',
   ProductAttribute: 'ProductAttribute',
   ProductImage: 'ProductImage',
@@ -437,7 +438,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember"
+    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1400,6 +1401,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.ProductCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.ProductCountAggregateOutputType> | number
+        }
+      }
+    }
+    ProductIdentity: {
+      payload: Prisma.$ProductIdentityPayload<ExtArgs>
+      fields: Prisma.ProductIdentityFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ProductIdentityFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductIdentityPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ProductIdentityFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductIdentityPayload>
+        }
+        findFirst: {
+          args: Prisma.ProductIdentityFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductIdentityPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ProductIdentityFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductIdentityPayload>
+        }
+        findMany: {
+          args: Prisma.ProductIdentityFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductIdentityPayload>[]
+        }
+        create: {
+          args: Prisma.ProductIdentityCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductIdentityPayload>
+        }
+        createMany: {
+          args: Prisma.ProductIdentityCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ProductIdentityCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductIdentityPayload>[]
+        }
+        delete: {
+          args: Prisma.ProductIdentityDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductIdentityPayload>
+        }
+        update: {
+          args: Prisma.ProductIdentityUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductIdentityPayload>
+        }
+        deleteMany: {
+          args: Prisma.ProductIdentityDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ProductIdentityUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ProductIdentityUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductIdentityPayload>[]
+        }
+        upsert: {
+          args: Prisma.ProductIdentityUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductIdentityPayload>
+        }
+        aggregate: {
+          args: Prisma.ProductIdentityAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateProductIdentity>
+        }
+        groupBy: {
+          args: Prisma.ProductIdentityGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProductIdentityGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ProductIdentityCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProductIdentityCountAggregateOutputType> | number
         }
       }
     }
@@ -2532,6 +2607,18 @@ export const ProductScalarFieldEnum = {
 export type ProductScalarFieldEnum = (typeof ProductScalarFieldEnum)[keyof typeof ProductScalarFieldEnum]
 
 
+export const ProductIdentityScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  productId: 'productId',
+  type: 'type',
+  value: 'value',
+  createdAt: 'createdAt'
+} as const
+
+export type ProductIdentityScalarFieldEnum = (typeof ProductIdentityScalarFieldEnum)[keyof typeof ProductIdentityScalarFieldEnum]
+
+
 export const ProductVariantScalarFieldEnum = {
   id: 'id',
   productId: 'productId',
@@ -3040,6 +3127,20 @@ export type ListEnumProductStatusFieldRefInput<$PrismaModel> = FieldRefInputType
 
 
 /**
+ * Reference to a field of type 'ProductIdentityType'
+ */
+export type EnumProductIdentityTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ProductIdentityType'>
+    
+
+
+/**
+ * Reference to a field of type 'ProductIdentityType[]'
+ */
+export type ListEnumProductIdentityTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ProductIdentityType[]'>
+    
+
+
+/**
  * Reference to a field of type 'Decimal'
  */
 export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
@@ -3482,6 +3583,7 @@ export type GlobalOmitConfig = {
   channelKnowledgeOverride?: Prisma.ChannelKnowledgeOverrideOmit
   channelConnection?: Prisma.ChannelConnectionOmit
   product?: Prisma.ProductOmit
+  productIdentity?: Prisma.ProductIdentityOmit
   productVariant?: Prisma.ProductVariantOmit
   productAttribute?: Prisma.ProductAttributeOmit
   productImage?: Prisma.ProductImageOmit

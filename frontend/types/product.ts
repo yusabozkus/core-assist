@@ -11,6 +11,7 @@ export type CatalogProductVariant = {
   status: "ACTIVE" | "OUT_OF_STOCK" | "UNAVAILABLE" | "ARCHIVED"
   sourceUpdatedAt: string | null
   lastSyncedAt: string | null
+  providers: string[]
 }
 
 export type CatalogSizeGuideData = {

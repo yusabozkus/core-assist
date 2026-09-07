@@ -118,6 +118,14 @@ export const SizeGuideStatus = {
 export type SizeGuideStatus = (typeof SizeGuideStatus)[keyof typeof SizeGuideStatus]
 
 
+export const ProductIdentityType = {
+  MODEL_CODE: 'MODEL_CODE',
+  GTIN: 'GTIN'
+} as const
+
+export type ProductIdentityType = (typeof ProductIdentityType)[keyof typeof ProductIdentityType]
+
+
 export const ExternalEntityStatus = {
   ACTIVE: 'ACTIVE',
   ARCHIVED: 'ARCHIVED',

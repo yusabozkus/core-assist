@@ -5,109 +5,107 @@ import {
   Store01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { BILLING_PREVIEW } from "@/constants/billing"
 import { UsageRadialChart } from "./usage-radial-chart"
 
-const usageItems = [
-  {
-    label: "Yanıtlanan sorular",
-    description: "Bu dönemde AI taslağı oluşturulan ürün soruları",
-    value: 3420,
-    limit: 5000,
-    formattedValue: "3.420",
-    formattedLimit: "5.000",
-    icon: AiSparklesIcon,
-  },
-  {
-    label: "Aktif mağazalar",
-    description: "Planınıza bağlı olarak yönetilen mağazalar",
-    value: 2,
-    limit: 5,
-    formattedValue: "2",
-    formattedLimit: "5",
-    icon: Store01Icon,
-  },
-  {
-    label: "Bağlı kanallar",
-    description: "Aktif pazaryeri bağlantılarının toplamı",
-    value: 3,
-    limit: 10,
-    formattedValue: "3",
-    formattedLimit: "10",
-    icon: PlugSocketIcon,
-  },
-  {
-    label: "Katalog ürünleri",
-    description: "Tüm mağazalarda senkronize edilen ürünler",
-    value: 18640,
-    limit: 25000,
-    formattedValue: "18.640",
-    formattedLimit: "25.000",
-    icon: Package01Icon,
-  },
-] as const
-
 export function SubscriptionUsage() {
+  const { plan, usage } = BILLING_PREVIEW
+  const items = [
+    {
+      label: "AI ürün soruları",
+      description: "Bu dönemde AI taslağı hazırlanan sorular",
+      value: usage.questions,
+      limit: plan.questions,
+      icon: AiSparklesIcon,
+    },
+    {
+      label: "Mağazalar",
+      description: "Hesabınızda yönetilen aktif mağazalar",
+      value: usage.stores,
+      limit: plan.stores,
+      icon: Store01Icon,
+    },
+    {
+      label: "Pazaryeri bağlantıları",
+      description: "Mağazalarınıza bağlı satış kanalları",
+      value: usage.connections,
+      limit: plan.connections,
+      icon: PlugSocketIcon,
+    },
+    {
+      label: "Katalog ürünleri",
+      description: "Tüm mağazalarınızdaki toplam ürünler",
+      value: usage.products,
+      limit: plan.products,
+      icon: Package01Icon,
+    },
+  ]
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
-      <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-5 sm:px-6">
+    <section
+      aria-labelledby="subscription-usage-title"
+      className="overflow-hidden rounded-xl border border-border bg-card"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3 px-5 pt-5 pb-4 sm:px-6 sm:pt-6">
         <div>
-          <h2 className="font-semibold tracking-[-0.015em]">Plan kullanımı</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            15 Ağustos – 15 Eylül 2026 dönemi
+          <h2 id="subscription-usage-title" className="text-sm font-semibold">
+            Plan kullanımı
+          </h2>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            {BILLING_PREVIEW.period}
           </p>
         </div>
-        <div className="shrink-0 text-right">
-          <p className="text-xs font-medium text-foreground">13 gün kaldı</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            15 Eylül&apos;de yenilenir
-          </p>
-        </div>
+        <span className="rounded-md border border-border px-2 py-1 text-[10px] text-muted-foreground">
+          Mevcut dönem
+        </span>
       </div>
-
-      <div className="divide-y divide-border">
-        {usageItems.map((item) => {
-          const percentage = Math.min(
-            100,
-            Math.round((item.value / item.limit) * 100)
-          )
-
+      <div className="divide-y divide-border/70 px-5 sm:px-6">
+        {items.map((item) => {
+          const percentage = item.limit
+            ? Math.min(100, Math.round((item.value / item.limit) * 100))
+            : 0
           return (
             <div
               key={item.label}
-              className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/25 sm:px-6 sm:py-5"
+              className="flex items-center gap-3 py-5 sm:gap-4"
             >
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/65 text-secondary-foreground">
-                <HugeiconsIcon icon={item.icon} className="size-4.5" />
-              </span>
-
+              <HugeiconsIcon
+                icon={item.icon}
+                className="hidden size-5 shrink-0 text-muted-foreground sm:block"
+              />
               <div className="min-w-0 flex-1">
-                <h3 className="text-sm font-medium text-foreground">
-                  {item.label}
-                </h3>
+                <h3 className="text-sm font-medium">{item.label}</h3>
                 <p className="mt-1 hidden text-xs leading-5 text-muted-foreground sm:block">
                   {item.description}
                 </p>
+                <p className="mt-1.5 text-xs tabular-nums sm:hidden">
+                  {item.value.toLocaleString("tr-TR")}{" "}
+                  <span className="text-muted-foreground">
+                    / {item.limit?.toLocaleString("tr-TR") ?? "Sınırsız"}
+                  </span>
+                </p>
               </div>
-
-              <div className="shrink-0 text-right">
-                <p className="text-sm font-semibold tracking-[-0.01em] text-foreground tabular-nums">
-                  {item.formattedValue}
+              <div className="hidden shrink-0 text-right sm:block">
+                <p className="text-sm font-semibold tabular-nums">
+                  {item.value.toLocaleString("tr-TR")}{" "}
                   <span className="font-normal text-muted-foreground">
-                    {" "}
-                    / {item.formattedLimit}
+                    / {item.limit?.toLocaleString("tr-TR") ?? "Sınırsız"}
                   </span>
                 </p>
                 <p className="mt-1 text-[11px] text-muted-foreground">
-                  %{percentage} kullanıldı
+                  {item.limit
+                    ? `${Math.max(0, item.limit - item.value).toLocaleString("tr-TR")} kullanılabilir`
+                    : "Limitsiz kullanım"}
                 </p>
               </div>
-
               <UsageRadialChart value={percentage} label={item.label} />
             </div>
           )
         })}
       </div>
+      <p className="border-t border-border bg-muted/15 px-5 py-3.5 text-xs leading-5 text-muted-foreground sm:px-6">
+        Soru hakkınız her faturalama döneminde yenilenir. Mağaza, bağlantı ve
+        ürün limitleri toplam kapasitenizi gösterir.
+      </p>
     </section>
   )
 }

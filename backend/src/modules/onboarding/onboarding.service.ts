@@ -79,15 +79,17 @@ export class OnboardingService {
                   syncRuns: {
                     where: {
                       kind: CatalogSyncKind.FULL,
-                      status: {
-                        in: [
-                          CatalogSyncStatus.RUNNING,
-                          CatalogSyncStatus.COMPLETED,
-                        ],
-                      },
                     },
+                    orderBy: { startedAt: 'desc' as const },
                     take: 1,
-                    select: { id: true },
+                    select: {
+                      id: true,
+                      status: true,
+                      stage: true,
+                      progress: true,
+                      errorMessage: true,
+                      startedAt: true,
+                    },
                   },
                 },
               },
@@ -98,21 +100,34 @@ export class OnboardingService {
     ]);
 
     const store = workspace?.stores[0] ?? null;
-    const hasProvisionedChannel = Boolean(
+    const hasCompletedCatalogSync = Boolean(
       store?.channelConnections.some(
         (connection) =>
           connection.status === ChannelConnectionStatus.CONNECTED &&
-          connection.syncRuns.length > 0,
+          connection.syncRuns[0]?.status === CatalogSyncStatus.COMPLETED,
       ),
     );
+    const latestCatalogSync = store?.channelConnections
+      .flatMap((connection) =>
+        connection.syncRuns.map((syncRun) => ({
+          ...syncRun,
+          connectionId: connection.id,
+          providerKey: connection.providerKey,
+        })),
+      )
+      .sort(
+        (left, right) => right.startedAt.getTime() - left.startedAt.getTime(),
+      )[0];
     const completed = Boolean(user?.onboardingCompletedAt && store);
     const stage = completed
       ? 'COMPLETED'
       : !store
         ? 'STORE'
-        : hasProvisionedChannel
+        : hasCompletedCatalogSync
           ? 'PREFERENCES'
-          : 'CHANNEL';
+          : latestCatalogSync?.status === CatalogSyncStatus.RUNNING
+            ? 'SYNCING'
+            : 'CHANNEL';
 
     return {
       completed,
@@ -132,6 +147,17 @@ export class OnboardingService {
           type: connection.type,
           status: connection.status,
         })) ?? [],
+      catalogSync: latestCatalogSync
+        ? {
+            syncRunId: latestCatalogSync.id,
+            connectionId: latestCatalogSync.connectionId,
+            providerKey: latestCatalogSync.providerKey,
+            status: latestCatalogSync.status,
+            stage: latestCatalogSync.stage,
+            progress: latestCatalogSync.progress,
+            errorMessage: latestCatalogSync.errorMessage,
+          }
+        : null,
     };
   }
 
@@ -303,7 +329,7 @@ export class OnboardingService {
       store: setup.store,
       channelConnection,
       catalogSync,
-      nextStep: 'PREFERENCES' as const,
+      nextStep: 'CATALOG_SYNC' as const,
     };
   }
 
@@ -321,12 +347,7 @@ export class OnboardingService {
               syncRuns: {
                 some: {
                   kind: CatalogSyncKind.FULL,
-                  status: {
-                    in: [
-                      CatalogSyncStatus.RUNNING,
-                      CatalogSyncStatus.COMPLETED,
-                    ],
-                  },
+                  status: CatalogSyncStatus.COMPLETED,
                 },
               },
             },

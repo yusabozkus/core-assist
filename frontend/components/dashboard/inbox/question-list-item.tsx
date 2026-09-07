@@ -40,7 +40,7 @@ export function QuestionListItem({
       ) : null}
 
       <span className="flex items-start gap-3">
-        <span className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted text-muted-foreground">
+        <span className="relative flex w-11 h-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted text-muted-foreground">
           {imageUrl ? (
             <Image
               src={imageUrl}

@@ -2,7 +2,8 @@ import type { AiEmojiPolicy, AiResponseLength, AiTone } from "@/types/knowledge"
 
 export type OnboardingChannel = "TRENDYOL" | "HEPSIBURADA"
 
-export type OnboardingStage = "STORE" | "CHANNEL" | "PREFERENCES" | "COMPLETED"
+export type OnboardingStage =
+  "STORE" | "CHANNEL" | "SYNCING" | "PREFERENCES" | "COMPLETED"
 
 export type ProvisionOnboardingPayload = {
   storeName: string
@@ -47,6 +48,21 @@ export type OnboardingStatus = {
     responseLength: AiResponseLength
   } | null
   channelConnections: ChannelConnection[]
+  catalogSync: {
+    syncRunId: string
+    connectionId: string
+    providerKey: string
+    status: "RUNNING" | "COMPLETED" | "FAILED"
+    stage:
+      | "QUEUED"
+      | "FETCHING"
+      | "PERSISTING"
+      | "RECONCILING"
+      | "COMPLETED"
+      | "FAILED"
+    progress: number
+    errorMessage: string | null
+  } | null
 }
 
 export type ProvisionOnboardingResponse = {
@@ -62,7 +78,7 @@ export type ProvisionOnboardingResponse = {
     queuedAt: string
     kind: "FULL" | "INVENTORY"
   }
-  nextStep: "PREFERENCES"
+  nextStep: "CATALOG_SYNC"
 }
 
 export type CompleteOnboardingResponse = {

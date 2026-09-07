@@ -7,7 +7,6 @@ import {
   PlugSocketIcon,
   RefreshIcon,
   Settings02Icon,
-  UserGroupIcon,
   WorkflowSquare01Icon,
 } from "@hugeicons/core-free-icons"
 import type { IconSvgElement } from "@hugeicons/react"
@@ -29,7 +28,6 @@ export const APP_ROUTES = {
       products: "/dashboard/catalog/products",
       inventory: "/dashboard/catalog/inventory",
     },
-    customers: "/dashboard/customers",
     channels: {
       root: "/dashboard/channels",
       sync: "/dashboard/channels/sync",
@@ -114,11 +112,6 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
           title: "Ürünler",
           url: APP_ROUTES.dashboard.catalog.products,
           icon: Package01Icon,
-        },
-        {
-          title: "Müşteriler",
-          url: APP_ROUTES.dashboard.customers,
-          icon: UserGroupIcon,
         },
       ],
     },

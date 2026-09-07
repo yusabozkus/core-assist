@@ -65,6 +65,7 @@ const QUESTION_DETAIL_SELECT = {
   id: true,
   externalQuestionId: true,
   externalProductId: true,
+  externalProductRecordId: true,
   customerName: true,
   question: true,
   status: true,
@@ -111,6 +112,16 @@ const QUESTION_DETAIL_SELECT = {
           status: true,
           sourceUpdatedAt: true,
           lastSyncedAt: true,
+          externalVariants: {
+            select: {
+              externalProductId: true,
+              externalProduct: {
+                select: {
+                  connection: { select: { providerKey: true } },
+                },
+              },
+            },
+          },
         },
       },
       attributes: {
@@ -132,6 +143,7 @@ const QUESTION_DETAIL_SELECT = {
           confidence: true,
           failureReason: true,
           analyzedAt: true,
+          externalProductId: true,
         },
       },
       externalProducts: {
@@ -308,10 +320,45 @@ export class QuestionsService {
       product: question.product
         ? {
             ...question.product,
-            variants: question.product.variants.map((variant) => ({
-              ...variant,
-              price: Number(variant.price),
-            })),
+            variants: question.product.variants
+              .filter(
+                (variant) =>
+                  !question.externalProductRecordId ||
+                  variant.externalVariants.some(
+                    (externalVariant) =>
+                      externalVariant.externalProductId ===
+                      question.externalProductRecordId,
+                  ),
+              )
+              .map(({ externalVariants, ...variant }) => ({
+                ...variant,
+                price: Number(variant.price),
+                providers: [
+                  ...new Set(
+                    externalVariants.map(
+                      (externalVariant) =>
+                        externalVariant.externalProduct.connection.providerKey,
+                    ),
+                  ),
+                ],
+              })),
+            sizeGuides: question.product.sizeGuides
+              .filter(
+                (guide) =>
+                  !question.externalProductRecordId ||
+                  !guide.externalProductId ||
+                  guide.externalProductId === question.externalProductRecordId,
+              )
+              .map((guide) => ({
+                id: guide.id,
+                sourceUrl: guide.sourceUrl,
+                status: guide.status,
+                normalizedText: guide.normalizedText,
+                structuredData: guide.structuredData,
+                confidence: guide.confidence,
+                failureReason: guide.failureReason,
+                analyzedAt: guide.analyzedAt,
+              })),
           }
         : null,
     };

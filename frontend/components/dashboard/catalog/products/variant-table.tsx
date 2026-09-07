@@ -20,6 +20,7 @@ export function VariantTable({
         <thead className="bg-muted/40 text-xs text-muted-foreground">
           <tr>
             <th className="px-5 py-3 font-medium">Varyant</th>
+            <th className="px-5 py-3 font-medium">Kanal</th>
             <th className="px-5 py-3 font-medium">SKU</th>
             <th className="px-5 py-3 font-medium">Barkod</th>
             <th className="px-5 py-3 font-medium">Renk</th>

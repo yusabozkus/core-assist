@@ -121,6 +121,7 @@ model Store {
   members            StoreMember[]
   channelConnections ChannelConnection[]
   products           Product[]
+  productIdentities  ProductIdentity[]
   incomingEvents     IncomingEvent[]
   productQuestions   ProductQuestion[]
   questionAnswers    QuestionAnswer[]
@@ -307,6 +308,11 @@ enum SizeGuideStatus {
   FAILED
 }
 
+enum ProductIdentityType {
+  MODEL_CODE
+  GTIN
+}
+
 model Product {
   id          String        @id @default(uuid())
   storeId     String
@@ -324,10 +330,27 @@ model Product {
   images           ProductImage[]
   sizeGuides       ProductSizeGuide[]
   externalProducts ExternalProduct[]
+  identities       ProductIdentity[]
   questions        ProductQuestion[]
 
   @@index([storeId, status])
   @@map("product")
+}
+
+model ProductIdentity {
+  id        String              @id @default(uuid())
+  storeId   String
+  productId String
+  type      ProductIdentityType
+  value     String
+  createdAt DateTime            @default(now())
+
+  store   Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, type, value])
+  @@index([productId])
+  @@map("product_identity")
 }
 
 model ProductVariant {
@@ -350,7 +373,7 @@ model ProductVariant {
   product          Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
   externalVariants ExternalProductVariant[]
 
-  @@unique([productId, sku])
+  @@index([productId, sku])
   @@index([barcode])
   @@map("product_variant")
 }

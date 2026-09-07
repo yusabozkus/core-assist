@@ -1,19 +1,14 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import Link from "next/link"
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons"
+import { Cancel01Icon, Search01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { BillingPageHeader } from "@/components/dashboard/billing/billing-page-header"
 import { InvoiceDetailDialog } from "@/components/dashboard/billing/invoice-detail-dialog"
-import {
-  InvoiceHistory,
-  type InvoiceRecord,
-  type InvoiceStatus,
-} from "@/components/dashboard/billing/invoice-history"
+import { InvoiceHistory } from "@/components/dashboard/billing/invoice-history"
 import { InvoiceSummary } from "@/components/dashboard/billing/invoice-summary"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -21,140 +16,114 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { APP_ROUTES } from "@/constants/site"
+import { BILLING_INVOICES } from "@/constants/billing"
+import type { InvoiceRecord, InvoiceStatus } from "@/types/billing"
 
 type StatusFilter = "all" | InvoiceStatus
-
-const invoices: readonly InvoiceRecord[] = [
-  createInvoice("0192", "15 Ağustos – 15 Eylül 2026", "15 Ağustos 2026"),
-  createInvoice("0171", "15 Temmuz – 15 Ağustos 2026", "15 Temmuz 2026"),
-  createInvoice("0148", "15 Haziran – 15 Temmuz 2026", "15 Haziran 2026"),
-  createInvoice("0126", "15 Mayıs – 15 Haziran 2026", "15 Mayıs 2026"),
-  createInvoice("0104", "15 Nisan – 15 Mayıs 2026", "15 Nisan 2026"),
-  createInvoice("0081", "15 Mart – 15 Nisan 2026", "15 Mart 2026"),
-  createInvoice("0057", "15 Şubat – 15 Mart 2026", "15 Şubat 2026"),
-  createInvoice("0032", "15 Ocak – 15 Şubat 2026", "15 Ocak 2026"),
-  createInvoice(
-    "0418",
-    "15 Aralık 2025 – 15 Ocak 2026",
-    "15 Aralık 2025",
-    "2025",
-    "Starter",
-    2300
-  ),
-  createInvoice(
-    "0391",
-    "15 Kasım – 15 Aralık 2025",
-    "15 Kasım 2025",
-    "2025",
-    "Starter",
-    2300,
-    "refunded"
-  ),
-] as const
-
-function createInvoice(
-  sequence: string,
-  period: string,
-  issuedAt: string,
-  year = "2026",
-  plan = "Growth",
-  subtotal = 6000,
-  status: InvoiceStatus = "paid"
-): InvoiceRecord {
-  const tax = subtotal * 0.2
-
-  return {
-    id: `${year}-${sequence}`,
-    number: `CA-${year}-${sequence}`,
-    plan: `${plan} · Aylık plan`,
-    period,
-    issuedAt,
-    year,
-    subtotal,
-    tax,
-    total: subtotal + tax,
-    status,
-    paymentMethod: "Visa •••• 4242",
-  }
-}
+const years = [
+  ...new Set(BILLING_INVOICES.map((invoice) => invoice.year)),
+].sort((a, b) => Number(b) - Number(a))
 
 export function InvoicesClient() {
-  const [year, setYear] = useState("2026")
+  const [year, setYear] = useState(years[0] ?? "all")
   const [status, setStatus] = useState<StatusFilter>("all")
+  const [query, setQuery] = useState("")
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceRecord | null>(
     null
   )
-
-  const filteredInvoices = useMemo(
+  const periodInvoices = useMemo(
     () =>
-      invoices.filter(
-        (invoice) =>
-          invoice.year === year &&
-          (status === "all" || invoice.status === status)
+      BILLING_INVOICES.filter(
+        (invoice) => year === "all" || invoice.year === year
       ),
-    [year, status]
+    [year]
   )
-
-  const paidTotal = invoices
-    .filter((invoice) => invoice.year === "2026" && invoice.status === "paid")
-    .reduce((total, invoice) => total + invoice.total, 0)
-
+  const filteredInvoices = useMemo(() => {
+    const search = query.trim().toLocaleLowerCase("tr-TR")
+    return periodInvoices.filter(
+      (invoice) =>
+        (status === "all" || invoice.status === status) &&
+        (!search ||
+          [invoice.number, invoice.plan, invoice.period, invoice.issuedAt].some(
+            (value) => value.toLocaleLowerCase("tr-TR").includes(search)
+          ))
+    )
+  }, [periodInvoices, query, status])
+  function resetFilters() {
+    setYear("all")
+    setStatus("all")
+    setQuery("")
+  }
   return (
-    <main className="mx-auto w-full max-w-[1440px] px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
-      <header className="flex flex-col gap-5 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-[-0.035em] text-foreground sm:text-3xl">
-            Faturalar
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Abonelik ödemelerinizi, fatura dönemlerinizi ve geçmiş kayıtlarınızı
-            görüntüleyin.
-          </p>
-        </div>
-        <Button asChild variant="outline" size="sm">
-          <Link href={APP_ROUTES.dashboard.settings.billing}>
-            <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
-            Aboneliğe dön
-          </Link>
-        </Button>
-      </header>
-
-      <InvoiceSummary paidTotal={paidTotal} />
-
-      <section className="mt-6 overflow-hidden rounded-xl border border-border bg-card shadow-xs">
-        <div className="flex flex-col gap-4 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="font-semibold tracking-[-0.015em]">
-                Fatura geçmişi
-              </h2>
-              <Badge variant="secondary">{filteredInvoices.length} kayıt</Badge>
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Oluşturulan faturaları inceleyin ve PDF olarak indirin.
-            </p>
+    <main className="mx-auto w-full max-w-[1120px] space-y-6 px-5 py-8 sm:px-8 lg:px-10">
+      <BillingPageHeader active="invoices" />
+      <InvoiceSummary invoices={periodInvoices} year={year} />
+      <section
+        aria-labelledby="invoice-history-title"
+        className="overflow-hidden rounded-xl border border-border bg-card"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5 sm:px-6">
+          <div className="flex items-center gap-2.5">
+            <h2 id="invoice-history-title" className="text-sm font-semibold">
+              Fatura geçmişi
+            </h2>
+            <span className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              {periodInvoices.length}
+            </span>
           </div>
-
-          <div className="flex items-center gap-2">
+          <p className="text-xs text-muted-foreground">En yeniden eskiye</p>
+        </div>
+        <div className="flex flex-col justify-between gap-3 p-5 sm:flex-row sm:items-center sm:px-6">
+          <div className="w-full sm:max-w-xs">
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              aria-label="Fatura ara"
+              placeholder="Fatura numarası veya plan ara…"
+              className="h-9 rounded-lg border-border bg-background text-xs shadow-none"
+              icon={<HugeiconsIcon icon={Search01Icon} className="size-3.5" />}
+              endIcon={
+                query ? (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    aria-label="Aramayı temizle"
+                    className="rounded-sm p-0.5 outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
+                  </button>
+                ) : undefined
+              }
+            />
+          </div>
+          <div className="flex gap-2">
             <Select value={year} onValueChange={setYear}>
-              <SelectTrigger className="rounded-xl border-border bg-card">
+              <SelectTrigger
+                aria-label="Fatura yılı"
+                className="h-9 min-w-28 flex-1 rounded-lg border-border bg-card text-xs"
+              >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent position="popper" align="end">
-                <SelectItem value="2026">2026</SelectItem>
-                <SelectItem value="2025">2025</SelectItem>
+              <SelectContent>
+                <SelectItem value="all">Tüm yıllar</SelectItem>
+                {years.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {value}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-
             <Select
               value={status}
               onValueChange={(value) => setStatus(value as StatusFilter)}
             >
-              <SelectTrigger className="rounded-xl border-border bg-card">
+              <SelectTrigger
+                aria-label="Fatura durumu"
+                className="h-9 min-w-36 flex-1 rounded-lg border-border bg-card text-xs"
+              >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent position="popper" align="end">
+              <SelectContent>
                 <SelectItem value="all">Tüm durumlar</SelectItem>
                 <SelectItem value="paid">Ödendi</SelectItem>
                 <SelectItem value="refunded">İade edildi</SelectItem>
@@ -162,13 +131,36 @@ export function InvoicesClient() {
             </Select>
           </div>
         </div>
-
         <InvoiceHistory
           invoices={filteredInvoices}
           onSelect={setSelectedInvoice}
+          onReset={resetFilters}
         />
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-muted/15 px-5 py-3 sm:px-6">
+          <p
+            role="status"
+            aria-live="polite"
+            className="text-xs text-muted-foreground"
+          >
+            {filteredInvoices.length} fatura gösteriliyor
+          </p>
+          {(query || status !== "all" || year !== "all") && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 text-muted-foreground"
+              onClick={resetFilters}
+            >
+              Filtreleri temizle
+            </Button>
+          )}
+        </div>
       </section>
-
+      <p className="text-xs leading-5 text-muted-foreground">
+        Fatura detaylarını kayıt üzerinden açabilirsiniz. Gösterilen kayıtlar
+        örnektir; resmî fatura yerine geçmez.
+      </p>
       <InvoiceDetailDialog
         invoice={selectedInvoice}
         onOpenChange={(open) => {

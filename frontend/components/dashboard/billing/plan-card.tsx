@@ -1,30 +1,16 @@
+"use client"
+
 import {
-  CalendarCheck01Icon,
+  ArrowRight01Icon,
   CheckmarkCircle01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
-import { Badge } from "@/components/ui/badge"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { Button } from "@/components/ui/button"
-import { formatCurrency } from "@/lib/format-currency"
+import { BILLING_PREVIEW } from "@/constants/billing"
+import { getPlanPrice } from "@/lib/billing"
 import { cn } from "@/lib/utils"
-
-export type BillingCycle = "monthly" | "annual"
-
-export type SubscriptionPlan = {
-  id: "starter" | "growth" | "business"
-  name: string
-  description: string
-  monthlyPrice: number
-  features: readonly string[]
-  highlighted?: boolean
-  current?: boolean
-}
-
-const formatPlanPrice = (value: number) =>
-  formatCurrency(value, "TRY", {
-    maximumFractionDigits: 0,
-  })
+import type { BillingCycle, SubscriptionPlan } from "@/types/billing"
 
 export function PlanCard({
   plan,
@@ -35,123 +21,139 @@ export function PlanCard({
   billingCycle: BillingCycle
   onSelect: (plan: SubscriptionPlan) => void
 }) {
-  const isAnnual = billingCycle === "annual"
-  const displayedMonthlyPrice = isAnnual
-    ? plan.monthlyPrice * 0.9
-    : plan.monthlyPrice
-  const annualTotal = displayedMonthlyPrice * 12
-
+  const reducedMotion = useReducedMotion()
+  const price = getPlanPrice(plan, billingCycle)
+  const current =
+    plan.id === BILLING_PREVIEW.plan.id &&
+    billingCycle === BILLING_PREVIEW.cycle
+  const limits = [
+    { label: "Mağaza", value: plan.stores.toLocaleString("tr-TR") },
+    {
+      label: "Pazaryeri bağlantısı",
+      value: plan.connections?.toLocaleString("tr-TR") ?? "Sınırsız",
+    },
+    { label: "Katalog ürünü", value: plan.products.toLocaleString("tr-TR") },
+  ]
   return (
     <article
       className={cn(
-        "relative flex h-full flex-col overflow-hidden rounded-xl border bg-card p-5 shadow-xs transition-[border-color,box-shadow,transform] duration-200 sm:p-6",
+        "flex h-full min-w-0 flex-col overflow-hidden rounded-xl border bg-card",
         plan.highlighted
-          ? "border-primary/45 shadow-lg ring-1 shadow-primary/6 ring-primary/10"
-          : "border-border hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-lg"
+          ? "border-primary/50 ring-1 ring-primary/15"
+          : "border-border"
       )}
     >
-      {plan.highlighted ? (
-        <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
-      ) : null}
-
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold tracking-[-0.025em]">
-            {plan.name}
-          </h2>
-          <p className="mt-1.5 min-h-10 text-sm leading-5 text-muted-foreground">
-            {plan.description}
+      <div
+        className={cn(
+          "flex h-9 items-center justify-between border-b px-6 text-[11px]",
+          plan.highlighted
+            ? "border-primary/15 bg-primary/8 text-primary"
+            : "border-border bg-muted/20 text-muted-foreground"
+        )}
+      >
+        <span>
+          {plan.highlighted
+            ? "Büyüyen operasyonlar için"
+            : plan.id === "starter"
+              ? "İlk mağazanız için"
+              : "Yüksek hacimli ekipler için"}
+        </span>
+        {plan.id === BILLING_PREVIEW.plan.id && (
+          <span className="font-medium">Planınız</span>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col p-6 sm:p-7">
+        <h2 className="text-xl font-semibold tracking-tight">{plan.name}</h2>
+        <p className="mt-2 min-h-12 text-sm leading-6 text-muted-foreground lg:min-h-18 xl:min-h-12">
+          {plan.description}
+        </p>
+        <div className="mt-7">
+          <p
+            className="flex items-baseline gap-2"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            <span className="sr-only">{price.monthly} / ay</span>
+            <span
+              aria-hidden="true"
+              className="relative inline-grid overflow-hidden py-1 text-4xl font-semibold tracking-[-0.055em] tabular-nums"
+            >
+              <AnimatePresence initial={false} mode="popLayout">
+                <motion.span
+                  key={billingCycle}
+                  className="[grid-area:1/1]"
+                  initial={{ y: reducedMotion ? 0 : -25, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: reducedMotion ? 0 : 25, opacity: 0 }}
+                  transition={{ duration: reducedMotion ? 0 : 0.22 }}
+                >
+                  {price.monthly}
+                </motion.span>
+              </AnimatePresence>
+            </span>
+            <span aria-hidden="true" className="text-sm text-muted-foreground">
+              / ay
+            </span>
+          </p>
+          <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">
+            {billingCycle === "annual"
+              ? `Yıllık ${price.total} + KDV. ${price.saving} tasarruf edin.`
+              : "Aylık faturalandırılır. Fiyatlara KDV dahil değildir."}
           </p>
         </div>
-        {plan.current ? (
-          <Badge variant="success">
-            <span className="size-1.5 rounded-full bg-current" />
-            Mevcut
-          </Badge>
-        ) : plan.highlighted ? (
-          <Badge>En popüler</Badge>
-        ) : null}
-      </div>
-
-      <div className="mt-6">
-        {isAnnual ? (
-          <div className="mb-1.5 flex items-center gap-2 text-xs">
-            <span className="text-muted-foreground line-through">
-              {formatPlanPrice(plan.monthlyPrice)}
-            </span>
-            <span className="font-semibold text-primary">%10 indirimli</span>
-          </div>
-        ) : (
-          <div className="mb-1.5 h-4" aria-hidden="true" />
-        )}
-        <p className="text-3xl font-semibold tracking-[-0.045em] text-foreground">
-          {formatPlanPrice(displayedMonthlyPrice)}
-          <span className="ml-1 text-sm font-normal tracking-normal text-muted-foreground">
-            / ay
-          </span>
-        </p>
-        <p className="mt-2 min-h-5 text-xs text-muted-foreground">
-          {isAnnual
-            ? `${formatPlanPrice(annualTotal)} yıllık faturalandırılır`
-            : "Aylık olarak faturalandırılır"}
-        </p>
-      </div>
-
-      <div className="mt-5 flex items-center gap-2 text-xs font-medium text-foreground">
-        <HugeiconsIcon
-          icon={CalendarCheck01Icon}
-          className="size-4 shrink-0 text-primary"
-        />
-        İlk abonelikte 7 gün ücretsiz
-      </div>
-
-      {plan.current ? (
-        <div className="mt-5 flex h-11 w-full items-center justify-center rounded-xl border border-primary/20 bg-primary/8 text-sm font-medium text-primary">
-          Planınız aktif
-        </div>
-      ) : (
         <Button
           type="button"
           variant={plan.highlighted ? "default" : "outline"}
-          className="mt-5 w-full"
+          disabled={current}
           onClick={() => onSelect(plan)}
+          className="mt-5 w-full justify-between shadow-none"
         >
-          7 gün ücretsiz dene
+          {current ? "Mevcut planınız" : "Planı seç"}
+          <HugeiconsIcon
+            icon={current ? CheckmarkCircle01Icon : ArrowRight01Icon}
+            className="size-4"
+          />
         </Button>
-      )}
-
-      <div className="mt-6 border-t border-border pt-5">
-        <p className="text-xs font-semibold tracking-wide text-foreground uppercase">
-          Dahil olanlar
+        <p className="mt-3 text-center text-[11px] text-muted-foreground">
+          İlk abonelikte 7 gün ücretsiz deneme
         </p>
-        <ul className="mt-4 space-y-3">
+        <div className="mt-6 border-y border-border py-4">
+          <p className="text-2xl font-semibold tracking-tight tabular-nums">
+            {plan.questions.toLocaleString("tr-TR")}{" "}
+            <span className="text-xs font-normal tracking-normal text-muted-foreground">
+              soru / ay
+            </span>
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            AI ile yanıtlanabilecek ürün soruları
+          </p>
+        </div>
+        <dl className="my-5 space-y-3">
+          {limits.map((limit) => (
+            <div
+              key={limit.label}
+              className="flex justify-between gap-3 text-xs"
+            >
+              <dt className="text-muted-foreground">{limit.label}</dt>
+              <dd className="font-medium tabular-nums">{limit.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <ul className="mt-auto space-y-3 border-t border-border pt-5">
           {plan.features.map((feature) => (
             <li
               key={feature}
-              className="flex items-start gap-2.5 text-sm leading-5 text-foreground"
+              className="flex items-start gap-2 text-xs leading-5"
             >
               <HugeiconsIcon
                 icon={CheckmarkCircle01Icon}
-                className="mt-0.5 size-4 shrink-0 text-primary"
+                className="mt-0.5 size-3.5 shrink-0 text-primary"
               />
-              <span>{feature}</span>
+              {feature}
             </li>
           ))}
         </ul>
       </div>
     </article>
   )
-}
-
-export function getPlanPrice(plan: SubscriptionPlan, cycle: BillingCycle) {
-  const monthlyPrice =
-    cycle === "annual" ? plan.monthlyPrice * 0.9 : plan.monthlyPrice
-
-  return {
-    monthly: formatPlanPrice(monthlyPrice),
-    billed:
-      cycle === "annual"
-        ? `${formatPlanPrice(monthlyPrice * 12)} / yıl`
-        : `${formatPlanPrice(monthlyPrice)} / ay`,
-  }
 }

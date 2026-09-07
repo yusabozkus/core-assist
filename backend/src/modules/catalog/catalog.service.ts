@@ -40,6 +40,15 @@ const PRODUCT_DETAIL_SELECT = {
       status: true,
       sourceUpdatedAt: true,
       lastSyncedAt: true,
+      externalVariants: {
+        select: {
+          externalProduct: {
+            select: {
+              connection: { select: { providerKey: true } },
+            },
+          },
+        },
+      },
     },
   },
   attributes: {
@@ -89,6 +98,19 @@ export class CatalogService {
 
     const query = options.query?.trim();
     const provider = options.provider?.trim();
+    const providerVariantWhere = {
+      ...(provider
+        ? {
+            externalVariants: {
+              some: {
+                externalProduct: {
+                  connection: { storeId, providerKey: provider },
+                },
+              },
+            },
+          }
+        : {}),
+    } satisfies Prisma.ProductVariantWhereInput;
     const baseWhere = {
       storeId,
       status: 'ACTIVE',
@@ -122,6 +144,7 @@ export class CatalogService {
             {
               variants: {
                 some: {
+                  ...providerVariantWhere,
                   OR: [
                     { sku: { contains: query, mode: 'insensitive' } },
                     { barcode: { contains: query, mode: 'insensitive' } },
@@ -157,6 +180,7 @@ export class CatalogService {
               select: { url: true },
             },
             variants: {
+              where: providerVariantWhere,
               select: {
                 price: true,
                 currency: true,
@@ -175,10 +199,14 @@ export class CatalogService {
         this.prisma.product.count({ where }),
         this.prisma.product.count({ where: baseWhere }),
         this.prisma.productVariant.count({
-          where: { product: baseWhere },
+          where: { product: baseWhere, ...providerVariantWhere },
         }),
         this.prisma.productVariant.aggregate({
-          where: { product: baseWhere, status: 'ACTIVE' },
+          where: {
+            product: baseWhere,
+            status: 'ACTIVE',
+            ...providerVariantWhere,
+          },
           _sum: { stock: true },
         }),
       ]);
@@ -240,9 +268,17 @@ export class CatalogService {
 
     return {
       ...product,
-      variants: product.variants.map((variant) => ({
+      variants: product.variants.map(({ externalVariants, ...variant }) => ({
         ...variant,
         price: Number(variant.price),
+        providers: [
+          ...new Set(
+            externalVariants.map(
+              (externalVariant) =>
+                externalVariant.externalProduct.connection.providerKey,
+            ),
+          ),
+        ],
       })),
     };
   }

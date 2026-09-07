@@ -4,6 +4,7 @@ import {
   CatalogSyncStatus,
   ChannelConnectionStatus,
   ExternalEntityStatus,
+  ProductIdentityType,
   ProductStatus,
   ProductVariantStatus,
   StoreStatus,
@@ -40,6 +41,10 @@ type SyncCounters = {
 
 type ProductChange = 'CREATED' | 'UPDATED' | 'UNCHANGED';
 type InventoryChange = 'UPDATED' | 'UNCHANGED';
+type ProductIdentityCandidate = {
+  type: ProductIdentityType;
+  value: string;
+};
 
 @Injectable()
 export class ProductSyncWorkerService {
@@ -288,6 +293,7 @@ export class ProductSyncWorkerService {
       const attributes = uniqueAttributes(normalized.attributes);
       const images = [...new Set(normalized.images.filter(Boolean))];
       const variants = uniqueVariants(normalized.variants);
+      const identityCandidates = getProductIdentityCandidates(normalized);
       const existingExternalProduct =
         await transaction.externalProduct.findUnique({
           where: {
@@ -303,6 +309,12 @@ export class ProductSyncWorkerService {
             sourceUpdatedAt: true,
           },
         });
+      const canonicalProductId = await this.resolveCanonicalProduct(
+        transaction,
+        storeId,
+        existingExternalProduct?.productId,
+        identityCandidates,
+      );
       const change: ProductChange = !existingExternalProduct
         ? 'CREATED'
         : isSameProductSnapshot(existingExternalProduct, normalized)
@@ -319,7 +331,7 @@ export class ProductSyncWorkerService {
       let externalProductId: string;
 
       if (existingExternalProduct) {
-        productId = existingExternalProduct.productId;
+        productId = canonicalProductId ?? existingExternalProduct.productId;
         externalProductId = existingExternalProduct.id;
         await transaction.product.update({
           where: { id: productId },
@@ -341,6 +353,7 @@ export class ProductSyncWorkerService {
         await transaction.externalProduct.update({
           where: { id: externalProductId },
           data: {
+            productId,
             externalUrl: normalized.externalUrl ?? null,
             rawPayload: normalized.rawPayload as Prisma.InputJsonValue,
             status: ExternalEntityStatus.ACTIVE,
@@ -349,6 +362,40 @@ export class ProductSyncWorkerService {
             lastSyncedAt: syncedAt,
           },
         });
+      } else if (canonicalProductId) {
+        productId = canonicalProductId;
+        await transaction.product.update({
+          where: { id: productId },
+          data: {
+            ...productData,
+            attributes: {
+              deleteMany: {},
+              create: attributes,
+            },
+            images: {
+              deleteMany: {},
+              create: images.map((url, position) => ({
+                url,
+                position,
+              })),
+            },
+          },
+        });
+        const externalProduct = await transaction.externalProduct.create({
+          data: {
+            connectionId,
+            productId,
+            externalId: normalized.externalId,
+            externalUrl: normalized.externalUrl,
+            rawPayload: normalized.rawPayload as Prisma.InputJsonValue,
+            status: ExternalEntityStatus.ACTIVE,
+            lastSeenSyncId: syncRunId,
+            sourceUpdatedAt: normalized.sourceUpdatedAt,
+            lastSyncedAt: syncedAt,
+          },
+          select: { id: true },
+        });
+        externalProductId = externalProduct.id;
       } else {
         const product = await transaction.product.create({
           data: {
@@ -380,6 +427,25 @@ export class ProductSyncWorkerService {
         });
         productId = product.id;
         externalProductId = externalProduct.id;
+      }
+
+      if (identityCandidates.length > 0) {
+        await transaction.productIdentity.createMany({
+          data: identityCandidates.map((identity) => ({
+            storeId,
+            productId,
+            ...identity,
+          })),
+          skipDuplicates: true,
+        });
+
+        productId =
+          (await this.resolveCanonicalProduct(
+            transaction,
+            storeId,
+            productId,
+            identityCandidates,
+          )) ?? productId;
       }
 
       for (const variant of variants) {
@@ -418,6 +484,89 @@ export class ProductSyncWorkerService {
     }
 
     return saved.change;
+  }
+
+  private async resolveCanonicalProduct(
+    transaction: Prisma.TransactionClient,
+    storeId: string,
+    currentProductId: string | undefined,
+    identities: ProductIdentityCandidate[],
+  ) {
+    const identityMatches =
+      identities.length === 0
+        ? []
+        : await transaction.productIdentity.findMany({
+            where: {
+              storeId,
+              OR: identities.map((identity) => ({
+                type: identity.type,
+                value: identity.value,
+              })),
+            },
+            select: { productId: true },
+          });
+    const candidateIds = [
+      ...new Set([
+        ...(currentProductId ? [currentProductId] : []),
+        ...identityMatches.map((identity) => identity.productId),
+      ]),
+    ];
+
+    if (candidateIds.length === 0) return null;
+
+    const candidates = await transaction.product.findMany({
+      where: { id: { in: candidateIds }, storeId },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      select: { id: true },
+    });
+    const canonicalProductId = candidates[0]?.id;
+
+    if (!canonicalProductId) return null;
+
+    const duplicateProductIds = candidates
+      .slice(1)
+      .map((product) => product.id);
+
+    if (duplicateProductIds.length > 0) {
+      await this.mergeProducts(
+        transaction,
+        canonicalProductId,
+        duplicateProductIds,
+      );
+    }
+
+    return canonicalProductId;
+  }
+
+  private async mergeProducts(
+    transaction: Prisma.TransactionClient,
+    canonicalProductId: string,
+    duplicateProductIds: string[],
+  ) {
+    await transaction.productVariant.updateMany({
+      where: { productId: { in: duplicateProductIds } },
+      data: { productId: canonicalProductId },
+    });
+
+    await transaction.productSizeGuide.updateMany({
+      where: { productId: { in: duplicateProductIds } },
+      data: { productId: canonicalProductId },
+    });
+    await transaction.externalProduct.updateMany({
+      where: { productId: { in: duplicateProductIds } },
+      data: { productId: canonicalProductId },
+    });
+    await transaction.productQuestion.updateMany({
+      where: { productId: { in: duplicateProductIds } },
+      data: { productId: canonicalProductId },
+    });
+    await transaction.productIdentity.updateMany({
+      where: { productId: { in: duplicateProductIds } },
+      data: { productId: canonicalProductId },
+    });
+    await transaction.product.deleteMany({
+      where: { id: { in: duplicateProductIds } },
+    });
   }
 
   private async upsertVariant(
@@ -495,24 +644,11 @@ export class ProductSyncWorkerService {
       return;
     }
 
-    const existingVariant = await transaction.productVariant.findUnique({
-      where: { productId_sku: { productId, sku: normalized.sku } },
+    const productVariant = await transaction.productVariant.create({
+      data: { productId, ...fullVariantData },
       select: { id: true },
     });
-
-    if (existingVariant) {
-      productVariantId = existingVariant.id;
-      await transaction.productVariant.update({
-        where: { id: productVariantId },
-        data: fullVariantData,
-      });
-    } else {
-      const productVariant = await transaction.productVariant.create({
-        data: { productId, ...fullVariantData },
-        select: { id: true },
-      });
-      productVariantId = productVariant.id;
-    }
+    productVariantId = productVariant.id;
 
     await transaction.externalProductVariant.create({
       data: {
@@ -877,4 +1013,87 @@ function uniqueVariants(variants: NormalizedProductVariant[]) {
       variants.map((variant) => [variant.externalId, variant]),
     ).values(),
   ];
+}
+
+function getProductIdentityCandidates(
+  product: NormalizedProduct,
+): ProductIdentityCandidate[] {
+  const candidates: ProductIdentityCandidate[] = [];
+  const normalizedBrand = normalizeIdentityValue(product.brand ?? '');
+
+  if (normalizedBrand) {
+    const modelCodeSources = [
+      product.title,
+      product.externalId,
+      ...product.attributes
+        .filter((attribute) => isModelCodeAttribute(attribute.name))
+        .map((attribute) => attribute.value),
+    ];
+
+    for (const code of modelCodeSources.flatMap(extractProductCodes)) {
+      candidates.push({
+        type: ProductIdentityType.MODEL_CODE,
+        value: `${normalizedBrand}:${normalizeIdentityValue(code)}`,
+      });
+    }
+  }
+
+  for (const variant of product.variants) {
+    const gtin = variant.barcode?.trim().replace(/\s+/g, '');
+
+    if (gtin && /^\d{8,14}$/.test(gtin)) {
+      candidates.push({ type: ProductIdentityType.GTIN, value: gtin });
+    }
+  }
+
+  return [
+    ...new Map(
+      candidates.map((candidate) => [
+        `${candidate.type}:${candidate.value}`,
+        candidate,
+      ]),
+    ).values(),
+  ];
+}
+
+function isModelCodeAttribute(name: string) {
+  const normalizedName = normalizeSearchValue(name);
+
+  return [
+    'urun kodu',
+    'urun model kodu',
+    'model kodu',
+    'product code',
+    'model code',
+  ].includes(normalizedName);
+}
+
+function extractProductCodes(value: string) {
+  return (
+    value
+      .toUpperCase()
+      .match(
+        /\b(?=[A-Z0-9-]{6,32}\b)(?=[A-Z0-9-]*[A-Z])(?=[A-Z0-9-]*\d)[A-Z0-9]+(?:-[A-Z0-9]+)*\b/g,
+      ) ?? []
+  );
+}
+
+function normalizeIdentityValue(value: string) {
+  return normalizeSearchValue(value)
+    .replace(/[^a-z0-9]/g, '')
+    .toUpperCase();
+}
+
+function normalizeSearchValue(value: string) {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[ıİ]/g, 'i')
+    .replace(/[şŞ]/g, 's')
+    .replace(/[ğĞ]/g, 'g')
+    .replace(/[üÜ]/g, 'u')
+    .replace(/[öÖ]/g, 'o')
+    .replace(/[çÇ]/g, 'c')
+    .trim()
+    .toLowerCase();
 }

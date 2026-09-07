@@ -179,7 +179,6 @@ html {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--muted-foreground) 28%, transparent)
     var(--background);
-  scrollbar-gutter: stable;
 }
 
 html::-webkit-scrollbar {
@@ -198,7 +197,7 @@ html::-webkit-scrollbar-thumb {
 
 html:hover::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--muted-foreground) 46%, transparent);
-  background-clip: padding-box;
+  background-clip: content-box;
 }
 
 .themed-scrollbar {

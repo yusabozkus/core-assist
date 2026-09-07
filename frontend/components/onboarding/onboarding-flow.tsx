@@ -34,6 +34,7 @@ import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { APP_ROUTES } from "@/constants/site"
+import { getChannelSyncRun } from "@/lib/api/channels"
 import { completeOnboarding, provisionOnboarding } from "@/lib/api/onboarding"
 import { signOutCurrentUser } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
@@ -179,6 +180,60 @@ const INITIAL_AI_PROFILE: StoreKnowledge["profile"] = {
   preferredEmoji: null,
 }
 
+const CATALOG_SYNC_POLL_INTERVAL_MS = 800
+const CATALOG_SYNC_TIMEOUT_MS = 10 * 60 * 1_000
+
+function waitForNextCatalogSyncPoll(signal: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    if (signal.aborted) {
+      reject(new DOMException("Aborted", "AbortError"))
+      return
+    }
+
+    const handleAbort = () => {
+      window.clearTimeout(timeoutId)
+      reject(new DOMException("Aborted", "AbortError"))
+    }
+    const timeoutId = window.setTimeout(() => {
+      signal.removeEventListener("abort", handleAbort)
+      resolve()
+    }, CATALOG_SYNC_POLL_INTERVAL_MS)
+
+    signal.addEventListener("abort", handleAbort, { once: true })
+  })
+}
+
+async function waitForCatalogSync(
+  storeId: string,
+  syncRunId: string,
+  onProgress: (progress: number) => void,
+  signal: AbortSignal
+) {
+  const deadline = Date.now() + CATALOG_SYNC_TIMEOUT_MS
+
+  while (Date.now() < deadline) {
+    signal.throwIfAborted()
+
+    const syncRun = await getChannelSyncRun(storeId, syncRunId, signal)
+    onProgress(syncRun.progress)
+
+    if (syncRun.status === "COMPLETED") return
+
+    if (syncRun.status === "FAILED") {
+      throw new Error(
+        syncRun.errorMessage ??
+          "İlk katalog senkronizasyonu tamamlanamadı. Bilgilerinizi kontrol edip tekrar deneyin."
+      )
+    }
+
+    await waitForNextCatalogSyncPoll(signal)
+  }
+
+  throw new Error(
+    "İlk katalog senkronizasyonu beklenenden uzun sürdü. Biraz sonra tekrar deneyin."
+  )
+}
+
 type OnboardingFlowProps = {
   user: AuthUser
   initialStatus: OnboardingStatus
@@ -186,7 +241,7 @@ type OnboardingFlowProps = {
 
 function getInitialStep(status: OnboardingStatus) {
   if (status.stage === "PREFERENCES") return 3
-  if (status.stage === "CHANNEL") return 2
+  if (status.stage === "CHANNEL" || status.stage === "SYNCING") return 2
   return 1
 }
 
@@ -213,10 +268,22 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
   const [currentStep, setCurrentStep] = React.useState(initialStep)
   const [direction, setDirection] = React.useState(1)
   const [furthestStep, setFurthestStep] = React.useState(initialStep)
-  const [isProvisioning, setIsProvisioning] = React.useState(false)
+  const [isProvisioning, setIsProvisioning] = React.useState(
+    initialStatus.stage === "SYNCING"
+  )
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [syncProgress, setSyncProgress] = React.useState(0)
-  const [submitError, setSubmitError] = React.useState<string | null>(null)
+  const [syncProgress, setSyncProgress] = React.useState(
+    initialStatus.catalogSync?.progress ?? 0
+  )
+  const [submitError, setSubmitError] = React.useState<string | null>(() =>
+    initialStatus.catalogSync?.status === "FAILED"
+      ? (initialStatus.catalogSync.errorMessage ??
+        "İlk katalog senkronizasyonu tamamlanamadı. Bilgilerinizi kontrol edip tekrar deneyin.")
+      : null
+  )
+  const syncAbortControllerRef = React.useRef<AbortController | null>(null)
+
+  React.useEffect(() => () => syncAbortControllerRef.current?.abort(), [])
   const [provisionedStore, setProvisionedStore] =
     React.useState<OnboardingResource | null>(
       initialStatus.stage === "PREFERENCES" ? initialStatus.store : null
@@ -259,14 +326,55 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
         : Boolean(provisionedStore)
 
   React.useEffect(() => {
-    if (!isProvisioning) return
+    const catalogSync = initialStatus.catalogSync
+    const store = initialStatus.store
 
-    const interval = window.setInterval(() => {
-      setSyncProgress((current) => Math.min(current + 6, 90))
-    }, 320)
+    if (
+      initialStatus.stage !== "SYNCING" ||
+      !catalogSync ||
+      catalogSync.status !== "RUNNING" ||
+      !store
+    ) {
+      return
+    }
 
-    return () => window.clearInterval(interval)
-  }, [isProvisioning])
+    const controller = new AbortController()
+    syncAbortControllerRef.current = controller
+
+    void waitForCatalogSync(
+      store.id,
+      catalogSync.syncRunId,
+      (nextProgress) => setSyncProgress(nextProgress),
+      controller.signal
+    )
+      .then(() => {
+        if (controller.signal.aborted) return
+
+        setSyncProgress(100)
+        setProvisionedStore(store)
+        setDirection(1)
+        setCurrentStep(3)
+        setFurthestStep(3)
+        setSubmitError(null)
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return
+
+        setSubmitError(
+          error instanceof Error
+            ? error.message
+            : "İlk katalog senkronizasyonu tamamlanamadı. Lütfen tekrar deneyin."
+        )
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsProvisioning(false)
+        if (syncAbortControllerRef.current === controller) {
+          syncAbortControllerRef.current = null
+        }
+      })
+
+    return () => controller.abort()
+  }, [initialStatus.catalogSync, initialStatus.stage, initialStatus.store])
 
   const updateProfile = <Key extends keyof StoreKnowledge["profile"]>(
     key: Key,
@@ -348,10 +456,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
     setSubmitError(null)
 
     try {
-      const minimumProgressDuration = new Promise((resolve) =>
-        window.setTimeout(resolve, 4_500)
-      )
-      const onboardingRequest = provisionOnboarding({
+      const result = await provisionOnboarding({
         storeName: storeName.trim(),
         selectedChannel: selectedChannel.toUpperCase() as OnboardingChannel,
         environment: "PRODUCTION",
@@ -360,10 +465,16 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
         tone: profileDraft.tone,
         responseLength: profileDraft.responseLength,
       })
-      const [result] = await Promise.all([
-        onboardingRequest,
-        minimumProgressDuration,
-      ])
+
+      const controller = new AbortController()
+      syncAbortControllerRef.current = controller
+
+      await waitForCatalogSync(
+        result.store.id,
+        result.catalogSync.syncRunId,
+        (nextProgress) => setSyncProgress(nextProgress),
+        controller.signal
+      )
 
       setSyncProgress(100)
       setProvisionedStore(result.store)
@@ -376,6 +487,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
           : "Kanal bağlanamadı. Bilgilerinizi kontrol edip tekrar deneyin."
       )
     } finally {
+      syncAbortControllerRef.current = null
       setIsProvisioning(false)
     }
   }

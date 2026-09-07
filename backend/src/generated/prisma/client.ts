@@ -105,6 +105,11 @@ export type ChannelConnection = Prisma.ChannelConnectionModel
  */
 export type Product = Prisma.ProductModel
 /**
+ * Model ProductIdentity
+ * 
+ */
+export type ProductIdentity = Prisma.ProductIdentityModel
+/**
  * Model ProductVariant
  * 
  */
