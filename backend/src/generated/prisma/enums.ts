@@ -274,3 +274,26 @@ export const StoreRole = {
 } as const
 
 export type StoreRole = (typeof StoreRole)[keyof typeof StoreRole]
+
+
+export const NotificationType = {
+  AI_REVIEW_REQUIRED: 'AI_REVIEW_REQUIRED',
+  AI_DRAFT_FAILED: 'AI_DRAFT_FAILED',
+  ANSWER_DELIVERY_FAILED: 'ANSWER_DELIVERY_FAILED',
+  PRODUCT_SYNC_FAILED: 'PRODUCT_SYNC_FAILED',
+  QUESTION_SYNC_FAILED: 'QUESTION_SYNC_FAILED',
+  LOW_STOCK: 'LOW_STOCK',
+  OUT_OF_STOCK: 'OUT_OF_STOCK',
+  CHANNEL_CONNECTION_ERROR: 'CHANNEL_CONNECTION_ERROR'
+} as const
+
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType]
+
+
+export const NotificationSeverity = {
+  INFO: 'INFO',
+  WARNING: 'WARNING',
+  ERROR: 'ERROR'
+} as const
+
+export type NotificationSeverity = (typeof NotificationSeverity)[keyof typeof NotificationSeverity]

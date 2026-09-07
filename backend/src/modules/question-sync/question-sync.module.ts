@@ -1,6 +1,8 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { IntegrationsModule } from '../integrations/integrations.module';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { QuestionProductLinkModule } from '../question-product-link/question-product-link.module';
 import { QuestionDraftModule } from '../questions/question-draft.module';
 import {
   QUESTION_SYNC_DISPATCHER,
@@ -14,6 +16,8 @@ import { QuestionSyncWorkerService } from './question-sync-worker.service';
 @Module({
   imports: [
     IntegrationsModule,
+    NotificationsModule,
+    QuestionProductLinkModule,
     QuestionDraftModule,
     BullModule.registerQueue({ name: QUESTION_SYNC_QUEUE }),
   ],

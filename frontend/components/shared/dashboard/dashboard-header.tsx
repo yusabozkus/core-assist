@@ -2,7 +2,6 @@
 
 import {
   ChevronRightIcon,
-  Notification01Icon,
   RefreshIcon,
   Search01Icon,
 } from "@hugeicons/core-free-icons"
@@ -21,6 +20,7 @@ import {
 } from "@/components/ui/tooltip"
 import { APP_ROUTES, getDashboardBreadcrumbs } from "@/constants/site"
 import { GlobalSearch } from "@/components/shared/dashboard/global-search"
+import { NotificationCenter } from "@/components/shared/dashboard/notification-center"
 import { getChannelConnections } from "@/lib/api/channels"
 import {
   getDashboardSyncState,
@@ -241,19 +241,7 @@ function DashboardHeaderContent({
 
               <SyncStatusLink state={liveSyncState} />
 
-              <Button
-                asChild
-                variant="outline"
-                size="icon-sm"
-                className="bg-card shadow-xs"
-              >
-                <Link
-                  href={APP_ROUTES.dashboard.settings.notifications}
-                  aria-label="Bildirimler"
-                >
-                  <HugeiconsIcon icon={Notification01Icon} className="size-4" />
-                </Link>
-              </Button>
+              <NotificationCenter storeId={storeId} />
             </>
           )}
         </div>

@@ -1,9 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import {
   CatalogSyncStatus,
+  AiAutomationMode,
   ChannelConnectionStatus,
   ExternalEntityStatus,
+  NotificationSeverity,
+  NotificationType,
   ProductIdentityType,
   ProductStatus,
   ProductVariantStatus,
@@ -17,7 +20,12 @@ import type {
   NormalizedProductVariant,
 } from '../channels/providers/catalog-connector';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
+import { isProviderAuthenticationError } from '../channels/providers/connector-utils';
 import { SizeGuideDispatcher } from '../size-guides/size-guide.types';
+import { NotificationsService } from '../notifications/notifications.service';
+import { QuestionProductLinkService } from '../question-product-link/question-product-link.service';
+import { QUESTION_DRAFT_DISPATCHER } from '../questions/question-draft.constants';
+import type { QuestionDraftDispatcher } from '../questions/question-draft.types';
 import { PRODUCT_SYNC_MAX_BATCHES } from './product-sync.constants';
 import type { ProductSyncJobData } from './product-sync.types';
 
@@ -37,10 +45,17 @@ type SyncCounters = {
   productsUnchanged: number;
   variantsUpdated: number;
   variantsUnchanged: number;
+  lowStockAlerts: number;
+  outOfStockAlerts: number;
 };
 
 type ProductChange = 'CREATED' | 'UPDATED' | 'UNCHANGED';
 type InventoryChange = 'UPDATED' | 'UNCHANGED';
+type StockAlert = 'LOW_STOCK' | 'OUT_OF_STOCK';
+type InventoryUpdateResult = {
+  change: InventoryChange;
+  stockAlert: StockAlert | null;
+};
 type ProductIdentityCandidate = {
   type: ProductIdentityType;
   value: string;
@@ -55,6 +70,10 @@ export class ProductSyncWorkerService {
     private readonly providers: ProviderRegistryService,
     private readonly encryption: CredentialsEncryptionService,
     private readonly sizeGuides: SizeGuideDispatcher,
+    private readonly notifications: NotificationsService,
+    private readonly productLinks: QuestionProductLinkService,
+    @Inject(QUESTION_DRAFT_DISPATCHER)
+    private readonly questionDrafts: QuestionDraftDispatcher,
   ) {}
 
   async run(
@@ -107,7 +126,12 @@ export class ProductSyncWorkerService {
             updateProgress,
           );
 
+    if (data.kind === 'FULL') {
+      await this.reconcileQuestionProductLinks(data, updateProgress);
+    }
+
     await this.completeSync(data, counters);
+    await this.notifyInventoryAlerts(data, counters);
     await updateProgress(100);
   }
 
@@ -116,8 +140,9 @@ export class ProductSyncWorkerService {
       error instanceof Error
         ? error.message
         : 'Ürün senkronizasyonu başarısız.';
+    const authenticationError = isProviderAuthenticationError(error);
     const connectionData =
-      data.kind === 'FULL'
+      data.kind === 'FULL' || authenticationError
         ? {
             status: ChannelConnectionStatus.ERROR,
             processingStartedAt: null,
@@ -144,6 +169,30 @@ export class ProductSyncWorkerService {
         data: connectionData,
       }),
     ]);
+
+    const inventorySync = data.kind === 'INVENTORY';
+    await this.notifications.createForStoreMembers({
+      storeId: data.storeId,
+      type: NotificationType.PRODUCT_SYNC_FAILED,
+      severity: NotificationSeverity.ERROR,
+      title: inventorySync
+        ? 'Stok senkronizasyonu başarısız'
+        : 'Ürün senkronizasyonu başarısız',
+      message: inventorySync
+        ? 'Pazaryerindeki güncel stok bilgileri alınamadı. Senkronizasyon geçmişini inceleyin.'
+        : 'Pazaryerindeki ürünler güncellenemedi. Senkronizasyon geçmişini inceleyin.',
+      actionUrl: `/dashboard/channels/sync?status=failed&kind=${data.kind.toLowerCase()}`,
+      entityType: 'CATALOG_SYNC_RUN',
+      entityId: data.syncRunId,
+      dedupeKey: `product-sync-failed:${data.connectionId}:${data.kind}`,
+    });
+
+    if (authenticationError) {
+      await this.notifications.createChannelConnectionError(
+        data.storeId,
+        data.connectionId,
+      );
+    }
   }
 
   private async syncFullCatalog(
@@ -220,6 +269,8 @@ export class ProductSyncWorkerService {
       productsUnchanged,
       variantsUpdated: 0,
       variantsUnchanged: 0,
+      lowStockAlerts: 0,
+      outOfStockAlerts: 0,
     };
   }
 
@@ -234,6 +285,8 @@ export class ProductSyncWorkerService {
     let batchCount = 0;
     let variantsUpdated = 0;
     let variantsUnchanged = 0;
+    let lowStockAlerts = 0;
+    let outOfStockAlerts = 0;
 
     do {
       const batch = await this.providers.fetchInventory(
@@ -243,13 +296,15 @@ export class ProductSyncWorkerService {
       );
 
       for (const variant of batch.variants) {
-        const change = await this.updateInventoryVariant(
+        const result = await this.updateInventoryVariant(
           connection.id,
           variant,
         );
-        if (change) variantsProcessed += 1;
-        if (change === 'UPDATED') variantsUpdated += 1;
-        if (change === 'UNCHANGED') variantsUnchanged += 1;
+        if (result) variantsProcessed += 1;
+        if (result?.change === 'UPDATED') variantsUpdated += 1;
+        if (result?.change === 'UNCHANGED') variantsUnchanged += 1;
+        if (result?.stockAlert === 'LOW_STOCK') lowStockAlerts += 1;
+        if (result?.stockAlert === 'OUT_OF_STOCK') outOfStockAlerts += 1;
       }
 
       cursor = batch.nextCursor;
@@ -279,6 +334,8 @@ export class ProductSyncWorkerService {
       productsUnchanged: 0,
       variantsUpdated,
       variantsUnchanged,
+      lowStockAlerts,
+      outOfStockAlerts,
     };
   }
 
@@ -787,6 +844,10 @@ export class ProductSyncWorkerService {
       )
         ? 'UNCHANGED'
         : 'UPDATED';
+      const stockAlert = getStockAlert(
+        externalVariant.productVariant.stock,
+        normalized.stock,
+      );
 
       const syncedAt = new Date();
       const inventoryData = {
@@ -833,8 +894,43 @@ export class ProductSyncWorkerService {
         data: { status: ProductStatus.ACTIVE },
       });
 
-      return change;
+      return { change, stockAlert } satisfies InventoryUpdateResult;
     });
+  }
+
+  private async notifyInventoryAlerts(
+    data: ProductSyncJobData,
+    counters: SyncCounters,
+  ) {
+    if (data.kind !== 'INVENTORY') return;
+
+    if (counters.outOfStockAlerts > 0) {
+      await this.notifications.createForStoreMembers({
+        storeId: data.storeId,
+        type: NotificationType.OUT_OF_STOCK,
+        severity: NotificationSeverity.ERROR,
+        title: 'Stoku tükenen varyantlar var',
+        message: `${counters.outOfStockAlerts} varyantın stoğu son kontrolde tükendi. Stok takibi sayfasını inceleyin.`,
+        actionUrl: '/dashboard/catalog/inventory?status=out_of_stock',
+        entityType: 'CATALOG_SYNC_RUN',
+        entityId: data.syncRunId,
+        dedupeKey: `out-of-stock:${data.syncRunId}`,
+      });
+    }
+
+    if (counters.lowStockAlerts > 0) {
+      await this.notifications.createForStoreMembers({
+        storeId: data.storeId,
+        type: NotificationType.LOW_STOCK,
+        severity: NotificationSeverity.WARNING,
+        title: 'Kritik stok seviyesine düşen varyantlar var',
+        message: `${counters.lowStockAlerts} varyantın stoğu 5 adet veya altına düştü. Stok takibi sayfasını inceleyin.`,
+        actionUrl: '/dashboard/catalog/inventory?status=low_stock',
+        entityType: 'CATALOG_SYNC_RUN',
+        entityId: data.syncRunId,
+        dedupeKey: `low-stock:${data.syncRunId}`,
+      });
+    }
   }
 
   private async reconcileMissingProducts(
@@ -957,6 +1053,51 @@ export class ProductSyncWorkerService {
       }),
     ]);
   }
+
+  private async reconcileQuestionProductLinks(
+    data: ProductSyncJobData,
+    updateProgress: (progress: number) => Promise<void>,
+  ) {
+    await this.prisma.catalogSyncRun.updateMany({
+      where: { id: data.syncRunId, connectionId: data.connectionId },
+      data: { stage: 'RECONCILING', progress: 90 },
+    });
+    await updateProgress(90);
+
+    const recoveredQuestions =
+      await this.productLinks.reconcilePendingQuestions(
+        data.storeId,
+        data.connectionId,
+      );
+
+    if (recoveredQuestions.length === 0) return;
+
+    const knowledgeProfile = await this.prisma.storeKnowledgeProfile.findUnique(
+      {
+        where: { storeId: data.storeId },
+        select: { automationMode: true },
+      },
+    );
+    const automaticDraftsEnabled =
+      knowledgeProfile?.automationMode === AiAutomationMode.SHADOW ||
+      knowledgeProfile?.automationMode === AiAutomationMode.SAFE_AUTO;
+
+    if (!automaticDraftsEnabled) return;
+
+    for (const questionId of recoveredQuestions) {
+      try {
+        await this.questionDrafts.enqueue(data.storeId, questionId);
+      } catch (error) {
+        this.logger.warn(
+          `Recovered question ${questionId} could not be queued for an AI draft: ${errorMessage(error)}`,
+        );
+      }
+    }
+  }
+}
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function isSameProductSnapshot(
@@ -994,6 +1135,19 @@ function isSameInventorySnapshot(
     (!normalized.currency || existing.currency === normalized.currency) &&
     (normalized.stock === undefined || existing.stock === normalized.stock)
   );
+}
+
+function getStockAlert(
+  previousStock: number,
+  currentStock: number | undefined,
+): StockAlert | null {
+  if (currentStock === undefined || currentStock === previousStock) return null;
+  if (previousStock > 0 && currentStock === 0) return 'OUT_OF_STOCK';
+  if (previousStock > 5 && currentStock > 0 && currentStock <= 5) {
+    return 'LOW_STOCK';
+  }
+
+  return null;
 }
 
 function uniqueAttributes(attributes: Array<{ name: string; value: string }>) {

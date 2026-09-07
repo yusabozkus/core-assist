@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
   AiAutomationMode,
+  NotificationSeverity,
+  NotificationType,
   ProductQuestionStatus,
   QuestionAnswerStatus,
   QuestionDraftProcessingStatus,
@@ -9,6 +11,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { QUESTION_ANSWER_DISPATCHER } from '../question-answer/question-answer.constants';
 import type { QuestionAnswerDispatcher } from '../question-answer/question-answer.types';
+import { NotificationsService } from '../notifications/notifications.service';
 import { QuestionDraftService } from './question-draft.service';
 import type { QuestionDraftJobData } from './question-draft.types';
 
@@ -19,6 +22,7 @@ export class QuestionDraftWorkerService {
     private readonly drafts: QuestionDraftService,
     @Inject(QUESTION_ANSWER_DISPATCHER)
     private readonly answers: QuestionAnswerDispatcher,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async run(data: QuestionDraftJobData) {
@@ -111,6 +115,24 @@ export class QuestionDraftWorkerService {
     });
 
     if (
+      result.status === 'DRAFTED' &&
+      result.context.decision === 'NEEDS_REVIEW'
+    ) {
+      await this.notifications.createForStoreMembers({
+        storeId: data.storeId,
+        type: NotificationType.AI_REVIEW_REQUIRED,
+        severity: NotificationSeverity.WARNING,
+        title: 'Yanıt incelemeniz gerekiyor',
+        message:
+          'AI bu soru için güvenli bir otomatik gönderim kararı veremedi. Hazırlanan taslağı inceleyin.',
+        actionUrl: `/dashboard/inbox?question=${data.questionId}`,
+        entityType: 'PRODUCT_QUESTION',
+        entityId: data.questionId,
+        dedupeKey: `ai-review-required:${data.questionId}`,
+      });
+    }
+
+    if (
       automationMode !== AiAutomationMode.SAFE_AUTO ||
       result.status !== 'DRAFTED' ||
       result.context.decision !== 'READY_FOR_SEND' ||
@@ -133,7 +155,7 @@ export class QuestionDraftWorkerService {
     const message =
       error instanceof Error ? error.message : 'AI taslağı oluşturulamadı.';
 
-    await this.prisma.productQuestion.updateMany({
+    const updated = await this.prisma.productQuestion.updateMany({
       where: {
         id: data.questionId,
         storeId: data.storeId,
@@ -151,6 +173,21 @@ export class QuestionDraftWorkerService {
         draftProcessingStartedAt: null,
       },
     });
+
+    if (updated.count > 0) {
+      await this.notifications.createForStoreMembers({
+        storeId: data.storeId,
+        type: NotificationType.AI_DRAFT_FAILED,
+        severity: NotificationSeverity.ERROR,
+        title: 'AI taslağı oluşturulamadı',
+        message:
+          'Ürün sorusu için taslak hazırlanamadı. Soruyu inceleyip taslağı yeniden oluşturabilirsiniz.',
+        actionUrl: `/dashboard/inbox?question=${data.questionId}`,
+        entityType: 'PRODUCT_QUESTION',
+        entityId: data.questionId,
+        dedupeKey: `ai-draft-failed:${data.questionId}`,
+      });
+    }
   }
 
   private async enqueueAutomaticAnswer(

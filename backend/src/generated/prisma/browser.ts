@@ -147,3 +147,23 @@ export type QuestionAnswer = Prisma.QuestionAnswerModel
  * 
  */
 export type StoreMember = Prisma.StoreMemberModel
+/**
+ * Model Notification
+ * 
+ */
+export type Notification = Prisma.NotificationModel
+/**
+ * Model NotificationPreference
+ * 
+ */
+export type NotificationPreference = Prisma.NotificationPreferenceModel
+/**
+ * Model NotificationDeliverySetting
+ * 
+ */
+export type NotificationDeliverySetting = Prisma.NotificationDeliverySettingModel
+/**
+ * Model WebPushSubscription
+ * 
+ */
+export type WebPushSubscription = Prisma.WebPushSubscriptionModel

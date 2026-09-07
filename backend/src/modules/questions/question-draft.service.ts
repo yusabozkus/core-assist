@@ -31,6 +31,7 @@ import type {
   DraftQuestionAnswer,
   ProductAnswerContext,
 } from './product-answer-context.types';
+import { QuestionProductLinkService } from '../question-product-link/question-product-link.service';
 import { QuestionResponsePolicyService } from './question-response-policy.service';
 import { QuestionReplyDecisionService } from './question-reply-decision.service';
 import {
@@ -54,6 +55,7 @@ export class QuestionDraftService {
     private readonly aiDrafts: AiDraftGenerator,
     private readonly responsePolicy: QuestionResponsePolicyService,
     private readonly replyDecision: QuestionReplyDecisionService,
+    private readonly productLinks: QuestionProductLinkService,
   ) {}
 
   async generate(
@@ -139,6 +141,7 @@ export class QuestionDraftService {
       };
     }
 
+    await this.productLinks.linkQuestionIfPossible(storeId, questionId);
     let context = await this.productContext.build(storeId, questionId);
     let inventorySnapshotHash: string | null = null;
     let inventoryCheckAttempted = false;

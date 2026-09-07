@@ -27,6 +27,10 @@ const apiUrl = (
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001"
 ).replace(/\/$/, "")
 
+export function getApiUrl(path: string) {
+  return `${apiUrl}${path}`
+}
+
 export async function apiFetch<T>(
   path: string,
   init: RequestInit = {}

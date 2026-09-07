@@ -76,7 +76,11 @@ export const ModelName = {
   ProductQuestion: 'ProductQuestion',
   AiDraftAttempt: 'AiDraftAttempt',
   QuestionAnswer: 'QuestionAnswer',
-  StoreMember: 'StoreMember'
+  StoreMember: 'StoreMember',
+  Notification: 'Notification',
+  NotificationPreference: 'NotificationPreference',
+  NotificationDeliverySetting: 'NotificationDeliverySetting',
+  WebPushSubscription: 'WebPushSubscription'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -560,6 +564,72 @@ export const StoreMemberScalarFieldEnum = {
 } as const
 
 export type StoreMemberScalarFieldEnum = (typeof StoreMemberScalarFieldEnum)[keyof typeof StoreMemberScalarFieldEnum]
+
+
+export const NotificationScalarFieldEnum = {
+  id: 'id',
+  recipientUserId: 'recipientUserId',
+  storeId: 'storeId',
+  type: 'type',
+  severity: 'severity',
+  title: 'title',
+  message: 'message',
+  actionUrl: 'actionUrl',
+  entityType: 'entityType',
+  entityId: 'entityId',
+  dedupeKey: 'dedupeKey',
+  occurrenceCount: 'occurrenceCount',
+  readAt: 'readAt',
+  lastOccurredAt: 'lastOccurredAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
+
+
+export const NotificationPreferenceScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  storeId: 'storeId',
+  type: 'type',
+  enabled: 'enabled',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type NotificationPreferenceScalarFieldEnum = (typeof NotificationPreferenceScalarFieldEnum)[keyof typeof NotificationPreferenceScalarFieldEnum]
+
+
+export const NotificationDeliverySettingScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  storeId: 'storeId',
+  browserEnabled: 'browserEnabled',
+  emailEnabled: 'emailEnabled',
+  quietHoursEnabled: 'quietHoursEnabled',
+  quietHoursStart: 'quietHoursStart',
+  quietHoursEnd: 'quietHoursEnd',
+  timezone: 'timezone',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type NotificationDeliverySettingScalarFieldEnum = (typeof NotificationDeliverySettingScalarFieldEnum)[keyof typeof NotificationDeliverySettingScalarFieldEnum]
+
+
+export const WebPushSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  p256dh: 'p256dh',
+  auth: 'auth',
+  userAgent: 'userAgent',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WebPushSubscriptionScalarFieldEnum = (typeof WebPushSubscriptionScalarFieldEnum)[keyof typeof WebPushSubscriptionScalarFieldEnum]
 
 
 export const SortOrder = {

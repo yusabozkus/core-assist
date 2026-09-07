@@ -99,3 +99,10 @@ export async function readProviderError(response: Response): Promise<string> {
 
   return `Provider request failed with status ${response.status}: ${body.slice(0, 300)}`;
 }
+
+export function isProviderAuthenticationError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /(?:status\s*(?:401|403)|unauthori[sz]ed|forbidden|authentication|invalid credentials?)/i.test(
+    message,
+  );
+}

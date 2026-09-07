@@ -2,6 +2,9 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { IntegrationsModule } from '../integrations/integrations.module';
 import { SizeGuideModule } from '../size-guides/size-guide.module';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { QuestionProductLinkModule } from '../question-product-link/question-product-link.module';
+import { QuestionDraftModule } from '../questions/question-draft.module';
 import {
   PRODUCT_SYNC_DISPATCHER,
   PRODUCT_SYNC_QUEUE,
@@ -15,6 +18,9 @@ import { ProductSyncWorkerService } from './product-sync-worker.service';
   imports: [
     IntegrationsModule,
     SizeGuideModule,
+    NotificationsModule,
+    QuestionProductLinkModule,
+    QuestionDraftModule,
     BullModule.registerQueue({ name: PRODUCT_SYNC_QUEUE }),
   ],
   providers: [

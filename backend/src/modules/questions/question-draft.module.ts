@@ -2,7 +2,9 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { AiModule } from '../ai/ai.module';
 import { InventoryVerificationModule } from '../inventory-verification/inventory-verification.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { QuestionAnswerModule } from '../question-answer/question-answer.module';
+import { QuestionProductLinkModule } from '../question-product-link/question-product-link.module';
 import {
   QUESTION_DRAFT_DISPATCHER,
   QUESTION_DRAFT_QUEUE,
@@ -19,7 +21,9 @@ import { QuestionResponsePolicyService } from './question-response-policy.servic
   imports: [
     AiModule,
     InventoryVerificationModule,
+    NotificationsModule,
     QuestionAnswerModule,
+    QuestionProductLinkModule,
     BullModule.registerQueue({ name: QUESTION_DRAFT_QUEUE }),
   ],
   providers: [

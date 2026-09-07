@@ -21,6 +21,7 @@ import { PRODUCT_SYNC_DISPATCHER } from '../product-sync/product-sync.constants'
 import type { ProductSyncDispatcher } from '../product-sync/product-sync.types';
 import { QUESTION_SYNC_DISPATCHER } from '../question-sync/question-sync.constants';
 import type { QuestionSyncDispatcher } from '../question-sync/question-sync.types';
+import { NotificationsService } from '../notifications/notifications.service';
 import { channelConnectionSelect } from './channel.constants';
 import { CredentialsEncryptionService } from './credentials-encryption.service';
 import { ConfigureChannelConnectionDto } from './dto/configure-channel-connection.dto';
@@ -43,6 +44,7 @@ export class ChannelsService {
     private readonly productSyncQueue: ProductSyncDispatcher,
     @Inject(QUESTION_SYNC_DISPATCHER)
     private readonly questionSyncQueue: QuestionSyncDispatcher,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async findAvailableProviders(storeId: string, userId: string) {
@@ -477,10 +479,29 @@ export class ChannelsService {
     const credentials = this.encryption.decrypt(
       connection.credentialsEncrypted,
     );
-    await this.providers.verifyCredentials(connection.providerKey, {
-      environment: connection.environment,
-      credentials,
-    });
+    try {
+      await this.providers.verifyCredentials(connection.providerKey, {
+        environment: connection.environment,
+        credentials,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Kanal bağlantısı doğrulanamadı.';
+      await this.prisma.channelConnection.updateMany({
+        where: { id: connectionId, storeId },
+        data: {
+          status: ChannelConnectionStatus.ERROR,
+          failureReason: message.slice(0, 1_000),
+        },
+      });
+      await this.notifications.createChannelConnectionError(
+        storeId,
+        connectionId,
+      );
+      throw error;
+    }
 
     return this.prisma.channelConnection.update({
       where: { id: connectionId },

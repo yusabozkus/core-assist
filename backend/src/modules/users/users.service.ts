@@ -128,6 +128,58 @@ export class UsersService {
             expiresAt: true,
           },
         },
+        notifications: {
+          orderBy: { lastOccurredAt: 'desc' },
+          select: {
+            id: true,
+            storeId: true,
+            type: true,
+            severity: true,
+            title: true,
+            message: true,
+            actionUrl: true,
+            entityType: true,
+            entityId: true,
+            occurrenceCount: true,
+            readAt: true,
+            lastOccurredAt: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+        notificationPreferences: {
+          orderBy: [{ storeId: 'asc' }, { type: 'asc' }],
+          select: {
+            storeId: true,
+            type: true,
+            enabled: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+        notificationDeliverySettings: {
+          orderBy: { storeId: 'asc' },
+          select: {
+            storeId: true,
+            browserEnabled: true,
+            emailEnabled: true,
+            quietHoursEnabled: true,
+            quietHoursStart: true,
+            quietHoursEnd: true,
+            timezone: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+        webPushSubscriptions: {
+          orderBy: { createdAt: 'asc' },
+          select: {
+            endpoint: true,
+            userAgent: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
         workspaceMembers: {
           select: {
             role: true,

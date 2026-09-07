@@ -5,6 +5,8 @@ import {
   ChannelConnectionStatus,
   IncomingEventProcessingStatus,
   IncomingEventType,
+  NotificationSeverity,
+  NotificationType,
   ProductQuestionStatus,
   StoreStatus,
 } from '../../generated/prisma/enums';
@@ -12,7 +14,10 @@ import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { CredentialsEncryptionService } from '../channels/credentials-encryption.service';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
+import { isProviderAuthenticationError } from '../channels/providers/connector-utils';
 import type { NormalizedProductQuestion } from '../channels/providers/question-connector';
+import { NotificationsService } from '../notifications/notifications.service';
+import { QuestionProductLinkService } from '../question-product-link/question-product-link.service';
 import { evaluateQuestionResponsePolicy } from '../questions/question-response-policy.service';
 import { QUESTION_DRAFT_DISPATCHER } from '../questions/question-draft.constants';
 import type { QuestionDraftDispatcher } from '../questions/question-draft.types';
@@ -36,6 +41,8 @@ export class QuestionSyncWorkerService {
     private readonly encryption: CredentialsEncryptionService,
     @Inject(QUESTION_DRAFT_DISPATCHER)
     private readonly questionDrafts: QuestionDraftDispatcher,
+    private readonly notifications: NotificationsService,
+    private readonly productLinks: QuestionProductLinkService,
   ) {}
 
   async run(data: QuestionSyncJobData) {
@@ -175,6 +182,8 @@ export class QuestionSyncWorkerService {
         ? error.message
         : 'Soru senkronizasyonu tamamlanamadı.';
 
+    const authenticationError = isProviderAuthenticationError(error);
+
     await this.prisma.$transaction([
       this.prisma.catalogSyncRun.updateMany({
         where: { id: data.syncRunId, connectionId: data.connectionId },
@@ -189,11 +198,37 @@ export class QuestionSyncWorkerService {
       this.prisma.channelConnection.updateMany({
         where: { id: data.connectionId, storeId: data.storeId },
         data: {
+          ...(authenticationError
+            ? {
+                status: ChannelConnectionStatus.ERROR,
+                failureReason: message,
+              }
+            : {}),
           questionSyncStartedAt: null,
           questionSyncFailureReason: message,
         },
       }),
     ]);
+
+    await this.notifications.createForStoreMembers({
+      storeId: data.storeId,
+      type: NotificationType.QUESTION_SYNC_FAILED,
+      severity: NotificationSeverity.ERROR,
+      title: 'Soru senkronizasyonu başarısız',
+      message:
+        'Pazaryerinden yeni ürün soruları alınamadı. Senkronizasyon geçmişini inceleyin.',
+      actionUrl: '/dashboard/channels/sync?status=failed&kind=question',
+      entityType: 'CATALOG_SYNC_RUN',
+      entityId: data.syncRunId,
+      dedupeKey: `question-sync-failed:${data.connectionId}`,
+    });
+
+    if (authenticationError) {
+      await this.notifications.createChannelConnectionError(
+        data.storeId,
+        data.connectionId,
+      );
+    }
   }
 
   private async removeLegacyMockQuestions(connection: QuestionSyncConnection) {
@@ -253,6 +288,13 @@ export class QuestionSyncWorkerService {
           select: { id: true, status: true },
         });
 
+        if (existingQuestion) {
+          await this.productLinks.linkQuestionIfPossible(
+            connection.storeId,
+            existingQuestion.id,
+          );
+        }
+
         return existingQuestion
           ? { ...existingQuestion, isNew: false as const }
           : null;
@@ -273,7 +315,7 @@ export class QuestionSyncWorkerService {
     }
 
     try {
-      const externalProduct = await this.resolveExternalProduct(
+      const externalProduct = await this.productLinks.resolveExternalProduct(
         connection.id,
         question.externalProductId,
       );
@@ -327,67 +369,6 @@ export class QuestionSyncWorkerService {
       });
       throw error;
     }
-  }
-
-  private async resolveExternalProduct(
-    connectionId: string,
-    externalProductId: string,
-  ) {
-    const exactProduct = await this.prisma.externalProduct.findUnique({
-      where: {
-        connectionId_externalId: {
-          connectionId,
-          externalId: externalProductId,
-        },
-      },
-      select: {
-        id: true,
-        productId: true,
-        product: {
-          select: {
-            title: true,
-            images: {
-              orderBy: { position: 'asc' },
-              take: 1,
-              select: { url: true },
-            },
-          },
-        },
-      },
-    });
-
-    if (exactProduct) return exactProduct;
-
-    const matchedVariant = await this.prisma.externalProductVariant.findFirst({
-      where: {
-        externalProduct: { connectionId },
-        OR: [
-          { externalId: externalProductId },
-          { sku: externalProductId },
-          { barcode: externalProductId },
-        ],
-      },
-      select: {
-        externalProduct: {
-          select: {
-            id: true,
-            productId: true,
-            product: {
-              select: {
-                title: true,
-                images: {
-                  orderBy: { position: 'asc' },
-                  take: 1,
-                  select: { url: true },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    return matchedVariant?.externalProduct ?? null;
   }
 }
 

@@ -9,21 +9,25 @@ generator client {
 }
 
 model User {
-  id                       String            @id @default(uuid())
-  name                     String
-  email                    String            @unique
-  emailVerified            Boolean           @default(false)
-  image                    String?
-  onboardingCompletedAt    DateTime?
-  createdAt                DateTime          @default(now())
-  updatedAt                DateTime          @updatedAt
-  sessions                 Session[]
-  accounts                 Account[]
-  ownedWorkspaces          Workspace[]       @relation("WorkspaceOwner")
-  workspaceMembers         WorkspaceMember[]
-  storeMembers             StoreMember[]
-  requestedQuestionAnswers QuestionAnswer[]  @relation("QuestionAnswerRequester")
-  requestedAiDrafts        AiDraftAttempt[]  @relation("AiDraftRequester")
+  id                           String                        @id @default(uuid())
+  name                         String
+  email                        String                        @unique
+  emailVerified                Boolean                       @default(false)
+  image                        String?
+  onboardingCompletedAt        DateTime?
+  createdAt                    DateTime                      @default(now())
+  updatedAt                    DateTime                      @updatedAt
+  sessions                     Session[]
+  accounts                     Account[]
+  ownedWorkspaces              Workspace[]                   @relation("WorkspaceOwner")
+  workspaceMembers             WorkspaceMember[]
+  storeMembers                 StoreMember[]
+  requestedQuestionAnswers     QuestionAnswer[]              @relation("QuestionAnswerRequester")
+  requestedAiDrafts            AiDraftAttempt[]              @relation("AiDraftRequester")
+  notifications                Notification[]
+  notificationPreferences      NotificationPreference[]
+  notificationDeliverySettings NotificationDeliverySetting[]
+  webPushSubscriptions         WebPushSubscription[]
 
   @@map("user")
 }
@@ -117,19 +121,22 @@ model Store {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  workspace          Workspace                  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  members            StoreMember[]
-  channelConnections ChannelConnection[]
-  products           Product[]
-  productIdentities  ProductIdentity[]
-  incomingEvents     IncomingEvent[]
-  productQuestions   ProductQuestion[]
-  questionAnswers    QuestionAnswer[]
-  aiDraftAttempts    AiDraftAttempt[]
-  knowledgeProfile   StoreKnowledgeProfile?
-  knowledgeFaqs      StoreKnowledgeFaq[]
-  aiInstructions     StoreAiInstruction[]
-  channelKnowledge   ChannelKnowledgeOverride[]
+  workspace                    Workspace                     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members                      StoreMember[]
+  channelConnections           ChannelConnection[]
+  products                     Product[]
+  productIdentities            ProductIdentity[]
+  incomingEvents               IncomingEvent[]
+  productQuestions             ProductQuestion[]
+  questionAnswers              QuestionAnswer[]
+  aiDraftAttempts              AiDraftAttempt[]
+  knowledgeProfile             StoreKnowledgeProfile?
+  knowledgeFaqs                StoreKnowledgeFaq[]
+  aiInstructions               StoreAiInstruction[]
+  channelKnowledge             ChannelKnowledgeOverride[]
+  notifications                Notification[]
+  notificationPreferences      NotificationPreference[]
+  notificationDeliverySettings NotificationDeliverySetting[]
 
   @@map("store")
 }
@@ -770,4 +777,102 @@ enum StoreRole {
   ADMIN
   AGENT
   VIEWER
+}
+
+enum NotificationType {
+  AI_REVIEW_REQUIRED
+  AI_DRAFT_FAILED
+  ANSWER_DELIVERY_FAILED
+  PRODUCT_SYNC_FAILED
+  QUESTION_SYNC_FAILED
+  LOW_STOCK
+  OUT_OF_STOCK
+  CHANNEL_CONNECTION_ERROR
+}
+
+enum NotificationSeverity {
+  INFO
+  WARNING
+  ERROR
+}
+
+model Notification {
+  id              String               @id @default(uuid())
+  recipientUserId String
+  storeId         String?
+  type            NotificationType
+  severity        NotificationSeverity @default(INFO)
+  title           String
+  message         String
+  actionUrl       String?
+  entityType      String?
+  entityId        String?
+  dedupeKey       String?
+  occurrenceCount Int                  @default(1)
+  readAt          DateTime?
+  lastOccurredAt  DateTime             @default(now())
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  recipient User   @relation(fields: [recipientUserId], references: [id], onDelete: Cascade)
+  store     Store? @relation(fields: [storeId], references: [id], onDelete: SetNull)
+
+  @@unique([recipientUserId, dedupeKey])
+  @@index([recipientUserId, readAt, lastOccurredAt])
+  @@index([storeId, lastOccurredAt])
+  @@map("notification")
+}
+
+model NotificationPreference {
+  id        String           @id @default(uuid())
+  userId    String
+  storeId   String
+  type      NotificationType
+  enabled   Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storeId, type])
+  @@index([storeId, type])
+  @@map("notification_preference")
+}
+
+model NotificationDeliverySetting {
+  id                String   @id @default(uuid())
+  userId            String
+  storeId           String
+  browserEnabled    Boolean  @default(false)
+  emailEnabled      Boolean  @default(false)
+  quietHoursEnabled Boolean  @default(false)
+  quietHoursStart   String   @default("22:00")
+  quietHoursEnd     String   @default("08:00")
+  timezone          String   @default("Europe/Istanbul")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storeId])
+  @@index([storeId])
+  @@map("notification_delivery_setting")
+}
+
+model WebPushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("web_push_subscription")
 }

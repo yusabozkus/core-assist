@@ -3,6 +3,8 @@ import {
   AiAutomationMode,
   AiDraftOutcome,
   ChannelConnectionStatus,
+  NotificationSeverity,
+  NotificationType,
   ProductQuestionStatus,
   QuestionAnswerOrigin,
   QuestionAnswerStatus,
@@ -12,7 +14,9 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { CredentialsEncryptionService } from '../channels/credentials-encryption.service';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
+import { isProviderAuthenticationError } from '../channels/providers/connector-utils';
 import { InventoryVerificationService } from '../inventory-verification/inventory-verification.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import type { QuestionAnswerJobData } from './question-answer.types';
 import { requiresInventoryVerification } from './automatic-answer-inventory.guard';
 
@@ -23,6 +27,7 @@ export class QuestionAnswerWorkerService {
     private readonly providers: ProviderRegistryService,
     private readonly encryption: CredentialsEncryptionService,
     private readonly inventoryVerification: InventoryVerificationService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async run(data: QuestionAnswerJobData) {
@@ -287,11 +292,11 @@ export class QuestionAnswerWorkerService {
 
     const delivery = await this.prisma.questionAnswer.findFirst({
       where: { id: data.answerId, storeId: data.storeId },
-      select: { draftAttemptId: true },
+      select: { draftAttemptId: true, questionId: true, connectionId: true },
     });
 
-    await this.prisma.$transaction(async (transaction) => {
-      await transaction.questionAnswer.updateMany({
+    const updatedCount = await this.prisma.$transaction(async (transaction) => {
+      const updated = await transaction.questionAnswer.updateMany({
         where: {
           id: data.answerId,
           storeId: data.storeId,
@@ -312,7 +317,38 @@ export class QuestionAnswerWorkerService {
           },
         });
       }
+
+      return updated.count;
     });
+
+    if (updatedCount > 0 && delivery) {
+      await this.notifications.createForStoreMembers({
+        storeId: data.storeId,
+        type: NotificationType.ANSWER_DELIVERY_FAILED,
+        severity: NotificationSeverity.ERROR,
+        title: 'Cevap gönderilemedi',
+        message:
+          'Hazırlanan cevap pazaryerine iletilemedi. Soruyu inceleyip tekrar gönderebilirsiniz.',
+        actionUrl: `/dashboard/inbox?question=${delivery.questionId}`,
+        entityType: 'PRODUCT_QUESTION',
+        entityId: delivery.questionId,
+        dedupeKey: `answer-delivery-failed:${data.answerId}`,
+      });
+
+      if (isProviderAuthenticationError(error)) {
+        await this.prisma.channelConnection.updateMany({
+          where: { id: delivery.connectionId, storeId: data.storeId },
+          data: {
+            status: ChannelConnectionStatus.ERROR,
+            failureReason: message.slice(0, 1_000),
+          },
+        });
+        await this.notifications.createChannelConnectionError(
+          data.storeId,
+          delivery.connectionId,
+        );
+      }
+    }
   }
 
   private async rejectAutomaticDelivery(
@@ -322,59 +358,81 @@ export class QuestionAnswerWorkerService {
     message: string,
     inventoryInvalidated = false,
   ) {
-    await this.prisma.$transaction(async (transaction) => {
-      const updated = await transaction.questionAnswer.updateMany({
-        where: {
-          id: data.answerId,
-          storeId: data.storeId,
-          status: {
-            in: [QuestionAnswerStatus.QUEUED, QuestionAnswerStatus.PROCESSING],
-          },
-        },
-        data: {
-          status: QuestionAnswerStatus.FAILED,
-          processingStartedAt: null,
-          lastError: message,
-        },
-      });
-      if (updated.count !== 1) return;
-      if (draftAttemptId) {
-        await transaction.aiDraftAttempt.updateMany({
-          where: { id: draftAttemptId, storeId: data.storeId },
-          data: {
-            outcome: AiDraftOutcome.FAILED,
-            finalizedAt: new Date(),
-            ...(inventoryInvalidated
-              ? {
-                  autoSendEligible: false,
-                  decision: QuestionReplyDecision.NEEDS_REVIEW,
-                  confidence: 0.6,
-                  answerability: 'PARTIAL',
-                  risks: ['STALE_INVENTORY'],
-                  missingInformation: [message],
-                  eligibilityReasons: ['REVIEW_REQUIRED', 'RISK_DETECTED'],
-                }
-              : {}),
-          },
-        });
-      }
-      if (inventoryInvalidated) {
-        await transaction.productQuestion.updateMany({
+    const requiresReview = await this.prisma.$transaction(
+      async (transaction) => {
+        const updated = await transaction.questionAnswer.updateMany({
           where: {
-            id: questionId,
+            id: data.answerId,
             storeId: data.storeId,
-            status: ProductQuestionStatus.DRAFTED,
+            status: {
+              in: [
+                QuestionAnswerStatus.QUEUED,
+                QuestionAnswerStatus.PROCESSING,
+              ],
+            },
           },
           data: {
-            draftDecision: QuestionReplyDecision.NEEDS_REVIEW,
-            draftConfidence: 0.6,
-            draftAnswerability: 'PARTIAL',
-            draftRisks: ['STALE_INVENTORY'],
-            draftMissingInformation: [message],
+            status: QuestionAnswerStatus.FAILED,
+            processingStartedAt: null,
+            lastError: message,
           },
         });
-      }
-    });
+        if (updated.count !== 1) return false;
+        if (draftAttemptId) {
+          await transaction.aiDraftAttempt.updateMany({
+            where: { id: draftAttemptId, storeId: data.storeId },
+            data: {
+              outcome: AiDraftOutcome.FAILED,
+              finalizedAt: new Date(),
+              ...(inventoryInvalidated
+                ? {
+                    autoSendEligible: false,
+                    decision: QuestionReplyDecision.NEEDS_REVIEW,
+                    confidence: 0.6,
+                    answerability: 'PARTIAL',
+                    risks: ['STALE_INVENTORY'],
+                    missingInformation: [message],
+                    eligibilityReasons: ['REVIEW_REQUIRED', 'RISK_DETECTED'],
+                  }
+                : {}),
+            },
+          });
+        }
+        if (inventoryInvalidated) {
+          await transaction.productQuestion.updateMany({
+            where: {
+              id: questionId,
+              storeId: data.storeId,
+              status: ProductQuestionStatus.DRAFTED,
+            },
+            data: {
+              draftDecision: QuestionReplyDecision.NEEDS_REVIEW,
+              draftConfidence: 0.6,
+              draftAnswerability: 'PARTIAL',
+              draftRisks: ['STALE_INVENTORY'],
+              draftMissingInformation: [message],
+            },
+          });
+        }
+
+        return true;
+      },
+    );
+
+    if (requiresReview) {
+      await this.notifications.createForStoreMembers({
+        storeId: data.storeId,
+        type: NotificationType.AI_REVIEW_REQUIRED,
+        severity: NotificationSeverity.WARNING,
+        title: 'Yanıt incelemeniz gerekiyor',
+        message:
+          'Otomatik gönderim güvenlik kontrolünü geçemedi. Taslağı kontrol ederek manuel gönderebilirsiniz.',
+        actionUrl: `/dashboard/inbox?question=${questionId}`,
+        entityType: 'PRODUCT_QUESTION',
+        entityId: questionId,
+        dedupeKey: `ai-review-required:${questionId}`,
+      });
+    }
   }
 
   private async failPendingDelivery(
