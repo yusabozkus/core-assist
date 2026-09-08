@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { BILLING_TRIAL } from "@/constants/billing"
 import { LANDING_NAVIGATION } from "@/constants/landing"
 import { APP_ROUTES } from "@/constants/site"
 import { FooterWordmark } from "./footer-wordmark"
@@ -25,7 +26,7 @@ export function LandingFooter() {
           </div>
           <div className="lg:pb-2">
             <Link href={APP_ROUTES.login} className={styles.primaryLink}>
-              7 gün ücretsiz deneyin
+              {BILLING_TRIAL.days} gün ücretsiz deneyin
               <span className={styles.linkArrow}>
                 <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" />
               </span>

@@ -1,6 +1,10 @@
 import { Button } from "@/components/ui/button"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
-import { BILLING_PREVIEW } from "@/constants/billing"
+import {
+  BILLING_PREVIEW,
+  BILLING_TRIAL,
+  INCLUDED_MARKETPLACES,
+} from "@/constants/billing"
 import { getPlanPrice } from "@/lib/billing"
 import type { BillingCycle, SubscriptionPlan } from "@/types/billing"
 
@@ -62,10 +66,20 @@ export function PlanSelectionDialog({
               <dd>{plan.questions.toLocaleString("tr-TR")}</dd>
             </div>
             <div className="flex justify-between gap-3">
+              <dt className="text-muted-foreground">Mağaza / kullanıcı</dt>
+              <dd>
+                {plan.stores} / {plan.members}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-muted-foreground">Pazaryerleri</dt>
+              <dd className="text-right">{INCLUDED_MARKETPLACES}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
               <dt className="text-muted-foreground">
                 {billingCycle === "annual" ? "Yıllık toplam" : "Aylık toplam"}
               </dt>
-              <dd className="font-semibold">{price.total} + KDV</dd>
+              <dd className="font-semibold">{price.total}</dd>
             </div>
             {billingCycle === "annual" && (
               <div className="flex justify-between gap-3 text-primary">
@@ -75,8 +89,10 @@ export function PlanSelectionDialog({
             )}
           </dl>
           <p className="text-xs leading-6 text-muted-foreground">
-            İlk aboneliğinizde tüm planları 7 gün ücretsiz deneyebilirsiniz. Bu
-            ekran önizlemedir; planınız değiştirilmez ve ödeme alınmaz.
+            İlk aboneliğinizde kart bilgisi vermeden {BILLING_TRIAL.days} gün
+            ücretsiz deneyebilirsiniz. Vergiler ödeme adresinize göre ödeme
+            adımında hesaplanır. Bu ekran önizlemedir; planınız değiştirilmez ve
+            ödeme alınmaz.
           </p>
         </div>
       )}

@@ -18,6 +18,42 @@ export const WorkspaceRole = {
 export type WorkspaceRole = (typeof WorkspaceRole)[keyof typeof WorkspaceRole]
 
 
+export const BillingPlan = {
+  STARTER: 'STARTER',
+  GROWTH: 'GROWTH',
+  BUSINESS: 'BUSINESS'
+} as const
+
+export type BillingPlan = (typeof BillingPlan)[keyof typeof BillingPlan]
+
+
+export const BillingCycle = {
+  MONTHLY: 'MONTHLY',
+  ANNUAL: 'ANNUAL'
+} as const
+
+export type BillingCycle = (typeof BillingCycle)[keyof typeof BillingCycle]
+
+
+export const BillingSubscriptionStatus = {
+  TRIALING: 'TRIALING',
+  ACTIVE: 'ACTIVE',
+  PAST_DUE: 'PAST_DUE',
+  PAUSED: 'PAUSED',
+  CANCELED: 'CANCELED',
+  EXPIRED: 'EXPIRED'
+} as const
+
+export type BillingSubscriptionStatus = (typeof BillingSubscriptionStatus)[keyof typeof BillingSubscriptionStatus]
+
+
+export const BillingUsageMetric = {
+  AI_QUESTION: 'AI_QUESTION'
+} as const
+
+export type BillingUsageMetric = (typeof BillingUsageMetric)[keyof typeof BillingUsageMetric]
+
+
 export const AiTone = {
   PROFESSIONAL: 'PROFESSIONAL',
   FRIENDLY: 'FRIENDLY',

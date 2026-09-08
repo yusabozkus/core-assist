@@ -5,6 +5,17 @@ import type {
   SubscriptionPlan,
 } from "@/types/billing"
 
+export const ANNUAL_DISCOUNT_RATE = 0.1
+
+export const BILLING_TRIAL = {
+  days: 10,
+  questions: 100,
+  stores: 1,
+  products: 1000,
+} as const
+
+export const INCLUDED_MARKETPLACES = "Trendyol ve Hepsiburada"
+
 export const SUBSCRIPTION_PLANS: readonly SubscriptionPlan[] = [
   {
     id: "starter",
@@ -14,12 +25,14 @@ export const SUBSCRIPTION_PLANS: readonly SubscriptionPlan[] = [
     monthlyPrice: 2300,
     questions: 1500,
     stores: 1,
-    connections: 2,
+    members: 1,
     products: 5000,
+    support: "2 iş günü hedefli e-posta desteği",
     features: [
-      "AI taslakları ve güvenli otomasyon",
-      "Yanıt tonu ve uzunluk ayarları",
-      "E-posta desteği",
+      "Tüm desteklenen pazaryerleri",
+      "AI taslakları ve güvenli otomatik gönderim",
+      "AI performansı ve güven analizleri",
+      "Bilgi merkezi ve pazaryeri istisnaları",
     ],
   },
   {
@@ -30,12 +43,14 @@ export const SUBSCRIPTION_PLANS: readonly SubscriptionPlan[] = [
     monthlyPrice: 6000,
     questions: 5000,
     stores: 5,
-    connections: 10,
+    members: 3,
     products: 25000,
+    support: "1 iş günü hedefli öncelikli e-posta desteği",
     highlighted: true,
     features: [
       "Starter planındaki tüm özellikler",
-      "Gelişmiş yanıt ve marka ayarları",
+      "Birden fazla mağazada merkezi yönetim",
+      "Her mağaza için ayrı bilgi ve AI ayarları",
       "Öncelikli destek",
     ],
   },
@@ -46,12 +61,14 @@ export const SUBSCRIPTION_PLANS: readonly SubscriptionPlan[] = [
     monthlyPrice: 10000,
     questions: 15000,
     stores: 15,
-    connections: null,
+    members: 10,
     products: 100000,
+    support: "Aynı iş günü öncelikli destek ve kurulum görüşmesi",
     features: [
       "Growth planındaki tüm özellikler",
-      "Gelişmiş AI kuralları ve analizler",
-      "Öncelikli destek ve hızlı dönüş",
+      "Yüksek hacimli mağaza operasyonları",
+      "Bilgi merkezi için başlangıç kurulum desteği",
+      "Aynı iş günü hedefli öncelikli destek",
     ],
   },
 ]
@@ -67,7 +84,7 @@ export const BILLING_PREVIEW = {
   company: "North Clothing Teknoloji ve Ticaret Ltd. Şti.",
   address: "Maslak Mah. Büyükdere Cad. No: 123, Sarıyer / İstanbul",
   taxNumber: "123 456 7890",
-  usage: { questions: 3420, stores: 2, connections: 3, products: 18640 },
+  usage: { questions: 3420, stores: 2, members: 2, products: 18640 },
 } as const
 
 function createInvoice(

@@ -8,47 +8,18 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
+import {
+  ANNUAL_DISCOUNT_RATE,
+  BILLING_TRIAL,
+  INCLUDED_MARKETPLACES,
+  SUBSCRIPTION_PLANS,
+} from "@/constants/billing"
 import { APP_ROUTES } from "@/constants/site"
 import { formatCurrency } from "@/lib/format-currency"
 import { cn } from "@/lib/utils"
 import { LandingReveal } from "./landing-reveal"
 import styles from "./landing.module.css"
 
-const plans = [
-  {
-    id: "starter",
-    name: "Başlangıç",
-    price: 2300,
-    description: "İlk otomasyonunu kuran mağazalar için.",
-    questions: "1.500",
-    stores: "1 mağaza",
-    connections: "2 pazaryeri bağlantısı",
-    catalog: "5.000 ürüne kadar katalog",
-    featured: false,
-  },
-  {
-    id: "growth",
-    name: "Büyüme",
-    price: 6000,
-    description: "Birden fazla mağazayı yöneten ekipler için.",
-    questions: "5.000",
-    stores: "5 mağaza",
-    connections: "10 pazaryeri bağlantısı",
-    catalog: "25.000 ürüne kadar katalog",
-    featured: true,
-  },
-  {
-    id: "business",
-    name: "Ölçek",
-    price: 10000,
-    description: "Yüksek soru hacmine sahip operasyonlar için.",
-    questions: "15.000",
-    stores: "15 mağaza",
-    connections: "Sınırsız pazaryeri bağlantısı",
-    catalog: "100.000 ürüne kadar katalog",
-    featured: false,
-  },
-]
 const formatPlanPrice = (value: number) =>
   formatCurrency(value, "TRY", { maximumFractionDigits: 0 })
 
@@ -207,13 +178,13 @@ export function PricingSection() {
               Birlikte büyüyelim.
             </h2>
             <p className="mt-5 text-sm text-[#76816b]">
-              Her planda 7 gün ücretsiz deneme.
+              Kart gerektirmeden {BILLING_TRIAL.days} gün ücretsiz deneyin.
             </p>
           </div>
           <BillingCycleToggle value={billingCycle} onChange={setBillingCycle} />
         </LandingReveal>
         <div className="grid items-stretch gap-4 lg:grid-cols-3">
-          {plans.map((plan, index) => (
+          {SUBSCRIPTION_PLANS.map((plan, index) => (
             <LandingReveal
               key={plan.id}
               delay={index * 0.06}
@@ -223,7 +194,7 @@ export function PricingSection() {
                 className={cn(
                   "relative flex h-full flex-col rounded-2xl border p-6 sm:p-8",
                   "transition-[transform,border-color,box-shadow] duration-300 ease-out active:scale-[0.995] motion-safe:hover:-translate-y-1",
-                  plan.featured
+                  plan.highlighted
                     ? "border-[#97b575] bg-[#e2efcd] hover:border-[#789c58] hover:shadow-[0_22px_46px_-32px_rgba(36,93,70,0.45)]"
                     : "border-[#dde4d5] bg-white hover:border-[#b7c7ac] hover:shadow-[0_22px_46px_-32px_rgba(23,40,31,0.34)]"
                 )}
@@ -232,7 +203,7 @@ export function PricingSection() {
                   <h3 className="text-xl font-medium tracking-[-.035em]">
                     {plan.name}
                   </h3>
-                  {plan.featured && (
+                  {plan.highlighted && (
                     <span className="rounded-full border border-[#b8cd9b] px-2 py-1 text-[10px] text-[#658049]">
                       Büyüyen ekipler için
                     </span>
@@ -248,10 +219,16 @@ export function PricingSection() {
                   <span className="text-[42px] font-medium tracking-[-.07em] tabular-nums">
                     <AnimatedPrice
                       cycle={billingCycle}
-                      value={formatPlanPrice(plan.price * (annual ? 0.9 : 1))}
+                      value={formatPlanPrice(
+                        plan.monthlyPrice *
+                          (annual ? 1 - ANNUAL_DISCOUNT_RATE : 1)
+                      )}
                     />
                     <span className="sr-only">
-                      {formatPlanPrice(plan.price * (annual ? 0.9 : 1))}
+                      {formatPlanPrice(
+                        plan.monthlyPrice *
+                          (annual ? 1 - ANNUAL_DISCOUNT_RATE : 1)
+                      )}
                     </span>
                   </span>
                   <span className="text-xs text-[#879476]">/ ay</span>
@@ -259,7 +236,7 @@ export function PricingSection() {
                 <p className="mt-2 min-h-5 text-[11px] text-[#829071]">
                   <AnimatedBillingNote cycle={billingCycle}>
                     {annual
-                      ? `Yıllık ${formatPlanPrice(plan.price * 12 * 0.9)} olarak ödenir`
+                      ? `Yıllık ${formatPlanPrice(plan.monthlyPrice * 12 * (1 - ANNUAL_DISCOUNT_RATE))} olarak ödenir`
                       : "Aylık faturalandırılır"}
                   </AnimatedBillingNote>
                 </p>
@@ -267,7 +244,7 @@ export function PricingSection() {
                   href={APP_ROUTES.login}
                   className={cn(
                     "group mt-7 flex h-11 items-center justify-between rounded-full px-5 text-xs font-medium transition-[background-color,transform] active:scale-[0.98]",
-                    plan.featured
+                    plan.highlighted
                       ? "bg-[#243e2b] text-white hover:bg-[#32563a]"
                       : "border border-[#dde5d2] hover:bg-[#f2f6eb]"
                   )}
@@ -280,16 +257,33 @@ export function PricingSection() {
                 </Link>
                 <div className="mt-7 border-t border-[#c7d7b8]/60 pt-6">
                   <p className="text-sm font-medium">
-                    Ayda {plan.questions} ürün sorusu
+                    Ayda {plan.questions.toLocaleString("tr-TR")} ürün sorusu
                   </p>
                   <ul className="mt-5 space-y-3.5">
                     {[
-                      { id: "stores", text: plan.stores },
-                      { id: "connections", text: plan.connections },
-                      { id: "catalog", text: plan.catalog },
+                      {
+                        id: "stores",
+                        text: `${plan.stores} mağaza · ${plan.members} kullanıcı`,
+                      },
+                      {
+                        id: "marketplaces",
+                        text: INCLUDED_MARKETPLACES,
+                      },
+                      {
+                        id: "catalog",
+                        text: `${plan.products.toLocaleString("tr-TR")} aktif ürüne kadar`,
+                      },
                       {
                         id: "automation",
-                        text: "AI taslakları ve güvenli otomasyon",
+                        text: "AI taslakları ve güvenli otomatik gönderim",
+                      },
+                      {
+                        id: "analytics",
+                        text: "AI performansı ve güven analizleri",
+                      },
+                      {
+                        id: "support",
+                        text: plan.support,
                       },
                     ].map((feature) => (
                       <li
@@ -310,8 +304,8 @@ export function PricingSection() {
           ))}
         </div>
         <p className="mt-6 text-xs leading-5 text-[#8a957e]">
-          Fiyatlara KDV dahil değildir. Yıllık planlarda aylık fiyatın 12 katına
-          %10 indirim uygulanır.
+          Vergiler ödeme adresine göre hesaplanır. Yıllık planlarda aylık
+          fiyatın 12 katına %10 indirim uygulanır.
         </p>
       </div>
     </section>

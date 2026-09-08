@@ -14,7 +14,11 @@ import { PlanSelectionDialog } from "@/components/dashboard/billing/plan-selecti
 import { PlanQuestions } from "@/components/dashboard/billing/plan-questions"
 import { AppLogo } from "@/components/shared/brand/app-logo"
 import { Button } from "@/components/ui/button"
-import { BILLING_PREVIEW, SUBSCRIPTION_PLANS } from "@/constants/billing"
+import {
+  BILLING_PREVIEW,
+  BILLING_TRIAL,
+  SUBSCRIPTION_PLANS,
+} from "@/constants/billing"
 import { APP_ROUTES } from "@/constants/site"
 import type { BillingCycle, SubscriptionPlan } from "@/types/billing"
 
@@ -58,14 +62,14 @@ export function PlansClient() {
           <div className="max-w-xl">
             <p className="mb-4 inline-flex items-center gap-2 text-xs font-medium text-primary">
               <HugeiconsIcon icon={CalendarCheck01Icon} className="size-4" />
-              Her planda 7 gün ücretsiz deneme
+              Kart gerektirmeden {BILLING_TRIAL.days} gün ücretsiz deneme
             </p>
             <h1 className="text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">
               İşinize uygun kapasiteyi seçin.
             </h1>
             <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
-              Sorularınız, mağazalarınız ve kataloğunuz için ihtiyacınız kadar
-              alan. Tüm planlarda aynı kolay kullanım.
+              Tüm AI, otomasyon ve performans özellikleri her planda açık.
+              Yalnızca operasyonunuza uygun kapasiteyi seçin.
             </p>
           </div>
           <div className="flex flex-col items-start gap-2.5 lg:items-end">
@@ -97,8 +101,8 @@ export function PlansClient() {
           <div className="flex flex-wrap gap-x-6 gap-y-3">
             {[
               "Trendyol ve Hepsiburada",
-              "Ürün bilgileriyle desteklenen yanıtlar",
-              "Mobil uyumlu gelen kutusu",
+              "Güvenli otomatik gönderim",
+              "Tüm planlarda AI performansı",
             ].map((feature) => (
               <span key={feature} className="flex items-center gap-2">
                 <HugeiconsIcon
@@ -109,7 +113,7 @@ export function PlansClient() {
               </span>
             ))}
           </div>
-          <span>Fiyatlara KDV dahil değildir.</span>
+          <span>Vergiler ödeme adresine göre hesaplanır.</span>
         </div>
         <PlanQuestions />
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 text-xs text-muted-foreground">

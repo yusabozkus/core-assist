@@ -58,7 +58,8 @@ export function BillingOverview() {
               {[
                 `Ayda ${plan.questions.toLocaleString("tr-TR")} soru`,
                 `${plan.stores} mağaza`,
-                `${plan.connections} bağlantı`,
+                `${plan.members} kullanıcı`,
+                "Tüm desteklenen pazaryerleri",
               ].map((feature) => (
                 <li key={feature} className="flex items-center gap-2 text-xs">
                   <HugeiconsIcon
@@ -88,7 +89,7 @@ export function BillingOverview() {
                 <dd className="font-medium tabular-nums">
                   {formatPlanPrice(plan.monthlyPrice)}{" "}
                   <span className="font-normal text-muted-foreground">
-                    + KDV
+                    · vergiler ödeme adımında
                   </span>
                 </dd>
               </div>

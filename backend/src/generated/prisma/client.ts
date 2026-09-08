@@ -70,6 +70,21 @@ export type Workspace = Prisma.WorkspaceModel
  */
 export type WorkspaceMember = Prisma.WorkspaceMemberModel
 /**
+ * Model BillingSubscription
+ * 
+ */
+export type BillingSubscription = Prisma.BillingSubscriptionModel
+/**
+ * Model BillingUsagePeriod
+ * 
+ */
+export type BillingUsagePeriod = Prisma.BillingUsagePeriodModel
+/**
+ * Model BillingUsageEvent
+ * 
+ */
+export type BillingUsageEvent = Prisma.BillingUsageEventModel
+/**
  * Model Store
  * 
  */

@@ -84,9 +84,12 @@ model Workspace {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  owner   User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  members WorkspaceMember[]
-  stores  Store[]
+  owner               User                 @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members             WorkspaceMember[]
+  stores              Store[]
+  billingSubscription BillingSubscription?
+  billingUsagePeriods BillingUsagePeriod[]
+  billingUsageEvents  BillingUsageEvent[]
 
   @@map("workspace")
 }
@@ -110,6 +113,95 @@ enum WorkspaceRole {
   OWNER
   ADMIN
   MEMBER
+}
+
+enum BillingPlan {
+  STARTER
+  GROWTH
+  BUSINESS
+}
+
+enum BillingCycle {
+  MONTHLY
+  ANNUAL
+}
+
+enum BillingSubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  PAUSED
+  CANCELED
+  EXPIRED
+}
+
+enum BillingUsageMetric {
+  AI_QUESTION
+}
+
+model BillingSubscription {
+  id                   String                    @id @default(uuid())
+  workspaceId          String                    @unique
+  plan                 BillingPlan               @default(STARTER)
+  cycle                BillingCycle              @default(MONTHLY)
+  status               BillingSubscriptionStatus @default(TRIALING)
+  paddleCustomerId     String?                   @unique
+  paddleSubscriptionId String?                   @unique
+  paddlePriceId        String?
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  trialEndsAt          DateTime?
+  cancelAtPeriodEnd    Boolean                   @default(false)
+  canceledAt           DateTime?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+
+  workspace    Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  usagePeriods BillingUsagePeriod[]
+
+  @@index([status, currentPeriodEnd])
+  @@map("billing_subscription")
+}
+
+model BillingUsagePeriod {
+  id              String   @id @default(uuid())
+  workspaceId     String
+  subscriptionId  String?
+  periodStart     DateTime
+  periodEnd       DateTime
+  aiQuestionUnits Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workspace    Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  subscription BillingSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  events       BillingUsageEvent[]
+
+  @@unique([workspaceId, periodStart])
+  @@index([workspaceId, periodEnd])
+  @@index([subscriptionId])
+  @@map("billing_usage_period")
+}
+
+model BillingUsageEvent {
+  id             String             @id @default(uuid())
+  workspaceId    String
+  usagePeriodId  String
+  metric         BillingUsageMetric
+  quantity       Int                @default(1)
+  idempotencyKey String
+  sourceType     String?
+  sourceId       String?
+  metadata       Json?
+  createdAt      DateTime           @default(now())
+
+  workspace   Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  usagePeriod BillingUsagePeriod @relation(fields: [usagePeriodId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, idempotencyKey])
+  @@index([usagePeriodId, metric, createdAt])
+  @@index([sourceType, sourceId])
+  @@map("billing_usage_event")
 }
 
 model Store {

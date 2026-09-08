@@ -17,6 +17,7 @@ import {
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { InventoryVerificationService } from '../inventory-verification/inventory-verification.service';
+import { BillingUsageService } from '../billing/billing-usage.service';
 import {
   AiDraftGenerator,
   AiDraftRateLimitError,
@@ -56,6 +57,7 @@ export class QuestionDraftService {
     private readonly responsePolicy: QuestionResponsePolicyService,
     private readonly replyDecision: QuestionReplyDecisionService,
     private readonly productLinks: QuestionProductLinkService,
+    private readonly billingUsage: BillingUsageService,
   ) {}
 
   async generate(
@@ -140,6 +142,11 @@ export class QuestionDraftService {
         },
       };
     }
+
+    await this.billingUsage.assertDraftGenerationAvailableForStore(
+      storeId,
+      questionId,
+    );
 
     await this.productLinks.linkQuestionIfPossible(storeId, questionId);
     let context = await this.productContext.build(storeId, questionId);
@@ -289,6 +296,17 @@ export class QuestionDraftService {
           'Taslak oluşturulurken soru durumu değişti.',
         );
       }
+
+      await this.billingUsage.consumeSuccessfulDraft(
+        transaction,
+        {
+          storeId,
+          questionId,
+          draftAttemptId: attempt.id,
+          trigger: options.trigger === 'AUTOMATION' ? 'AUTOMATION' : 'MANUAL',
+        },
+        draftedAt,
+      );
 
       return attempt;
     });

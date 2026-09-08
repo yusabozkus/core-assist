@@ -403,6 +403,9 @@ export const ModelName = {
   Verification: 'Verification',
   Workspace: 'Workspace',
   WorkspaceMember: 'WorkspaceMember',
+  BillingSubscription: 'BillingSubscription',
+  BillingUsagePeriod: 'BillingUsagePeriod',
+  BillingUsageEvent: 'BillingUsageEvent',
   Store: 'Store',
   StoreKnowledgeProfile: 'StoreKnowledgeProfile',
   StoreKnowledgeFaq: 'StoreKnowledgeFaq',
@@ -442,7 +445,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "webPushSubscription"
+    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "billingSubscription" | "billingUsagePeriod" | "billingUsageEvent" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "webPushSubscription"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -887,6 +890,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.WorkspaceMemberCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.WorkspaceMemberCountAggregateOutputType> | number
+        }
+      }
+    }
+    BillingSubscription: {
+      payload: Prisma.$BillingSubscriptionPayload<ExtArgs>
+      fields: Prisma.BillingSubscriptionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BillingSubscriptionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingSubscriptionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BillingSubscriptionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingSubscriptionPayload>
+        }
+        findFirst: {
+          args: Prisma.BillingSubscriptionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingSubscriptionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BillingSubscriptionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingSubscriptionPayload>
+        }
+        findMany: {
+          args: Prisma.BillingSubscriptionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingSubscriptionPayload>[]
+        }
+        create: {
+          args: Prisma.BillingSubscriptionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingSubscriptionPayload>
+        }
+        createMany: {
+          args: Prisma.BillingSubscriptionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BillingSubscriptionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingSubscriptionPayload>[]
+        }
+        delete: {
+          args: Prisma.BillingSubscriptionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingSubscriptionPayload>
+        }
+        update: {
+          args: Prisma.BillingSubscriptionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingSubscriptionPayload>
+        }
+        deleteMany: {
+          args: Prisma.BillingSubscriptionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BillingSubscriptionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BillingSubscriptionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingSubscriptionPayload>[]
+        }
+        upsert: {
+          args: Prisma.BillingSubscriptionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingSubscriptionPayload>
+        }
+        aggregate: {
+          args: Prisma.BillingSubscriptionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBillingSubscription>
+        }
+        groupBy: {
+          args: Prisma.BillingSubscriptionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingSubscriptionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BillingSubscriptionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingSubscriptionCountAggregateOutputType> | number
+        }
+      }
+    }
+    BillingUsagePeriod: {
+      payload: Prisma.$BillingUsagePeriodPayload<ExtArgs>
+      fields: Prisma.BillingUsagePeriodFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BillingUsagePeriodFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsagePeriodPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BillingUsagePeriodFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsagePeriodPayload>
+        }
+        findFirst: {
+          args: Prisma.BillingUsagePeriodFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsagePeriodPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BillingUsagePeriodFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsagePeriodPayload>
+        }
+        findMany: {
+          args: Prisma.BillingUsagePeriodFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsagePeriodPayload>[]
+        }
+        create: {
+          args: Prisma.BillingUsagePeriodCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsagePeriodPayload>
+        }
+        createMany: {
+          args: Prisma.BillingUsagePeriodCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BillingUsagePeriodCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsagePeriodPayload>[]
+        }
+        delete: {
+          args: Prisma.BillingUsagePeriodDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsagePeriodPayload>
+        }
+        update: {
+          args: Prisma.BillingUsagePeriodUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsagePeriodPayload>
+        }
+        deleteMany: {
+          args: Prisma.BillingUsagePeriodDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BillingUsagePeriodUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BillingUsagePeriodUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsagePeriodPayload>[]
+        }
+        upsert: {
+          args: Prisma.BillingUsagePeriodUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsagePeriodPayload>
+        }
+        aggregate: {
+          args: Prisma.BillingUsagePeriodAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBillingUsagePeriod>
+        }
+        groupBy: {
+          args: Prisma.BillingUsagePeriodGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingUsagePeriodGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BillingUsagePeriodCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingUsagePeriodCountAggregateOutputType> | number
+        }
+      }
+    }
+    BillingUsageEvent: {
+      payload: Prisma.$BillingUsageEventPayload<ExtArgs>
+      fields: Prisma.BillingUsageEventFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BillingUsageEventFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsageEventPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BillingUsageEventFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsageEventPayload>
+        }
+        findFirst: {
+          args: Prisma.BillingUsageEventFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsageEventPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BillingUsageEventFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsageEventPayload>
+        }
+        findMany: {
+          args: Prisma.BillingUsageEventFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsageEventPayload>[]
+        }
+        create: {
+          args: Prisma.BillingUsageEventCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsageEventPayload>
+        }
+        createMany: {
+          args: Prisma.BillingUsageEventCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BillingUsageEventCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsageEventPayload>[]
+        }
+        delete: {
+          args: Prisma.BillingUsageEventDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsageEventPayload>
+        }
+        update: {
+          args: Prisma.BillingUsageEventUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsageEventPayload>
+        }
+        deleteMany: {
+          args: Prisma.BillingUsageEventDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BillingUsageEventUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BillingUsageEventUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsageEventPayload>[]
+        }
+        upsert: {
+          args: Prisma.BillingUsageEventUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingUsageEventPayload>
+        }
+        aggregate: {
+          args: Prisma.BillingUsageEventAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBillingUsageEvent>
+        }
+        groupBy: {
+          args: Prisma.BillingUsageEventGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingUsageEventGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BillingUsageEventCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingUsageEventCountAggregateOutputType> | number
         }
       }
     }
@@ -2788,6 +3013,57 @@ export const WorkspaceMemberScalarFieldEnum = {
 export type WorkspaceMemberScalarFieldEnum = (typeof WorkspaceMemberScalarFieldEnum)[keyof typeof WorkspaceMemberScalarFieldEnum]
 
 
+export const BillingSubscriptionScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  plan: 'plan',
+  cycle: 'cycle',
+  status: 'status',
+  paddleCustomerId: 'paddleCustomerId',
+  paddleSubscriptionId: 'paddleSubscriptionId',
+  paddlePriceId: 'paddlePriceId',
+  currentPeriodStart: 'currentPeriodStart',
+  currentPeriodEnd: 'currentPeriodEnd',
+  trialEndsAt: 'trialEndsAt',
+  cancelAtPeriodEnd: 'cancelAtPeriodEnd',
+  canceledAt: 'canceledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingSubscriptionScalarFieldEnum = (typeof BillingSubscriptionScalarFieldEnum)[keyof typeof BillingSubscriptionScalarFieldEnum]
+
+
+export const BillingUsagePeriodScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  subscriptionId: 'subscriptionId',
+  periodStart: 'periodStart',
+  periodEnd: 'periodEnd',
+  aiQuestionUnits: 'aiQuestionUnits',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingUsagePeriodScalarFieldEnum = (typeof BillingUsagePeriodScalarFieldEnum)[keyof typeof BillingUsagePeriodScalarFieldEnum]
+
+
+export const BillingUsageEventScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  usagePeriodId: 'usagePeriodId',
+  metric: 'metric',
+  quantity: 'quantity',
+  idempotencyKey: 'idempotencyKey',
+  sourceType: 'sourceType',
+  sourceId: 'sourceId',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+} as const
+
+export type BillingUsageEventScalarFieldEnum = (typeof BillingUsageEventScalarFieldEnum)[keyof typeof BillingUsageEventScalarFieldEnum]
+
+
 export const StoreScalarFieldEnum = {
   id: 'id',
   workspaceId: 'workspaceId',
@@ -3342,6 +3618,90 @@ export type ListEnumWorkspaceRoleFieldRefInput<$PrismaModel> = FieldRefInputType
 
 
 /**
+ * Reference to a field of type 'BillingPlan'
+ */
+export type EnumBillingPlanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingPlan'>
+    
+
+
+/**
+ * Reference to a field of type 'BillingPlan[]'
+ */
+export type ListEnumBillingPlanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingPlan[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BillingCycle'
+ */
+export type EnumBillingCycleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingCycle'>
+    
+
+
+/**
+ * Reference to a field of type 'BillingCycle[]'
+ */
+export type ListEnumBillingCycleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingCycle[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BillingSubscriptionStatus'
+ */
+export type EnumBillingSubscriptionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingSubscriptionStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'BillingSubscriptionStatus[]'
+ */
+export type ListEnumBillingSubscriptionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingSubscriptionStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Int'
+ */
+export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+/**
+ * Reference to a field of type 'Int[]'
+ */
+export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BillingUsageMetric'
+ */
+export type EnumBillingUsageMetricFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingUsageMetric'>
+    
+
+
+/**
+ * Reference to a field of type 'BillingUsageMetric[]'
+ */
+export type ListEnumBillingUsageMetricFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingUsageMetric[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+/**
  * Reference to a field of type 'StoreStatus'
  */
 export type EnumStoreStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreStatus'>
@@ -3422,20 +3782,6 @@ export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, '
  * Reference to a field of type 'Float[]'
  */
 export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
-    
-
-
-/**
- * Reference to a field of type 'Int'
- */
-export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
-
-
-/**
- * Reference to a field of type 'Int[]'
- */
-export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 
@@ -3548,20 +3894,6 @@ export type EnumSizeGuideStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$
  * Reference to a field of type 'SizeGuideStatus[]'
  */
 export type ListEnumSizeGuideStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SizeGuideStatus[]'>
-    
-
-
-/**
- * Reference to a field of type 'Json'
- */
-export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
-    
-
-
-/**
- * Reference to a field of type 'QueryMode'
- */
-export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -3973,6 +4305,9 @@ export type GlobalOmitConfig = {
   verification?: Prisma.VerificationOmit
   workspace?: Prisma.WorkspaceOmit
   workspaceMember?: Prisma.WorkspaceMemberOmit
+  billingSubscription?: Prisma.BillingSubscriptionOmit
+  billingUsagePeriod?: Prisma.BillingUsagePeriodOmit
+  billingUsageEvent?: Prisma.BillingUsageEventOmit
   store?: Prisma.StoreOmit
   storeKnowledgeProfile?: Prisma.StoreKnowledgeProfileOmit
   storeKnowledgeFaq?: Prisma.StoreKnowledgeFaqOmit

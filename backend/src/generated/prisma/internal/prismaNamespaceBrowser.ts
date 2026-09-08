@@ -57,6 +57,9 @@ export const ModelName = {
   Verification: 'Verification',
   Workspace: 'Workspace',
   WorkspaceMember: 'WorkspaceMember',
+  BillingSubscription: 'BillingSubscription',
+  BillingUsagePeriod: 'BillingUsagePeriod',
+  BillingUsageEvent: 'BillingUsageEvent',
   Store: 'Store',
   StoreKnowledgeProfile: 'StoreKnowledgeProfile',
   StoreKnowledgeFaq: 'StoreKnowledgeFaq',
@@ -180,6 +183,57 @@ export const WorkspaceMemberScalarFieldEnum = {
 } as const
 
 export type WorkspaceMemberScalarFieldEnum = (typeof WorkspaceMemberScalarFieldEnum)[keyof typeof WorkspaceMemberScalarFieldEnum]
+
+
+export const BillingSubscriptionScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  plan: 'plan',
+  cycle: 'cycle',
+  status: 'status',
+  paddleCustomerId: 'paddleCustomerId',
+  paddleSubscriptionId: 'paddleSubscriptionId',
+  paddlePriceId: 'paddlePriceId',
+  currentPeriodStart: 'currentPeriodStart',
+  currentPeriodEnd: 'currentPeriodEnd',
+  trialEndsAt: 'trialEndsAt',
+  cancelAtPeriodEnd: 'cancelAtPeriodEnd',
+  canceledAt: 'canceledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingSubscriptionScalarFieldEnum = (typeof BillingSubscriptionScalarFieldEnum)[keyof typeof BillingSubscriptionScalarFieldEnum]
+
+
+export const BillingUsagePeriodScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  subscriptionId: 'subscriptionId',
+  periodStart: 'periodStart',
+  periodEnd: 'periodEnd',
+  aiQuestionUnits: 'aiQuestionUnits',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingUsagePeriodScalarFieldEnum = (typeof BillingUsagePeriodScalarFieldEnum)[keyof typeof BillingUsagePeriodScalarFieldEnum]
+
+
+export const BillingUsageEventScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  usagePeriodId: 'usagePeriodId',
+  metric: 'metric',
+  quantity: 'quantity',
+  idempotencyKey: 'idempotencyKey',
+  sourceType: 'sourceType',
+  sourceId: 'sourceId',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+} as const
+
+export type BillingUsageEventScalarFieldEnum = (typeof BillingUsageEventScalarFieldEnum)[keyof typeof BillingUsageEventScalarFieldEnum]
 
 
 export const StoreScalarFieldEnum = {

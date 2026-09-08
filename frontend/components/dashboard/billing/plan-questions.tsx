@@ -3,9 +3,9 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 const questions = [
   {
-    question: "7 günlük deneme nasıl çalışır?",
+    question: "10 günlük deneme nasıl çalışır?",
     answer:
-      "İlk aboneliğinizde seçtiğiniz planı 7 gün ücretsiz deneyebilirsiniz. Deneme hakkı tüm planlar için geçerlidir.",
+      "Kart bilgisi vermeden 10 gün boyunca 1 mağaza, 100 işlenen soru ve 1.000 ürüne kadar tüm özellikleri deneyebilirsiniz.",
   },
   {
     question: "Yıllık ödemede ne kadar avantajım var?",
@@ -13,9 +13,19 @@ const questions = [
       "Aylık plan ücretinin 12 katına %10 indirim uygulanır. Yıllık toplam tek seferde faturalandırılır; soru hakları her ay yenilenir.",
   },
   {
-    question: "Hangi limit bana uygun?",
+    question: "Soru hakkı nasıl hesaplanır?",
     answer:
-      "Önce aylık aldığınız ürün sorusu sayısını, ardından mağaza sayınızı ve katalog büyüklüğünüzü değerlendirin. Mevcut kullanımınızı abonelik özetinden görebilirsiniz.",
+      "Bir pazaryeri sorusu ilk kez başarıyla analiz edilip taslağı hazırlandığında bir kullanım sayılır. Taslağı düzenlemek, göndermek veya aynı soru için ilk üç taslağı oluşturmak ek kullanım oluşturmaz. Dördüncü ve sonraki her taslak bir ek kullanım sayılır; başarısız AI istekleri kotadan düşmez.",
+  },
+  {
+    question: "Soru hakkım biterse ne olur?",
+    answer:
+      "Yeni sorular gelen kutunuza gelmeye devam eder ve manuel yanıt verebilirsiniz. AI taslağı ile otomatik gönderim yeni dönem başlayana veya planınızı yükseltene kadar duraklatılır; sürpriz ek ücret alınmaz.",
+  },
+  {
+    question: "Pazaryeri bağlantısı sınırı var mı?",
+    answer:
+      "Hayır. Planınızdaki mağaza sınırı içinde CoreAssist'in desteklediği Trendyol ve Hepsiburada bağlantılarının tamamını kullanabilirsiniz.",
   },
 ]
 

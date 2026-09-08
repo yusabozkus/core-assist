@@ -7,7 +7,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { Button } from "@/components/ui/button"
-import { BILLING_PREVIEW } from "@/constants/billing"
+import { BILLING_PREVIEW, BILLING_TRIAL } from "@/constants/billing"
 import { getPlanPrice } from "@/lib/billing"
 import { cn } from "@/lib/utils"
 import type { BillingCycle, SubscriptionPlan } from "@/types/billing"
@@ -29,10 +29,13 @@ export function PlanCard({
   const limits = [
     { label: "Mağaza", value: plan.stores.toLocaleString("tr-TR") },
     {
-      label: "Pazaryeri bağlantısı",
-      value: plan.connections?.toLocaleString("tr-TR") ?? "Sınırsız",
+      label: "Kullanıcı",
+      value: plan.members.toLocaleString("tr-TR"),
     },
-    { label: "Katalog ürünü", value: plan.products.toLocaleString("tr-TR") },
+    {
+      label: "Aktif ürün",
+      value: plan.products.toLocaleString("tr-TR"),
+    },
   ]
   return (
     <article
@@ -97,8 +100,8 @@ export function PlanCard({
           </p>
           <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">
             {billingCycle === "annual"
-              ? `Yıllık ${price.total} + KDV. ${price.saving} tasarruf edin.`
-              : "Aylık faturalandırılır. Fiyatlara KDV dahil değildir."}
+              ? `Yıllık ${price.total} olarak ödenir. ${price.saving} tasarruf edin.`
+              : "Aylık faturalandırılır. Vergiler ödeme adresine göre hesaplanır."}
           </p>
         </div>
         <Button
@@ -115,7 +118,7 @@ export function PlanCard({
           />
         </Button>
         <p className="mt-3 text-center text-[11px] text-muted-foreground">
-          İlk abonelikte 7 gün ücretsiz deneme
+          Kart gerektirmeden {BILLING_TRIAL.days} gün ücretsiz deneme
         </p>
         <div className="mt-6 border-y border-border py-4">
           <p className="text-2xl font-semibold tracking-tight tabular-nums">
@@ -125,7 +128,7 @@ export function PlanCard({
             </span>
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            AI ile yanıtlanabilecek ürün soruları
+            Başarıyla işlenen benzersiz ürün soruları
           </p>
         </div>
         <dl className="my-5 space-y-3">
@@ -152,6 +155,13 @@ export function PlanCard({
               {feature}
             </li>
           ))}
+          <li className="flex items-start gap-2 text-xs leading-5">
+            <HugeiconsIcon
+              icon={CheckmarkCircle01Icon}
+              className="mt-0.5 size-3.5 shrink-0 text-primary"
+            />
+            {plan.support}
+          </li>
         </ul>
       </div>
     </article>

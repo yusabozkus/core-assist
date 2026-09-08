@@ -8,6 +8,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from "motion/react"
 
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import { QuestionDemo } from "@/components/landing/question-demo"
+import { BILLING_TRIAL } from "@/constants/billing"
 import { APP_ROUTES } from "@/constants/site"
 import styles from "./landing.module.css"
 
@@ -68,7 +69,9 @@ export function LandingHero() {
                 />
               </a>
             </div>
-            <p className="mt-4 text-xs text-[#7b867b]">7 gün ücretsiz deneme</p>
+            <p className="mt-4 text-xs text-[#7b867b]">
+              Kart gerektirmeden {BILLING_TRIAL.days} gün ücretsiz deneme
+            </p>
           </motion.div>
           <div className="relative min-w-0">
             <QuestionDemo />

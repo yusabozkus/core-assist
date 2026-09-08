@@ -1,6 +1,7 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { AiModule } from '../ai/ai.module';
+import { BillingModule } from '../billing/billing.module';
 import { InventoryVerificationModule } from '../inventory-verification/inventory-verification.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { QuestionAnswerModule } from '../question-answer/question-answer.module';
@@ -20,6 +21,7 @@ import { QuestionResponsePolicyService } from './question-response-policy.servic
 @Module({
   imports: [
     AiModule,
+    BillingModule,
     InventoryVerificationModule,
     NotificationsModule,
     QuestionAnswerModule,

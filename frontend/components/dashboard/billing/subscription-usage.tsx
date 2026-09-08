@@ -1,8 +1,8 @@
 import {
   AiSparklesIcon,
   Package01Icon,
-  PlugSocketIcon,
   Store01Icon,
+  UserCircleIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { BILLING_PREVIEW } from "@/constants/billing"
@@ -26,11 +26,11 @@ export function SubscriptionUsage() {
       icon: Store01Icon,
     },
     {
-      label: "Pazaryeri bağlantıları",
-      description: "Mağazalarınıza bağlı satış kanalları",
-      value: usage.connections,
-      limit: plan.connections,
-      icon: PlugSocketIcon,
+      label: "Kullanıcılar",
+      description: "Hesabınızda erişimi bulunan kullanıcılar",
+      value: usage.members,
+      limit: plan.members,
+      icon: UserCircleIcon,
     },
     {
       label: "Katalog ürünleri",
@@ -103,8 +103,9 @@ export function SubscriptionUsage() {
         })}
       </div>
       <p className="border-t border-border bg-muted/15 px-5 py-3.5 text-xs leading-5 text-muted-foreground sm:px-6">
-        Soru hakkınız her faturalama döneminde yenilenir. Mağaza, bağlantı ve
-        ürün limitleri toplam kapasitenizi gösterir.
+        Soru hakkınız her faturalama döneminde yenilenir. Mağaza, kullanıcı ve
+        ürün limitleri toplam kapasitenizi gösterir. Desteklenen pazaryerlerinin
+        tamamı planınıza dahildir.
       </p>
     </section>
   )

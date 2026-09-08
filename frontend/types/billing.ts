@@ -7,8 +7,9 @@ export type SubscriptionPlan = {
   monthlyPrice: number
   questions: number
   stores: number
-  connections: number | null
+  members: number
   products: number
+  support: string
   features: readonly string[]
   highlighted?: boolean
 }
