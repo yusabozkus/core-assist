@@ -1,0 +1,15 @@
+node_modules
+dist
+coverage
+test
+docs
+src/generated/prisma
+
+.env
+.env.*
+!.env.example
+
+.git
+.gitignore
+*.log
+npm-debug.log*
