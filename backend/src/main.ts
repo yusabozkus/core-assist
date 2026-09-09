@@ -4,7 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   const isProduction = process.env.NODE_ENV === 'production';
   const configuredFrontendURL = process.env.FRONTEND_URL?.trim();
 

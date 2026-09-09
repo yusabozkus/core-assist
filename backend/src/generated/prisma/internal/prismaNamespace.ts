@@ -404,6 +404,7 @@ export const ModelName = {
   Workspace: 'Workspace',
   WorkspaceMember: 'WorkspaceMember',
   BillingSubscription: 'BillingSubscription',
+  BillingWebhookEvent: 'BillingWebhookEvent',
   BillingUsagePeriod: 'BillingUsagePeriod',
   BillingUsageEvent: 'BillingUsageEvent',
   Store: 'Store',
@@ -445,7 +446,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "billingSubscription" | "billingUsagePeriod" | "billingUsageEvent" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "webPushSubscription"
+    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "billingSubscription" | "billingWebhookEvent" | "billingUsagePeriod" | "billingUsageEvent" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "webPushSubscription"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -964,6 +965,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.BillingSubscriptionCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.BillingSubscriptionCountAggregateOutputType> | number
+        }
+      }
+    }
+    BillingWebhookEvent: {
+      payload: Prisma.$BillingWebhookEventPayload<ExtArgs>
+      fields: Prisma.BillingWebhookEventFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BillingWebhookEventFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingWebhookEventPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BillingWebhookEventFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingWebhookEventPayload>
+        }
+        findFirst: {
+          args: Prisma.BillingWebhookEventFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingWebhookEventPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BillingWebhookEventFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingWebhookEventPayload>
+        }
+        findMany: {
+          args: Prisma.BillingWebhookEventFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingWebhookEventPayload>[]
+        }
+        create: {
+          args: Prisma.BillingWebhookEventCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingWebhookEventPayload>
+        }
+        createMany: {
+          args: Prisma.BillingWebhookEventCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BillingWebhookEventCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingWebhookEventPayload>[]
+        }
+        delete: {
+          args: Prisma.BillingWebhookEventDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingWebhookEventPayload>
+        }
+        update: {
+          args: Prisma.BillingWebhookEventUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingWebhookEventPayload>
+        }
+        deleteMany: {
+          args: Prisma.BillingWebhookEventDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BillingWebhookEventUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BillingWebhookEventUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingWebhookEventPayload>[]
+        }
+        upsert: {
+          args: Prisma.BillingWebhookEventUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingWebhookEventPayload>
+        }
+        aggregate: {
+          args: Prisma.BillingWebhookEventAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBillingWebhookEvent>
+        }
+        groupBy: {
+          args: Prisma.BillingWebhookEventGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingWebhookEventGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BillingWebhookEventCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingWebhookEventCountAggregateOutputType> | number
         }
       }
     }
@@ -3027,11 +3102,22 @@ export const BillingSubscriptionScalarFieldEnum = {
   trialEndsAt: 'trialEndsAt',
   cancelAtPeriodEnd: 'cancelAtPeriodEnd',
   canceledAt: 'canceledAt',
+  paddleUpdatedAt: 'paddleUpdatedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type BillingSubscriptionScalarFieldEnum = (typeof BillingSubscriptionScalarFieldEnum)[keyof typeof BillingSubscriptionScalarFieldEnum]
+
+
+export const BillingWebhookEventScalarFieldEnum = {
+  id: 'id',
+  eventType: 'eventType',
+  occurredAt: 'occurredAt',
+  processedAt: 'processedAt'
+} as const
+
+export type BillingWebhookEventScalarFieldEnum = (typeof BillingWebhookEventScalarFieldEnum)[keyof typeof BillingWebhookEventScalarFieldEnum]
 
 
 export const BillingUsagePeriodScalarFieldEnum = {
@@ -4306,6 +4392,7 @@ export type GlobalOmitConfig = {
   workspace?: Prisma.WorkspaceOmit
   workspaceMember?: Prisma.WorkspaceMemberOmit
   billingSubscription?: Prisma.BillingSubscriptionOmit
+  billingWebhookEvent?: Prisma.BillingWebhookEventOmit
   billingUsagePeriod?: Prisma.BillingUsagePeriodOmit
   billingUsageEvent?: Prisma.BillingUsageEventOmit
   store?: Prisma.StoreOmit

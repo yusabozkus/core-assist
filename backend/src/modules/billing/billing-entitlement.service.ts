@@ -67,6 +67,7 @@ export class BillingEntitlementService {
         currentPeriodStart: subscription.currentPeriodStart,
         currentPeriodEnd: subscription.currentPeriodEnd,
         cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+        managedByPaddle: Boolean(subscription.paddleSubscriptionId),
       },
       entitlements: {
         ...limits,

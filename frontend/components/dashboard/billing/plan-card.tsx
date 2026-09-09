@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import {
   ArrowRight01Icon,
   CheckmarkCircle01Icon,
@@ -7,7 +8,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { Button } from "@/components/ui/button"
-import { BILLING_PREVIEW, BILLING_TRIAL } from "@/constants/billing"
+import { BILLING_TRIAL } from "@/constants/billing"
 import { getPlanPrice } from "@/lib/billing"
 import { cn } from "@/lib/utils"
 import type { BillingCycle, SubscriptionPlan } from "@/types/billing"
@@ -15,17 +16,16 @@ import type { BillingCycle, SubscriptionPlan } from "@/types/billing"
 export function PlanCard({
   plan,
   billingCycle,
-  onSelect,
+  checkoutHref,
+  current = false,
 }: {
   plan: SubscriptionPlan
   billingCycle: BillingCycle
-  onSelect: (plan: SubscriptionPlan) => void
+  checkoutHref: string
+  current?: boolean
 }) {
   const reducedMotion = useReducedMotion()
   const price = getPlanPrice(plan, billingCycle)
-  const current =
-    plan.id === BILLING_PREVIEW.plan.id &&
-    billingCycle === BILLING_PREVIEW.cycle
   const limits = [
     { label: "Mağaza", value: plan.stores.toLocaleString("tr-TR") },
     {
@@ -61,9 +61,7 @@ export function PlanCard({
               ? "İlk mağazanız için"
               : "Yüksek hacimli ekipler için"}
         </span>
-        {plan.id === BILLING_PREVIEW.plan.id && (
-          <span className="font-medium">Planınız</span>
-        )}
+        {current && <span className="font-medium">Planınız</span>}
       </div>
       <div className="flex flex-1 flex-col p-6 sm:p-7">
         <h2 className="text-xl font-semibold tracking-tight">{plan.name}</h2>
@@ -104,19 +102,28 @@ export function PlanCard({
               : "Aylık faturalandırılır. Vergiler ödeme adresine göre hesaplanır."}
           </p>
         </div>
-        <Button
-          type="button"
-          variant={plan.highlighted ? "default" : "outline"}
-          disabled={current}
-          onClick={() => onSelect(plan)}
-          className="mt-5 w-full justify-between shadow-none"
-        >
-          {current ? "Mevcut planınız" : "Planı seç"}
-          <HugeiconsIcon
-            icon={current ? CheckmarkCircle01Icon : ArrowRight01Icon}
-            className="size-4"
-          />
-        </Button>
+        {current ? (
+          <Button
+            type="button"
+            variant={plan.highlighted ? "default" : "outline"}
+            disabled
+            className="mt-5 w-full justify-between shadow-none"
+          >
+            Mevcut planınız
+            <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-4" />
+          </Button>
+        ) : (
+          <Button
+            asChild
+            variant={plan.highlighted ? "default" : "outline"}
+            className="mt-5 w-full justify-between shadow-none"
+          >
+            <Link href={checkoutHref}>
+              Planı seç
+              <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" />
+            </Link>
+          </Button>
+        )}
         <p className="mt-3 text-center text-[11px] text-muted-foreground">
           Kart gerektirmeden {BILLING_TRIAL.days} gün ücretsiz deneme
         </p>

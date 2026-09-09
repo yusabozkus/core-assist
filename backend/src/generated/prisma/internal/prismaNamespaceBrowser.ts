@@ -58,6 +58,7 @@ export const ModelName = {
   Workspace: 'Workspace',
   WorkspaceMember: 'WorkspaceMember',
   BillingSubscription: 'BillingSubscription',
+  BillingWebhookEvent: 'BillingWebhookEvent',
   BillingUsagePeriod: 'BillingUsagePeriod',
   BillingUsageEvent: 'BillingUsageEvent',
   Store: 'Store',
@@ -199,11 +200,22 @@ export const BillingSubscriptionScalarFieldEnum = {
   trialEndsAt: 'trialEndsAt',
   cancelAtPeriodEnd: 'cancelAtPeriodEnd',
   canceledAt: 'canceledAt',
+  paddleUpdatedAt: 'paddleUpdatedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type BillingSubscriptionScalarFieldEnum = (typeof BillingSubscriptionScalarFieldEnum)[keyof typeof BillingSubscriptionScalarFieldEnum]
+
+
+export const BillingWebhookEventScalarFieldEnum = {
+  id: 'id',
+  eventType: 'eventType',
+  occurredAt: 'occurredAt',
+  processedAt: 'processedAt'
+} as const
+
+export type BillingWebhookEventScalarFieldEnum = (typeof BillingWebhookEventScalarFieldEnum)[keyof typeof BillingWebhookEventScalarFieldEnum]
 
 
 export const BillingUsagePeriodScalarFieldEnum = {

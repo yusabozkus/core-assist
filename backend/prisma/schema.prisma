@@ -153,6 +153,7 @@ model BillingSubscription {
   trialEndsAt          DateTime?
   cancelAtPeriodEnd    Boolean                   @default(false)
   canceledAt           DateTime?
+  paddleUpdatedAt      DateTime?
   createdAt            DateTime                  @default(now())
   updatedAt            DateTime                  @updatedAt
 
@@ -161,6 +162,16 @@ model BillingSubscription {
 
   @@index([status, currentPeriodEnd])
   @@map("billing_subscription")
+}
+
+model BillingWebhookEvent {
+  id          String   @id
+  eventType   String
+  occurredAt  DateTime
+  processedAt DateTime @default(now())
+
+  @@index([eventType, occurredAt])
+  @@map("billing_webhook_event")
 }
 
 model BillingUsagePeriod {

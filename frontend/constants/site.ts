@@ -16,6 +16,7 @@ export const APP_ROUTES = {
   login: "/login",
   register: "/register",
   onboarding: "/onboarding",
+  checkout: "/checkout",
   dashboard: {
     root: "/dashboard",
     inbox: "/dashboard/inbox",

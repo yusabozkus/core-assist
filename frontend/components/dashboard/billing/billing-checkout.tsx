@@ -1,0 +1,372 @@
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import {
+  AlertCircleIcon,
+  ArrowLeft01Icon,
+  CheckmarkCircle01Icon,
+  Loading03Icon,
+  ShieldCheckIcon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { AppLogo } from "@/components/shared/brand/app-logo"
+import { Button } from "@/components/ui/button"
+import { BILLING_TRIAL, INCLUDED_MARKETPLACES } from "@/constants/billing"
+import { APP_ROUTES } from "@/constants/site"
+import { createBillingCheckout } from "@/lib/api/billing"
+import { getPlanPrice } from "@/lib/billing"
+import { getPaddle, subscribeToPaddleEvents } from "@/lib/paddle"
+import type { BillingCycle, SubscriptionPlan } from "@/types/billing"
+
+const PADDLE_FRAME_TARGET = "coreassist-paddle-checkout"
+
+export function BillingCheckout({
+  storeId,
+  customerEmail,
+  plan,
+  billingCycle,
+}: {
+  storeId: string
+  customerEmail: string
+  plan: SubscriptionPlan
+  billingCycle: BillingCycle
+}) {
+  const router = useRouter()
+  const [attempt, setAttempt] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const mountedRef = useRef(false)
+  const startedAttemptRef = useRef<number | null>(null)
+  const paddleRef = useRef<Awaited<ReturnType<typeof getPaddle>> | null>(null)
+  const price = getPlanPrice(plan, billingCycle)
+
+  useEffect(() => {
+    mountedRef.current = true
+
+    const unsubscribe = subscribeToPaddleEvents((event) => {
+      if (!mountedRef.current) return
+
+      if (event.name === "checkout.loaded") {
+        setIsLoading(false)
+      }
+
+      if (event.name === "checkout.error" || event.name === "checkout.failed") {
+        setIsLoading(false)
+        setError(
+          event.detail ??
+            "Ödeme formu yüklenemedi. Lütfen bağlantınızı kontrol edip tekrar deneyin."
+        )
+      }
+
+      if (event.name === "checkout.completed") {
+        router.replace(
+          `${APP_ROUTES.dashboard.settings.billing}?checkout=success`
+        )
+      }
+    })
+
+    if (startedAttemptRef.current !== attempt) {
+      startedAttemptRef.current = attempt
+
+      void (async () => {
+        try {
+          const [checkout, paddle] = await Promise.all([
+            createBillingCheckout(storeId, plan.id, billingCycle),
+            getPaddle(),
+          ])
+
+          if (!mountedRef.current) return
+
+          paddleRef.current?.Checkout.close()
+          paddleRef.current = paddle
+          paddle.Checkout.open({
+            transactionId: checkout.transactionId,
+            customer: { email: customerEmail },
+            settings: {
+              displayMode: "inline",
+              variant: "one-page",
+              frameTarget: PADDLE_FRAME_TARGET,
+              frameInitialHeight: 650,
+              frameStyle:
+                "width: 100%; min-width: 286px; background-color: transparent; border: none;",
+              locale: "tr",
+              theme: document.documentElement.classList.contains("dark")
+                ? "dark"
+                : "light",
+              allowLogout: false,
+              successUrl: `${window.location.origin}${APP_ROUTES.dashboard.settings.billing}?checkout=success`,
+            },
+          })
+        } catch (checkoutError) {
+          if (!mountedRef.current) return
+          setIsLoading(false)
+          setError(
+            checkoutError instanceof Error
+              ? checkoutError.message
+              : "Ödeme adımı şu anda başlatılamadı. Lütfen tekrar deneyin."
+          )
+        }
+      })()
+    }
+
+    return () => {
+      mountedRef.current = false
+      unsubscribe()
+      window.setTimeout(() => {
+        if (!mountedRef.current) paddleRef.current?.Checkout.close()
+      }, 0)
+    }
+  }, [attempt, billingCycle, customerEmail, plan.id, router, storeId])
+
+  function retryCheckout() {
+    paddleRef.current?.Checkout.close()
+    setIsLoading(true)
+    setError(null)
+    setAttempt((current) => current + 1)
+  }
+
+  return (
+    <main className="relative min-h-svh overflow-x-hidden bg-background">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_10%_5%,color-mix(in_oklab,var(--primary)_7%,transparent),transparent_28%),radial-gradient(circle_at_92%_18%,color-mix(in_oklab,var(--primary)_5%,transparent),transparent_24%),linear-gradient(to_bottom,color-mix(in_oklab,var(--muted)_22%,transparent),transparent_52%)]"
+      />
+
+      <header className="relative z-30 bg-background/65 backdrop-blur-xl">
+        <div className="mx-auto flex h-17 w-full max-w-[1180px] items-center justify-between gap-4 border-b border-border/60 px-5 sm:px-8">
+          <AppLogo href={APP_ROUTES.dashboard.settings.plans} />
+          <div className="flex items-center gap-2 sm:gap-4">
+            <span className="hidden items-center gap-2 text-[11px] font-medium text-muted-foreground md:flex">
+              <HugeiconsIcon
+                icon={ShieldCheckIcon}
+                className="size-3.5 text-primary"
+              />
+              Paddle ile güvenli ödeme
+            </span>
+            <Button asChild variant="ghost" size="sm" className="-mr-2">
+              <Link href={APP_ROUTES.dashboard.settings.plans}>
+                <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
+                <span className="hidden sm:inline">Planlara dön</span>
+                <span className="sm:hidden">Geri</span>
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <div className="relative mx-auto grid w-full max-w-[1180px] gap-10 px-5 py-8 sm:px-8 sm:py-11 lg:grid-cols-[minmax(0,0.82fr)_minmax(500px,1.18fr)] lg:gap-18 lg:py-14">
+        <section className="lg:sticky lg:top-24 lg:self-start">
+          <div className="mb-9 flex items-center gap-3 text-[11px] font-medium">
+            <span className="flex items-center gap-2 text-muted-foreground">
+              <span className="flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <HugeiconsIcon
+                  icon={CheckmarkCircle01Icon}
+                  className="size-3.5"
+                />
+              </span>
+              Plan seçimi
+            </span>
+            <span className="h-px w-9 bg-border" />
+            <span className="flex items-center gap-2 text-foreground">
+              <span className="flex size-5 items-center justify-center rounded-full border border-primary/25 bg-primary/8 text-[10px] font-semibold text-primary">
+                2
+              </span>
+              Ödeme
+            </span>
+          </div>
+
+          <p className="text-xs font-medium text-primary">Seçtiğiniz plan</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-[-0.045em] sm:text-[2.6rem] sm:leading-[1.08]">
+            {plan.name} ile devam edin
+          </h1>
+          <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">
+            {plan.description}
+          </p>
+
+          <div className="mt-8 rounded-2xl bg-card/75 p-5 shadow-[0_18px_55px_-38px_color-mix(in_oklab,var(--foreground)_30%,transparent)] ring-1 ring-border/60 backdrop-blur-sm sm:p-6">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  {billingCycle === "annual"
+                    ? "Yıllık faturalandırma"
+                    : "Aylık faturalandırma"}
+                </p>
+                <p className="mt-1.5 text-3xl font-semibold tracking-[-0.04em] tabular-nums">
+                  {price.monthly}
+                  <span className="ml-1.5 text-sm font-normal tracking-normal text-muted-foreground">
+                    / ay
+                  </span>
+                </p>
+              </div>
+              {billingCycle === "annual" ? (
+                <span className="rounded-full bg-primary/9 px-2.5 py-1 text-[11px] font-semibold text-primary ring-1 ring-primary/12">
+                  %10 tasarruf
+                </span>
+              ) : null}
+            </div>
+
+            <dl className="mt-6 divide-y divide-border/55 border-t border-border/55">
+              <SummaryRow
+                label="Aylık soru hakkı"
+                value={plan.questions.toLocaleString("tr-TR")}
+              />
+              <SummaryRow
+                label="Mağaza ve kullanıcı"
+                value={`${plan.stores} mağaza · ${plan.members} kullanıcı`}
+              />
+              <SummaryRow label="Pazaryerleri" value={INCLUDED_MARKETPLACES} />
+              <SummaryRow
+                label={
+                  billingCycle === "annual" ? "Yıllık toplam" : "Ara toplam"
+                }
+                value={price.total}
+                emphasized
+              />
+            </dl>
+          </div>
+
+          <ul className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            {plan.features.slice(0, 4).map((feature) => (
+              <li
+                key={feature}
+                className="flex items-start gap-2.5 text-xs leading-5 text-muted-foreground"
+              >
+                <HugeiconsIcon
+                  icon={CheckmarkCircle01Icon}
+                  className="mt-0.5 size-3.5 shrink-0 text-primary"
+                />
+                {feature}
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-7 flex items-start gap-3 border-t border-border/60 pt-5">
+            <HugeiconsIcon
+              icon={ShieldCheckIcon}
+              className="mt-0.5 size-4 shrink-0 text-primary"
+            />
+            <p className="max-w-md text-[11px] leading-5 text-muted-foreground">
+              Ödeme bilgileriniz CoreAssist sunucularında tutulmaz. Vergiler,
+              ödeme adresinize göre Paddle tarafından ödeme adımında hesaplanır.
+            </p>
+          </div>
+        </section>
+
+        <section aria-labelledby="payment-heading" className="min-w-0">
+          <div className="overflow-hidden rounded-[1.4rem] bg-card/90 shadow-[0_30px_90px_-52px_color-mix(in_oklab,var(--foreground)_38%,transparent)] ring-1 ring-border/65 backdrop-blur-sm">
+            <div className="flex items-start justify-between gap-4 px-5 py-5 sm:px-7 sm:py-6">
+              <div>
+                <p className="text-[11px] font-medium text-primary">
+                  Güvenli ödeme
+                </p>
+                <h2
+                  id="payment-heading"
+                  className="mt-1 text-lg font-semibold tracking-tight"
+                >
+                  Aboneliğinizi tamamlayın
+                </h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Bilgilerinizi girin ve planınızı etkinleştirin.
+                </p>
+              </div>
+              <span className="hidden rounded-full bg-muted/60 px-2.5 py-1 text-[10px] font-medium text-muted-foreground ring-1 ring-border/60 sm:inline-flex">
+                {BILLING_TRIAL.days} gün deneme
+              </span>
+            </div>
+
+            <div className="relative min-h-[650px] border-t border-border/55 bg-background/28">
+              {isLoading ? <CheckoutLoading /> : null}
+              {error ? (
+                <div className="absolute inset-0 z-20 flex items-center justify-center bg-card p-6">
+                  <div className="max-w-sm text-center">
+                    <span className="mx-auto flex size-11 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                      <HugeiconsIcon
+                        icon={AlertCircleIcon}
+                        className="size-5"
+                      />
+                    </span>
+                    <h3 className="mt-4 font-semibold">
+                      Ödeme formu açılamadı
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      {error}
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="mt-5"
+                      onClick={retryCheckout}
+                    >
+                      Tekrar dene
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+              <div className={`${PADDLE_FRAME_TARGET} min-h-[650px] w-full`} />
+            </div>
+          </div>
+
+          <p className="mt-4 text-center text-[10px] leading-4 text-muted-foreground">
+            Ödeme adımını tamamlayarak Paddle’ın satış ve gizlilik koşullarını
+            kabul etmiş olursunuz.
+          </p>
+        </section>
+      </div>
+    </main>
+  )
+}
+
+function SummaryRow({
+  label,
+  value,
+  emphasized = false,
+}: {
+  label: string
+  value: string
+  emphasized?: boolean
+}) {
+  return (
+    <div className="flex items-center justify-between gap-5 py-3.5 text-xs">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd
+        className={
+          emphasized
+            ? "font-semibold text-foreground"
+            : "font-medium text-foreground/85"
+        }
+      >
+        {value}
+      </dd>
+    </div>
+  )
+}
+
+function CheckoutLoading() {
+  return (
+    <div className="absolute inset-0 z-10 bg-card/95 p-6 sm:p-8">
+      <div className="flex items-center gap-3 border-b border-border/55 pb-6">
+        <span className="flex size-9 items-center justify-center rounded-full bg-primary/9 text-primary">
+          <HugeiconsIcon icon={Loading03Icon} className="size-4 animate-spin" />
+        </span>
+        <div>
+          <p className="text-sm font-medium">Ödeme formu hazırlanıyor</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Güvenli bağlantı kuruluyor…
+          </p>
+        </div>
+      </div>
+      <div className="mt-7 animate-pulse space-y-5">
+        <div className="h-11 rounded-xl bg-muted/70" />
+        <div className="h-11 rounded-xl bg-muted/70" />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="h-11 rounded-xl bg-muted/70" />
+          <div className="h-11 rounded-xl bg-muted/70" />
+        </div>
+        <div className="h-11 rounded-xl bg-muted/70" />
+        <div className="mt-12 h-12 rounded-xl bg-primary/8" />
+      </div>
+    </div>
+  )
+}

@@ -53,6 +53,11 @@ export type WorkspaceMember = Prisma.WorkspaceMemberModel
  */
 export type BillingSubscription = Prisma.BillingSubscriptionModel
 /**
+ * Model BillingWebhookEvent
+ * 
+ */
+export type BillingWebhookEvent = Prisma.BillingWebhookEventModel
+/**
  * Model BillingUsagePeriod
  * 
  */

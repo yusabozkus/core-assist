@@ -10,25 +10,30 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { BillingCycleToggle } from "@/components/dashboard/billing/billing-cycle-toggle"
 import { PlanCard } from "@/components/dashboard/billing/plan-card"
-import { PlanSelectionDialog } from "@/components/dashboard/billing/plan-selection-dialog"
 import { PlanQuestions } from "@/components/dashboard/billing/plan-questions"
 import { AppLogo } from "@/components/shared/brand/app-logo"
 import { Button } from "@/components/ui/button"
-import {
-  BILLING_PREVIEW,
-  BILLING_TRIAL,
-  SUBSCRIPTION_PLANS,
-} from "@/constants/billing"
+import { BILLING_TRIAL, SUBSCRIPTION_PLANS } from "@/constants/billing"
 import { APP_ROUTES } from "@/constants/site"
-import type { BillingCycle, SubscriptionPlan } from "@/types/billing"
+import type { BillingCycle, BillingSummary } from "@/types/billing"
 
-export function PlansClient() {
+export function PlansClient({
+  initialBillingSummary,
+}: {
+  initialBillingSummary: BillingSummary | null
+}) {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(
-    BILLING_PREVIEW.cycle
+    initialBillingSummary?.subscription.cycle === "ANNUAL"
+      ? "annual"
+      : "monthly"
   )
-  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(
-    null
-  )
+  const currentPlan = initialBillingSummary?.subscription.managedByPaddle
+    ? SUBSCRIPTION_PLANS.find(
+        (plan) =>
+          plan.id === initialBillingSummary.subscription.plan.toLowerCase()
+      )
+    : null
+  const currentPlanLabel = currentPlan?.name ?? "Ücretsiz deneme"
   return (
     <main className="themed-scrollbar fixed inset-0 z-40 overflow-y-auto overscroll-y-contain bg-background">
       <header className="sticky top-0 z-10 border-b border-border bg-background/95">
@@ -38,7 +43,7 @@ export function PlansClient() {
             <span className="hidden text-xs text-muted-foreground sm:block">
               Mevcut planınız{" "}
               <span className="ml-1 font-medium text-foreground">
-                {BILLING_PREVIEW.plan.name}
+                {currentPlanLabel}
               </span>
             </span>
             <Button
@@ -93,7 +98,12 @@ export function PlansClient() {
               key={plan.id}
               plan={plan}
               billingCycle={billingCycle}
-              onSelect={setSelectedPlan}
+              checkoutHref={`${APP_ROUTES.checkout}?plan=${plan.id}&cycle=${billingCycle}`}
+              current={
+                currentPlan?.id === plan.id &&
+                initialBillingSummary?.subscription.cycle.toLowerCase() ===
+                  billingCycle
+              }
             />
           ))}
         </section>
@@ -118,16 +128,9 @@ export function PlansClient() {
         <PlanQuestions />
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 text-xs text-muted-foreground">
           <span>CoreAssist · Planlar ve fiyatlandırma</span>
-          <span>Örnek görünüm · Henüz ödeme alınmaz.</span>
+          <span>Ödemeler Paddle güvencesiyle işlenir.</span>
         </footer>
       </div>
-      <PlanSelectionDialog
-        plan={selectedPlan}
-        billingCycle={billingCycle}
-        onOpenChange={(open) => {
-          if (!open) setSelectedPlan(null)
-        }}
-      />
     </main>
   )
 }

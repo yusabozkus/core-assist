@@ -6,15 +6,18 @@ import { BillingEntitlementService } from './billing-entitlement.service';
 import { BillingSubscriptionService } from './billing-subscription.service';
 import { BillingUsageService } from './billing-usage.service';
 import { BillingUsageNotificationService } from './billing-usage-notification.service';
+import { PaddleBillingService } from './paddle-billing.service';
+import { PaddleWebhookController } from './paddle-webhook.controller';
 
 @Module({
   imports: [AuthModule, NotificationsModule],
-  controllers: [BillingController],
+  controllers: [BillingController, PaddleWebhookController],
   providers: [
     BillingSubscriptionService,
     BillingUsageService,
     BillingUsageNotificationService,
     BillingEntitlementService,
+    PaddleBillingService,
   ],
   exports: [
     BillingSubscriptionService,
