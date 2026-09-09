@@ -25,6 +25,8 @@ import { SizeGuideDispatcher } from '../size-guides/size-guide.types';
 import { NotificationsService } from '../notifications/notifications.service';
 import { QuestionProductLinkService } from '../question-product-link/question-product-link.service';
 import { QUESTION_DRAFT_DISPATCHER } from '../questions/question-draft.constants';
+import { BillingEntitlementService } from '../billing/billing-entitlement.service';
+import { BillingPlanLimitException } from '../billing/billing.errors';
 import type { QuestionDraftDispatcher } from '../questions/question-draft.types';
 import { PRODUCT_SYNC_MAX_BATCHES } from './product-sync.constants';
 import type { ProductSyncJobData } from './product-sync.types';
@@ -72,6 +74,7 @@ export class ProductSyncWorkerService {
     private readonly sizeGuides: SizeGuideDispatcher,
     private readonly notifications: NotificationsService,
     private readonly productLinks: QuestionProductLinkService,
+    private readonly billingEntitlements: BillingEntitlementService,
     @Inject(QUESTION_DRAFT_DISPATCHER)
     private readonly questionDrafts: QuestionDraftDispatcher,
   ) {}
@@ -141,8 +144,9 @@ export class ProductSyncWorkerService {
         ? error.message
         : 'Ürün senkronizasyonu başarısız.';
     const authenticationError = isProviderAuthenticationError(error);
+    const planLimitError = error instanceof BillingPlanLimitException;
     const connectionData =
-      data.kind === 'FULL' || authenticationError
+      (data.kind === 'FULL' && !planLimitError) || authenticationError
         ? {
             status: ChannelConnectionStatus.ERROR,
             processingStartedAt: null,
@@ -169,6 +173,22 @@ export class ProductSyncWorkerService {
         data: connectionData,
       }),
     ]);
+
+    if (planLimitError) {
+      await this.notifications.createForStoreMembers({
+        storeId: data.storeId,
+        type: NotificationType.BILLING_PLAN_LIMIT,
+        severity: NotificationSeverity.WARNING,
+        title: 'Ürün kapasitesi doldu',
+        message:
+          'Yeni ürünler içe aktarılamadı. Mevcut ürünleri güncellemeye devam edebilir veya planınızı yükseltebilirsiniz.',
+        actionUrl: '/dashboard/settings/billing',
+        entityType: 'CATALOG_SYNC_RUN',
+        entityId: data.syncRunId,
+        dedupeKey: `billing-product-limit:${data.connectionId}`,
+      });
+      return;
+    }
 
     const inventorySync = data.kind === 'INVENTORY';
     await this.notifications.createForStoreMembers({
@@ -390,6 +410,11 @@ export class ProductSyncWorkerService {
       if (existingExternalProduct) {
         productId = canonicalProductId ?? existingExternalProduct.productId;
         externalProductId = existingExternalProduct.id;
+        await this.assertProductActivationCapacity(
+          transaction,
+          storeId,
+          productId,
+        );
         await transaction.product.update({
           where: { id: productId },
           data: {
@@ -421,6 +446,11 @@ export class ProductSyncWorkerService {
         });
       } else if (canonicalProductId) {
         productId = canonicalProductId;
+        await this.assertProductActivationCapacity(
+          transaction,
+          storeId,
+          productId,
+        );
         await transaction.product.update({
           where: { id: productId },
           data: {
@@ -454,6 +484,7 @@ export class ProductSyncWorkerService {
         });
         externalProductId = externalProduct.id;
       } else {
+        await this.assertProductActivationCapacity(transaction, storeId);
         const product = await transaction.product.create({
           data: {
             storeId,
@@ -541,6 +572,25 @@ export class ProductSyncWorkerService {
     }
 
     return saved.change;
+  }
+
+  private async assertProductActivationCapacity(
+    transaction: Prisma.TransactionClient,
+    storeId: string,
+    productId?: string,
+  ) {
+    if (productId) {
+      const product = await transaction.product.findUnique({
+        where: { id: productId },
+        select: { status: true },
+      });
+      if (product?.status === ProductStatus.ACTIVE) return;
+    }
+
+    await this.billingEntitlements.assertProductCapacityForStoreInTransaction(
+      transaction,
+      storeId,
+    );
   }
 
   private async resolveCanonicalProduct(

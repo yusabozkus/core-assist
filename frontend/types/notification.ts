@@ -1,12 +1,14 @@
 export type NotificationType =
   | "AI_REVIEW_REQUIRED"
   | "AI_DRAFT_FAILED"
+  | "AI_USAGE_LIMIT"
   | "ANSWER_DELIVERY_FAILED"
   | "PRODUCT_SYNC_FAILED"
   | "QUESTION_SYNC_FAILED"
   | "LOW_STOCK"
   | "OUT_OF_STOCK"
   | "CHANNEL_CONNECTION_ERROR"
+  | "BILLING_PLAN_LIMIT"
 
 export type NotificationSeverity = "INFO" | "WARNING" | "ERROR"
 export type NotificationReadFilter = "ALL" | "UNREAD"

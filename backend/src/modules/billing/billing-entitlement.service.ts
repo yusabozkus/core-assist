@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '../../generated/prisma/client';
 import { ProductStatus } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import {
@@ -83,42 +84,122 @@ export class BillingEntitlementService {
   }
 
   async assertStoreCapacity(workspaceId: string) {
-    const summary = await this.getSummaryForWorkspace(workspaceId);
-    if (!summary.subscription.active) {
-      throw new BillingAccessRequiredException();
-    }
-    if (summary.usage.stores.remaining < 1) {
-      throw new BillingPlanLimitException(
-        'stores',
-        summary.entitlements.stores,
-      );
+    return this.prisma.$transaction((transaction) =>
+      this.assertStoreCapacityInTransaction(transaction, workspaceId),
+    );
+  }
+
+  async assertStoreCapacityInTransaction(
+    transaction: Prisma.TransactionClient,
+    workspaceId: string,
+  ) {
+    const limits = await this.getActiveLimitsInTransaction(
+      transaction,
+      workspaceId,
+    );
+    const stores = await transaction.store.count({
+      where: { workspaceId, status: 'ACTIVE' },
+    });
+    if (stores >= limits.stores) {
+      throw new BillingPlanLimitException('stores', limits.stores);
     }
   }
 
   async assertMemberCapacity(workspaceId: string) {
-    const summary = await this.getSummaryForWorkspace(workspaceId);
-    if (!summary.subscription.active) {
-      throw new BillingAccessRequiredException();
-    }
-    if (summary.usage.members.remaining < 1) {
-      throw new BillingPlanLimitException(
-        'members',
-        summary.entitlements.members,
-      );
+    return this.prisma.$transaction((transaction) =>
+      this.assertMemberCapacityInTransaction(transaction, workspaceId),
+    );
+  }
+
+  async assertMemberCapacityInTransaction(
+    transaction: Prisma.TransactionClient,
+    workspaceId: string,
+  ) {
+    const limits = await this.getActiveLimitsInTransaction(
+      transaction,
+      workspaceId,
+    );
+    const members = await transaction.workspaceMember.count({
+      where: { workspaceId },
+    });
+    if (members >= limits.members) {
+      throw new BillingPlanLimitException('members', limits.members);
     }
   }
 
   async assertProductCapacity(workspaceId: string, additionalProducts = 1) {
-    const summary = await this.getSummaryForWorkspace(workspaceId);
-    if (!summary.subscription.active) {
-      throw new BillingAccessRequiredException();
-    }
-    if (summary.usage.activeProducts.remaining < additionalProducts) {
+    return this.prisma.$transaction((transaction) =>
+      this.assertProductCapacityInTransaction(
+        transaction,
+        workspaceId,
+        additionalProducts,
+      ),
+    );
+  }
+
+  async assertProductCapacityForStoreInTransaction(
+    transaction: Prisma.TransactionClient,
+    storeId: string,
+    additionalProducts = 1,
+  ) {
+    const store = await transaction.store.findUnique({
+      where: { id: storeId },
+      select: { workspaceId: true },
+    });
+    if (!store) throw new NotFoundException('Mağaza bulunamadı.');
+
+    return this.assertProductCapacityInTransaction(
+      transaction,
+      store.workspaceId,
+      additionalProducts,
+    );
+  }
+
+  async assertProductCapacityInTransaction(
+    transaction: Prisma.TransactionClient,
+    workspaceId: string,
+    additionalProducts = 1,
+  ) {
+    const limits = await this.getActiveLimitsInTransaction(
+      transaction,
+      workspaceId,
+    );
+    const activeProducts = await transaction.product.count({
+      where: {
+        store: { workspaceId },
+        status: ProductStatus.ACTIVE,
+      },
+    });
+    if (activeProducts + additionalProducts > limits.activeProducts) {
       throw new BillingPlanLimitException(
         'activeProducts',
-        summary.entitlements.activeProducts,
+        limits.activeProducts,
       );
     }
+  }
+
+  private async getActiveLimitsInTransaction(
+    transaction: Prisma.TransactionClient,
+    workspaceId: string,
+    now = new Date(),
+  ) {
+    await transaction.$queryRaw`
+      SELECT "id"
+      FROM "workspace"
+      WHERE "id" = ${workspaceId}
+      FOR UPDATE
+    `;
+
+    const subscription = await this.subscriptions.getOrCreateForWorkspace(
+      workspaceId,
+      now,
+      transaction,
+    );
+    if (!this.subscriptions.hasAccess(subscription, now)) {
+      throw new BillingAccessRequiredException();
+    }
+
+    return entitlementsFor(subscription.plan, subscription.status);
   }
 }
 

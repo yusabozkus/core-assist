@@ -257,7 +257,13 @@ export class BillingUsageService {
     } catch (error) {
       if (isUniqueConstraintError(error)) {
         const usage = await this.getCurrentForWorkspace(workspaceId, now);
-        return usageResult(usage.used, usage.limit, false);
+        return usageResult(
+          usage.used,
+          usage.limit,
+          false,
+          usage.periodId,
+          usage.used,
+        );
       }
       throw error;
     }
@@ -307,7 +313,13 @@ export class BillingUsageService {
       select: { id: true },
     });
     if (existing) {
-      return usageResult(period.aiQuestionUnits, limit, false);
+      return usageResult(
+        period.aiQuestionUnits,
+        limit,
+        false,
+        period.id,
+        period.aiQuestionUnits,
+      );
     }
 
     const incremented = await client.billingUsagePeriod.updateMany({
@@ -334,13 +346,27 @@ export class BillingUsageService {
       },
     });
 
-    return usageResult(period.aiQuestionUnits + quantity, limit, true);
+    return usageResult(
+      period.aiQuestionUnits + quantity,
+      limit,
+      true,
+      period.id,
+      period.aiQuestionUnits,
+    );
   }
 }
 
-function usageResult(used: number, limit: number, charged: boolean) {
+function usageResult(
+  used: number,
+  limit: number,
+  charged: boolean,
+  periodId: string | null = null,
+  previousUsed = used,
+) {
   return {
     charged,
+    periodId,
+    previousUsed,
     used,
     limit,
     remaining: Math.max(0, limit - used),

@@ -28,12 +28,14 @@ const NOTIFICATION_TYPE_DETAILS: Record<
 > = {
   AI_REVIEW_REQUIRED: { label: "İnceleme", icon: AiBrain01Icon },
   AI_DRAFT_FAILED: { label: "AI taslağı", icon: AiBrain01Icon },
+  AI_USAGE_LIMIT: { label: "Plan kullanımı", icon: AiBrain01Icon },
   ANSWER_DELIVERY_FAILED: { label: "Yanıt", icon: InboxIcon },
   PRODUCT_SYNC_FAILED: { label: "Ürün senkronizasyonu", icon: RefreshIcon },
   QUESTION_SYNC_FAILED: { label: "Soru senkronizasyonu", icon: RefreshIcon },
   LOW_STOCK: { label: "Stok", icon: Package01Icon },
   OUT_OF_STOCK: { label: "Stok", icon: Package01Icon },
   CHANNEL_CONNECTION_ERROR: { label: "Kanal", icon: PlugSocketIcon },
+  BILLING_PLAN_LIMIT: { label: "Plan limiti", icon: Package01Icon },
 }
 
 const SEVERITY_STYLES: Record<

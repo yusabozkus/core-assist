@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import {
   AiBrain01Icon,
+  CreditCardIcon,
   InboxIcon,
   Package01Icon,
   RefreshIcon,
@@ -81,6 +82,26 @@ const PREFERENCE_GROUPS: Array<{
         type: "CHANNEL_CONNECTION_ERROR",
         title: "Kanal bağlantı sorunları",
         description: "Bağlı bir pazaryerinin erişimi kesildiğinde bildirin.",
+      },
+    ],
+  },
+  {
+    title: "Plan ve kullanım",
+    description: "Abonelik haklarınızın kalan kapasitesini takip edin.",
+    icon: CreditCardIcon,
+    iconClassName: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    preferences: [
+      {
+        type: "AI_USAGE_LIMIT",
+        title: "AI kullanım limiti",
+        description:
+          "Aylık soru hakkınız kritik kullanım eşiklerine ulaştığında bildirin.",
+      },
+      {
+        type: "BILLING_PLAN_LIMIT",
+        title: "Plan kapasitesi",
+        description:
+          "Mağaza veya ürün kapasitesi bir işlemi engellediğinde bildirin.",
       },
     ],
   },
@@ -338,9 +359,9 @@ export function NotificationPreferences({ storeId }: { storeId: string }) {
 function NotificationPreferencesSkeleton() {
   return (
     <div className="space-y-4" aria-hidden="true">
-      {Array.from({ length: 3 }).map((_, groupIndex) => (
+      {PREFERENCE_GROUPS.map((group) => (
         <section
-          key={groupIndex}
+          key={group.title}
           className="overflow-hidden rounded-xl border border-border bg-card"
         >
           <div className="flex items-start gap-3 border-b border-border px-5 py-4">
@@ -350,7 +371,7 @@ function NotificationPreferencesSkeleton() {
               <Skeleton className="h-3 w-64 max-w-full rounded-md" />
             </div>
           </div>
-          {Array.from({ length: groupIndex === 2 ? 2 : 3 }).map(
+          {Array.from({ length: group.preferences.length }).map(
             (_, itemIndex) => (
               <div
                 key={itemIndex}

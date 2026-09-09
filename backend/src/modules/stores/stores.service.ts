@@ -19,10 +19,14 @@ import {
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { PrismaService } from '../../database/prisma.service';
 import { createDefaultStoreAiInstructions } from '../knowledge/default-ai-instructions';
+import { BillingEntitlementService } from '../billing/billing-entitlement.service';
 
 @Injectable()
 export class StoresService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly billingEntitlements: BillingEntitlementService,
+  ) {}
 
   async create(userId: string, createStoreDto: CreateStoreDto) {
     const memberships = await this.prisma.workspaceMember.findMany({
@@ -42,29 +46,36 @@ export class StoresService {
       throw new ForbiddenException('Mağaza oluşturma yetkiniz bulunmuyor.');
     }
 
-    return this.prisma.store.create({
-      data: {
-        name: createStoreDto.name,
-        workspaceId: membership.workspaceId,
-        members: {
-          create: {
-            userId: userId,
-            role:
-              membership.role === WorkspaceRole.OWNER
-                ? StoreRole.OWNER
-                : StoreRole.ADMIN,
+    return this.prisma.$transaction(async (transaction) => {
+      await this.billingEntitlements.assertStoreCapacityInTransaction(
+        transaction,
+        membership.workspaceId,
+      );
+
+      return transaction.store.create({
+        data: {
+          name: createStoreDto.name,
+          workspaceId: membership.workspaceId,
+          members: {
+            create: {
+              userId,
+              role:
+                membership.role === WorkspaceRole.OWNER
+                  ? StoreRole.OWNER
+                  : StoreRole.ADMIN,
+            },
+          },
+          aiInstructions: {
+            create: createDefaultStoreAiInstructions(),
           },
         },
-        aiInstructions: {
-          create: createDefaultStoreAiInstructions(),
+        select: {
+          id: true,
+          name: true,
+          status: true,
+          createdAt: true,
         },
-      },
-      select: {
-        id: true,
-        name: true,
-        status: true,
-        createdAt: true,
-      },
+      });
     });
   }
 
@@ -237,35 +248,42 @@ export class StoresService {
   }
 
   async restore(id: string, userId: string) {
-    const store = await this.prisma.store.findFirst({
-      where: {
-        id,
-        status: StoreStatus.INACTIVE,
-        members: {
-          some: {
-            userId,
-            role: { in: [StoreRole.OWNER, StoreRole.ADMIN] },
+    return this.prisma.$transaction(async (transaction) => {
+      const store = await transaction.store.findFirst({
+        where: {
+          id,
+          status: StoreStatus.INACTIVE,
+          members: {
+            some: {
+              userId,
+              role: { in: [StoreRole.OWNER, StoreRole.ADMIN] },
+            },
           },
         },
-      },
-      select: { id: true },
-    });
+        select: { id: true, workspaceId: true },
+      });
 
-    if (!store) {
-      throw new NotFoundException(
-        'Arşivlenen mağaza bulunamadı, zaten aktif veya yetkiniz yok.',
+      if (!store) {
+        throw new NotFoundException(
+          'Arşivlenen mağaza bulunamadı, zaten aktif veya yetkiniz yok.',
+        );
+      }
+
+      await this.billingEntitlements.assertStoreCapacityInTransaction(
+        transaction,
+        store.workspaceId,
       );
-    }
 
-    return this.prisma.store.update({
-      where: { id },
-      data: { status: StoreStatus.ACTIVE },
-      select: {
-        id: true,
-        name: true,
-        status: true,
-        createdAt: true,
-      },
+      return transaction.store.update({
+        where: { id },
+        data: { status: StoreStatus.ACTIVE },
+        select: {
+          id: true,
+          name: true,
+          status: true,
+          createdAt: true,
+        },
+      });
     });
   }
 

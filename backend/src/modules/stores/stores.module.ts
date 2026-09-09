@@ -4,9 +4,10 @@ import { StoresController } from './stores.controller';
 
 import { PrismaModule } from '../../database/prisma.module';
 import { AuthModule } from '../auth/auth.module';
+import { BillingModule } from '../billing/billing.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, BillingModule],
   controllers: [StoresController],
   providers: [StoresService],
 })

@@ -19,6 +19,7 @@ import {
   ProvisionOnboardingDto,
 } from './dto/complete-onboarding.dto';
 import { createDefaultStoreAiInstructions } from '../knowledge/default-ai-instructions';
+import { BillingEntitlementService } from '../billing/billing-entitlement.service';
 
 const CHANNEL_PROVIDER_KEY: Record<OnboardingChannel, string> = {
   [OnboardingChannel.TRENDYOL]: 'trendyol',
@@ -37,6 +38,7 @@ export class OnboardingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly channels: ChannelsService,
+    private readonly billingEntitlements: BillingEntitlementService,
   ) {}
 
   async getStatus(userId: string) {
@@ -223,6 +225,10 @@ export class OnboardingService {
       let store = workspace.stores[0] ?? null;
 
       if (!store) {
+        await this.billingEntitlements.assertStoreCapacityInTransaction(
+          transaction,
+          workspace.id,
+        );
         store = await transaction.store.create({
           data: {
             name: dto.storeName,

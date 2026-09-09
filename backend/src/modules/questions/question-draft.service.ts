@@ -18,6 +18,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { InventoryVerificationService } from '../inventory-verification/inventory-verification.service';
 import { BillingUsageService } from '../billing/billing-usage.service';
+import { BillingUsageNotificationService } from '../billing/billing-usage-notification.service';
 import {
   AiDraftGenerator,
   AiDraftRateLimitError,
@@ -58,6 +59,7 @@ export class QuestionDraftService {
     private readonly replyDecision: QuestionReplyDecisionService,
     private readonly productLinks: QuestionProductLinkService,
     private readonly billingUsage: BillingUsageService,
+    private readonly billingUsageNotifications: BillingUsageNotificationService,
   ) {}
 
   async generate(
@@ -297,7 +299,7 @@ export class QuestionDraftService {
         );
       }
 
-      await this.billingUsage.consumeSuccessfulDraft(
+      const billingUsage = await this.billingUsage.consumeSuccessfulDraft(
         transaction,
         {
           storeId,
@@ -308,14 +310,19 @@ export class QuestionDraftService {
         draftedAt,
       );
 
-      return attempt;
+      return { attempt, billingUsage };
     });
+
+    await this.billingUsageNotifications.notifyAiQuestionThreshold(
+      storeId,
+      draftAttempt.billingUsage,
+    );
 
     return {
       answer,
       status: 'DRAFTED',
       context: {
-        attemptId: draftAttempt.id,
+        attemptId: draftAttempt.attempt.id,
         autoSend: {
           eligible: autoSend.eligible,
           mode: automationMode,
