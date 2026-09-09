@@ -35,4 +35,29 @@ export class BillingController {
       input.cycle,
     );
   }
+
+  @Get('invoices')
+  getInvoices(
+    @Param('storeId') storeId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.paddleBilling.getBillingHistory(storeId, user.id);
+  }
+
+  @Get('invoices/:transactionId/pdf')
+  getInvoicePdf(
+    @Param('storeId') storeId: string,
+    @Param('transactionId') transactionId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.paddleBilling.getInvoicePdf(storeId, user.id, transactionId);
+  }
+
+  @Post('portal-session')
+  createPortalSession(
+    @Param('storeId') storeId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.paddleBilling.createPortalSession(storeId, user.id);
+  }
 }

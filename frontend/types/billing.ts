@@ -67,18 +67,51 @@ export type BillingCheckoutResult = {
   environment: "sandbox" | "production"
 }
 
-export type InvoiceStatus = "paid" | "refunded"
+export type InvoiceStatus = "paid" | "partially_refunded" | "refunded"
+
+export type BillingPaymentMethod = {
+  type: string
+  brand: string | null
+  last4: string | null
+  expiryMonth: number | null
+  expiryYear: number | null
+}
+
+export type BillingCustomer = {
+  name: string | null
+  email: string | null
+  taxIdentifier: string | null
+  address: string | null
+}
 
 export type InvoiceRecord = {
   id: string
+  transactionId: string
   number: string
-  plan: string
-  period: string
+  plan: "STARTER" | "GROWTH" | "BUSINESS" | null
+  cycle: "MONTHLY" | "ANNUAL" | null
+  periodStart: string | null
+  periodEnd: string | null
   issuedAt: string
-  year: string
   subtotal: number
   tax: number
   total: number
+  refundedAmount: number
+  currency: string
   status: InvoiceStatus
-  paymentMethod: string
+  paymentMethod: BillingPaymentMethod | null
+  billingCustomer: BillingCustomer | null
+}
+
+export type BillingHistory = {
+  managedByPaddle: boolean
+  paymentMethod: BillingPaymentMethod | null
+  billingCustomer: BillingCustomer | null
+  invoices: InvoiceRecord[]
+}
+
+export type BillingPortalSession = {
+  overviewUrl: string
+  updatePaymentMethodUrl: string | null
+  cancelSubscriptionUrl: string | null
 }

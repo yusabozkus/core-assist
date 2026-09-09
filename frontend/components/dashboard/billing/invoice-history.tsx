@@ -1,7 +1,12 @@
 import { ArrowRight01Icon, Invoice03Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
-import { formatInvoiceAmount } from "@/lib/billing"
+import {
+  formatBillingAmount,
+  formatBillingDate,
+  formatBillingPeriod,
+  getInvoiceDescription,
+} from "@/lib/billing"
 import type { InvoiceRecord } from "@/types/billing"
 import { InvoiceStatusBadge } from "./invoice-status-badge"
 
@@ -14,9 +19,9 @@ export function InvoiceHistory({
   onSelect: (invoice: InvoiceRecord) => void
   onReset: () => void
 }) {
-  if (!invoices.length)
+  if (!invoices.length) {
     return (
-      <div className="flex min-h-72 flex-col items-center justify-center px-5 py-12 text-center">
+      <div className="flex min-h-72 flex-col items-center justify-center border-t border-border px-5 py-12 text-center">
         <HugeiconsIcon
           icon={Invoice03Icon}
           className="size-8 text-muted-foreground/60"
@@ -38,6 +43,8 @@ export function InvoiceHistory({
         </Button>
       </div>
     )
+  }
+
   return (
     <>
       <div className="themed-scrollbar hidden overflow-x-auto md:block">
@@ -57,7 +64,7 @@ export function InvoiceHistory({
                 Durum
               </th>
               <th scope="col" className="px-4 py-3 text-right font-medium">
-                Tutar <span className="font-normal">(KDV dahil)</span>
+                Tutar <span className="font-normal">(vergiler dahil)</span>
               </th>
               <th scope="col" className="w-12 px-5 py-3">
                 <span className="sr-only">Detay</span>
@@ -87,20 +94,27 @@ export function InvoiceHistory({
                         {invoice.number}
                       </button>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {invoice.issuedAt}
+                        {formatBillingDate(invoice.issuedAt)}
                       </p>
                     </div>
                   </div>
                 </td>
                 <td className="px-4 py-4">
-                  <p className="whitespace-nowrap">{invoice.period}</p>
-                  <p className="mt-1 text-muted-foreground">{invoice.plan}</p>
+                  <p className="whitespace-nowrap">
+                    {formatBillingPeriod(
+                      invoice.periodStart,
+                      invoice.periodEnd
+                    )}
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    {getInvoiceDescription(invoice)}
+                  </p>
                 </td>
                 <td className="px-4 py-4">
                   <InvoiceStatusBadge status={invoice.status} />
                 </td>
                 <td className="px-4 py-4 text-right text-sm font-medium whitespace-nowrap tabular-nums">
-                  {formatInvoiceAmount(invoice.total)}
+                  {formatBillingAmount(invoice.total, invoice.currency)}
                 </td>
                 <td className="px-5 py-4">
                   <Button
@@ -121,6 +135,7 @@ export function InvoiceHistory({
           </tbody>
         </table>
       </div>
+
       <div className="divide-y divide-border border-t border-border md:hidden">
         {invoices.map((invoice) => (
           <button
@@ -134,15 +149,15 @@ export function InvoiceHistory({
                 {invoice.number}
               </span>
               <span className="mt-1 block text-xs text-muted-foreground">
-                {invoice.issuedAt}
+                {formatBillingDate(invoice.issuedAt)}
               </span>
               <span className="mt-1 block text-[11px] text-muted-foreground">
-                {invoice.plan}
+                {getInvoiceDescription(invoice)}
               </span>
             </span>
             <span className="shrink-0 text-right">
               <span className="block text-sm font-medium tabular-nums">
-                {formatInvoiceAmount(invoice.total)}
+                {formatBillingAmount(invoice.total, invoice.currency)}
               </span>
               <span className="mt-2 flex justify-end">
                 <InvoiceStatusBadge status={invoice.status} />

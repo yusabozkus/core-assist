@@ -62,9 +62,6 @@ export function BillingPageHeader({
             {link.label}
           </Link>
         ))}
-        <span className="ml-auto hidden text-xs text-muted-foreground sm:block">
-          Örnek görünüm
-        </span>
       </nav>
     </header>
   )

@@ -1,4 +1,4 @@
-import { formatInvoiceAmount } from "@/lib/billing"
+import { formatBillingAmount, formatBillingDate } from "@/lib/billing"
 import type { InvoiceRecord } from "@/types/billing"
 
 export function InvoiceSummary({
@@ -8,32 +8,43 @@ export function InvoiceSummary({
   invoices: readonly InvoiceRecord[]
   year: string
 }) {
-  const paid = invoices.filter((invoice) => invoice.status === "paid")
-  const refunded = invoices.filter((invoice) => invoice.status === "refunded")
-  const lastPaid = paid[0]
+  const currency = invoices[0]?.currency ?? "TRY"
+  const totalPaid = invoices.reduce(
+    (total, invoice) => total + invoice.total - invoice.refundedAmount,
+    0
+  )
+  const totalRefunded = invoices.reduce(
+    (total, invoice) => total + invoice.refundedAmount,
+    0
+  )
+  const lastPaid = invoices[0]
+  const refundedCount = invoices.filter(
+    (invoice) => invoice.refundedAmount > 0
+  ).length
   const items = [
     {
-      label: `${year === "all" ? "Tüm dönemler" : year} · toplam ödeme`,
-      value: formatInvoiceAmount(
-        paid.reduce((total, invoice) => total + invoice.total, 0)
-      ),
-      detail: `${paid.length} başarılı ödeme · KDV dahil`,
+      label: `${year === "all" ? "Tüm dönemler" : year} · net ödeme`,
+      value: formatBillingAmount(totalPaid, currency),
+      detail: `${invoices.length} tamamlanan işlem · vergiler dahil`,
     },
     {
       label: "Son başarılı ödeme",
-      value: lastPaid ? formatInvoiceAmount(lastPaid.total) : "—",
-      detail: lastPaid?.issuedAt ?? "Bu dönemde ödeme yok",
+      value: lastPaid
+        ? formatBillingAmount(lastPaid.total, lastPaid.currency)
+        : "—",
+      detail: lastPaid
+        ? formatBillingDate(lastPaid.issuedAt)
+        : "Henüz ödeme bulunmuyor",
     },
     {
       label: "İade edilen",
-      value: formatInvoiceAmount(
-        refunded.reduce((total, invoice) => total + invoice.total, 0)
-      ),
-      detail: refunded.length
-        ? `${refunded.length} fatura iade edildi`
+      value: formatBillingAmount(totalRefunded, currency),
+      detail: refundedCount
+        ? `${refundedCount} işlemde iade bulunuyor`
         : "Bu dönemde iade bulunmuyor",
     },
   ]
+
   return (
     <section
       aria-label="Dönemin ödeme özeti"

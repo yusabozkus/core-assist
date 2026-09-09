@@ -2,7 +2,9 @@ import { apiFetch } from "@/lib/api/client"
 import type {
   BillingCheckoutResult,
   BillingCycle,
+  BillingHistory,
   BillingPlanId,
+  BillingPortalSession,
   BillingSummary,
 } from "@/types/billing"
 
@@ -26,5 +28,27 @@ export function createBillingCheckout(
         cycle: cycle.toUpperCase(),
       }),
     }
+  )
+}
+
+export function getBillingHistory(storeId: string, signal?: AbortSignal) {
+  return apiFetch<BillingHistory>(`/stores/${storeId}/billing/invoices`, {
+    signal,
+  })
+}
+
+export function getBillingInvoicePdf(
+  storeId: string,
+  transactionId: string
+) {
+  return apiFetch<{ url: string }>(
+    `/stores/${storeId}/billing/invoices/${transactionId}/pdf`
+  )
+}
+
+export function createBillingPortalSession(storeId: string) {
+  return apiFetch<BillingPortalSession>(
+    `/stores/${storeId}/billing/portal-session`,
+    { method: "POST" }
   )
 }
