@@ -75,6 +75,11 @@ export class PaddleBillingService {
     );
   }
 
+  async cancelPendingCheckout(workspaceId: string, userId: string) {
+    await this.getManageableSubscription(workspaceId, userId);
+    return this.checkouts.cancelPending(workspaceId, this.getClient());
+  }
+
   async getBillingHistory(workspaceId: string, userId: string) {
     const { subscription } = await this.getManageableSubscription(
       workspaceId,
@@ -208,6 +213,24 @@ export class PaddleBillingService {
         'Abonelik yönetimi şu anda açılamıyor. Lütfen tekrar deneyin.',
       );
     }
+  }
+
+  async refreshSubscriptionState(workspaceId: string, userId: string) {
+    await this.getManageableSubscription(workspaceId, userId);
+    await this.reconcileWorkspace(workspaceId);
+
+    const subscription =
+      await this.prisma.billingSubscription.findUniqueOrThrow({
+        where: { workspaceId },
+        select: {
+          status: true,
+          cancelAtPeriodEnd: true,
+          scheduledAccessEndsAt: true,
+          currentPeriodEnd: true,
+        },
+      });
+
+    return { refreshed: true, subscription };
   }
 
   async handleWebhook(rawBody: string, signature: string | undefined) {

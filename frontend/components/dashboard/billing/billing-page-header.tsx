@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import Link from "next/link"
 import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -8,9 +9,11 @@ import { cn } from "@/lib/utils"
 export function BillingPageHeader({
   active,
   workspaceId,
+  children,
 }: {
   workspaceId: string
   active: "overview" | "invoices"
+  children?: ReactNode
 }) {
   const links = [
     {
@@ -44,9 +47,10 @@ export function BillingPageHeader({
           </Link>
         </Button>
       </div>
+      {children ? <div className="mt-5">{children}</div> : null}
       <nav
         aria-label="Faturalama sayfaları"
-        className="mt-7 flex items-center gap-6 border-b border-border"
+        className="mt-6 flex items-center gap-6 border-b border-border"
       >
         {links.map((link) => (
           <Link

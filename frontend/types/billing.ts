@@ -50,6 +50,7 @@ export type BillingSummary = {
     currentPeriodStart: string
     currentPeriodEnd: string
     cancelAtPeriodEnd: boolean
+    scheduledAccessEndsAt: string | null
   }
   entitlements: {
     monthlyAiQuestions: number
@@ -90,6 +91,8 @@ export type BillingPlanChangePreview = {
   cycle: BillingSummary["subscription"]["cycle"]
   currentPlan: BillingSummary["subscription"]["plan"]
   currentCycle: BillingSummary["subscription"]["cycle"]
+  changeType: "upgrade" | "downgrade" | "billing_cycle_change"
+  settlementTiming: "immediately" | "next_billing_period"
   effectiveFrom: "immediately"
   expiresAt: string
   canConfirm: boolean
@@ -115,6 +118,12 @@ export type BillingCheckoutResult = {
   environment: "sandbox" | "production"
   plan: BillingSummary["subscription"]["plan"]
   cycle: BillingSummary["subscription"]["cycle"]
+  canCancel: boolean
+}
+
+export type BillingCheckoutCancellation = {
+  canceled: boolean
+  transactionId: string | null
 }
 
 export type InvoiceStatus = "paid" | "partially_refunded" | "refunded"

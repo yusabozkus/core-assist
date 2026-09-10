@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Download04Icon, Loading03Icon } from "@hugeicons/core-free-icons"
+import { Download01Icon, Loading03Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
@@ -37,6 +37,8 @@ export function InvoiceDetailDialog({
         invoice.transactionId
       )
       window.location.assign(result.url)
+      setIsDownloading(false)
+      onOpenChange(false)
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -79,8 +81,9 @@ export function InvoiceDetailDialog({
             onClick={downloadInvoice}
           >
             <HugeiconsIcon
-              icon={isDownloading ? Loading03Icon : Download04Icon}
-              className={isDownloading ? "size-3.5 animate-spin" : "size-3.5"}
+              strokeWidth={2}
+              icon={isDownloading ? Loading03Icon : Download01Icon}
+              className={isDownloading ? "size-3.5 animate-spin" : "size-4"}
             />
             {isDownloading ? "Hazırlanıyor" : "Faturayı indir"}
           </Button>
@@ -92,9 +95,6 @@ export function InvoiceDetailDialog({
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-lg font-semibold tracking-tight">CoreAssist</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Paddle abonelik faturası
-              </p>
             </div>
             <InvoiceStatusBadge status={invoice.status} />
           </div>

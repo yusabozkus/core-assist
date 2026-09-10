@@ -15,7 +15,11 @@ import { Button } from "@/components/ui/button"
 import { BILLING_TRIAL, INCLUDED_MARKETPLACES } from "@/constants/billing"
 import { billingRoutes } from "@/lib/billing-routes"
 import { APP_ROUTES } from "@/constants/site"
-import { createBillingCheckout, getBillingSummary } from "@/lib/api/billing"
+import {
+  cancelPendingBillingCheckout,
+  createBillingCheckout,
+  getBillingSummary,
+} from "@/lib/api/billing"
 import { getPlanPrice } from "@/lib/billing"
 import { getPaddle, subscribeToPaddleEvents } from "@/lib/paddle"
 import type { BillingCycle, SubscriptionPlan } from "@/types/billing"
@@ -43,6 +47,9 @@ export function BillingCheckout({
   const [error, setError] = useState<string | null>(null)
   const [completionError, setCompletionError] = useState<string | null>(null)
   const [pendingCheckoutHref, setPendingCheckoutHref] = useState<string | null>(
+    null
+  )
+  const [pendingCheckoutPlan, setPendingCheckoutPlan] = useState<string | null>(
     null
   )
   const mountedRef = useRef(false)
@@ -134,8 +141,35 @@ export function BillingCheckout({
           setPendingCheckoutHref(
             `${APP_ROUTES.checkout}?workspaceId=${encodeURIComponent(workspaceId)}&plan=${checkout.plan.toLowerCase()}&cycle=${checkout.cycle.toLowerCase()}`
           )
+          setPendingCheckoutPlan(formatPlanName(checkout.plan))
+
+          if (checkout.canCancel) {
+            await cancelPendingBillingCheckout(workspaceId)
+            setPendingCheckoutHref(null)
+            setPendingCheckoutPlan(null)
+            checkout = await createBillingCheckout(
+              workspaceId,
+              plan.id,
+              billingCycle,
+              controller.signal
+            )
+            while (checkout.state === "preparing" && Date.now() < deadline) {
+              await wait(1_000, controller.signal)
+              checkout = await createBillingCheckout(
+                workspaceId,
+                plan.id,
+                billingCycle,
+                controller.signal
+              )
+            }
+          }
+        }
+
+        if (checkout.state === "plan_conflict") {
           throw new Error(
-            "Başka bir plan için açık ödeme işleminiz bulunuyor. İkinci bir ödeme açılmadı; mevcut işleminize devam edebilirsiniz."
+            checkout.canCancel
+              ? "Bekleyen ödeme değiştirilemedi. Mevcut işleminize devam edebilir veya daha sonra tekrar deneyebilirsiniz."
+              : "Mevcut ödemeniz işleniyor. Abonelik bilgileriniz güncellenene kadar başka bir plan seçilemez."
           )
         }
         if (checkout.state === "payment_pending") {
@@ -208,6 +242,7 @@ export function BillingCheckout({
     setError(null)
     setCompletionError(null)
     setPendingCheckoutHref(null)
+    setPendingCheckoutPlan(null)
     completionStartedRef.current = false
     setAttempt((current) => current + 1)
   }
@@ -394,11 +429,15 @@ export function BillingCheckout({
                       {error}
                     </p>
                     {pendingCheckoutHref ? (
-                      <Button asChild size="sm" className="mt-5">
-                        <Link href={pendingCheckoutHref}>
-                          Mevcut ödemeye dön
-                        </Link>
-                      </Button>
+                      <div className="mt-5 flex flex-col items-stretch gap-2">
+                        <Button asChild size="sm">
+                          <Link href={pendingCheckoutHref}>
+                            {pendingCheckoutPlan
+                              ? `${pendingCheckoutPlan} ödemesine devam et`
+                              : "Mevcut ödemeye dön"}
+                          </Link>
+                        </Button>
+                      </div>
                     ) : (
                       <Button
                         type="button"
@@ -424,6 +463,10 @@ export function BillingCheckout({
       </div>
     </main>
   )
+}
+
+function formatPlanName(plan: "STARTER" | "GROWTH" | "BUSINESS") {
+  return `${plan.charAt(0)}${plan.slice(1).toLowerCase()}`
 }
 
 function CheckoutCompletion({

@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   Logger,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { ApiError, Paddle, type Transaction } from '@paddle/paddle-node-sdk';
 import { PrismaService } from '../../database/prisma.service';
@@ -38,6 +39,11 @@ type CheckoutResult = {
   environment: 'production' | 'sandbox';
   plan: BillingPlan;
   cycle: BillingCycle;
+  canCancel: boolean;
+};
+type CancelCheckoutResult = {
+  canceled: boolean;
+  transactionId: string | null;
 };
 const PENDING_STATUSES = [
   BillingCheckoutStatus.CREATING,
@@ -209,6 +215,105 @@ export class PaddleCheckoutService {
     return result ?? this.createOrReuse(input, client);
   }
 
+  async cancelPending(
+    workspaceId: string,
+    client: Paddle,
+  ): Promise<CancelCheckoutResult> {
+    const environment = paddleCheckoutEnvironment();
+    const checkout = await this.withWorkspaceLock(workspaceId, (tx) =>
+      tx.billingCheckout.findFirst({
+        where: {
+          workspaceId,
+          status: { in: PENDING_STATUSES },
+        },
+      }),
+    );
+
+    if (!checkout) return { canceled: false, transactionId: null };
+    if (
+      checkout.environment !== environment ||
+      checkout.status !== BillingCheckoutStatus.OPEN ||
+      !checkout.paddleTransactionId ||
+      checkout.boundAt
+    ) {
+      throw reviewRequired();
+    }
+
+    let remote: Transaction;
+    try {
+      remote = await client.transactions.get(checkout.paddleTransactionId);
+      if (remote.id !== checkout.paddleTransactionId) throw reviewRequired();
+
+      if (
+        remote.subscriptionId ||
+        remote.status === 'paid' ||
+        remote.status === 'completed' ||
+        remote.status === 'billed' ||
+        remote.status === 'past_due'
+      ) {
+        throw checkoutPaymentPending();
+      }
+      if (remote.status !== 'canceled') {
+        if (remote.status !== 'draft' && remote.status !== 'ready')
+          throw reviewRequired();
+        remote = await client.transactions.update(
+          checkout.paddleTransactionId,
+          {
+            status: 'canceled',
+          },
+        );
+      }
+    } catch (error) {
+      if (error instanceof ConflictException) throw error;
+      this.logger.error(
+        `Paddle transaction ${checkout.paddleTransactionId} could not be canceled safely.`,
+      );
+      throw new ServiceUnavailableException({
+        code: 'PADDLE_CHECKOUT_CANCEL_FAILED',
+        message:
+          'Bekleyen ödemeniz Paddle üzerinde iptal edilemedi. Eski ödeme açık kalabileceği için yeni işlem oluşturulmadı; lütfen tekrar deneyin.',
+      });
+    }
+
+    if (
+      remote.id !== checkout.paddleTransactionId ||
+      remote.status !== 'canceled' ||
+      remote.subscriptionId
+    ) {
+      throw reviewRequired();
+    }
+
+    return this.withWorkspaceLock(workspaceId, async (tx) => {
+      const current = await tx.billingCheckout.findUniqueOrThrow({
+        where: { id: checkout.id },
+      });
+      if (current.status === BillingCheckoutStatus.CANCELED) {
+        return {
+          canceled: true,
+          transactionId: current.paddleTransactionId,
+        };
+      }
+      if (
+        current.status !== BillingCheckoutStatus.OPEN ||
+        current.paddleTransactionId !== remote.id ||
+        current.boundAt
+      ) {
+        throw checkoutPaymentPending();
+      }
+      const canceled = await tx.billingCheckout.updateMany({
+        where: {
+          id: current.id,
+          status: BillingCheckoutStatus.OPEN,
+          paddleTransactionId: remote.id,
+          boundAt: null,
+        },
+        data: { status: BillingCheckoutStatus.CANCELED },
+      });
+      if (canceled.count !== 1) throw reviewRequired();
+      return { canceled: true, transactionId: remote.id };
+    });
+  }
+
   private async createTransaction(checkout: Checkout, client: Paddle) {
     let remote: Transaction;
     try {
@@ -339,7 +444,19 @@ function checkoutResult(
         : ('sandbox' as const),
     plan: checkout.plan,
     cycle: checkout.cycle,
+    canCancel:
+      state === 'plan_conflict' &&
+      checkout.status === BillingCheckoutStatus.OPEN &&
+      !checkout.boundAt,
   };
+}
+
+function checkoutPaymentPending() {
+  return new ConflictException({
+    code: 'PADDLE_CHECKOUT_PAYMENT_PENDING',
+    message:
+      'Ödeme işlemi başlamış veya tamamlanmış görünüyor. Abonelik bilgileri güncellenene kadar bu işlem iptal edilemez.',
+  });
 }
 
 function reviewRequired() {

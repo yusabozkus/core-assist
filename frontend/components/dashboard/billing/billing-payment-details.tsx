@@ -9,6 +9,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
 import { createBillingPortalSession } from "@/lib/api/billing"
+import { markBillingPortalVisit } from "@/lib/billing-portal-return"
 import type { BillingHistory, BillingPaymentMethod } from "@/types/billing"
 
 export function BillingPaymentDetails({
@@ -30,6 +31,7 @@ export function BillingPaymentDetails({
     setError(null)
     try {
       const session = await createBillingPortalSession(workspaceId)
+      markBillingPortalVisit(workspaceId)
       window.location.assign(
         session.updatePaymentMethodUrl ?? session.overviewUrl
       )

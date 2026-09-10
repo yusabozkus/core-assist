@@ -62,6 +62,16 @@ export class BillingController {
     );
   }
 
+  @Post('checkout/cancel')
+  cancelCheckout(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Headers('origin') origin: string | undefined,
+  ) {
+    assertBillingActionOrigin(origin);
+    return this.paddleBilling.cancelPendingCheckout(workspaceId, user.id);
+  }
+
   @Get('invoices')
   getInvoices(
     @Param('workspaceId') workspaceId: string,
@@ -125,5 +135,15 @@ export class BillingController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.paddleBilling.createPortalSession(workspaceId, user.id);
+  }
+
+  @Post('refresh')
+  refreshSubscription(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Headers('origin') origin: string | undefined,
+  ) {
+    assertBillingActionOrigin(origin);
+    return this.paddleBilling.refreshSubscriptionState(workspaceId, user.id);
   }
 }

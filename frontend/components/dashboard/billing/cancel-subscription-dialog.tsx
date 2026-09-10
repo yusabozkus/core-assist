@@ -7,15 +7,18 @@ import { Button } from "@/components/ui/button"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
 import { createBillingPortalSession } from "@/lib/api/billing"
 import { formatBillingDate } from "@/lib/billing"
+import { markBillingPortalVisit } from "@/lib/billing-portal-return"
 
 export function CancelSubscriptionDialog({
   workspaceId,
   accessEndsAt,
   accessActive,
+  cancellationScheduled,
 }: {
   workspaceId: string
   accessEndsAt: string
   accessActive: boolean
+  cancellationScheduled: boolean
 }) {
   const [isOpeningPortal, setIsOpeningPortal] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -25,8 +28,11 @@ export function CancelSubscriptionDialog({
     setError(null)
     try {
       const session = await createBillingPortalSession(workspaceId)
+      markBillingPortalVisit(workspaceId)
       window.location.assign(
-        session.cancelSubscriptionUrl ?? session.overviewUrl
+        cancellationScheduled
+          ? session.overviewUrl
+          : (session.cancelSubscriptionUrl ?? session.overviewUrl)
       )
     } catch (caughtError) {
       setError(
@@ -40,11 +46,17 @@ export function CancelSubscriptionDialog({
 
   return (
     <ResponsiveDialog
-      title="Abonelik yenilemesini durdur"
+      title={
+        cancellationScheduled
+          ? "Planlanan iptali yönet"
+          : "Abonelik yenilemesini durdur"
+      }
       description={
-        accessActive
-          ? `Yenilemeyi dönem sonunda iptal ederseniz erişiminiz ${formatBillingDate(accessEndsAt)} tarihine kadar devam eder.`
-          : "Abonelik erişiminiz şu anda aktif değil. İptal durumunu Paddle üzerinden yönetebilirsiniz."
+        cancellationScheduled
+          ? `Aboneliğiniz ${formatBillingDate(accessEndsAt)} tarihinde sona erecek. İptali geri almak veya aboneliği yönetmek için Paddle'ı açabilirsiniz.`
+          : accessActive
+            ? `Yenilemeyi dönem sonunda iptal ederseniz erişiminiz ${formatBillingDate(accessEndsAt)} tarihine kadar devam eder.`
+            : "Abonelik erişiminiz şu anda aktif değil. İptal durumunu Paddle üzerinden yönetebilirsiniz."
       }
       preventClose={isOpeningPortal}
       trigger={
@@ -54,7 +66,7 @@ export function CancelSubscriptionDialog({
           size="sm"
           className="text-muted-foreground hover:text-destructive"
         >
-          Aboneliği iptal et
+          {cancellationScheduled ? "İptali yönet" : "Aboneliği iptal et"}
         </Button>
       }
       footer={({ close }) => (
@@ -70,7 +82,7 @@ export function CancelSubscriptionDialog({
           </Button>
           <Button
             type="button"
-            variant="destructive"
+            variant={cancellationScheduled ? "default" : "destructive"}
             size="sm"
             disabled={isOpeningPortal}
             onClick={openCancellation}
@@ -81,39 +93,48 @@ export function CancelSubscriptionDialog({
                 className="size-3.5 animate-spin"
               />
             ) : null}
-            {isOpeningPortal ? "Paddle açılıyor" : "Yenilemeyi durdur"}
+            {isOpeningPortal
+              ? "Paddle açılıyor"
+              : cancellationScheduled
+                ? "Paddle'da yönet"
+                : "Yenilemeyi durdur"}
           </Button>
         </>
       )}
     >
       <div className="space-y-5 py-2">
-        <div className="flex gap-3">
-          <HugeiconsIcon
-            icon={AlertCircleIcon}
-            className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400"
-          />
-          <div>
-            <p className="text-sm font-medium">
-              Erişim sona erdiğinde ne olur?
-            </p>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Yeni AI taslakları, kuyruktaki otomatik yanıtlar ve ürün, stok,
-              soru senkronizasyonları durur. Elle başlatılan güncellemeler de
-              aktif abonelik gerektirir. Kayıtlı verilerinizi görüntüleyebilir,
-              mevcut soruları manuel yanıtlayabilir ve faturalarınıza
-              erişebilirsiniz.
-            </p>
+        {!cancellationScheduled ? (
+          <div className="flex gap-3">
+            <HugeiconsIcon
+              icon={AlertCircleIcon}
+              className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400"
+            />
+            <div>
+              <p className="text-sm font-medium">
+                Erişim sona erdiğinde ne olur?
+              </p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Yeni AI taslakları, kuyruktaki otomatik yanıtlar ve ürün, stok,
+                soru senkronizasyonları durur. Elle başlatılan güncellemeler de
+                aktif abonelik gerektirir. Kayıtlı verilerinizi
+                görüntüleyebilir, mevcut soruları manuel yanıtlayabilir ve
+                faturalarınıza erişebilirsiniz.
+              </p>
+            </div>
           </div>
-        </div>
-        <p className="text-xs leading-5 text-muted-foreground">
-          Yalnızca soru kotanız dolarsa aboneliğiniz sona ermez. Senkronizasyon,
-          manuel yanıtlar ve önceden hazırlanmış güvenli yanıtların otomatik
-          gönderimi devam eder; yeni sorular için AI üretimi durur.
-        </p>
+        ) : null}
+        {!cancellationScheduled ? (
+          <p className="text-xs leading-5 text-muted-foreground">
+            Yalnızca soru kotanız dolarsa aboneliğiniz sona ermez.
+            Senkronizasyon, manuel yanıtlar ve önceden hazırlanmış güvenli
+            yanıtların otomatik gönderimi devam eder; yeni sorular için AI
+            üretimi durur.
+          </p>
+        ) : null}
         <p className="border-t border-border pt-4 text-xs leading-5 text-muted-foreground">
-          {
-            "İptal işlemini Paddle'ın güvenli abonelik yönetimi ekranında tamamlayacaksınız."
-          }
+          {cancellationScheduled
+            ? "Yaptığınız değişiklik doğrulandıktan sonra bu sayfa otomatik güncellenir."
+            : "İptal işlemini Paddle'ın güvenli abonelik yönetimi ekranında tamamlayacaksınız."}
         </p>
         {error ? (
           <p role="alert" className="text-xs leading-5 text-destructive">

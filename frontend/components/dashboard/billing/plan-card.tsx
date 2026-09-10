@@ -141,11 +141,11 @@ export function PlanCard({
             </Link>
           </Button>
         )}
-        <p className="mt-3 text-center text-[11px] text-muted-foreground">
-          {managed
-            ? "Tutarı ve yeni limitleri onaylamadan değişiklik yapılmaz."
-            : `Kart gerektirmeden ${BILLING_TRIAL.days} gün ücretsiz deneme`}
-        </p>
+        {!managed ? (
+          <p className="mt-3 text-center text-[11px] text-muted-foreground">
+            Kart gerektirmeden {BILLING_TRIAL.days} gün ücretsiz deneme
+          </p>
+        ) : null}
         <div className="mt-6 border-y border-border py-4">
           <p className="text-2xl font-semibold tracking-tight tabular-nums">
             {plan.questions.toLocaleString("tr-TR")}{" "}

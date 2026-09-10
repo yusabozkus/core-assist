@@ -4,7 +4,23 @@ import type {
   Subscription,
   SubscriptionPreview,
 } from '@paddle/paddle-node-sdk';
-import { BillingPlanChangeStatus } from '../../generated/prisma/enums';
+import {
+  BillingCycle,
+  BillingPlan,
+  BillingPlanChangeStatus,
+} from '../../generated/prisma/enums';
+
+const PLAN_RANK: Readonly<Record<BillingPlan, number>> = {
+  [BillingPlan.STARTER]: 0,
+  [BillingPlan.GROWTH]: 1,
+  [BillingPlan.BUSINESS]: 2,
+};
+
+export type PlanChangePolicy = {
+  changeType: 'upgrade' | 'downgrade' | 'billing_cycle_change';
+  settlementTiming: 'immediately' | 'next_billing_period';
+  prorationBillingMode: 'prorated_immediately' | 'prorated_next_billing_period';
+};
 
 export const PENDING_PLAN_CHANGE_STATUSES: BillingPlanChangeStatus[] = [
   BillingPlanChangeStatus.PROCESSING,
@@ -14,6 +30,40 @@ export const PENDING_PLAN_CHANGE_STATUSES: BillingPlanChangeStatus[] = [
 
 export function planChangeConflict(code: string, message: string) {
   return new ConflictException({ code, message });
+}
+
+/**
+ * Mirrors Paddle's customer-portal billing policy:
+ * - tier upgrades are billed and provisioned immediately;
+ * - same-cycle tier downgrades are provisioned immediately, while the credit
+ *   is settled on the next invoice;
+ * - billing-frequency changes must use an immediate mode because Paddle does
+ *   not accept next-period proration when replacing monthly and annual prices.
+ */
+export function resolvePlanChangePolicy(
+  currentPlan: BillingPlan,
+  currentCycle: BillingCycle,
+  targetPlan: BillingPlan,
+  targetCycle: BillingCycle,
+): PlanChangePolicy {
+  const targetRank = PLAN_RANK[targetPlan];
+  const currentRank = PLAN_RANK[currentPlan];
+  const changeType =
+    targetRank > currentRank
+      ? 'upgrade'
+      : targetRank < currentRank
+        ? 'downgrade'
+        : 'billing_cycle_change';
+  const deferSettlement =
+    changeType === 'downgrade' && currentCycle === targetCycle;
+
+  return {
+    changeType,
+    settlementTiming: deferSettlement ? 'next_billing_period' : 'immediately',
+    prorationBillingMode: deferSettlement
+      ? 'prorated_next_billing_period'
+      : 'prorated_immediately',
+  };
 }
 
 export function subscriptionFingerprint(remote: Subscription) {

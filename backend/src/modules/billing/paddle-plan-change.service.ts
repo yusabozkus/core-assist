@@ -22,6 +22,7 @@ import {
   PENDING_PLAN_CHANGE_STATUSES,
   planChangeAmounts,
   planChangeConflict,
+  resolvePlanChangePolicy,
   subscriptionFingerprint,
 } from './billing-plan-change.policy';
 
@@ -67,9 +68,20 @@ export class PaddlePlanChangeService {
         'Bu plan ve ödeme dönemi zaten kullanılıyor.',
       );
     }
+    const policy = resolvePlanChangePolicy(
+      local.plan,
+      local.cycle,
+      plan,
+      cycle,
+    );
     let amounts: ReturnType<typeof planChangeAmounts>;
     try {
-      amounts = await this.calculatePreview(local, targetPriceId, cycle);
+      amounts = await this.calculatePreview(
+        local,
+        targetPriceId,
+        cycle,
+        policy.prorationBillingMode,
+      );
     } catch (error) {
       this.logFailure('preview', undefined, error);
       throw new BadGatewayException(
@@ -108,6 +120,8 @@ export class PaddlePlanChangeService {
         cycle,
         currentPlan: current.plan,
         currentCycle: current.cycle,
+        changeType: policy.changeType,
+        settlementTiming: policy.settlementTiming,
         effectiveFrom: 'immediately' as const,
         expiresAt: change.expiresAt,
         amounts,
@@ -183,6 +197,12 @@ export class PaddlePlanChangeService {
         subscription,
         change.targetPriceId,
         change.cycle,
+        resolvePlanChangePolicy(
+          subscription.plan,
+          subscription.cycle,
+          change.plan,
+          change.cycle,
+        ).prorationBillingMode,
       );
       const expected = change.preview as Record<string, unknown>;
       if (Object.entries(fresh).some(([key, value]) => expected[key] !== value))
@@ -211,7 +231,10 @@ export class PaddlePlanChangeService {
     try {
       const remote = await this.getClient().subscriptions.update(
         change.paddleSubscriptionId,
-        updateRequest(change.targetPriceId),
+        updateRequest(
+          change.targetPriceId,
+          policyForChange(change).prorationBillingMode,
+        ),
       );
       if (
         remote.id !== change.paddleSubscriptionId ||
@@ -327,10 +350,12 @@ export class PaddlePlanChangeService {
     local: LocalSubscription,
     priceId: string,
     cycle: BillingCycle,
+    prorationBillingMode:
+      'prorated_immediately' | 'prorated_next_billing_period',
   ) {
     const preview = await this.getClient().subscriptions.previewUpdate(
       local.paddleSubscriptionId!,
-      updateRequest(priceId),
+      updateRequest(priceId, prorationBillingMode),
     );
     const item = preview.items[0];
     if (
@@ -440,10 +465,13 @@ export class PaddlePlanChangeService {
   }
 }
 
-function updateRequest(priceId: string) {
+function updateRequest(
+  priceId: string,
+  prorationBillingMode: 'prorated_immediately' | 'prorated_next_billing_period',
+) {
   return {
     items: [{ priceId, quantity: 1 }],
-    prorationBillingMode: 'prorated_immediately' as const,
+    prorationBillingMode,
     onPaymentFailure: 'prevent_change' as const,
   };
 }
@@ -491,11 +519,24 @@ function assertQuoteSubscription(
 }
 
 function assertEnvironmentAndPrice(change: Change) {
+  const source = paddlePlanForPrice(change.sourcePriceId);
   if (
     change.environment !== paddleCheckoutEnvironment() ||
+    !source ||
     change.targetPriceId !== paddlePriceId(change.plan, change.cycle)
   )
     throw stalePreview();
+}
+
+function policyForChange(change: Change) {
+  const source = paddlePlanForPrice(change.sourcePriceId);
+  if (!source) throw stalePreview();
+  return resolvePlanChangePolicy(
+    source.plan,
+    source.cycle,
+    change.plan,
+    change.cycle,
+  );
 }
 
 function assertCapacity(

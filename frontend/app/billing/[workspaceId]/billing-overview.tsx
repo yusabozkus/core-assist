@@ -55,10 +55,16 @@ export function BillingOverview({
     ) ?? SUBSCRIPTION_PLANS[0]
   const cycle = summary.subscription.cycle.toLowerCase() as BillingCycle
   const price = getPlanPrice(plan, cycle)
-  const status = statusDetails[summary.subscription.status]
+  const cancellationScheduled = summary.subscription.cancelAtPeriodEnd
+  const status = cancellationScheduled
+    ? ({ label: "Dönem sonunda sona erecek", variant: "warning" } as const)
+    : statusDetails[summary.subscription.status]
   const isTrial = summary.subscription.status === "TRIALING"
   const isManaged = summary.subscription.managedByPaddle
-  const renewalLabel = summary.subscription.cancelAtPeriodEnd
+  const accessEndsAt =
+    summary.subscription.scheduledAccessEndsAt ??
+    summary.subscription.currentPeriodEnd
+  const renewalLabel = cancellationScheduled
     ? "Erişim bitişi"
     : isTrial
       ? "Deneme bitişi"
@@ -66,30 +72,48 @@ export function BillingOverview({
 
   return (
     <main className="mx-auto w-full max-w-[1120px] space-y-6 px-5 py-8 sm:px-8 lg:px-10">
-      <BillingPageHeader workspaceId={workspaceId} active="overview" />
-      <BillingRecoveryNotice
-        workspaceId={workspaceId}
-        subscription={summary.subscription}
-      />
-      <section
-        className="rounded-xl border border-border bg-muted/25 px-5 py-4"
-        aria-labelledby="billing-access-title"
-      >
-        <h2 id="billing-access-title" className="text-sm font-medium">
-          {!summary.subscription.active
-            ? "Abonelik erişimi kapalı"
-            : summary.usage.questions.remaining === 0
-              ? "Bu dönemin AI soru kotası doldu"
-              : "Aboneliğinizin çalışma kapsamı"}
-        </h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          {!summary.subscription.active
-            ? "Yeni AI taslakları, otomatik gönderim ve ürün, stok, soru senkronizasyonları durduruldu. Kayıtlı veriler, mevcut soruları manuel yanıtlama ve fatura yönetimi kullanılabilir. Stok bilgileri son güncelleme tarihine aittir."
-            : summary.usage.questions.remaining === 0
-              ? "Yeni sorular için AI taslağı üretimi durur. Senkronizasyon, manuel yanıt ve önceden hazırlanmış güvenli cevapların otomatik gönderimi devam eder. Mevcut soruların pakete dahil yeniden oluşturma hakları korunur."
-              : "Soru kotası yalnızca AI üretimini sınırlar. Ürün, stok ve soru senkronizasyonları aktif aboneliğiniz boyunca devam eder. Abonelik sona erse de mevcut soruları manuel yanıtlayabilir ve kayıtlı verilerinize erişebilirsiniz."}
-        </p>
-      </section>
+      <BillingPageHeader workspaceId={workspaceId} active="overview">
+        <div className="space-y-3">
+          <BillingRecoveryNotice
+            workspaceId={workspaceId}
+            subscription={summary.subscription}
+          />
+          {cancellationScheduled ? (
+            <section
+              role="status"
+              className="rounded-xl border border-amber-500/25 bg-amber-500/5 px-5 py-4"
+            >
+              <h2 className="text-sm font-medium">
+                Abonelik yenilemesi durduruldu
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Planınız {formatBillingDate(accessEndsAt)} tarihine kadar tüm
+                mevcut haklarıyla kullanılabilir. Bu tarihte abonelik sona erer
+                ve yeni bir ücret alınmaz.
+              </p>
+            </section>
+          ) : null}
+          <section
+            className="rounded-xl border border-border bg-muted/25 px-5 py-4"
+            aria-labelledby="billing-access-title"
+          >
+            <h2 id="billing-access-title" className="text-sm font-medium">
+              {!summary.subscription.active
+                ? "Abonelik erişimi kapalı"
+                : summary.usage.questions.remaining === 0
+                  ? "Bu dönemin AI soru kotası doldu"
+                  : "Aboneliğinizin çalışma kapsamı"}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              {!summary.subscription.active
+                ? "Yeni AI taslakları, otomatik gönderim ve ürün, stok, soru senkronizasyonları durduruldu. Kayıtlı veriler, mevcut soruları manuel yanıtlama ve fatura yönetimi kullanılabilir. Stok bilgileri son güncelleme tarihine aittir."
+                : summary.usage.questions.remaining === 0
+                  ? "Yeni sorular için AI taslağı üretimi durur. Senkronizasyon, manuel yanıt ve önceden hazırlanmış güvenli cevapların otomatik gönderimi devam eder. Mevcut soruların pakete dahil yeniden oluşturma hakları korunur."
+                  : "Soru kotası yalnızca AI üretimini sınırlar. Ürün, stok ve soru senkronizasyonları aktif aboneliğiniz boyunca devam eder. Abonelik sona erse de mevcut soruları manuel yanıtlayabilir ve kayıtlı verilerinize erişebilirsiniz."}
+            </p>
+          </section>
+        </div>
+      </BillingPageHeader>
       {summary.pendingPlanChange && (
         <PendingPlanChange
           workspaceId={workspaceId}
@@ -160,7 +184,7 @@ export function BillingOverview({
               {renewalLabel}
             </div>
             <p className="mt-3 text-lg font-semibold tracking-tight">
-              {formatBillingDate(summary.subscription.currentPeriodEnd)}
+              {formatBillingDate(accessEndsAt)}
             </p>
             <dl className="mt-5 space-y-3 text-xs">
               <div className="flex justify-between gap-3">
@@ -205,8 +229,9 @@ export function BillingOverview({
           {isManaged ? (
             <CancelSubscriptionDialog
               workspaceId={workspaceId}
-              accessEndsAt={summary.subscription.currentPeriodEnd}
+              accessEndsAt={accessEndsAt}
               accessActive={summary.subscription.active}
+              cancellationScheduled={cancellationScheduled}
             />
           ) : null}
         </div>

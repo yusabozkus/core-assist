@@ -162,6 +162,9 @@ export function PlanChangeDialog({
   const loading = !preview && !result && !pendingId && !error
   const showPreview = preview && !pending && !completed && !failed
   const amounts = preview?.amounts
+  const deferredDowngrade =
+    preview?.changeType === "downgrade" &&
+    preview.settlementTiming === "next_billing_period"
   const money = (value: string) => formatMinorAmount(value, amounts!.currency)
 
   return (
@@ -213,7 +216,9 @@ export function PlanChangeDialog({
               <div>
                 <p className="text-sm font-medium">Şimdi ödenecek</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Vergiler ve varsa mahsup dahil
+                  {deferredDowngrade
+                    ? "Plan hemen değişir, mahsup sonraki faturaya yansır"
+                    : "Vergiler ve varsa mahsup dahil"}
                 </p>
               </div>
               <p className="text-2xl font-semibold tracking-tight tabular-nums">
@@ -222,11 +227,11 @@ export function PlanChangeDialog({
             </div>
             <dl className="space-y-2.5 text-sm">
               <AmountRow
-                label="Kullanılmayan süre için alacak"
+                label="Kullanılmayan süre alacağı"
                 value={money(amounts.credit)}
               />
               <AmountRow
-                label="Yeni planın dönem ücreti"
+                label="Yeni planın kalan süre ücreti"
                 value={money(amounts.charge)}
               />
               <AmountRow
@@ -247,11 +252,24 @@ export function PlanChangeDialog({
               />
             </dl>
             <p className="text-xs leading-5 text-muted-foreground">
-              Değişiklik onaydan sonra hemen uygulanır. Ücret farkı kayıtlı
-              ödeme yönteminden tahsil edilir; ödeme başarısızsa plan değişmez.
-              {amounts.differenceAction === "credit" &&
-                " Alacak, Paddle tarafından mahsup edilir; kartınıza nakit iade taahhüdü değildir."}{" "}
-              Tutarlar kalan süreye göre değişebilir; onay sırasında yeniden
+              {deferredDowngrade ? (
+                <>
+                  Yeni plan ve limitler onaydan sonra hemen uygulanır. Kalan
+                  süreden doğan alacak {formatBillingDate(amounts.nextBilledAt)}
+                  {" "}tarihli Paddle faturasına mahsup edilir; kartınıza anlık
+                  nakit iade yapılmaz.
+                </>
+              ) : (
+                <>
+                  Değişiklik onaydan sonra hemen uygulanır. Ücret farkı kayıtlı
+                  ödeme yönteminden tahsil edilir; ödeme başarısızsa plan
+                  değişmez.
+                  {amounts.differenceAction === "credit" &&
+                    " Alacak, Paddle tarafından mahsup edilir; kartınıza nakit iade taahhüdü değildir."}
+                </>
+              )}{" "}
+              Fiyat farkı kullanılan soru miktarına göre değil, dönemde kalan
+              süreye göre hesaplanır. Tutarlar onay sırasında yeniden
               doğrulanır.
             </p>
             <div className="border-t border-border pt-5">

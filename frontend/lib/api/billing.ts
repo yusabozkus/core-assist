@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/api/client"
 import type {
   BillingCheckoutResult,
+  BillingCheckoutCancellation,
   BillingWorkspace,
   BillingCycle,
   BillingHistory,
@@ -39,6 +40,13 @@ export function createBillingCheckout(
   )
 }
 
+export function cancelPendingBillingCheckout(workspaceId: string) {
+  return apiFetch<BillingCheckoutCancellation>(
+    `/workspaces/${encodeURIComponent(workspaceId)}/billing/checkout/cancel`,
+    { method: "POST" }
+  )
+}
+
 export function getBillingHistory(workspaceId: string, signal?: AbortSignal) {
   return apiFetch<BillingHistory>(
     `/workspaces/${encodeURIComponent(workspaceId)}/billing/invoices`,
@@ -62,6 +70,25 @@ export function createBillingPortalSession(workspaceId: string) {
     `/workspaces/${encodeURIComponent(workspaceId)}/billing/portal-session`,
     { method: "POST" }
   )
+}
+
+export function refreshBillingSubscription(
+  workspaceId: string,
+  signal?: AbortSignal
+) {
+  return apiFetch<{
+    refreshed: boolean
+    subscription: Pick<
+      BillingSummary["subscription"],
+      | "status"
+      | "cancelAtPeriodEnd"
+      | "scheduledAccessEndsAt"
+      | "currentPeriodEnd"
+    >
+  }>(`/workspaces/${encodeURIComponent(workspaceId)}/billing/refresh`, {
+    method: "POST",
+    signal,
+  })
 }
 
 export function previewBillingPlanChange(

@@ -75,6 +75,7 @@ export class BillingEntitlementService {
         currentPeriodStart: subscription.currentPeriodStart,
         currentPeriodEnd: subscription.currentPeriodEnd,
         cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+        scheduledAccessEndsAt: subscription.scheduledAccessEndsAt,
         managedByPaddle: Boolean(subscription.paddleSubscriptionId),
         recovery: {
           awaitingRenewal: isAwaitingRenewal(subscription, now),
