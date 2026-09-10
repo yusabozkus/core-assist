@@ -2,6 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import { SizeGuideStatus } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { BillingSubscriptionService } from '../billing/billing-subscription.service';
+import { BillingAccessRequiredException } from '../billing/billing.errors';
+import { BILLING_SYNC_STOPPED_MESSAGE } from '../billing/billing-access.policy';
+import { UnrecoverableError } from 'bullmq';
 import { GeminiClientService } from '../ai/gemini-client.service';
 import { DEFAULT_SIZE_GUIDE_MODEL } from './size-guide.constants';
 import { SizeGuideImageService } from './size-guide-image.service';
@@ -19,6 +23,7 @@ export class SizeGuideWorkerService {
     private readonly prisma: PrismaService,
     private readonly images: SizeGuideImageService,
     private readonly gemini: GeminiClientService,
+    private readonly billing: BillingSubscriptionService,
   ) {}
 
   async extract(sizeGuideId: string) {
@@ -28,7 +33,7 @@ export class SizeGuideWorkerService {
         id: true,
         sourceUrl: true,
         status: true,
-        product: { select: { title: true, category: true } },
+        product: { select: { title: true, category: true, storeId: true } },
       },
     });
 
@@ -39,6 +44,10 @@ export class SizeGuideWorkerService {
     });
 
     try {
+      await this.billing.assertStoreAccess(
+        guide.product.storeId,
+        BILLING_SYNC_STOPPED_MESSAGE,
+      );
       const cached = await this.prisma.productSizeGuide.findFirst({
         where: {
           id: { not: guide.id },
@@ -73,6 +82,10 @@ export class SizeGuideWorkerService {
       }
 
       const image = await this.images.download(guide.sourceUrl);
+      await this.billing.assertStoreAccess(
+        guide.product.storeId,
+        BILLING_SYNC_STOPPED_MESSAGE,
+      );
       const extraction = await this.gemini.extractSizeGuide({
         model: this.model,
         imageBase64: image.bytes.toString('base64'),
@@ -111,6 +124,8 @@ export class SizeGuideWorkerService {
       this.logger.warn(
         `${guide.id} beden tablosu analiz edilemedi: ${message}`,
       );
+      if (error instanceof BillingAccessRequiredException)
+        throw new UnrecoverableError(error.message);
       throw error;
     }
   }

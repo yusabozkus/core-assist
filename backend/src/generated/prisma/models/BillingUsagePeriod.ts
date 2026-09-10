@@ -531,14 +531,6 @@ export type BillingUsagePeriodUncheckedUpdateManyWithoutSubscriptionNestedInput 
   deleteMany?: Prisma.BillingUsagePeriodScalarWhereInput | Prisma.BillingUsagePeriodScalarWhereInput[]
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type BillingUsagePeriodCreateNestedOneWithoutEventsInput = {
   create?: Prisma.XOR<Prisma.BillingUsagePeriodCreateWithoutEventsInput, Prisma.BillingUsagePeriodUncheckedCreateWithoutEventsInput>
   connectOrCreate?: Prisma.BillingUsagePeriodCreateOrConnectWithoutEventsInput

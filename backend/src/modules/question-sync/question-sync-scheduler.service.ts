@@ -7,6 +7,7 @@ import {
   StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { activeBillingSubscriptionWhere } from '../billing/billing-access.policy';
 import {
   DEFAULT_QUESTION_SYNC_INTERVAL_MS,
   QUESTION_SYNC_QUEUE,
@@ -48,7 +49,12 @@ export class QuestionSyncSchedulerService implements OnModuleInit {
         type: ChannelType.COMMERCE,
         status: ChannelConnectionStatus.CONNECTED,
         credentialsEncrypted: { not: null },
-        store: { status: StoreStatus.ACTIVE },
+        store: {
+          status: StoreStatus.ACTIVE,
+          workspace: {
+            billingSubscription: { is: activeBillingSubscriptionWhere() },
+          },
+        },
       },
       select: { id: true, storeId: true },
     });

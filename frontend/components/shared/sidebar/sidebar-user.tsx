@@ -47,7 +47,13 @@ export type SidebarUserData = {
   avatarUrl?: string | null
 }
 
-export function SidebarUser({ user }: { user: SidebarUserData }) {
+export function SidebarUser({
+  user,
+  canManageBilling = false,
+}: {
+  user: SidebarUserData
+  canManageBilling?: boolean
+}) {
   const { theme, setTheme } = useTheme()
   const { isMobile } = useSidebar()
   const [isSigningOut, setIsSigningOut] = useState(false)
@@ -131,12 +137,14 @@ export function SidebarUser({ user }: { user: SidebarUserData }) {
                   Bildirimler
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href={APP_ROUTES.dashboard.settings.billing}>
-                  <HugeiconsIcon icon={CreditCardIcon} />
-                  Plan ve faturalama
-                </Link>
-              </DropdownMenuItem>
+              {canManageBilling ? (
+                <DropdownMenuItem asChild>
+                  <Link href={APP_ROUTES.dashboard.settings.billing}>
+                    <HugeiconsIcon icon={CreditCardIcon} />
+                    Plan ve faturalama
+                  </Link>
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   <HugeiconsIcon icon={PaintBoardIcon} />

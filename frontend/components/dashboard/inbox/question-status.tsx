@@ -85,6 +85,25 @@ export function QuestionStatus({
     )
   }
 
+  if (
+    draftProcessingStatus === "BLOCKED_QUOTA" ||
+    draftProcessingStatus === "BLOCKED_SUBSCRIPTION"
+  ) {
+    return (
+      <Badge
+        variant="outline"
+        className={cn(
+          "shrink-0 border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+          compactClassName
+        )}
+      >
+        {draftProcessingStatus === "BLOCKED_QUOTA"
+          ? "Kota bekliyor"
+          : "Abonelik bekliyor"}
+      </Badge>
+    )
+  }
+
   if (draftProcessingStatus === "FAILED") {
     return (
       <Badge

@@ -1,8 +1,7 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import {
   AlertCircleIcon,
   ArrowLeft01Icon,
@@ -14,36 +13,77 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { AppLogo } from "@/components/shared/brand/app-logo"
 import { Button } from "@/components/ui/button"
 import { BILLING_TRIAL, INCLUDED_MARKETPLACES } from "@/constants/billing"
+import { billingRoutes } from "@/lib/billing-routes"
 import { APP_ROUTES } from "@/constants/site"
-import { createBillingCheckout } from "@/lib/api/billing"
+import { createBillingCheckout, getBillingSummary } from "@/lib/api/billing"
 import { getPlanPrice } from "@/lib/billing"
 import { getPaddle, subscribeToPaddleEvents } from "@/lib/paddle"
 import type { BillingCycle, SubscriptionPlan } from "@/types/billing"
 
 const PADDLE_FRAME_TARGET = "coreassist-paddle-checkout"
+const BILLING_SYNC_TIMEOUT_MS = 20_000
+const BILLING_SYNC_INTERVAL_MS = 600
 
 export function BillingCheckout({
-  storeId,
+  workspaceId,
+  workspaceName,
   customerEmail,
   plan,
   billingCycle,
 }: {
-  storeId: string
+  workspaceId: string
+  workspaceName: string
   customerEmail: string
   plan: SubscriptionPlan
   billingCycle: BillingCycle
 }) {
-  const router = useRouter()
   const [attempt, setAttempt] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [isCompleting, setIsCompleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [completionError, setCompletionError] = useState<string | null>(null)
+  const [pendingCheckoutHref, setPendingCheckoutHref] = useState<string | null>(
+    null
+  )
   const mountedRef = useRef(false)
-  const startedAttemptRef = useRef<number | null>(null)
+  const completionStartedRef = useRef(false)
+  const completionAbortRef = useRef<AbortController | null>(null)
   const paddleRef = useRef<Awaited<ReturnType<typeof getPaddle>> | null>(null)
   const price = getPlanPrice(plan, billingCycle)
 
+  const completeCheckout = useCallback(async () => {
+    completionAbortRef.current?.abort()
+    const controller = new AbortController()
+    completionAbortRef.current = controller
+    setIsCompleting(true)
+    setCompletionError(null)
+
+    try {
+      await waitForBillingSync({
+        workspaceId,
+        planId: plan.id,
+        billingCycle,
+        signal: controller.signal,
+      })
+
+      if (!mountedRef.current || controller.signal.aborted) return
+      window.location.replace(
+        `${billingRoutes(workspaceId).overview}?checkout=success`
+      )
+    } catch (syncError) {
+      if (!mountedRef.current || controller.signal.aborted) return
+      setIsCompleting(false)
+      setCompletionError(
+        syncError instanceof Error
+          ? syncError.message
+          : "Ödeme alındı ancak abonelik bilgileri henüz güncellenemedi."
+      )
+    }
+  }, [billingCycle, plan.id, workspaceId])
+
   useEffect(() => {
     mountedRef.current = true
+    const controller = new AbortController()
 
     const unsubscribe = subscribeToPaddleEvents((event) => {
       if (!mountedRef.current) return
@@ -60,70 +100,115 @@ export function BillingCheckout({
         )
       }
 
-      if (event.name === "checkout.completed") {
-        router.replace(
-          `${APP_ROUTES.dashboard.settings.billing}?checkout=success`
-        )
+      if (
+        event.name === "checkout.completed" &&
+        !completionStartedRef.current
+      ) {
+        completionStartedRef.current = true
+        void completeCheckout()
       }
     })
 
-    if (startedAttemptRef.current !== attempt) {
-      startedAttemptRef.current = attempt
-
-      void (async () => {
-        try {
-          const [checkout, paddle] = await Promise.all([
-            createBillingCheckout(storeId, plan.id, billingCycle),
-            getPaddle(),
-          ])
-
-          if (!mountedRef.current) return
-
-          paddleRef.current?.Checkout.close()
-          paddleRef.current = paddle
-          paddle.Checkout.open({
-            transactionId: checkout.transactionId,
-            customer: { email: customerEmail },
-            settings: {
-              displayMode: "inline",
-              variant: "one-page",
-              frameTarget: PADDLE_FRAME_TARGET,
-              frameInitialHeight: 650,
-              frameStyle:
-                "width: 100%; min-width: 286px; background-color: transparent; border: none;",
-              locale: "tr",
-              theme: document.documentElement.classList.contains("dark")
-                ? "dark"
-                : "light",
-              allowLogout: false,
-              successUrl: `${window.location.origin}${APP_ROUTES.dashboard.settings.billing}?checkout=success`,
-            },
-          })
-        } catch (checkoutError) {
-          if (!mountedRef.current) return
-          setIsLoading(false)
-          setError(
-            checkoutError instanceof Error
-              ? checkoutError.message
-              : "Ödeme adımı şu anda başlatılamadı. Lütfen tekrar deneyin."
+    void (async () => {
+      try {
+        const deadline = Date.now() + 20_000
+        let checkout = await createBillingCheckout(
+          workspaceId,
+          plan.id,
+          billingCycle,
+          controller.signal
+        )
+        while (checkout.state === "preparing" && Date.now() < deadline) {
+          await wait(1_000, controller.signal)
+          checkout = await createBillingCheckout(
+            workspaceId,
+            plan.id,
+            billingCycle,
+            controller.signal
           )
         }
-      })()
-    }
+
+        if (!mountedRef.current || controller.signal.aborted) return
+
+        if (checkout.state === "plan_conflict") {
+          setPendingCheckoutHref(
+            `${APP_ROUTES.checkout}?workspaceId=${encodeURIComponent(workspaceId)}&plan=${checkout.plan.toLowerCase()}&cycle=${checkout.cycle.toLowerCase()}`
+          )
+          throw new Error(
+            "Başka bir plan için açık ödeme işleminiz bulunuyor. İkinci bir ödeme açılmadı; mevcut işleminize devam edebilirsiniz."
+          )
+        }
+        if (checkout.state === "payment_pending") {
+          setIsLoading(false)
+          completionStartedRef.current = true
+          await completeCheckout()
+          return
+        }
+        if (checkout.state === "preparing") {
+          throw new Error(
+            "Ödeme işleminiz hâlâ hazırlanıyor. Birkaç saniye sonra tekrar deneyin; mevcut işlem kullanılacaktır."
+          )
+        }
+        if (!checkout.transactionId)
+          throw new Error("Ödeme işlemi henüz hazır değil.")
+        const paddle = await getPaddle()
+        if (!mountedRef.current || controller.signal.aborted) return
+
+        paddleRef.current?.Checkout.close()
+        paddleRef.current = paddle
+        paddle.Checkout.open({
+          transactionId: checkout.transactionId,
+          customer: { email: customerEmail },
+          settings: {
+            displayMode: "inline",
+            variant: "one-page",
+            frameTarget: PADDLE_FRAME_TARGET,
+            frameInitialHeight: 650,
+            frameStyle:
+              "width: 100%; min-width: 286px; background-color: transparent; border: none;",
+            locale: "tr",
+            theme: document.documentElement.classList.contains("dark")
+              ? "dark"
+              : "light",
+            allowLogout: false,
+          },
+        })
+      } catch (checkoutError) {
+        if (!mountedRef.current || controller.signal.aborted) return
+        setIsLoading(false)
+        setError(
+          checkoutError instanceof Error
+            ? checkoutError.message
+            : "Ödeme adımı şu anda başlatılamadı. Lütfen tekrar deneyin."
+        )
+      }
+    })()
 
     return () => {
       mountedRef.current = false
+      controller.abort()
+      completionAbortRef.current?.abort()
       unsubscribe()
       window.setTimeout(() => {
         if (!mountedRef.current) paddleRef.current?.Checkout.close()
       }, 0)
     }
-  }, [attempt, billingCycle, customerEmail, plan.id, router, storeId])
+  }, [
+    attempt,
+    billingCycle,
+    completeCheckout,
+    customerEmail,
+    plan.id,
+    workspaceId,
+  ])
 
   function retryCheckout() {
     paddleRef.current?.Checkout.close()
     setIsLoading(true)
     setError(null)
+    setCompletionError(null)
+    setPendingCheckoutHref(null)
+    completionStartedRef.current = false
     setAttempt((current) => current + 1)
   }
 
@@ -136,7 +221,15 @@ export function BillingCheckout({
 
       <header className="relative z-30 bg-background/65 backdrop-blur-xl">
         <div className="mx-auto flex h-17 w-full max-w-[1180px] items-center justify-between gap-4 border-b border-border/60 px-5 sm:px-8">
-          <AppLogo href={APP_ROUTES.dashboard.settings.plans} />
+          <div className="flex min-w-0 items-center gap-4">
+            <AppLogo href={billingRoutes(workspaceId).plans} />
+            <span
+              className="max-w-40 truncate border-l border-border pl-4 text-xs text-muted-foreground"
+              title={workspaceName}
+            >
+              {workspaceName}
+            </span>
+          </div>
           <div className="flex items-center gap-2 sm:gap-4">
             <span className="hidden items-center gap-2 text-[11px] font-medium text-muted-foreground md:flex">
               <HugeiconsIcon
@@ -146,7 +239,7 @@ export function BillingCheckout({
               Paddle ile güvenli ödeme
             </span>
             <Button asChild variant="ghost" size="sm" className="-mr-2">
-              <Link href={APP_ROUTES.dashboard.settings.plans}>
+              <Link href={billingRoutes(workspaceId).plans}>
                 <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
                 <span className="hidden sm:inline">Planlara dön</span>
                 <span className="sm:hidden">Geri</span>
@@ -276,8 +369,15 @@ export function BillingCheckout({
               </span>
             </div>
 
-            <div className="relative min-h-[650px] border-t border-border/55 bg-background/28">
+            <div className="relative min-h-[650px] border-t border-border/55 bg-background/28 px-4">
               {isLoading ? <CheckoutLoading /> : null}
+              {isCompleting || completionError ? (
+                <CheckoutCompletion
+                  isCompleting={isCompleting}
+                  error={completionError}
+                  onRetry={() => void completeCheckout()}
+                />
+              ) : null}
               {error ? (
                 <div className="absolute inset-0 z-20 flex items-center justify-center bg-card p-6">
                   <div className="max-w-sm text-center">
@@ -293,14 +393,22 @@ export function BillingCheckout({
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
                       {error}
                     </p>
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="mt-5"
-                      onClick={retryCheckout}
-                    >
-                      Tekrar dene
-                    </Button>
+                    {pendingCheckoutHref ? (
+                      <Button asChild size="sm" className="mt-5">
+                        <Link href={pendingCheckoutHref}>
+                          Mevcut ödemeye dön
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="mt-5"
+                        onClick={retryCheckout}
+                      >
+                        Tekrar dene
+                      </Button>
+                    )}
                   </div>
                 </div>
               ) : null}
@@ -315,6 +423,44 @@ export function BillingCheckout({
         </section>
       </div>
     </main>
+  )
+}
+
+function CheckoutCompletion({
+  isCompleting,
+  error,
+  onRetry,
+}: {
+  isCompleting: boolean
+  error: string | null
+  onRetry: () => void
+}) {
+  return (
+    <div className="absolute inset-0 z-30 flex items-center justify-center bg-card p-6">
+      <div className="max-w-sm text-center">
+        <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <HugeiconsIcon
+            icon={isCompleting ? Loading03Icon : CheckmarkCircle01Icon}
+            className={isCompleting ? "size-5 animate-spin" : "size-5"}
+          />
+        </span>
+        <h3 className="mt-5 text-base font-semibold">
+          {isCompleting
+            ? "Aboneliğiniz kontrol ediliyor"
+            : "Doğrulama bekleniyor"}
+        </h3>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          {isCompleting
+            ? "Paddle doğrulaması tamamlanıyor. Bu işlem genellikle birkaç saniye sürer."
+            : error}
+        </p>
+        {!isCompleting ? (
+          <Button type="button" size="sm" className="mt-5" onClick={onRetry}>
+            Aboneliği kontrol et
+          </Button>
+        ) : null}
+      </div>
+    </div>
   )
 }
 
@@ -369,4 +515,60 @@ function CheckoutLoading() {
       </div>
     </div>
   )
+}
+
+async function waitForBillingSync({
+  workspaceId,
+  planId,
+  billingCycle,
+  signal,
+}: {
+  workspaceId: string
+  planId: SubscriptionPlan["id"]
+  billingCycle: BillingCycle
+  signal: AbortSignal
+}) {
+  const expectedPlan = planId.toUpperCase()
+  const expectedCycle = billingCycle.toUpperCase()
+  const deadline = Date.now() + BILLING_SYNC_TIMEOUT_MS
+
+  while (Date.now() < deadline) {
+    try {
+      const summary = await getBillingSummary(workspaceId, signal)
+      if (
+        summary.subscription.managedByPaddle &&
+        summary.subscription.active &&
+        summary.subscription.plan === expectedPlan &&
+        summary.subscription.cycle === expectedCycle
+      ) {
+        return
+      }
+    } catch (error) {
+      if (signal.aborted) throw error
+    }
+
+    await wait(BILLING_SYNC_INTERVAL_MS, signal)
+  }
+
+  throw new Error(
+    "Ödeme işleminizin sonucu henüz panele yansımadı. Yeniden ödeme yapmadan birkaç saniye sonra aboneliğinizi tekrar kontrol edin."
+  )
+}
+
+function wait(duration: number, signal: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    if (signal.aborted) {
+      reject(new DOMException("İşlem iptal edildi.", "AbortError"))
+      return
+    }
+    const handleAbort = () => {
+      window.clearTimeout(timeout)
+      reject(new DOMException("İşlem iptal edildi.", "AbortError"))
+    }
+    const timeout = window.setTimeout(() => {
+      signal.removeEventListener("abort", handleAbort)
+      resolve()
+    }, duration)
+    signal.addEventListener("abort", handleAbort, { once: true })
+  })
 }

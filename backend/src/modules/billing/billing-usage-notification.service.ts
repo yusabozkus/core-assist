@@ -44,7 +44,7 @@ export class BillingUsageNotificationService {
       message: exhausted
         ? `${usage.limit.toLocaleString('tr-TR')} soru hakkınızın tamamını kullandınız. Manuel yanıtlamaya devam edebilir veya planınızı yükseltebilirsiniz.`
         : `${usage.used.toLocaleString('tr-TR')} / ${usage.limit.toLocaleString('tr-TR')} soru hakkı kullanıldı. Dönem sonuna kadar ${usage.remaining.toLocaleString('tr-TR')} hakkınız kaldı.`,
-      actionUrl: '/dashboard/settings/billing',
+      actionUrl: '/billing',
       entityType: 'BILLING_USAGE_PERIOD',
       entityId: usage.periodId,
       dedupeKey: `ai-usage:${usage.periodId}:${threshold}`,

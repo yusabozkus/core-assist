@@ -8,6 +8,8 @@ import {
   StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { BillingSubscriptionService } from '../billing/billing-subscription.service';
+import { BILLING_SYNC_STOPPED_MESSAGE } from '../billing/billing-access.policy';
 import { CredentialsEncryptionService } from '../channels/credentials-encryption.service';
 import type { NormalizedInventoryVariant } from '../channels/providers/catalog-connector';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
@@ -42,6 +44,7 @@ export class InventoryVerificationService {
     private readonly prisma: PrismaService,
     private readonly providers: ProviderRegistryService,
     private readonly encryption: CredentialsEncryptionService,
+    private readonly billing: BillingSubscriptionService,
   ) {}
 
   verifyQuestionProduct(
@@ -56,6 +59,7 @@ export class InventoryVerificationService {
     storeId: string,
     questionId: string,
   ): Promise<InventoryVerificationResult> {
+    await this.billing.assertStoreAccess(storeId, BILLING_SYNC_STOPPED_MESSAGE);
     const question = await this.prisma.productQuestion.findFirst({
       where: {
         id: questionId,
@@ -112,6 +116,7 @@ export class InventoryVerificationService {
       );
     }
 
+    await this.billing.assertStoreAccess(storeId, BILLING_SYNC_STOPPED_MESSAGE);
     try {
       const credentials = this.encryption.decrypt(
         question.connection.credentialsEncrypted,

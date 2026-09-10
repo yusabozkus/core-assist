@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { betterAuth } from 'better-auth';
-import { APIError } from 'better-auth/api';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { lastLoginMethod } from 'better-auth/plugins';
 import { PrismaService } from '../../database/prisma.service';
-import { QuestionAnswerStatus } from '../../generated/prisma/enums';
 
 function requiredEnvironmentVariable(name: string): string {
   const value = process.env[name]?.trim();
@@ -75,46 +73,9 @@ function createAppAuth(prisma: PrismaService) {
     },
     user: {
       deleteUser: {
-        enabled: true,
-        beforeDelete: async (user) => {
-          const busyStore = await prisma.store.findFirst({
-            where: {
-              workspace: { ownerId: user.id },
-              OR: [
-                {
-                  channelConnections: {
-                    some: {
-                      OR: [
-                        { processingStartedAt: { not: null } },
-                        { questionSyncStartedAt: { not: null } },
-                      ],
-                    },
-                  },
-                },
-                {
-                  questionAnswers: {
-                    some: {
-                      status: {
-                        in: [
-                          QuestionAnswerStatus.QUEUED,
-                          QuestionAnswerStatus.PROCESSING,
-                        ],
-                      },
-                    },
-                  },
-                },
-              ],
-            },
-            select: { id: true },
-          });
-
-          if (busyStore) {
-            throw new APIError('CONFLICT', {
-              message:
-                'Kuyruktaki işlemler, senkronizasyonlar veya cevap gönderimleri tamamlanmadan hesap silinemez.',
-            });
-          }
-        },
+        // Deletion must use the authenticated, billing-aware Users endpoint.
+        // Leaving this route enabled would bypass its atomic closure checks.
+        enabled: false,
       },
     },
     session: {

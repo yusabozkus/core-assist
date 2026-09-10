@@ -12,11 +12,11 @@ import { createBillingPortalSession } from "@/lib/api/billing"
 import type { BillingHistory, BillingPaymentMethod } from "@/types/billing"
 
 export function BillingPaymentDetails({
-  storeId,
+  workspaceId,
   managedByPaddle,
   history,
 }: {
-  storeId: string
+  workspaceId: string
   managedByPaddle: boolean
   history: BillingHistory | null
 }) {
@@ -29,8 +29,10 @@ export function BillingPaymentDetails({
     setIsOpeningPortal(true)
     setError(null)
     try {
-      const session = await createBillingPortalSession(storeId)
-      window.location.assign(session.updatePaymentMethodUrl ?? session.overviewUrl)
+      const session = await createBillingPortalSession(workspaceId)
+      window.location.assign(
+        session.updatePaymentMethodUrl ?? session.overviewUrl
+      )
     } catch (caughtError) {
       setError(
         caughtError instanceof Error

@@ -3,6 +3,11 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 const questions = [
   {
+    question: "Mevcut planımı nasıl değiştiririm?",
+    answer:
+      "Yeni planı seçip Paddle'ın hesapladığı ücret veya alacak farkını ve limitleri inceleyin. Onaydan sonra mevcut aboneliğiniz hemen güncellenir; yeni abonelik açılmaz. Mağaza, kullanıcı veya ürün sayınız yeni limiti aşıyorsa önce kullanımı azaltmanız gerekir. Plan değişikliği soru kullanımınızı sıfırlamaz.",
+  },
+  {
     question: "10 günlük deneme nasıl çalışır?",
     answer:
       "Kart bilgisi vermeden 10 gün boyunca 1 mağaza, 100 işlenen soru ve 1.000 ürüne kadar tüm özellikleri deneyebilirsiniz.",

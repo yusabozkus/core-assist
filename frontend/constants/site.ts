@@ -44,9 +44,9 @@ export const APP_ROUTES = {
       root: "/dashboard/settings",
       profile: "/dashboard/settings/profile",
       notifications: "/dashboard/settings/notifications",
-      billing: "/dashboard/settings/billing",
-      plans: "/dashboard/settings/billing/plans",
-      invoices: "/dashboard/settings/billing/invoices",
+      billing: "/billing",
+      plans: "/billing?view=plans",
+      invoices: "/billing?view=invoices",
     },
   },
 } as const

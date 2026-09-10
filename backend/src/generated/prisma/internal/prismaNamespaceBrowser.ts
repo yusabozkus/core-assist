@@ -59,6 +59,9 @@ export const ModelName = {
   WorkspaceMember: 'WorkspaceMember',
   BillingSubscription: 'BillingSubscription',
   BillingWebhookEvent: 'BillingWebhookEvent',
+  BillingClosureRecord: 'BillingClosureRecord',
+  BillingCheckout: 'BillingCheckout',
+  BillingPlanChange: 'BillingPlanChange',
   BillingUsagePeriod: 'BillingUsagePeriod',
   BillingUsageEvent: 'BillingUsageEvent',
   Store: 'Store',
@@ -201,6 +204,13 @@ export const BillingSubscriptionScalarFieldEnum = {
   cancelAtPeriodEnd: 'cancelAtPeriodEnd',
   canceledAt: 'canceledAt',
   paddleUpdatedAt: 'paddleUpdatedAt',
+  paddleSnapshotAt: 'paddleSnapshotAt',
+  scheduledAccessEndsAt: 'scheduledAccessEndsAt',
+  lastReconciledAt: 'lastReconciledAt',
+  reconcileAfter: 'reconcileAfter',
+  reconcileFailures: 'reconcileFailures',
+  reconcileErrorCode: 'reconcileErrorCode',
+  usagePeriodAnchor: 'usagePeriodAnchor',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -216,6 +226,66 @@ export const BillingWebhookEventScalarFieldEnum = {
 } as const
 
 export type BillingWebhookEventScalarFieldEnum = (typeof BillingWebhookEventScalarFieldEnum)[keyof typeof BillingWebhookEventScalarFieldEnum]
+
+
+export const BillingClosureRecordScalarFieldEnum = {
+  id: 'id',
+  workspaceReference: 'workspaceReference',
+  environment: 'environment',
+  paddleSubscriptionIds: 'paddleSubscriptionIds',
+  paddleCustomerIds: 'paddleCustomerIds',
+  billingSnapshot: 'billingSnapshot',
+  closedAt: 'closedAt'
+} as const
+
+export type BillingClosureRecordScalarFieldEnum = (typeof BillingClosureRecordScalarFieldEnum)[keyof typeof BillingClosureRecordScalarFieldEnum]
+
+
+export const BillingCheckoutScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  requestedByUserId: 'requestedByUserId',
+  environment: 'environment',
+  status: 'status',
+  plan: 'plan',
+  cycle: 'cycle',
+  paddlePriceId: 'paddlePriceId',
+  paddleTransactionId: 'paddleTransactionId',
+  expectedPaddleCustomerId: 'expectedPaddleCustomerId',
+  previousPaddleSubscriptionId: 'previousPaddleSubscriptionId',
+  paddleSubscriptionId: 'paddleSubscriptionId',
+  boundAt: 'boundAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingCheckoutScalarFieldEnum = (typeof BillingCheckoutScalarFieldEnum)[keyof typeof BillingCheckoutScalarFieldEnum]
+
+
+export const BillingPlanChangeScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  requestedByUserId: 'requestedByUserId',
+  environment: 'environment',
+  status: 'status',
+  paddleSubscriptionId: 'paddleSubscriptionId',
+  paddleCustomerId: 'paddleCustomerId',
+  sourcePriceId: 'sourcePriceId',
+  sourceUpdatedAt: 'sourceUpdatedAt',
+  sourceFingerprint: 'sourceFingerprint',
+  targetPriceId: 'targetPriceId',
+  plan: 'plan',
+  cycle: 'cycle',
+  preview: 'preview',
+  expiresAt: 'expiresAt',
+  submittedAt: 'submittedAt',
+  completedAt: 'completedAt',
+  failureCode: 'failureCode',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingPlanChangeScalarFieldEnum = (typeof BillingPlanChangeScalarFieldEnum)[keyof typeof BillingPlanChangeScalarFieldEnum]
 
 
 export const BillingUsagePeriodScalarFieldEnum = {
@@ -706,19 +776,19 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
 export const NullableJsonNullValueInput = {
   DbNull: DbNull,
   JsonNull: JsonNull
 } as const
 
 export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
-
-
-export const JsonNullValueInput = {
-  JsonNull: JsonNull
-} as const
-
-export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {

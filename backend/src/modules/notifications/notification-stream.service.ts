@@ -78,7 +78,8 @@ export class NotificationStreamService
     const changes = this.changes.pipe(
       filter(
         (change) =>
-          change.recipientUserId === userId && change.storeId === storeId,
+          change.recipientUserId === userId &&
+          (change.storeId === storeId || change.storeId === null),
       ),
       map((change): MessageEvent => ({
         data: { kind: 'CHANGED', ...change },

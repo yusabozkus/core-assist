@@ -166,6 +166,7 @@ export class OnboardingService {
 
   async provision(userId: string, dto: ProvisionOnboardingDto) {
     const setup = await this.prisma.$transaction(async (transaction) => {
+      await transaction.$queryRaw`SELECT "id" FROM "user" WHERE "id" = ${userId} FOR UPDATE`;
       let workspace = await transaction.workspace.findFirst({
         where: { ownerId: userId },
         orderBy: { createdAt: 'asc' },

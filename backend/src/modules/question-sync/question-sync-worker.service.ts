@@ -12,6 +12,9 @@ import {
 } from '../../generated/prisma/enums';
 import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
+import { BillingSubscriptionService } from '../billing/billing-subscription.service';
+import { BillingAccessRequiredException } from '../billing/billing.errors';
+import { BILLING_SYNC_STOPPED_MESSAGE } from '../billing/billing-access.policy';
 import { CredentialsEncryptionService } from '../channels/credentials-encryption.service';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
 import { isProviderAuthenticationError } from '../channels/providers/connector-utils';
@@ -43,9 +46,14 @@ export class QuestionSyncWorkerService {
     private readonly questionDrafts: QuestionDraftDispatcher,
     private readonly notifications: NotificationsService,
     private readonly productLinks: QuestionProductLinkService,
+    private readonly billing: BillingSubscriptionService,
   ) {}
 
   async run(data: QuestionSyncJobData) {
+    await this.billing.assertStoreAccess(
+      data.storeId,
+      BILLING_SYNC_STOPPED_MESSAGE,
+    );
     await this.prisma.catalogSyncRun.updateMany({
       where: { id: data.syncRunId, connectionId: data.connectionId },
       data: { stage: 'FETCHING', progress: 10 },
@@ -99,6 +107,10 @@ export class QuestionSyncWorkerService {
     let questionsUnchanged = 0;
 
     do {
+      await this.billing.assertStoreAccess(
+        data.storeId,
+        BILLING_SYNC_STOPPED_MESSAGE,
+      );
       let batchQuestionsProcessed = 0;
       const batch = await this.providers.fetchProductQuestions(
         syncConnection.providerKey,
@@ -112,6 +124,10 @@ export class QuestionSyncWorkerService {
         },
       );
 
+      await this.billing.assertStoreAccess(
+        data.storeId,
+        BILLING_SYNC_STOPPED_MESSAGE,
+      );
       for (const question of batch.questions) {
         const persisted = await this.persistQuestion(syncConnection, question);
 
@@ -151,6 +167,10 @@ export class QuestionSyncWorkerService {
       }
     } while (cursor);
 
+    await this.billing.assertStoreAccess(
+      data.storeId,
+      BILLING_SYNC_STOPPED_MESSAGE,
+    );
     const completedAt = new Date();
     await this.prisma.$transaction([
       this.prisma.catalogSyncRun.updateMany({
@@ -183,6 +203,7 @@ export class QuestionSyncWorkerService {
         : 'Soru senkronizasyonu tamamlanamadı.';
 
     const authenticationError = isProviderAuthenticationError(error);
+    const accessError = error instanceof BillingAccessRequiredException;
 
     await this.prisma.$transaction([
       this.prisma.catalogSyncRun.updateMany({
@@ -213,11 +234,18 @@ export class QuestionSyncWorkerService {
     await this.notifications.createForStoreMembers({
       storeId: data.storeId,
       type: NotificationType.QUESTION_SYNC_FAILED,
-      severity: NotificationSeverity.ERROR,
-      title: 'Soru senkronizasyonu başarısız',
-      message:
-        'Pazaryerinden yeni ürün soruları alınamadı. Senkronizasyon geçmişini inceleyin.',
-      actionUrl: '/dashboard/channels/sync?status=failed&kind=question',
+      severity: accessError
+        ? NotificationSeverity.WARNING
+        : NotificationSeverity.ERROR,
+      title: accessError
+        ? 'Soru senkronizasyonu durduruldu'
+        : 'Soru senkronizasyonu başarısız',
+      message: accessError
+        ? BILLING_SYNC_STOPPED_MESSAGE
+        : 'Pazaryerinden yeni ürün soruları alınamadı. Senkronizasyon geçmişini inceleyin.',
+      actionUrl: accessError
+        ? '/billing'
+        : '/dashboard/channels/sync?status=failed&kind=question',
       entityType: 'CATALOG_SYNC_RUN',
       entityId: data.syncRunId,
       dedupeKey: `question-sync-failed:${data.connectionId}`,

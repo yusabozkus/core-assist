@@ -39,12 +39,14 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   user: SidebarUserData
   shops: SidebarShop[]
   activeShopId: string
+  canManageBilling: boolean
 }
 
 export function AppSidebar({
   user,
   shops,
   activeShopId,
+  canManageBilling,
   ...props
 }: AppSidebarProps) {
   const pathname = usePathname()
@@ -199,7 +201,7 @@ export function AppSidebar({
             })}
           </SidebarMenu>
         ) : null}
-        <SidebarUser user={user} />
+        <SidebarUser user={user} canManageBilling={canManageBilling} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

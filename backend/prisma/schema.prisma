@@ -28,6 +28,8 @@ model User {
   notificationPreferences      NotificationPreference[]
   notificationDeliverySettings NotificationDeliverySetting[]
   webPushSubscriptions         WebPushSubscription[]
+  billingCheckouts              BillingCheckout[]
+  billingPlanChanges            BillingPlanChange[]
 
   @@map("user")
 }
@@ -90,6 +92,8 @@ model Workspace {
   billingSubscription BillingSubscription?
   billingUsagePeriods BillingUsagePeriod[]
   billingUsageEvents  BillingUsageEvent[]
+  billingCheckouts    BillingCheckout[]
+  billingPlanChanges  BillingPlanChange[]
 
   @@map("workspace")
 }
@@ -154,6 +158,13 @@ model BillingSubscription {
   cancelAtPeriodEnd    Boolean                   @default(false)
   canceledAt           DateTime?
   paddleUpdatedAt      DateTime?
+  paddleSnapshotAt     DateTime?
+  scheduledAccessEndsAt DateTime?
+  lastReconciledAt     DateTime?
+  reconcileAfter       DateTime                  @default(now())
+  reconcileFailures    Int                       @default(0)
+  reconcileErrorCode   String?
+  usagePeriodAnchor    DateTime?
   createdAt            DateTime                  @default(now())
   updatedAt            DateTime                  @updatedAt
 
@@ -161,6 +172,7 @@ model BillingSubscription {
   usagePeriods BillingUsagePeriod[]
 
   @@index([status, currentPeriodEnd])
+  @@index([reconcileAfter])
   @@map("billing_subscription")
 }
 
@@ -172,6 +184,101 @@ model BillingWebhookEvent {
 
   @@index([eventType, occurredAt])
   @@map("billing_webhook_event")
+}
+
+// Minimal financial closure evidence survives account/workspace deletion.
+// No user relation, profile, payment credentials, or raw Paddle payloads.
+model BillingClosureRecord {
+  id                    String            @id @default(uuid())
+  workspaceReference    String            @unique
+  environment           PaddleEnvironment
+  paddleSubscriptionIds String[]
+  paddleCustomerIds     String[]
+  billingSnapshot       Json
+  closedAt              DateTime          @default(now())
+
+  @@index([paddleSubscriptionIds], type: Gin)
+  @@map("billing_closure_record")
+}
+
+enum PaddleEnvironment {
+  SANDBOX
+  PRODUCTION
+}
+
+enum BillingCheckoutStatus {
+  CREATING
+  OPEN
+  REVIEW_REQUIRED
+  COMPLETED
+  CANCELED
+  FAILED
+}
+
+model BillingCheckout {
+  id                          String            @id @default(uuid())
+  workspaceId                 String
+  requestedByUserId           String?
+  environment                 PaddleEnvironment
+  status                      BillingCheckoutStatus @default(CREATING)
+  plan                        BillingPlan
+  cycle                       BillingCycle
+  paddlePriceId               String
+  paddleTransactionId         String?           @unique
+  expectedPaddleCustomerId     String?
+  previousPaddleSubscriptionId String?
+  paddleSubscriptionId        String?           @unique
+  boundAt                     DateTime?
+  createdAt                   DateTime          @default(now())
+  updatedAt                   DateTime          @updatedAt
+
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  requestedByUser User?     @relation(fields: [requestedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+  // A SQL partial unique index permits only one unresolved checkout per workspace.
+  @@index([requestedByUserId])
+  @@map("billing_checkout")
+}
+
+enum BillingPlanChangeStatus {
+  PREVIEWED
+  PROCESSING
+  AWAITING_WEBHOOK
+  COMPLETED
+  FAILED
+  REVIEW_REQUIRED
+}
+
+model BillingPlanChange {
+  id                   String                  @id @default(uuid())
+  workspaceId          String
+  requestedByUserId    String?
+  environment          PaddleEnvironment
+  status               BillingPlanChangeStatus @default(PREVIEWED)
+  paddleSubscriptionId String
+  paddleCustomerId     String
+  sourcePriceId        String
+  sourceUpdatedAt      DateTime
+  sourceFingerprint    String
+  targetPriceId        String
+  plan                 BillingPlan
+  cycle                BillingCycle
+  preview              Json
+  expiresAt            DateTime
+  submittedAt          DateTime?
+  completedAt          DateTime?
+  failureCode          String?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  requestedByUser User?     @relation(fields: [requestedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+  @@index([requestedByUserId])
+  // A partial unique index serializes submitted changes, not read-only previews.
+  @@map("billing_plan_change")
 }
 
 model BillingUsagePeriod {
@@ -718,6 +825,8 @@ enum QuestionAnswerOrigin {
 }
 
 enum QuestionDraftProcessingStatus {
+  BLOCKED_QUOTA
+  BLOCKED_SUBSCRIPTION
   QUEUED
   PROCESSING
   FAILED
@@ -883,6 +992,7 @@ enum StoreRole {
 }
 
 enum NotificationType {
+  BILLING_PAYMENT_ISSUE
   AI_REVIEW_REQUIRED
   AI_DRAFT_FAILED
   AI_USAGE_LIMIT

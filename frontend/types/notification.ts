@@ -9,6 +9,7 @@ export type NotificationType =
   | "OUT_OF_STOCK"
   | "CHANNEL_CONNECTION_ERROR"
   | "BILLING_PLAN_LIMIT"
+  | "BILLING_PAYMENT_ISSUE"
 
 export type NotificationSeverity = "INFO" | "WARNING" | "ERROR"
 export type NotificationReadFilter = "ALL" | "UNREAD"

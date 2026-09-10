@@ -1,6 +1,10 @@
 import { ServiceUnavailableException } from '@nestjs/common';
 import { Environment } from '@paddle/paddle-node-sdk';
-import { BillingCycle, BillingPlan } from '../../generated/prisma/enums';
+import {
+  BillingCycle,
+  BillingPlan,
+  PaddleEnvironment,
+} from '../../generated/prisma/enums';
 
 type PaddlePlanSelection = {
   plan: BillingPlan;
@@ -25,6 +29,12 @@ const PRICE_ENV_KEYS: Record<BillingPlan, Record<BillingCycle, string>> = {
 export function paddleEnvironment() {
   const value = process.env.PADDLE_ENV?.trim().toLowerCase();
   return value === 'production' ? Environment.production : Environment.sandbox;
+}
+
+export function paddleCheckoutEnvironment() {
+  return paddleEnvironment() === Environment.production
+    ? PaddleEnvironment.PRODUCTION
+    : PaddleEnvironment.SANDBOX;
 }
 
 export function requirePaddleApiKey() {

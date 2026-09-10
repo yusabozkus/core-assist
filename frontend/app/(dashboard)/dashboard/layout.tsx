@@ -5,6 +5,7 @@ import { AppSidebar } from "@/components/shared/sidebar/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { APP_ROUTES } from "@/constants/site"
 import { getServerChannelConnections } from "@/lib/api/channels.server"
+import { getServerBillingWorkspaces } from "@/lib/api/billing.server"
 import { getOnboardingStatus } from "@/lib/api/onboarding.server"
 import { getDashboardSyncState } from "@/lib/channels/sync-state"
 import { getCurrentUser } from "@/lib/server-auth"
@@ -34,10 +35,12 @@ export default async function DashboardLayout({
     redirect(APP_ROUTES.onboarding)
   }
 
-  const connections =
+  const [connections, billingWorkspaces] = await Promise.all([
     activeStore.status === "ACTIVE"
-      ? await getServerChannelConnections(activeStore.id).catch(() => null)
-      : []
+      ? getServerChannelConnections(activeStore.id).catch(() => null)
+      : [],
+    getServerBillingWorkspaces().catch(() => []),
+  ])
   const syncState = getDashboardSyncState(connections)
 
   return (
@@ -51,6 +54,7 @@ export default async function DashboardLayout({
         }}
         shops={stores}
         activeShopId={activeStore.id}
+        canManageBilling={billingWorkspaces.length > 0}
       />
       <SidebarInset className="h-[98vh]">
         <DashboardHeader

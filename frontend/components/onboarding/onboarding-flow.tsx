@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft01Icon,
@@ -668,6 +669,16 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
             </div>
 
             <div className="flex min-w-0 items-center justify-end gap-2">
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="hidden sm:inline-flex"
+              >
+                <Link href={APP_ROUTES.dashboard.settings.billing}>
+                  Plan ve faturalama
+                </Link>
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -698,6 +709,11 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                     </p>
                   </div>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href={APP_ROUTES.dashboard.settings.billing}>
+                      Plan ve faturalama
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="cursor-pointer gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"

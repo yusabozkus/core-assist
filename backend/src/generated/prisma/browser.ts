@@ -58,6 +58,21 @@ export type BillingSubscription = Prisma.BillingSubscriptionModel
  */
 export type BillingWebhookEvent = Prisma.BillingWebhookEventModel
 /**
+ * Model BillingClosureRecord
+ * 
+ */
+export type BillingClosureRecord = Prisma.BillingClosureRecordModel
+/**
+ * Model BillingCheckout
+ * 
+ */
+export type BillingCheckout = Prisma.BillingCheckoutModel
+/**
+ * Model BillingPlanChange
+ * 
+ */
+export type BillingPlanChange = Prisma.BillingPlanChangeModel
+/**
  * Model BillingUsagePeriod
  * 
  */

@@ -54,6 +54,38 @@ export const BillingUsageMetric = {
 export type BillingUsageMetric = (typeof BillingUsageMetric)[keyof typeof BillingUsageMetric]
 
 
+export const PaddleEnvironment = {
+  SANDBOX: 'SANDBOX',
+  PRODUCTION: 'PRODUCTION'
+} as const
+
+export type PaddleEnvironment = (typeof PaddleEnvironment)[keyof typeof PaddleEnvironment]
+
+
+export const BillingCheckoutStatus = {
+  CREATING: 'CREATING',
+  OPEN: 'OPEN',
+  REVIEW_REQUIRED: 'REVIEW_REQUIRED',
+  COMPLETED: 'COMPLETED',
+  CANCELED: 'CANCELED',
+  FAILED: 'FAILED'
+} as const
+
+export type BillingCheckoutStatus = (typeof BillingCheckoutStatus)[keyof typeof BillingCheckoutStatus]
+
+
+export const BillingPlanChangeStatus = {
+  PREVIEWED: 'PREVIEWED',
+  PROCESSING: 'PROCESSING',
+  AWAITING_WEBHOOK: 'AWAITING_WEBHOOK',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  REVIEW_REQUIRED: 'REVIEW_REQUIRED'
+} as const
+
+export type BillingPlanChangeStatus = (typeof BillingPlanChangeStatus)[keyof typeof BillingPlanChangeStatus]
+
+
 export const AiTone = {
   PROFESSIONAL: 'PROFESSIONAL',
   FRIENDLY: 'FRIENDLY',
@@ -266,6 +298,8 @@ export type QuestionAnswerOrigin = (typeof QuestionAnswerOrigin)[keyof typeof Qu
 
 
 export const QuestionDraftProcessingStatus = {
+  BLOCKED_QUOTA: 'BLOCKED_QUOTA',
+  BLOCKED_SUBSCRIPTION: 'BLOCKED_SUBSCRIPTION',
   QUEUED: 'QUEUED',
   PROCESSING: 'PROCESSING',
   FAILED: 'FAILED'
@@ -313,6 +347,7 @@ export type StoreRole = (typeof StoreRole)[keyof typeof StoreRole]
 
 
 export const NotificationType = {
+  BILLING_PAYMENT_ISSUE: 'BILLING_PAYMENT_ISSUE',
   AI_REVIEW_REQUIRED: 'AI_REVIEW_REQUIRED',
   AI_DRAFT_FAILED: 'AI_DRAFT_FAILED',
   AI_USAGE_LIMIT: 'AI_USAGE_LIMIT',

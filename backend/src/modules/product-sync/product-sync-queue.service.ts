@@ -12,6 +12,8 @@ import {
   StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { BillingSubscriptionService } from '../billing/billing-subscription.service';
+import { BILLING_SYNC_STOPPED_MESSAGE } from '../billing/billing-access.policy';
 import {
   PRODUCT_SYNC_LOCK_TIMEOUT_MS,
   PRODUCT_SYNC_QUEUE,
@@ -32,6 +34,7 @@ export class ProductSyncQueueService implements ProductSyncDispatcher {
     private readonly prisma: PrismaService,
     @InjectQueue(PRODUCT_SYNC_QUEUE)
     private readonly queue: Queue<ProductSyncJobData>,
+    private readonly billing: BillingSubscriptionService,
   ) {}
 
   async enqueue(
@@ -40,6 +43,7 @@ export class ProductSyncQueueService implements ProductSyncDispatcher {
     kind: ProductSyncKind = 'FULL',
     options: ProductSyncEnqueueOptions = {},
   ): Promise<QueuedProductSync> {
+    await this.billing.assertStoreAccess(storeId, BILLING_SYNC_STOPPED_MESSAGE);
     const queuedAt = new Date();
     const staleBefore = new Date(
       queuedAt.getTime() - PRODUCT_SYNC_LOCK_TIMEOUT_MS,

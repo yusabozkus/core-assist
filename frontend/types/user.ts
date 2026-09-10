@@ -43,3 +43,21 @@ export type AccountDataExport = {
   notice: string
   user: Record<string, unknown>
 }
+
+export type AccountDeletionStatus = {
+  checkedAt: string
+  canDelete: boolean
+  canResolveBilling: boolean
+  workspaces: {
+    id: string
+    name: string
+    issues: string[]
+    pendingPaymentCount: number
+    subscriptions: {
+      id: string
+      status: string
+      cancelScheduled: boolean
+      accessEndsAt: string | null
+    }[]
+  }[]
+}

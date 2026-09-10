@@ -1,5 +1,6 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
+import { BillingModule } from '../billing/billing.module';
 import { IntegrationsModule } from '../integrations/integrations.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { QuestionProductLinkModule } from '../question-product-link/question-product-link.module';
@@ -15,6 +16,7 @@ import { QuestionSyncWorkerService } from './question-sync-worker.service';
 
 @Module({
   imports: [
+    BillingModule,
     IntegrationsModule,
     NotificationsModule,
     QuestionProductLinkModule,

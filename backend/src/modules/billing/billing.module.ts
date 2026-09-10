@@ -1,23 +1,46 @@
 import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
+import {
+  BILLING_RECOVERY_QUEUE,
+  BillingReconciliationProcessor,
+} from './billing-reconciliation.processor';
 import { AuthModule } from '../auth/auth.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { BillingController } from './billing.controller';
+import { BillingWorkspacesController } from './billing-workspaces.controller';
+import { BillingAuthorizationService } from './billing-authorization.service';
 import { BillingEntitlementService } from './billing-entitlement.service';
 import { BillingSubscriptionService } from './billing-subscription.service';
 import { BillingUsageService } from './billing-usage.service';
 import { BillingUsageNotificationService } from './billing-usage-notification.service';
 import { PaddleBillingService } from './paddle-billing.service';
 import { PaddleWebhookController } from './paddle-webhook.controller';
+import { PaddleCheckoutBindingService } from './paddle-checkout-binding.service';
+import { PaddleCheckoutService } from './paddle-checkout.service';
+import { PaddlePlanChangeService } from './paddle-plan-change.service';
 
 @Module({
-  imports: [AuthModule, NotificationsModule],
-  controllers: [BillingController, PaddleWebhookController],
+  imports: [
+    AuthModule,
+    NotificationsModule,
+    BullModule.registerQueue({ name: BILLING_RECOVERY_QUEUE }),
+  ],
+  controllers: [
+    BillingController,
+    BillingWorkspacesController,
+    PaddleWebhookController,
+  ],
   providers: [
+    BillingReconciliationProcessor,
+    BillingAuthorizationService,
     BillingSubscriptionService,
     BillingUsageService,
     BillingUsageNotificationService,
     BillingEntitlementService,
     PaddleBillingService,
+    PaddleCheckoutBindingService,
+    PaddleCheckoutService,
+    PaddlePlanChangeService,
   ],
   exports: [
     BillingSubscriptionService,

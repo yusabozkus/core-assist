@@ -18,11 +18,17 @@ export function PlanCard({
   billingCycle,
   checkoutHref,
   current = false,
+  onSelect,
+  disabled = false,
+  managed = false,
 }: {
   plan: SubscriptionPlan
   billingCycle: BillingCycle
   checkoutHref: string
   current?: boolean
+  onSelect?: () => void
+  disabled?: boolean
+  managed?: boolean
 }) {
   const reducedMotion = useReducedMotion()
   const price = getPlanPrice(plan, billingCycle)
@@ -112,6 +118,17 @@ export function PlanCard({
             Mevcut planınız
             <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-4" />
           </Button>
+        ) : onSelect || disabled ? (
+          <Button
+            type="button"
+            onClick={onSelect}
+            disabled={disabled}
+            variant={plan.highlighted ? "default" : "outline"}
+            className="mt-5 w-full justify-between shadow-none"
+          >
+            Değişikliği incele
+            <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" />
+          </Button>
         ) : (
           <Button
             asChild
@@ -125,7 +142,9 @@ export function PlanCard({
           </Button>
         )}
         <p className="mt-3 text-center text-[11px] text-muted-foreground">
-          Kart gerektirmeden {BILLING_TRIAL.days} gün ücretsiz deneme
+          {managed
+            ? "Tutarı ve yeni limitleri onaylamadan değişiklik yapılmaz."
+            : `Kart gerektirmeden ${BILLING_TRIAL.days} gün ücretsiz deneme`}
         </p>
         <div className="mt-6 border-y border-border py-4">
           <p className="text-2xl font-semibold tracking-tight tabular-nums">

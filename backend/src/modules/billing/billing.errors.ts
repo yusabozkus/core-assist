@@ -1,13 +1,14 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 export class BillingAccessRequiredException extends HttpException {
-  constructor() {
+  constructor(
+    message = 'Deneme süreniz veya aboneliğiniz aktif değil. Devam etmek için bir plan seçin.',
+  ) {
     super(
       {
         statusCode: HttpStatus.PAYMENT_REQUIRED,
         code: 'BILLING_ACCESS_REQUIRED',
-        message:
-          'Deneme süreniz veya aboneliğiniz aktif değil. Devam etmek için bir plan seçin.',
+        message,
       },
       HttpStatus.PAYMENT_REQUIRED,
     );

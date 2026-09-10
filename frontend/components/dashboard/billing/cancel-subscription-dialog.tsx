@@ -9,11 +9,13 @@ import { createBillingPortalSession } from "@/lib/api/billing"
 import { formatBillingDate } from "@/lib/billing"
 
 export function CancelSubscriptionDialog({
-  storeId,
+  workspaceId,
   accessEndsAt,
+  accessActive,
 }: {
-  storeId: string
+  workspaceId: string
   accessEndsAt: string
+  accessActive: boolean
 }) {
   const [isOpeningPortal, setIsOpeningPortal] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -22,8 +24,10 @@ export function CancelSubscriptionDialog({
     setIsOpeningPortal(true)
     setError(null)
     try {
-      const session = await createBillingPortalSession(storeId)
-      window.location.assign(session.cancelSubscriptionUrl ?? session.overviewUrl)
+      const session = await createBillingPortalSession(workspaceId)
+      window.location.assign(
+        session.cancelSubscriptionUrl ?? session.overviewUrl
+      )
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -37,7 +41,11 @@ export function CancelSubscriptionDialog({
   return (
     <ResponsiveDialog
       title="Abonelik yenilemesini durdur"
-      description={`İptal sonrasında planınız ${formatBillingDate(accessEndsAt)} tarihine kadar devam eder.`}
+      description={
+        accessActive
+          ? `Yenilemeyi dönem sonunda iptal ederseniz erişiminiz ${formatBillingDate(accessEndsAt)} tarihine kadar devam eder.`
+          : "Abonelik erişiminiz şu anda aktif değil. İptal durumunu Paddle üzerinden yönetebilirsiniz."
+      }
       preventClose={isOpeningPortal}
       trigger={
         <Button
@@ -85,15 +93,27 @@ export function CancelSubscriptionDialog({
             className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400"
           />
           <div>
-            <p className="text-sm font-medium">Dönem sonunda otomasyon durur</p>
+            <p className="text-sm font-medium">
+              Erişim sona erdiğinde ne olur?
+            </p>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              AI yanıtları ve kanal senkronizasyonu dönem sonunda durdurulur.
-              Kayıtlı verileriniz hesabınızda korunur.
+              Yeni AI taslakları, kuyruktaki otomatik yanıtlar ve ürün, stok,
+              soru senkronizasyonları durur. Elle başlatılan güncellemeler de
+              aktif abonelik gerektirir. Kayıtlı verilerinizi görüntüleyebilir,
+              mevcut soruları manuel yanıtlayabilir ve faturalarınıza
+              erişebilirsiniz.
             </p>
           </div>
         </div>
+        <p className="text-xs leading-5 text-muted-foreground">
+          Yalnızca soru kotanız dolarsa aboneliğiniz sona ermez. Senkronizasyon,
+          manuel yanıtlar ve önceden hazırlanmış güvenli yanıtların otomatik
+          gönderimi devam eder; yeni sorular için AI üretimi durur.
+        </p>
         <p className="border-t border-border pt-4 text-xs leading-5 text-muted-foreground">
-          {"İptal işlemini Paddle'ın güvenli abonelik yönetimi ekranında tamamlayacaksınız."}
+          {
+            "İptal işlemini Paddle'ın güvenli abonelik yönetimi ekranında tamamlayacaksınız."
+          }
         </p>
         {error ? (
           <p role="alert" className="text-xs leading-5 text-destructive">

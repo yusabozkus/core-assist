@@ -5,6 +5,7 @@ import type { Queue } from 'bullmq';
 import { Prisma } from '../../generated/prisma/client';
 import { SizeGuideStatus } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { BILLING_SYNC_STOPPED_MESSAGE } from '../billing/billing-access.policy';
 import {
   EXTRACT_SIZE_GUIDE_JOB,
   SIZE_GUIDE_QUEUE,
@@ -30,9 +31,11 @@ export class SizeGuideQueueService extends SizeGuideDispatcher {
   async register(input: RegisterSizeGuideInput) {
     const existing = await this.prisma.productSizeGuide.findUnique({
       where: { externalProductId: input.externalProductId },
-      select: { id: true, sourceUrl: true, status: true },
+      select: { id: true, sourceUrl: true, status: true, failureReason: true },
     });
     const sourceChanged = existing?.sourceUrl !== input.sizeGuide.sourceUrl;
+    const stoppedForBilling =
+      existing?.failureReason === BILLING_SYNC_STOPPED_MESSAGE;
     const structuredData = input.sizeGuide.structuredData;
 
     const guide = await this.prisma.productSizeGuide.upsert({
@@ -80,7 +83,9 @@ export class SizeGuideQueueService extends SizeGuideDispatcher {
       structuredData ||
       (!sourceChanged && guide.status === SizeGuideStatus.READY) ||
       guide.status === SizeGuideStatus.PROCESSING ||
-      (!sourceChanged && guide.status === SizeGuideStatus.FAILED)
+      (!sourceChanged &&
+        guide.status === SizeGuideStatus.FAILED &&
+        !stoppedForBilling)
     ) {
       return;
     }
@@ -89,11 +94,18 @@ export class SizeGuideQueueService extends SizeGuideDispatcher {
       .update(input.sizeGuide.sourceUrl)
       .digest('hex')
       .slice(0, 12);
+    const jobId = `size-guide-${guide.id}-${sourceHash}`;
+    if (stoppedForBilling) {
+      // Only a terminal billing-stopped job may be retried by the next full sync.
+      const previousJob = await this.queue.getJob(jobId);
+      if (previousJob && (await previousJob.getState()) === 'failed')
+        await previousJob.remove();
+    }
     await this.queue.add(
       EXTRACT_SIZE_GUIDE_JOB,
       { sizeGuideId: guide.id },
       {
-        jobId: `size-guide-${guide.id}-${sourceHash}`,
+        jobId,
         attempts: 3,
         backoff: { type: 'exponential', delay: 5_000 },
         removeOnComplete: { count: 250 },

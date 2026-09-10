@@ -9,10 +9,13 @@ import { BillingPageHeader } from "@/components/dashboard/billing/billing-page-h
 import { BillingPaymentDetails } from "@/components/dashboard/billing/billing-payment-details"
 import { CancelSubscriptionDialog } from "@/components/dashboard/billing/cancel-subscription-dialog"
 import { SubscriptionUsage } from "@/components/dashboard/billing/subscription-usage"
+import { PendingPlanChange } from "@/components/dashboard/billing/pending-plan-change"
+import { BillingRecoveryNotice } from "@/components/dashboard/billing/billing-recovery-notice"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { SUBSCRIPTION_PLANS } from "@/constants/billing"
-import { APP_ROUTES } from "@/constants/site"
+import { billingRoutes } from "@/lib/billing-routes"
+
 import {
   formatBillingDate,
   formatBillingPeriod,
@@ -38,11 +41,11 @@ const statusDetails: Record<
 }
 
 export function BillingOverview({
-  storeId,
+  workspaceId,
   summary,
   history,
 }: {
-  storeId: string
+  workspaceId: string
   summary: BillingSummary
   history: BillingHistory | null
 }) {
@@ -63,7 +66,36 @@ export function BillingOverview({
 
   return (
     <main className="mx-auto w-full max-w-[1120px] space-y-6 px-5 py-8 sm:px-8 lg:px-10">
-      <BillingPageHeader active="overview" />
+      <BillingPageHeader workspaceId={workspaceId} active="overview" />
+      <BillingRecoveryNotice
+        workspaceId={workspaceId}
+        subscription={summary.subscription}
+      />
+      <section
+        className="rounded-xl border border-border bg-muted/25 px-5 py-4"
+        aria-labelledby="billing-access-title"
+      >
+        <h2 id="billing-access-title" className="text-sm font-medium">
+          {!summary.subscription.active
+            ? "Abonelik erişimi kapalı"
+            : summary.usage.questions.remaining === 0
+              ? "Bu dönemin AI soru kotası doldu"
+              : "Aboneliğinizin çalışma kapsamı"}
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          {!summary.subscription.active
+            ? "Yeni AI taslakları, otomatik gönderim ve ürün, stok, soru senkronizasyonları durduruldu. Kayıtlı veriler, mevcut soruları manuel yanıtlama ve fatura yönetimi kullanılabilir. Stok bilgileri son güncelleme tarihine aittir."
+            : summary.usage.questions.remaining === 0
+              ? "Yeni sorular için AI taslağı üretimi durur. Senkronizasyon, manuel yanıt ve önceden hazırlanmış güvenli cevapların otomatik gönderimi devam eder. Mevcut soruların pakete dahil yeniden oluşturma hakları korunur."
+              : "Soru kotası yalnızca AI üretimini sınırlar. Ürün, stok ve soru senkronizasyonları aktif aboneliğiniz boyunca devam eder. Abonelik sona erse de mevcut soruları manuel yanıtlayabilir ve kayıtlı verilerinize erişebilirsiniz."}
+        </p>
+      </section>
+      {summary.pendingPlanChange && (
+        <PendingPlanChange
+          workspaceId={workspaceId}
+          change={summary.pendingPlanChange}
+        />
+      )}
 
       <section
         aria-labelledby="current-plan-title"
@@ -159,21 +191,22 @@ export function BillingOverview({
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-4 sm:px-7">
           <div className="flex flex-wrap gap-2">
             <Button asChild size="sm" className="shadow-none">
-              <Link href={APP_ROUTES.dashboard.settings.plans}>
+              <Link href={billingRoutes(workspaceId).plans}>
                 {isManaged ? "Planları görüntüle" : "Plan seç"}{" "}
                 <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
               </Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href={APP_ROUTES.dashboard.settings.invoices}>
+              <Link href={billingRoutes(workspaceId).invoices}>
                 Faturaları görüntüle
               </Link>
             </Button>
           </div>
           {isManaged ? (
             <CancelSubscriptionDialog
-              storeId={storeId}
+              workspaceId={workspaceId}
               accessEndsAt={summary.subscription.currentPeriodEnd}
+              accessActive={summary.subscription.active}
             />
           ) : null}
         </div>
@@ -182,7 +215,7 @@ export function BillingOverview({
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(19rem,1fr)]">
         <SubscriptionUsage summary={summary} />
         <BillingPaymentDetails
-          storeId={storeId}
+          workspaceId={workspaceId}
           managedByPaddle={isManaged}
           history={history}
         />
@@ -190,7 +223,9 @@ export function BillingOverview({
 
       {isManaged && !history ? (
         <p className="text-xs leading-5 text-amber-600 dark:text-amber-400">
-          {"Ödeme ve fatura bilgileri şu anda Paddle'dan alınamadı. Daha sonra yeniden deneyebilirsiniz."}
+          {
+            "Ödeme ve fatura bilgileri şu anda Paddle'dan alınamadı. Daha sonra yeniden deneyebilirsiniz."
+          }
         </p>
       ) : null}
     </main>

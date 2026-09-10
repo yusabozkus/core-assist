@@ -26,7 +26,12 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { QuestionProductLinkService } from '../question-product-link/question-product-link.service';
 import { QUESTION_DRAFT_DISPATCHER } from '../questions/question-draft.constants';
 import { BillingEntitlementService } from '../billing/billing-entitlement.service';
-import { BillingPlanLimitException } from '../billing/billing.errors';
+import {
+  BillingAccessRequiredException,
+  BillingPlanLimitException,
+} from '../billing/billing.errors';
+import { BillingSubscriptionService } from '../billing/billing-subscription.service';
+import { BILLING_SYNC_STOPPED_MESSAGE } from '../billing/billing-access.policy';
 import type { QuestionDraftDispatcher } from '../questions/question-draft.types';
 import { PRODUCT_SYNC_MAX_BATCHES } from './product-sync.constants';
 import type { ProductSyncJobData } from './product-sync.types';
@@ -77,12 +82,17 @@ export class ProductSyncWorkerService {
     private readonly billingEntitlements: BillingEntitlementService,
     @Inject(QUESTION_DRAFT_DISPATCHER)
     private readonly questionDrafts: QuestionDraftDispatcher,
+    private readonly billing: BillingSubscriptionService,
   ) {}
 
   async run(
     data: ProductSyncJobData,
     updateProgress: (progress: number) => Promise<void>,
   ) {
+    await this.billing.assertStoreAccess(
+      data.storeId,
+      BILLING_SYNC_STOPPED_MESSAGE,
+    );
     await this.prisma.catalogSyncRun.updateMany({
       where: { id: data.syncRunId, connectionId: data.connectionId },
       data: { stage: 'FETCHING', progress: 10 },
@@ -129,6 +139,10 @@ export class ProductSyncWorkerService {
             updateProgress,
           );
 
+    await this.billing.assertStoreAccess(
+      data.storeId,
+      BILLING_SYNC_STOPPED_MESSAGE,
+    );
     if (data.kind === 'FULL') {
       await this.reconcileQuestionProductLinks(data, updateProgress);
     }
@@ -145,8 +159,10 @@ export class ProductSyncWorkerService {
         : 'Ürün senkronizasyonu başarısız.';
     const authenticationError = isProviderAuthenticationError(error);
     const planLimitError = error instanceof BillingPlanLimitException;
+    const accessError = error instanceof BillingAccessRequiredException;
     const connectionData =
-      (data.kind === 'FULL' && !planLimitError) || authenticationError
+      (data.kind === 'FULL' && !planLimitError && !accessError) ||
+      authenticationError
         ? {
             status: ChannelConnectionStatus.ERROR,
             processingStartedAt: null,
@@ -174,6 +190,21 @@ export class ProductSyncWorkerService {
       }),
     ]);
 
+    if (accessError) {
+      await this.notifications.createForStoreMembers({
+        storeId: data.storeId,
+        type: NotificationType.PRODUCT_SYNC_FAILED,
+        severity: NotificationSeverity.WARNING,
+        title: 'Senkronizasyon durduruldu',
+        message: BILLING_SYNC_STOPPED_MESSAGE,
+        actionUrl: '/billing',
+        entityType: 'CATALOG_SYNC_RUN',
+        entityId: data.syncRunId,
+        dedupeKey: `billing-sync-inactive:${data.connectionId}`,
+      });
+      return;
+    }
+
     if (planLimitError) {
       await this.notifications.createForStoreMembers({
         storeId: data.storeId,
@@ -182,7 +213,7 @@ export class ProductSyncWorkerService {
         title: 'Ürün kapasitesi doldu',
         message:
           'Yeni ürünler içe aktarılamadı. Mevcut ürünleri güncellemeye devam edebilir veya planınızı yükseltebilirsiniz.',
-        actionUrl: '/dashboard/settings/billing',
+        actionUrl: '/billing',
         entityType: 'CATALOG_SYNC_RUN',
         entityId: data.syncRunId,
         dedupeKey: `billing-product-limit:${data.connectionId}`,
@@ -230,12 +261,20 @@ export class ProductSyncWorkerService {
     let productsUnchanged = 0;
 
     do {
+      await this.billing.assertStoreAccess(
+        data.storeId,
+        BILLING_SYNC_STOPPED_MESSAGE,
+      );
       const batch = await this.providers.fetchProducts(
         connection.providerKey,
         { environment: connection.environment, credentials },
         cursor,
       );
 
+      await this.billing.assertStoreAccess(
+        data.storeId,
+        BILLING_SYNC_STOPPED_MESSAGE,
+      );
       for (const product of batch.products) {
         const change = await this.saveNormalizedProduct(
           data.storeId,
@@ -269,6 +308,10 @@ export class ProductSyncWorkerService {
       throw new Error('Katalog senkronizasyonu güvenli batch sınırını aştı.');
     }
 
+    await this.billing.assertStoreAccess(
+      data.storeId,
+      BILLING_SYNC_STOPPED_MESSAGE,
+    );
     await this.prisma.catalogSyncRun.update({
       where: { id: data.syncRunId },
       data: { stage: 'RECONCILING', progress: 90 },
@@ -309,12 +352,20 @@ export class ProductSyncWorkerService {
     let outOfStockAlerts = 0;
 
     do {
+      await this.billing.assertStoreAccess(
+        data.storeId,
+        BILLING_SYNC_STOPPED_MESSAGE,
+      );
       const batch = await this.providers.fetchInventory(
         connection.providerKey,
         { environment: connection.environment, credentials },
         cursor,
       );
 
+      await this.billing.assertStoreAccess(
+        data.storeId,
+        BILLING_SYNC_STOPPED_MESSAGE,
+      );
       for (const variant of batch.variants) {
         const result = await this.updateInventoryVariant(
           connection.id,

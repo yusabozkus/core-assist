@@ -15,8 +15,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
 import { APP_ROUTES } from "@/constants/site"
-import { exportCurrentUserData } from "@/lib/api/users"
+import { deleteCurrentUser, exportCurrentUserData } from "@/lib/api/users"
 import { authClient } from "@/lib/auth-client"
+import type { AccountDeletionStatus } from "@/types/user"
+import { AccountBillingClosure } from "./account-billing-closure"
 
 const DELETE_CONFIRMATION = "HESABIMI SİL"
 
@@ -35,6 +37,9 @@ export function AccountDataControls({
   const [confirmation, setConfirmation] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deletionStatus, setDeletionStatus] =
+    useState<AccountDeletionStatus | null>(null)
+  const [isBillingBusy, setIsBillingBusy] = useState(false)
   const isConfirmed = confirmation === DELETE_CONFIRMATION
 
   async function handleExport() {
@@ -68,25 +73,22 @@ export function AccountDataControls({
   }
 
   async function handleDelete() {
-    if (!isConfirmed || isDeleting) return
+    if (
+      !isConfirmed ||
+      isDeleting ||
+      isBillingBusy ||
+      !deletionStatus?.canDelete
+    )
+      return
 
     setIsDeleting(true)
     setDeleteError(null)
 
     try {
-      const result = await authClient.deleteUser({
-        callbackURL: new URL(
-          APP_ROUTES.login,
-          window.location.origin
-        ).toString(),
-      })
+      const result = await deleteCurrentUser(confirmation)
+      if (!result.success) throw new Error("Hesabınız silinemedi.")
 
-      if (result.error || !result.data?.success) {
-        throw new Error(
-          getDeleteError(result.error?.code, result.error?.message)
-        )
-      }
-
+      await authClient.signOut().catch(() => undefined)
       await clearActiveStore().catch(() => undefined)
       window.location.replace(`${APP_ROUTES.login}?reason=account_deleted`)
     } catch (caughtError) {
@@ -100,11 +102,12 @@ export function AccountDataControls({
   }
 
   function handleDeleteOpenChange(open: boolean) {
-    if (!open && isDeleting) return
+    if (!open && (isDeleting || isBillingBusy)) return
     setDeleteOpen(open)
     if (!open) {
       setConfirmation("")
       setDeleteError(null)
+      setDeletionStatus(null)
     }
   }
 
@@ -182,7 +185,7 @@ export function AccountDataControls({
       <ResponsiveDialog
         open={deleteOpen}
         onOpenChange={handleDeleteOpenChange}
-        preventClose={isDeleting}
+        preventClose={isDeleting || isBillingBusy}
         title="CoreAssist hesabınızı silin"
         description="Bu işlem hesabınızı ve sahibi olduğunuz işletme verilerini kalıcı olarak siler."
         footer={({ close }) => (
@@ -191,14 +194,19 @@ export function AccountDataControls({
               type="button"
               variant="outline"
               onClick={close}
-              disabled={isDeleting}
+              disabled={isDeleting || isBillingBusy}
             >
               Vazgeç
             </Button>
             <Button
               type="button"
               variant="destructive"
-              disabled={!isConfirmed || isDeleting}
+              disabled={
+                !isConfirmed ||
+                isDeleting ||
+                isBillingBusy ||
+                !deletionStatus?.canDelete
+              }
               onClick={() => void handleDelete()}
             >
               <HugeiconsIcon
@@ -224,6 +232,14 @@ export function AccountDataControls({
             </p>
           </div>
 
+          {deleteOpen ? (
+            <AccountBillingClosure
+              onStatusChange={setDeletionStatus}
+              onBusyChange={setIsBillingBusy}
+              disabled={isDeleting}
+            />
+          ) : null}
+
           <div className="grid gap-2">
             <Label htmlFor="delete-account-confirmation">
               Devam etmek için <strong>{DELETE_CONFIRMATION}</strong> yazın
@@ -248,15 +264,4 @@ export function AccountDataControls({
       </ResponsiveDialog>
     </section>
   )
-}
-
-function getDeleteError(code?: string, message?: string) {
-  const normalizedCode = code?.toLowerCase() ?? ""
-  if (
-    normalizedCode.includes("session_expired") ||
-    message?.toLowerCase().includes("fresh")
-  ) {
-    return "Güvenliğiniz için çıkış yapıp yeniden giriş yaptıktan sonra hesap silme işlemini tekrar deneyin."
-  }
-  return message || "Hesabınız silinemedi. Lütfen tekrar deneyin."
 }

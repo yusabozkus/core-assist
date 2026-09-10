@@ -35,10 +35,10 @@ import type {
 type StatusFilter = "all" | InvoiceStatus
 
 export function InvoicesClient({
-  storeId,
+  workspaceId,
   history,
 }: {
-  storeId: string
+  workspaceId: string
   history: BillingHistory | null
 }) {
   const invoices = useMemo(() => history?.invoices ?? [], [history])
@@ -59,8 +59,7 @@ export function InvoicesClient({
   const periodInvoices = useMemo(
     () =>
       invoices.filter(
-        (invoice) =>
-          year === "all" || invoiceYear(invoice.issuedAt) === year
+        (invoice) => year === "all" || invoiceYear(invoice.issuedAt) === year
       ),
     [invoices, year]
   )
@@ -75,9 +74,7 @@ export function InvoicesClient({
             getBillingPlanName(invoice.plan),
             formatBillingPeriod(invoice.periodStart, invoice.periodEnd),
             formatBillingDate(invoice.issuedAt),
-          ].some((value) =>
-            value.toLocaleLowerCase("tr-TR").includes(search)
-          ))
+          ].some((value) => value.toLocaleLowerCase("tr-TR").includes(search)))
     )
   }, [periodInvoices, query, status])
 
@@ -89,7 +86,7 @@ export function InvoicesClient({
 
   return (
     <main className="mx-auto w-full max-w-[1120px] space-y-6 px-5 py-8 sm:px-8 lg:px-10">
-      <BillingPageHeader active="invoices" />
+      <BillingPageHeader workspaceId={workspaceId} active="invoices" />
       <InvoiceSummary invoices={periodInvoices} year={year} />
 
       <section
@@ -237,7 +234,7 @@ export function InvoicesClient({
       </p>
 
       <InvoiceDetailDialog
-        storeId={storeId}
+        workspaceId={workspaceId}
         invoice={selectedInvoice}
         onOpenChange={(open) => {
           if (!open) setSelectedInvoice(null)

@@ -9,6 +9,10 @@ import {
   QuestionReplyDecision,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import {
+  BillingAccessRequiredException,
+  BillingQuotaExceededException,
+} from '../billing/billing.errors';
 import { QUESTION_ANSWER_DISPATCHER } from '../question-answer/question-answer.constants';
 import type { QuestionAnswerDispatcher } from '../question-answer/question-answer.types';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -154,6 +158,9 @@ export class QuestionDraftWorkerService {
   async markFinalFailure(data: QuestionDraftJobData, error: unknown) {
     const message =
       error instanceof Error ? error.message : 'AI taslağı oluşturulamadı.';
+    const billingBlocked =
+      error instanceof BillingAccessRequiredException ||
+      error instanceof BillingQuotaExceededException;
 
     const updated = await this.prisma.productQuestion.updateMany({
       where: {
@@ -168,13 +175,20 @@ export class QuestionDraftWorkerService {
         },
       },
       data: {
-        draftProcessingStatus: QuestionDraftProcessingStatus.FAILED,
+        draftProcessingStatus:
+          error instanceof BillingQuotaExceededException
+            ? QuestionDraftProcessingStatus.BLOCKED_QUOTA
+            : error instanceof BillingAccessRequiredException
+              ? QuestionDraftProcessingStatus.BLOCKED_SUBSCRIPTION
+              : QuestionDraftProcessingStatus.FAILED,
         draftProcessingError: message.slice(0, 1_000),
         draftProcessingStartedAt: null,
       },
     });
 
-    if (updated.count > 0) {
+    // Billing has workspace-level notices. Do not send one "AI error" for
+    // every pending question after a quota/access change.
+    if (updated.count > 0 && !billingBlocked) {
       await this.notifications.createForStoreMembers({
         storeId: data.storeId,
         type: NotificationType.AI_DRAFT_FAILED,

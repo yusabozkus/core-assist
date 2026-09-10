@@ -12,6 +12,9 @@ import {
   StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { BillingSubscriptionService } from '../billing/billing-subscription.service';
+import { BillingAccessRequiredException } from '../billing/billing.errors';
+import { BILLING_AUTOMATION_STOPPED_MESSAGE } from '../billing/billing-access.policy';
 import { CredentialsEncryptionService } from '../channels/credentials-encryption.service';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
 import { isProviderAuthenticationError } from '../channels/providers/connector-utils';
@@ -28,6 +31,7 @@ export class QuestionAnswerWorkerService {
     private readonly encryption: CredentialsEncryptionService,
     private readonly inventoryVerification: InventoryVerificationService,
     private readonly notifications: NotificationsService,
+    private readonly billing: BillingSubscriptionService,
   ) {}
 
   async run(data: QuestionAnswerJobData) {
@@ -87,6 +91,25 @@ export class QuestionAnswerWorkerService {
       delivery.status === QuestionAnswerStatus.FAILED
     )
       return;
+
+    const stopIfSubscriptionInactive = async () => {
+      if (
+        delivery.origin !== QuestionAnswerOrigin.AUTOMATION ||
+        (await this.billing.hasStoreAccess(data.storeId))
+      )
+        return false;
+      await this.rejectAutomaticDelivery(
+        data,
+        delivery.questionId,
+        delivery.draftAttemptId,
+        BILLING_AUTOMATION_STOPPED_MESSAGE,
+        false,
+        true,
+      );
+      return true;
+    };
+    // Re-check an already queued answer; do not consult/consume AI quota here.
+    if (await stopIfSubscriptionInactive()) return;
 
     const claimed = await this.prisma.$transaction(async (transaction) => {
       await transaction.$queryRaw`
@@ -182,7 +205,18 @@ export class QuestionAnswerWorkerService {
             reason =
               'Ürün veya varyantın stok durumu değişti. Cevabı göndermeden önce yeni taslak oluşturun.';
           }
-        } catch {
+        } catch (error) {
+          if (error instanceof BillingAccessRequiredException) {
+            await this.rejectAutomaticDelivery(
+              data,
+              delivery.questionId,
+              delivery.draftAttemptId,
+              BILLING_AUTOMATION_STOPPED_MESSAGE,
+              false,
+              true,
+            );
+            return;
+          }
           reason =
             'Pazaryerinden güncel stok bilgisi doğrulanamadı. Cevabı göndermeden önce stoğu kontrol edin.';
         }
@@ -242,6 +276,9 @@ export class QuestionAnswerWorkerService {
       }
     }
 
+    // Stock verification may take seconds. Check again immediately before the
+    // provider side effect. A request already accepted remotely cannot be recalled.
+    if (await stopIfSubscriptionInactive()) return;
     const credentials = this.encryption.decrypt(
       delivery.connection.credentialsEncrypted,
     );
@@ -357,6 +394,7 @@ export class QuestionAnswerWorkerService {
     draftAttemptId: string | null,
     message: string,
     inventoryInvalidated = false,
+    billingBlocked = false,
   ) {
     const requiresReview = await this.prisma.$transaction(
       async (transaction) => {
@@ -364,6 +402,8 @@ export class QuestionAnswerWorkerService {
           where: {
             id: data.answerId,
             storeId: data.storeId,
+            origin: QuestionAnswerOrigin.AUTOMATION,
+            draftAttemptId,
             status: {
               in: [
                 QuestionAnswerStatus.QUEUED,
@@ -382,8 +422,18 @@ export class QuestionAnswerWorkerService {
           await transaction.aiDraftAttempt.updateMany({
             where: { id: draftAttemptId, storeId: data.storeId },
             data: {
-              outcome: AiDraftOutcome.FAILED,
-              finalizedAt: new Date(),
+              outcome: billingBlocked
+                ? AiDraftOutcome.AVAILABLE
+                : AiDraftOutcome.FAILED,
+              finalizedAt: billingBlocked ? null : new Date(),
+              ...(billingBlocked
+                ? {
+                    selectedAt: null,
+                    autoSendEligible: false,
+                    decision: QuestionReplyDecision.NEEDS_REVIEW,
+                    eligibilityReasons: ['REVIEW_REQUIRED'],
+                  }
+                : {}),
               ...(inventoryInvalidated
                 ? {
                     autoSendEligible: false,
@@ -396,6 +446,16 @@ export class QuestionAnswerWorkerService {
                   }
                 : {}),
             },
+          });
+        }
+        if (billingBlocked) {
+          await transaction.productQuestion.updateMany({
+            where: {
+              id: questionId,
+              storeId: data.storeId,
+              status: ProductQuestionStatus.DRAFTED,
+            },
+            data: { draftDecision: QuestionReplyDecision.NEEDS_REVIEW },
           });
         }
         if (inventoryInvalidated) {
@@ -424,9 +484,12 @@ export class QuestionAnswerWorkerService {
         storeId: data.storeId,
         type: NotificationType.AI_REVIEW_REQUIRED,
         severity: NotificationSeverity.WARNING,
-        title: 'Yanıt incelemeniz gerekiyor',
-        message:
-          'Otomatik gönderim güvenlik kontrolünü geçemedi. Taslağı kontrol ederek manuel gönderebilirsiniz.',
+        title: billingBlocked
+          ? 'Otomatik gönderim durduruldu'
+          : 'Yanıt incelemeniz gerekiyor',
+        message: billingBlocked
+          ? BILLING_AUTOMATION_STOPPED_MESSAGE
+          : 'Otomatik gönderim güvenlik kontrolünü geçemedi. Taslağı kontrol ederek manuel gönderebilirsiniz.',
         actionUrl: `/dashboard/inbox?question=${questionId}`,
         entityType: 'PRODUCT_QUESTION',
         entityId: questionId,

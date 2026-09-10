@@ -405,6 +405,9 @@ export const ModelName = {
   WorkspaceMember: 'WorkspaceMember',
   BillingSubscription: 'BillingSubscription',
   BillingWebhookEvent: 'BillingWebhookEvent',
+  BillingClosureRecord: 'BillingClosureRecord',
+  BillingCheckout: 'BillingCheckout',
+  BillingPlanChange: 'BillingPlanChange',
   BillingUsagePeriod: 'BillingUsagePeriod',
   BillingUsageEvent: 'BillingUsageEvent',
   Store: 'Store',
@@ -446,7 +449,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "billingSubscription" | "billingWebhookEvent" | "billingUsagePeriod" | "billingUsageEvent" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "webPushSubscription"
+    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "billingSubscription" | "billingWebhookEvent" | "billingClosureRecord" | "billingCheckout" | "billingPlanChange" | "billingUsagePeriod" | "billingUsageEvent" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "webPushSubscription"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1039,6 +1042,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.BillingWebhookEventCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.BillingWebhookEventCountAggregateOutputType> | number
+        }
+      }
+    }
+    BillingClosureRecord: {
+      payload: Prisma.$BillingClosureRecordPayload<ExtArgs>
+      fields: Prisma.BillingClosureRecordFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BillingClosureRecordFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingClosureRecordPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BillingClosureRecordFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingClosureRecordPayload>
+        }
+        findFirst: {
+          args: Prisma.BillingClosureRecordFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingClosureRecordPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BillingClosureRecordFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingClosureRecordPayload>
+        }
+        findMany: {
+          args: Prisma.BillingClosureRecordFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingClosureRecordPayload>[]
+        }
+        create: {
+          args: Prisma.BillingClosureRecordCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingClosureRecordPayload>
+        }
+        createMany: {
+          args: Prisma.BillingClosureRecordCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BillingClosureRecordCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingClosureRecordPayload>[]
+        }
+        delete: {
+          args: Prisma.BillingClosureRecordDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingClosureRecordPayload>
+        }
+        update: {
+          args: Prisma.BillingClosureRecordUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingClosureRecordPayload>
+        }
+        deleteMany: {
+          args: Prisma.BillingClosureRecordDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BillingClosureRecordUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BillingClosureRecordUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingClosureRecordPayload>[]
+        }
+        upsert: {
+          args: Prisma.BillingClosureRecordUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingClosureRecordPayload>
+        }
+        aggregate: {
+          args: Prisma.BillingClosureRecordAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBillingClosureRecord>
+        }
+        groupBy: {
+          args: Prisma.BillingClosureRecordGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingClosureRecordGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BillingClosureRecordCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingClosureRecordCountAggregateOutputType> | number
+        }
+      }
+    }
+    BillingCheckout: {
+      payload: Prisma.$BillingCheckoutPayload<ExtArgs>
+      fields: Prisma.BillingCheckoutFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BillingCheckoutFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingCheckoutPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BillingCheckoutFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingCheckoutPayload>
+        }
+        findFirst: {
+          args: Prisma.BillingCheckoutFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingCheckoutPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BillingCheckoutFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingCheckoutPayload>
+        }
+        findMany: {
+          args: Prisma.BillingCheckoutFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingCheckoutPayload>[]
+        }
+        create: {
+          args: Prisma.BillingCheckoutCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingCheckoutPayload>
+        }
+        createMany: {
+          args: Prisma.BillingCheckoutCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BillingCheckoutCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingCheckoutPayload>[]
+        }
+        delete: {
+          args: Prisma.BillingCheckoutDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingCheckoutPayload>
+        }
+        update: {
+          args: Prisma.BillingCheckoutUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingCheckoutPayload>
+        }
+        deleteMany: {
+          args: Prisma.BillingCheckoutDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BillingCheckoutUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BillingCheckoutUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingCheckoutPayload>[]
+        }
+        upsert: {
+          args: Prisma.BillingCheckoutUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingCheckoutPayload>
+        }
+        aggregate: {
+          args: Prisma.BillingCheckoutAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBillingCheckout>
+        }
+        groupBy: {
+          args: Prisma.BillingCheckoutGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingCheckoutGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BillingCheckoutCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingCheckoutCountAggregateOutputType> | number
+        }
+      }
+    }
+    BillingPlanChange: {
+      payload: Prisma.$BillingPlanChangePayload<ExtArgs>
+      fields: Prisma.BillingPlanChangeFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BillingPlanChangeFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingPlanChangePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BillingPlanChangeFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingPlanChangePayload>
+        }
+        findFirst: {
+          args: Prisma.BillingPlanChangeFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingPlanChangePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BillingPlanChangeFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingPlanChangePayload>
+        }
+        findMany: {
+          args: Prisma.BillingPlanChangeFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingPlanChangePayload>[]
+        }
+        create: {
+          args: Prisma.BillingPlanChangeCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingPlanChangePayload>
+        }
+        createMany: {
+          args: Prisma.BillingPlanChangeCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BillingPlanChangeCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingPlanChangePayload>[]
+        }
+        delete: {
+          args: Prisma.BillingPlanChangeDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingPlanChangePayload>
+        }
+        update: {
+          args: Prisma.BillingPlanChangeUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingPlanChangePayload>
+        }
+        deleteMany: {
+          args: Prisma.BillingPlanChangeDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BillingPlanChangeUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BillingPlanChangeUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingPlanChangePayload>[]
+        }
+        upsert: {
+          args: Prisma.BillingPlanChangeUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingPlanChangePayload>
+        }
+        aggregate: {
+          args: Prisma.BillingPlanChangeAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBillingPlanChange>
+        }
+        groupBy: {
+          args: Prisma.BillingPlanChangeGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingPlanChangeGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BillingPlanChangeCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingPlanChangeCountAggregateOutputType> | number
         }
       }
     }
@@ -3103,6 +3328,13 @@ export const BillingSubscriptionScalarFieldEnum = {
   cancelAtPeriodEnd: 'cancelAtPeriodEnd',
   canceledAt: 'canceledAt',
   paddleUpdatedAt: 'paddleUpdatedAt',
+  paddleSnapshotAt: 'paddleSnapshotAt',
+  scheduledAccessEndsAt: 'scheduledAccessEndsAt',
+  lastReconciledAt: 'lastReconciledAt',
+  reconcileAfter: 'reconcileAfter',
+  reconcileFailures: 'reconcileFailures',
+  reconcileErrorCode: 'reconcileErrorCode',
+  usagePeriodAnchor: 'usagePeriodAnchor',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -3118,6 +3350,66 @@ export const BillingWebhookEventScalarFieldEnum = {
 } as const
 
 export type BillingWebhookEventScalarFieldEnum = (typeof BillingWebhookEventScalarFieldEnum)[keyof typeof BillingWebhookEventScalarFieldEnum]
+
+
+export const BillingClosureRecordScalarFieldEnum = {
+  id: 'id',
+  workspaceReference: 'workspaceReference',
+  environment: 'environment',
+  paddleSubscriptionIds: 'paddleSubscriptionIds',
+  paddleCustomerIds: 'paddleCustomerIds',
+  billingSnapshot: 'billingSnapshot',
+  closedAt: 'closedAt'
+} as const
+
+export type BillingClosureRecordScalarFieldEnum = (typeof BillingClosureRecordScalarFieldEnum)[keyof typeof BillingClosureRecordScalarFieldEnum]
+
+
+export const BillingCheckoutScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  requestedByUserId: 'requestedByUserId',
+  environment: 'environment',
+  status: 'status',
+  plan: 'plan',
+  cycle: 'cycle',
+  paddlePriceId: 'paddlePriceId',
+  paddleTransactionId: 'paddleTransactionId',
+  expectedPaddleCustomerId: 'expectedPaddleCustomerId',
+  previousPaddleSubscriptionId: 'previousPaddleSubscriptionId',
+  paddleSubscriptionId: 'paddleSubscriptionId',
+  boundAt: 'boundAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingCheckoutScalarFieldEnum = (typeof BillingCheckoutScalarFieldEnum)[keyof typeof BillingCheckoutScalarFieldEnum]
+
+
+export const BillingPlanChangeScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  requestedByUserId: 'requestedByUserId',
+  environment: 'environment',
+  status: 'status',
+  paddleSubscriptionId: 'paddleSubscriptionId',
+  paddleCustomerId: 'paddleCustomerId',
+  sourcePriceId: 'sourcePriceId',
+  sourceUpdatedAt: 'sourceUpdatedAt',
+  sourceFingerprint: 'sourceFingerprint',
+  targetPriceId: 'targetPriceId',
+  plan: 'plan',
+  cycle: 'cycle',
+  preview: 'preview',
+  expiresAt: 'expiresAt',
+  submittedAt: 'submittedAt',
+  completedAt: 'completedAt',
+  failureCode: 'failureCode',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingPlanChangeScalarFieldEnum = (typeof BillingPlanChangeScalarFieldEnum)[keyof typeof BillingPlanChangeScalarFieldEnum]
 
 
 export const BillingUsagePeriodScalarFieldEnum = {
@@ -3608,19 +3900,19 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
 export const NullableJsonNullValueInput = {
   DbNull: DbNull,
   JsonNull: JsonNull
 } as const
 
 export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
-
-
-export const JsonNullValueInput = {
-  JsonNull: JsonNull
-} as const
-
-export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -3760,16 +4052,16 @@ export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
 
 
 /**
- * Reference to a field of type 'BillingUsageMetric'
+ * Reference to a field of type 'PaddleEnvironment'
  */
-export type EnumBillingUsageMetricFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingUsageMetric'>
+export type EnumPaddleEnvironmentFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaddleEnvironment'>
     
 
 
 /**
- * Reference to a field of type 'BillingUsageMetric[]'
+ * Reference to a field of type 'PaddleEnvironment[]'
  */
-export type ListEnumBillingUsageMetricFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingUsageMetric[]'>
+export type ListEnumPaddleEnvironmentFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaddleEnvironment[]'>
     
 
 
@@ -3784,6 +4076,48 @@ export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'J
  * Reference to a field of type 'QueryMode'
  */
 export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+/**
+ * Reference to a field of type 'BillingCheckoutStatus'
+ */
+export type EnumBillingCheckoutStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingCheckoutStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'BillingCheckoutStatus[]'
+ */
+export type ListEnumBillingCheckoutStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingCheckoutStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BillingPlanChangeStatus'
+ */
+export type EnumBillingPlanChangeStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingPlanChangeStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'BillingPlanChangeStatus[]'
+ */
+export type ListEnumBillingPlanChangeStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingPlanChangeStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BillingUsageMetric'
+ */
+export type EnumBillingUsageMetricFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingUsageMetric'>
+    
+
+
+/**
+ * Reference to a field of type 'BillingUsageMetric[]'
+ */
+export type ListEnumBillingUsageMetricFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingUsageMetric[]'>
     
 
 
@@ -4393,6 +4727,9 @@ export type GlobalOmitConfig = {
   workspaceMember?: Prisma.WorkspaceMemberOmit
   billingSubscription?: Prisma.BillingSubscriptionOmit
   billingWebhookEvent?: Prisma.BillingWebhookEventOmit
+  billingClosureRecord?: Prisma.BillingClosureRecordOmit
+  billingCheckout?: Prisma.BillingCheckoutOmit
+  billingPlanChange?: Prisma.BillingPlanChangeOmit
   billingUsagePeriod?: Prisma.BillingUsagePeriodOmit
   billingUsageEvent?: Prisma.BillingUsageEventOmit
   store?: Prisma.StoreOmit

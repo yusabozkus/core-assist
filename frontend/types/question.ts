@@ -13,7 +13,8 @@ export type AiAutomationMode = "OFF" | "SHADOW" | "SAFE_AUTO"
 export type AiDraftOutcome =
   "AVAILABLE" | "SUPERSEDED" | "SELECTED" | "SENT" | "FAILED"
 
-export type QuestionDraftProcessingStatus = "QUEUED" | "PROCESSING" | "FAILED"
+export type QuestionDraftProcessingStatus =
+  "QUEUED" | "PROCESSING" | "FAILED" | "BLOCKED_QUOTA" | "BLOCKED_SUBSCRIPTION"
 
 export type QuestionReplyDecision =
   "READY_FOR_SEND" | "NEEDS_REVIEW" | "DO_NOT_REPLY"

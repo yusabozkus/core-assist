@@ -232,7 +232,14 @@ export class NotificationsService {
   async findAll(userId: string, query: ListNotificationsQueryDto) {
     const where: Prisma.NotificationWhereInput = {
       recipientUserId: userId,
-      ...(query.storeId ? { storeId: query.storeId } : {}),
+      ...(query.storeId
+        ? {
+            OR: [
+              { storeId: query.storeId },
+              { storeId: null, type: NotificationType.BILLING_PAYMENT_ISSUE },
+            ],
+          }
+        : {}),
       ...(query.type ? { type: query.type } : {}),
       ...(query.status === NotificationReadFilter.UNREAD
         ? { readAt: null }
@@ -264,7 +271,14 @@ export class NotificationsService {
       where: {
         recipientUserId: userId,
         readAt: null,
-        ...(storeId ? { storeId } : {}),
+        ...(storeId
+          ? {
+              OR: [
+                { storeId },
+                { storeId: null, type: NotificationType.BILLING_PAYMENT_ISSUE },
+              ],
+            }
+          : {}),
       },
     });
 
@@ -300,7 +314,14 @@ export class NotificationsService {
       where: {
         recipientUserId: userId,
         readAt: null,
-        ...(body.storeId ? { storeId: body.storeId } : {}),
+        ...(body.storeId
+          ? {
+              OR: [
+                { storeId: body.storeId },
+                { storeId: null, type: NotificationType.BILLING_PAYMENT_ISSUE },
+              ],
+            }
+          : {}),
       },
       data: { readAt: new Date() },
     });
@@ -331,6 +352,51 @@ export class NotificationsService {
     }
 
     this.streamEvents.emit([userId], notification.storeId, 'DELETED');
+  }
+
+  // Financial notices target workspace finance roles, never all store admins.
+  // Persist in the subscription transaction; a failed insert must remain retryable.
+  async createBillingIssue(
+    transaction: Prisma.TransactionClient,
+    workspaceId: string,
+    input: { title: string; message: string; dedupeKey: string },
+  ) {
+    const workspace = await transaction.workspace.findUnique({
+      where: { id: workspaceId },
+      select: {
+        ownerId: true,
+        members: {
+          where: { role: { in: ['OWNER', 'ADMIN'] } },
+          select: { userId: true },
+        },
+      },
+    });
+    if (!workspace) return [];
+    const recipients = [
+      ...new Set([
+        workspace.ownerId,
+        ...workspace.members.map((member) => member.userId),
+      ]),
+    ];
+    const result = await transaction.notification.createMany({
+      data: recipients.map((recipientUserId) => ({
+        recipientUserId,
+        type: NotificationType.BILLING_PAYMENT_ISSUE,
+        severity: NotificationSeverity.WARNING,
+        title: input.title,
+        message: input.message,
+        dedupeKey: input.dedupeKey,
+        actionUrl: `/billing/${workspaceId}`,
+        entityType: 'BILLING_WORKSPACE',
+        entityId: workspaceId,
+      })),
+      skipDuplicates: true,
+    });
+    return result.count > 0 ? recipients : [];
+  }
+
+  emitBillingChange(recipientUserIds: string[]) {
+    this.streamEvents.emit(recipientUserIds, null, 'CREATED');
   }
 
   async createForStoreMembers(input: StoreNotificationInput) {

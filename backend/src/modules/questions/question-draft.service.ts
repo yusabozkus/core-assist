@@ -18,6 +18,8 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { InventoryVerificationService } from '../inventory-verification/inventory-verification.service';
 import { BillingUsageService } from '../billing/billing-usage.service';
+import { BillingSubscriptionService } from '../billing/billing-subscription.service';
+import { BillingAccessRequiredException } from '../billing/billing.errors';
 import { BillingUsageNotificationService } from '../billing/billing-usage-notification.service';
 import {
   AiDraftGenerator,
@@ -60,6 +62,7 @@ export class QuestionDraftService {
     private readonly productLinks: QuestionProductLinkService,
     private readonly billingUsage: BillingUsageService,
     private readonly billingUsageNotifications: BillingUsageNotificationService,
+    private readonly billing: BillingSubscriptionService,
   ) {}
 
   async generate(
@@ -167,7 +170,8 @@ export class QuestionDraftService {
         }
         context = applyVerifiedInventory(context, verification);
         inventorySnapshotHash = verification.snapshotHash;
-      } catch {
+      } catch (error) {
+        if (error instanceof BillingAccessRequiredException) throw error;
         this.logger.warn(`${questionId} sorusu için canlı stok doğrulanamadı.`);
         context = markInventoryAsUnverified(context);
       }
@@ -176,6 +180,7 @@ export class QuestionDraftService {
 
     try {
       if (context.requestedFacts.includes('STOCK')) await verifyInventory();
+      await this.billing.assertStoreAccess(storeId);
       aiDraft = await this.aiDrafts.generate(context);
       if (
         aiDraft &&
@@ -186,6 +191,7 @@ export class QuestionDraftService {
       ) {
         await verifyInventory();
         // Discard the first answer: it was composed before the provider check.
+        await this.billing.assertStoreAccess(storeId);
         aiDraft = await this.aiDrafts.generate(context);
       }
     } catch (error) {

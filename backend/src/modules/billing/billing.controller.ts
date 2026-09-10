@@ -1,35 +1,61 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { assertBillingActionOrigin } from './billing-action-origin';
 import { BillingEntitlementService } from './billing-entitlement.service';
 import { CreateBillingCheckoutDto } from './dto/create-billing-checkout.dto';
 import { PaddleBillingService } from './paddle-billing.service';
+import { BillingAuthorizationService } from './billing-authorization.service';
+import { PaddlePlanChangeService } from './paddle-plan-change.service';
 
-@Controller('stores/:storeId/billing')
+@Controller('workspaces/:workspaceId/billing')
 @UseGuards(AuthGuard)
 export class BillingController {
   constructor(
     private readonly entitlements: BillingEntitlementService,
     private readonly paddleBilling: PaddleBillingService,
+    private readonly authorization: BillingAuthorizationService,
+    private readonly planChanges: PaddlePlanChangeService,
   ) {}
+
+  @Get('access')
+  async getAccess(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const { canManageBilling } = await this.authorization.getWorkspaceAccess(
+      workspaceId,
+      user.id,
+    );
+    // Only the caller's capability is exposed, never financial or member data.
+    return { canManageBilling };
+  }
 
   @Get('summary')
   getSummary(
-    @Param('storeId') storeId: string,
+    @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.entitlements.getSummaryForStore(storeId, user.id);
+    return this.entitlements.getAuthorizedSummary(workspaceId, user.id);
   }
 
   @Post('checkout')
   createCheckout(
-    @Param('storeId') storeId: string,
+    @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() input: CreateBillingCheckoutDto,
   ) {
     return this.paddleBilling.createCheckout(
-      storeId,
+      workspaceId,
       user.id,
       input.plan,
       input.cycle,
@@ -38,26 +64,66 @@ export class BillingController {
 
   @Get('invoices')
   getInvoices(
-    @Param('storeId') storeId: string,
+    @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.paddleBilling.getBillingHistory(storeId, user.id);
+    return this.paddleBilling.getBillingHistory(workspaceId, user.id);
+  }
+
+  @Post('plan-changes/preview')
+  previewPlanChange(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() input: CreateBillingCheckoutDto,
+    @Headers('origin') origin: string | undefined,
+  ) {
+    assertBillingActionOrigin(origin);
+    return this.planChanges.preview(
+      workspaceId,
+      user.id,
+      input.plan,
+      input.cycle,
+    );
+  }
+
+  @Post('plan-changes/:changeId/confirm')
+  confirmPlanChange(
+    @Param('workspaceId') workspaceId: string,
+    @Param('changeId') changeId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Headers('origin') origin: string | undefined,
+  ) {
+    assertBillingActionOrigin(origin);
+    return this.planChanges.confirm(workspaceId, user.id, changeId);
+  }
+
+  @Get('plan-changes/:changeId')
+  getPlanChange(
+    @Param('workspaceId') workspaceId: string,
+    @Param('changeId') changeId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.planChanges.getStatus(workspaceId, user.id, changeId);
   }
 
   @Get('invoices/:transactionId/pdf')
   getInvoicePdf(
-    @Param('storeId') storeId: string,
+    @Param('workspaceId') workspaceId: string,
     @Param('transactionId') transactionId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.paddleBilling.getInvoicePdf(storeId, user.id, transactionId);
+    return this.paddleBilling.getInvoicePdf(
+      workspaceId,
+      user.id,
+      transactionId,
+    );
   }
 
   @Post('portal-session')
   createPortalSession(
-    @Param('storeId') storeId: string,
+    @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.paddleBilling.createPortalSession(storeId, user.id);
+    return this.paddleBilling.createPortalSession(workspaceId, user.id);
   }
 }

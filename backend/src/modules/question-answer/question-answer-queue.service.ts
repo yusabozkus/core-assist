@@ -19,6 +19,8 @@ import {
 } from '../../generated/prisma/enums';
 import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
+import { BillingSubscriptionService } from '../billing/billing-subscription.service';
+import { BILLING_AUTOMATION_STOPPED_MESSAGE } from '../billing/billing-access.policy';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
 import {
   QUESTION_ANSWER_QUEUE,
@@ -39,6 +41,7 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
     private readonly providers: ProviderRegistryService,
     @InjectQueue(QUESTION_ANSWER_QUEUE)
     private readonly queue: Queue<QuestionAnswerJobData>,
+    private readonly billing: BillingSubscriptionService,
   ) {}
 
   async enqueue(
@@ -48,6 +51,13 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
       input.origin === 'AUTOMATION'
         ? QuestionAnswerOrigin.AUTOMATION
         : QuestionAnswerOrigin.MANUAL;
+    if (origin === QuestionAnswerOrigin.AUTOMATION)
+      await this.billing.assertStoreAccess(
+        input.storeId,
+        BILLING_AUTOMATION_STOPPED_MESSAGE,
+      );
+    // Human-initiated replies to existing questions remain available, including
+    // sending a previously prepared draft. Never use composition as the origin.
     const question = await this.prisma.productQuestion.findFirst({
       where: { id: input.questionId, storeId: input.storeId },
       select: {

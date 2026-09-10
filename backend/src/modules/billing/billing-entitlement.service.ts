@@ -9,6 +9,10 @@ import {
 import { entitlementsFor } from './billing-plan.config';
 import { BillingSubscriptionService } from './billing-subscription.service';
 import { BillingUsageService } from './billing-usage.service';
+import { BillingAuthorizationService } from './billing-authorization.service';
+import { PENDING_PLAN_CHANGE_STATUSES } from './billing-plan-change.policy';
+import { PLAN_ENTITLEMENTS } from './billing-plan.config';
+import { isAwaitingRenewal, renewalGraceEndsAt } from './billing-access.policy';
 
 @Injectable()
 export class BillingEntitlementService {
@@ -16,24 +20,12 @@ export class BillingEntitlementService {
     private readonly prisma: PrismaService,
     private readonly subscriptions: BillingSubscriptionService,
     private readonly usage: BillingUsageService,
+    private readonly authorization: BillingAuthorizationService,
   ) {}
 
-  async getSummaryForStore(storeId: string, userId: string) {
-    const store = await this.prisma.store.findFirst({
-      where: {
-        id: storeId,
-        OR: [
-          { members: { some: { userId } } },
-          { workspace: { members: { some: { userId } } } },
-        ],
-      },
-      select: { workspaceId: true },
-    });
-    if (!store) {
-      throw new NotFoundException('Mağaza bulunamadı veya erişiminiz yok.');
-    }
-
-    return this.getSummaryForWorkspace(store.workspaceId);
+  async getAuthorizedSummary(workspaceId: string, userId: string) {
+    await this.authorization.requireWorkspaceAccess(workspaceId, userId);
+    return this.getSummaryForWorkspace(workspaceId);
   }
 
   async getSummaryForWorkspace(workspaceId: string, now = new Date()) {
@@ -42,7 +34,14 @@ export class BillingEntitlementService {
       now,
     );
     const limits = entitlementsFor(subscription.plan, subscription.status);
-    const [questionUsage, stores, members, activeProducts] = await Promise.all([
+    const [
+      questionUsage,
+      stores,
+      members,
+      activeProducts,
+      pendingPlanChange,
+      pendingCheckout,
+    ] = await Promise.all([
       this.usage.getCurrentForWorkspace(workspaceId, now),
       this.prisma.store.count({
         where: { workspaceId, status: 'ACTIVE' },
@@ -54,9 +53,18 @@ export class BillingEntitlementService {
           status: ProductStatus.ACTIVE,
         },
       }),
+      this.prisma.billingPlanChange.findFirst({
+        where: { workspaceId, status: { in: PENDING_PLAN_CHANGE_STATUSES } },
+        select: { id: true, plan: true, cycle: true, status: true },
+      }),
+      this.prisma.billingCheckout.findFirst({
+        where: { workspaceId, status: 'OPEN', boundAt: null },
+        select: { id: true },
+      }),
     ]);
 
     return {
+      pendingPlanChange,
       subscription: {
         id: subscription.id,
         plan: subscription.plan,
@@ -68,6 +76,16 @@ export class BillingEntitlementService {
         currentPeriodEnd: subscription.currentPeriodEnd,
         cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
         managedByPaddle: Boolean(subscription.paddleSubscriptionId),
+        recovery: {
+          awaitingRenewal: isAwaitingRenewal(subscription, now),
+          graceEndsAt: isAwaitingRenewal(subscription, now)
+            ? renewalGraceEndsAt(subscription)
+            : null,
+          paymentIssue: subscription.status === 'PAST_DUE',
+          lastCheckedAt: subscription.lastReconciledAt,
+          checkDelayed: Boolean(subscription.reconcileErrorCode),
+          checkoutPending: Boolean(pendingCheckout),
+        },
       },
       entitlements: {
         ...limits,
@@ -200,7 +218,21 @@ export class BillingEntitlementService {
       throw new BillingAccessRequiredException();
     }
 
-    return entitlementsFor(subscription.plan, subscription.status);
+    const limits = entitlementsFor(subscription.plan, subscription.status);
+    const pending = await transaction.billingPlanChange.findFirst({
+      where: { workspaceId, status: { in: PENDING_PLAN_CHANGE_STATUSES } },
+      select: { plan: true },
+    });
+    if (!pending) return limits;
+    // Keep capacity below BOTH plans while a downgrade is being submitted.
+    // Capacity writers already hold the same workspace lock as confirmation.
+    const target = PLAN_ENTITLEMENTS[pending.plan];
+    return {
+      ...limits,
+      stores: Math.min(limits.stores, target.stores),
+      members: Math.min(limits.members, target.members),
+      activeProducts: Math.min(limits.activeProducts, target.activeProducts),
+    };
   }
 }
 

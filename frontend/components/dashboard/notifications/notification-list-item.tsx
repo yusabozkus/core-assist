@@ -36,6 +36,7 @@ const NOTIFICATION_TYPE_DETAILS: Record<
   OUT_OF_STOCK: { label: "Stok", icon: Package01Icon },
   CHANNEL_CONNECTION_ERROR: { label: "Kanal", icon: PlugSocketIcon },
   BILLING_PLAN_LIMIT: { label: "Plan limiti", icon: Package01Icon },
+  BILLING_PAYMENT_ISSUE: { label: "Abonelik ödemesi", icon: Package01Icon },
 }
 
 const SEVERITY_STYLES: Record<

@@ -1,5 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import type { Job } from 'bullmq';
+import { UnrecoverableError } from 'bullmq';
+import { BillingAccessRequiredException } from '../billing/billing.errors';
 import {
   QUESTION_SYNC_QUEUE,
   SCHEDULE_CONNECTED_QUESTIONS_JOB,
@@ -36,10 +38,12 @@ export class QuestionSyncProcessor extends WorkerHost {
       const maximumAttempts = job.opts.attempts ?? 1;
       const isFinalAttempt = job.attemptsMade + 1 >= maximumAttempts;
 
-      if (isFinalAttempt) {
+      const accessBlocked = error instanceof BillingAccessRequiredException;
+      if (isFinalAttempt || accessBlocked) {
         await this.syncWorker.markFinalFailure(data, error);
       }
 
+      if (accessBlocked) throw new UnrecoverableError(error.message);
       throw error;
     }
   }

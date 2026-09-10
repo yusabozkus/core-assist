@@ -1,28 +1,36 @@
 import { apiFetch } from "@/lib/api/client"
 import type {
   BillingCheckoutResult,
+  BillingWorkspace,
   BillingCycle,
   BillingHistory,
   BillingPlanId,
   BillingPortalSession,
   BillingSummary,
+  BillingPlanChangePreview,
+  BillingPlanChangeResult,
 } from "@/types/billing"
 
-export function getBillingSummary(storeId: string, signal?: AbortSignal) {
-  return apiFetch<BillingSummary>(`/stores/${storeId}/billing/summary`, {
-    signal,
-  })
+export function getBillingSummary(workspaceId: string, signal?: AbortSignal) {
+  return apiFetch<BillingSummary>(
+    `/workspaces/${encodeURIComponent(workspaceId)}/billing/summary`,
+    {
+      signal,
+    }
+  )
 }
 
 export function createBillingCheckout(
-  storeId: string,
+  workspaceId: string,
   plan: BillingPlanId,
-  cycle: BillingCycle
+  cycle: BillingCycle,
+  signal?: AbortSignal
 ) {
   return apiFetch<BillingCheckoutResult>(
-    `/stores/${storeId}/billing/checkout`,
+    `/workspaces/${encodeURIComponent(workspaceId)}/billing/checkout`,
     {
       method: "POST",
+      signal,
       body: JSON.stringify({
         plan: plan.toUpperCase(),
         cycle: cycle.toUpperCase(),
@@ -31,24 +39,74 @@ export function createBillingCheckout(
   )
 }
 
-export function getBillingHistory(storeId: string, signal?: AbortSignal) {
-  return apiFetch<BillingHistory>(`/stores/${storeId}/billing/invoices`, {
-    signal,
-  })
+export function getBillingHistory(workspaceId: string, signal?: AbortSignal) {
+  return apiFetch<BillingHistory>(
+    `/workspaces/${encodeURIComponent(workspaceId)}/billing/invoices`,
+    {
+      signal,
+    }
+  )
 }
 
 export function getBillingInvoicePdf(
-  storeId: string,
+  workspaceId: string,
   transactionId: string
 ) {
   return apiFetch<{ url: string }>(
-    `/stores/${storeId}/billing/invoices/${transactionId}/pdf`
+    `/workspaces/${encodeURIComponent(workspaceId)}/billing/invoices/${transactionId}/pdf`
   )
 }
 
-export function createBillingPortalSession(storeId: string) {
+export function createBillingPortalSession(workspaceId: string) {
   return apiFetch<BillingPortalSession>(
-    `/stores/${storeId}/billing/portal-session`,
+    `/workspaces/${encodeURIComponent(workspaceId)}/billing/portal-session`,
     { method: "POST" }
   )
+}
+
+export function previewBillingPlanChange(
+  workspaceId: string,
+  plan: BillingPlanId,
+  cycle: BillingCycle,
+  signal?: AbortSignal
+) {
+  return apiFetch<BillingPlanChangePreview>(
+    `/workspaces/${encodeURIComponent(workspaceId)}/billing/plan-changes/preview`,
+    {
+      method: "POST",
+      signal,
+      body: JSON.stringify({
+        plan: plan.toUpperCase(),
+        cycle: cycle.toUpperCase(),
+      }),
+    }
+  )
+}
+
+export function confirmBillingPlanChange(
+  workspaceId: string,
+  changeId: string
+) {
+  return apiFetch<BillingPlanChangeResult>(
+    `/workspaces/${encodeURIComponent(workspaceId)}/billing/plan-changes/${changeId}/confirm`,
+    { method: "POST" }
+  )
+}
+
+export function getBillingPlanChange(
+  workspaceId: string,
+  changeId: string,
+  signal?: AbortSignal
+) {
+  return apiFetch<BillingPlanChangeResult>(
+    `/workspaces/${encodeURIComponent(workspaceId)}/billing/plan-changes/${changeId}`,
+    { signal }
+  )
+}
+
+export function createBillingWorkspace(name: string) {
+  return apiFetch<BillingWorkspace>("/billing/workspaces", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  })
 }

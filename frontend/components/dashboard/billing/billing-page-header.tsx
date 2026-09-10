@@ -2,27 +2,28 @@ import Link from "next/link"
 import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
-import { APP_ROUTES } from "@/constants/site"
+import { billingRoutes } from "@/lib/billing-routes"
 import { cn } from "@/lib/utils"
-
-const links = [
-  {
-    id: "overview",
-    label: "Abonelik ve kullanım",
-    href: APP_ROUTES.dashboard.settings.billing,
-  },
-  {
-    id: "invoices",
-    label: "Faturalar",
-    href: APP_ROUTES.dashboard.settings.invoices,
-  },
-] as const
 
 export function BillingPageHeader({
   active,
+  workspaceId,
 }: {
+  workspaceId: string
   active: "overview" | "invoices"
 }) {
+  const links = [
+    {
+      id: "overview",
+      label: "Abonelik ve kullanım",
+      href: billingRoutes(workspaceId).overview,
+    },
+    {
+      id: "invoices",
+      label: "Faturalar",
+      href: billingRoutes(workspaceId).invoices,
+    },
+  ] as const
   return (
     <header>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -37,7 +38,7 @@ export function BillingPageHeader({
           </p>
         </div>
         <Button asChild variant="outline" size="sm" className="bg-card">
-          <Link href={APP_ROUTES.dashboard.settings.plans}>
+          <Link href={billingRoutes(workspaceId).plans}>
             Planları karşılaştır{" "}
             <HugeiconsIcon icon={ArrowUpRight01Icon} className="size-4" />
           </Link>

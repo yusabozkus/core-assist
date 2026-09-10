@@ -16,11 +16,11 @@ import type { BillingPaymentMethod, InvoiceRecord } from "@/types/billing"
 import { InvoiceStatusBadge } from "./invoice-status-badge"
 
 export function InvoiceDetailDialog({
-  storeId,
+  workspaceId,
   invoice,
   onOpenChange,
 }: {
-  storeId: string
+  workspaceId: string
   invoice: InvoiceRecord | null
   onOpenChange: (open: boolean) => void
 }) {
@@ -33,7 +33,7 @@ export function InvoiceDetailDialog({
     setError(null)
     try {
       const result = await getBillingInvoicePdf(
-        storeId,
+        workspaceId,
         invoice.transactionId
       )
       window.location.assign(result.url)
@@ -149,10 +149,7 @@ export function InvoiceDetailDialog({
                   {getInvoiceDescription(invoice)}
                 </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  {formatBillingPeriod(
-                    invoice.periodStart,
-                    invoice.periodEnd
-                  )}
+                  {formatBillingPeriod(invoice.periodStart, invoice.periodEnd)}
                 </p>
               </div>
               <p className="text-sm font-medium whitespace-nowrap tabular-nums">
@@ -176,7 +173,11 @@ export function InvoiceDetailDialog({
                 <div className="flex justify-between text-amber-600 dark:text-amber-400">
                   <dt>İade</dt>
                   <dd className="tabular-nums">
-                    −{formatBillingAmount(invoice.refundedAmount, invoice.currency)}
+                    −
+                    {formatBillingAmount(
+                      invoice.refundedAmount,
+                      invoice.currency
+                    )}
                   </dd>
                 </div>
               ) : null}

@@ -17,12 +17,7 @@ export type SubscriptionPlan = {
 }
 
 export type BillingSubscriptionStatus =
-  | "TRIALING"
-  | "ACTIVE"
-  | "PAST_DUE"
-  | "PAUSED"
-  | "CANCELED"
-  | "EXPIRED"
+  "TRIALING" | "ACTIVE" | "PAST_DUE" | "PAUSED" | "CANCELED" | "EXPIRED"
 
 type BillingCapacityUsage = {
   used: number
@@ -32,6 +27,10 @@ type BillingCapacityUsage = {
 }
 
 export type BillingSummary = {
+  pendingPlanChange?: Pick<
+    BillingPlanChangeResult,
+    "id" | "plan" | "cycle" | "status"
+  > | null
   subscription: {
     id: string
     plan: "STARTER" | "GROWTH" | "BUSINESS"
@@ -39,6 +38,14 @@ export type BillingSummary = {
     status: BillingSubscriptionStatus
     active: boolean
     managedByPaddle: boolean
+    recovery: {
+      awaitingRenewal: boolean
+      graceEndsAt: string | null
+      paymentIssue: boolean
+      lastCheckedAt: string | null
+      checkDelayed: boolean
+      checkoutPending: boolean
+    }
     trialEndsAt: string | null
     currentPeriodStart: string
     currentPeriodEnd: string
@@ -62,9 +69,52 @@ export type BillingSummary = {
   }
 }
 
+export type BillingPlanChangeResult = {
+  id: string
+  status:
+    | "PREVIEWED"
+    | "PROCESSING"
+    | "AWAITING_WEBHOOK"
+    | "COMPLETED"
+    | "FAILED"
+    | "REVIEW_REQUIRED"
+  plan: BillingSummary["subscription"]["plan"]
+  cycle: BillingSummary["subscription"]["cycle"]
+  failureCode?: string | null
+  completedAt?: string | null
+}
+
+export type BillingPlanChangePreview = {
+  id: string
+  plan: BillingSummary["subscription"]["plan"]
+  cycle: BillingSummary["subscription"]["cycle"]
+  currentPlan: BillingSummary["subscription"]["plan"]
+  currentCycle: BillingSummary["subscription"]["cycle"]
+  effectiveFrom: "immediately"
+  expiresAt: string
+  canConfirm: boolean
+  amounts: {
+    currency: string
+    credit: string
+    charge: string
+    difference: string
+    differenceAction: "credit" | "charge"
+    dueNow: string
+    taxNow: string
+    nextTotal: string
+    recurringTotal: string
+    nextBilledAt: string
+  }
+  capacity: Array<{ key: string; label: string; used: number; limit: number }>
+  questions: { used: number; limit: number; resetsAt: string }
+}
+
 export type BillingCheckoutResult = {
-  transactionId: string
+  state: "ready" | "preparing" | "payment_pending" | "plan_conflict"
+  transactionId: string | null
   environment: "sandbox" | "production"
+  plan: BillingSummary["subscription"]["plan"]
+  cycle: BillingSummary["subscription"]["cycle"]
 }
 
 export type InvoiceStatus = "paid" | "partially_refunded" | "refunded"
@@ -115,3 +165,4 @@ export type BillingPortalSession = {
   updatePaymentMethodUrl: string | null
   cancelSubscriptionUrl: string | null
 }
+export type BillingWorkspace = { id: string; name: string }

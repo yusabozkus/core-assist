@@ -7,6 +7,8 @@ import {
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { BILLING_TRIAL_DAYS } from './billing-plan.config';
+import { hasBillingAccess } from './billing-access.policy';
+import { BillingAccessRequiredException } from './billing.errors';
 
 type SubscriptionRecord = Prisma.BillingSubscriptionGetPayload<object>;
 type BillingSubscriptionClient = Pick<
@@ -40,11 +42,23 @@ export class BillingSubscriptionService {
 
     if (
       subscription.status === BillingSubscriptionStatus.TRIALING &&
+      !subscription.paddleSubscriptionId &&
       (!subscription.trialEndsAt || subscription.trialEndsAt <= now)
     ) {
-      subscription = await client.billingSubscription.update({
-        where: { id: subscription.id },
+      // A webhook may bind/activate this subscription after the initial read.
+      // Expire only an unchanged local trial; Paddle owns its own lifecycle.
+      await client.billingSubscription.updateMany({
+        where: {
+          id: subscription.id,
+          updatedAt: subscription.updatedAt,
+          status: BillingSubscriptionStatus.TRIALING,
+          paddleSubscriptionId: null,
+          OR: [{ trialEndsAt: null }, { trialEndsAt: { lte: now } }],
+        },
         data: { status: BillingSubscriptionStatus.EXPIRED },
+      });
+      subscription = await client.billingSubscription.findUniqueOrThrow({
+        where: { id: subscription.id },
       });
     }
 
@@ -52,22 +66,51 @@ export class BillingSubscriptionService {
   }
 
   hasAccess(subscription: SubscriptionRecord, now = new Date()) {
-    if (subscription.status === BillingSubscriptionStatus.TRIALING) {
-      return Boolean(
-        subscription.trialEndsAt && subscription.trialEndsAt > now,
-      );
-    }
+    return hasBillingAccess(subscription, now);
+  }
 
-    return (
-      subscription.status === BillingSubscriptionStatus.ACTIVE &&
-      subscription.currentPeriodEnd > now
-    );
+  async hasStoreAccess(storeId: string) {
+    const store = await this.prisma.store.findUnique({
+      where: { id: storeId },
+      select: {
+        workspace: {
+          select: {
+            billingSubscription: {
+              select: {
+                status: true,
+                trialEndsAt: true,
+                currentPeriodEnd: true,
+                paddleSubscriptionId: true,
+                cancelAtPeriodEnd: true,
+                scheduledAccessEndsAt: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    // Evaluate the time after the DB read, not when the async check started.
+    return hasBillingAccess(store?.workspace.billingSubscription);
+  }
+
+  async assertStoreAccess(storeId: string, message?: string) {
+    if (!(await this.hasStoreAccess(storeId)))
+      throw new BillingAccessRequiredException(message);
   }
 
   resolveUsageWindow(subscription: SubscriptionRecord, now = new Date()) {
+    // Do not grant a fresh monthly allowance while a paid renewal is unverified.
+    // When Paddle confirms the next period, the original anchor advances normally.
+    if (
+      subscription.status === BillingSubscriptionStatus.ACTIVE &&
+      subscription.currentPeriodEnd <= now
+    ) {
+      now = new Date(subscription.currentPeriodEnd.getTime() - 1);
+    }
     if (
       subscription.status === BillingSubscriptionStatus.TRIALING ||
-      subscription.cycle === BillingCycle.MONTHLY
+      (!subscription.usagePeriodAnchor &&
+        subscription.cycle === BillingCycle.MONTHLY)
     ) {
       return {
         start: subscription.currentPeriodStart,
@@ -75,13 +118,15 @@ export class BillingSubscriptionService {
       };
     }
 
-    const anchor = subscription.currentPeriodStart;
+    const anchor =
+      subscription.usagePeriodAnchor ?? subscription.currentPeriodStart;
     let monthIndex = 0;
     let nextBoundary = addUtcMonthsClamped(anchor, 1);
 
     while (
       nextBoundary <= now &&
-      nextBoundary < subscription.currentPeriodEnd
+      (subscription.usagePeriodAnchor ||
+        nextBoundary < subscription.currentPeriodEnd)
     ) {
       monthIndex += 1;
       nextBoundary = addUtcMonthsClamped(anchor, monthIndex + 1);
@@ -90,6 +135,7 @@ export class BillingSubscriptionService {
     return {
       start: addUtcMonthsClamped(anchor, monthIndex),
       end:
+        subscription.usagePeriodAnchor ||
         nextBoundary < subscription.currentPeriodEnd
           ? nextBoundary
           : subscription.currentPeriodEnd,
