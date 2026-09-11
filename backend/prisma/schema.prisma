@@ -19,7 +19,7 @@ model User {
   updatedAt                    DateTime                      @updatedAt
   sessions                     Session[]
   accounts                     Account[]
-  ownedWorkspaces              Workspace[]                   @relation("WorkspaceOwner")
+  ownedWorkspace               Workspace?                    @relation("WorkspaceOwner")
   workspaceMembers             WorkspaceMember[]
   storeMembers                 StoreMember[]
   requestedQuestionAnswers     QuestionAnswer[]              @relation("QuestionAnswerRequester")
@@ -82,7 +82,7 @@ model Verification {
 model Workspace {
   id        String   @id @default(uuid())
   name      String
-  ownerId   String
+  ownerId   String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -183,6 +183,7 @@ model BillingWebhookEvent {
   processedAt DateTime @default(now())
 
   @@index([eventType, occurredAt])
+  @@index([processedAt])
   @@map("billing_webhook_event")
 }
 
@@ -236,6 +237,7 @@ model BillingCheckout {
   requestedByUser User?     @relation(fields: [requestedByUserId], references: [id], onDelete: SetNull)
 
   @@index([workspaceId, createdAt])
+  @@index([status, updatedAt])
   // A SQL partial unique index permits only one unresolved checkout per workspace.
   @@index([requestedByUserId])
   @@map("billing_checkout")
@@ -244,6 +246,7 @@ model BillingCheckout {
 enum BillingPlanChangeStatus {
   PREVIEWED
   PROCESSING
+  RETRY_SCHEDULED
   AWAITING_WEBHOOK
   COMPLETED
   FAILED
@@ -267,6 +270,9 @@ model BillingPlanChange {
   preview              Json
   expiresAt            DateTime
   submittedAt          DateTime?
+  retryAfterSeconds    Int?
+  retryAt              DateTime?
+  retryCount           Int                     @default(0)
   completedAt          DateTime?
   failureCode          String?
   createdAt            DateTime                @default(now())
@@ -277,6 +283,9 @@ model BillingPlanChange {
 
   @@index([workspaceId, createdAt])
   @@index([requestedByUserId])
+  @@index([status, retryAt])
+  @@index([status, expiresAt])
+  @@index([status, updatedAt])
   // A partial unique index serializes submitted changes, not read-only previews.
   @@map("billing_plan_change")
 }

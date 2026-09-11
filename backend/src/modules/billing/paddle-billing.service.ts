@@ -15,6 +15,7 @@ import {
   type SubscriptionNotification,
   type Subscription,
   type Transaction,
+  type TransactionNotification,
 } from '@paddle/paddle-node-sdk';
 import { Prisma } from '../../generated/prisma/client';
 import {
@@ -29,6 +30,7 @@ import { PaddleCheckoutBindingService } from './paddle-checkout-binding.service'
 import { PaddleCheckoutService } from './paddle-checkout.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PENDING_PLAN_CHANGE_STATUSES } from './billing-plan-change.policy';
+import { hasBillingAccess } from './billing-access.policy';
 import {
   paddleEnvironment,
   paddleCheckoutEnvironment,
@@ -46,6 +48,12 @@ const SUBSCRIPTION_EVENTS = new Set<string>([
   EventName.SubscriptionPaused,
   EventName.SubscriptionResumed,
   EventName.SubscriptionCanceled,
+]);
+
+const TRANSACTION_RECOVERY_EVENTS = new Set<string>([
+  EventName.TransactionCreated,
+  EventName.TransactionReady,
+  EventName.TransactionCompleted,
 ]);
 
 @Injectable()
@@ -106,7 +114,7 @@ export class PaddleBillingService {
           'adjustment',
           'adjustments_totals',
         ],
-        perPage: 100,
+        perPage: 30,
       });
       const transactions: Transaction[] = [];
       for await (const transaction of collection) {
@@ -233,7 +241,7 @@ export class PaddleBillingService {
     return { refreshed: true, subscription };
   }
 
-  async handleWebhook(rawBody: string, signature: string | undefined) {
+  async verifyWebhook(rawBody: string, signature: string | undefined) {
     if (!signature) {
       throw new BadRequestException('Paddle-Signature başlığı eksik.');
     }
@@ -249,6 +257,17 @@ export class PaddleBillingService {
       throw new BadRequestException('Paddle webhook imzası doğrulanamadı.');
     }
 
+    if (!event.eventId?.trim() || !event.eventType?.trim()) {
+      throw new BadRequestException('Paddle olay kimliği veya türü eksik.');
+    }
+    if (!parseDate(event.occurredAt)) {
+      throw new BadRequestException('Paddle olayının tarihi geçersiz.');
+    }
+
+    return event;
+  }
+
+  async processVerifiedWebhook(event: EventEntity) {
     try {
       if (!event.eventId?.trim() || !event.eventType?.trim()) {
         throw new BadRequestException('Paddle olay kimliği veya türü eksik.');
@@ -302,7 +321,7 @@ export class PaddleBillingService {
             // account was deleted. Delayed events never resurrect its access.
             return { received: true, processed: false, ignored: true };
           }
-          const notificationUserIds = await this.syncSubscription(
+          const notificationChange = await this.syncSubscription(
             transaction,
             data,
             occurredAt,
@@ -310,18 +329,37 @@ export class PaddleBillingService {
               ? event.data.transactionId
               : undefined,
           );
-          return { received: true, processed: true, notificationUserIds };
+          return { received: true, processed: true, notificationChange };
+        }
+
+        if (TRANSACTION_RECOVERY_EVENTS.has(event.eventType)) {
+          const recovered = await this.checkoutBindings.recoverTransaction(
+            transaction,
+            event.data as TransactionNotification,
+          );
+          if (recovered) {
+            return {
+              received: true,
+              processed: recovered.recovered,
+              recovered: recovered.recovered,
+            };
+          }
         }
 
         // Transaction notifications are recorded/deduplicated, but never grant
-        // or revoke subscription access. A payment may be a one-off charge,
-        // an old invoice, or a payment-method change, including while paused.
-        // subscription.updated supplies the complete authoritative state.
+        // or revoke subscription access. Created/ready/completed events only
+        // recover a transaction ID lost between Paddle's response and our DB
+        // write. Subscription events/snapshots remain authoritative for access.
 
         return { received: true, processed: false, ignored: true };
       });
-      if ('notificationUserIds' in result) {
-        this.notifications.emitBillingChange(result.notificationUserIds ?? []);
+      if ('notificationChange' in result) {
+        if (result.notificationChange) {
+          this.notifications.emitBillingChange(
+            result.notificationChange.recipientUserIds,
+            result.notificationChange.reason,
+          );
+        }
         return { received: true, processed: true };
       }
       return result;
@@ -378,7 +416,7 @@ export class PaddleBillingService {
     );
     if (snapshot.id !== subscriptionId)
       throw new ConflictException('Paddle abonelik kimliği eşleşmedi.');
-    const notificationUserIds = await this.prisma.$transaction((transaction) =>
+    const notificationChange = await this.prisma.$transaction((transaction) =>
       this.syncSubscription(
         transaction,
         snapshot,
@@ -390,7 +428,12 @@ export class PaddleBillingService {
         },
       ),
     );
-    this.notifications.emitBillingChange(notificationUserIds ?? []);
+    if (notificationChange) {
+      this.notifications.emitBillingChange(
+        notificationChange.recipientUserIds,
+        notificationChange.reason,
+      );
+    }
   }
 
   private async syncSubscription(
@@ -445,6 +488,36 @@ export class PaddleBillingService {
         throw new BadRequestException('Paddle abonelik dönemi geçersiz.');
     }
 
+    const incomingHasBillingAccess = hasBillingAccess({
+      status,
+      currentPeriodEnd:
+        parseDate(currentPeriod?.endsAt) ?? existing.currentPeriodEnd,
+      trialEndsAt:
+        status === BillingSubscriptionStatus.TRIALING
+          ? (parseDate(currentPeriod?.endsAt) ?? existing.trialEndsAt)
+          : null,
+      paddleSubscriptionId: data.id,
+      cancelAtPeriodEnd: data.scheduledChange?.action === 'cancel',
+      scheduledAccessEndsAt:
+        data.scheduledChange?.action === 'cancel' ||
+        data.scheduledChange?.action === 'pause'
+          ? parseDate(data.scheduledChange.effectiveAt)
+          : null,
+    });
+
+    const existingHealthyNotificationChange =
+      existing.paddleSubscriptionId === data.id &&
+      hasBillingAccess(existing) &&
+      incomingHasBillingAccess
+        ? {
+            recipientUserIds: await this.notifications.resolveBillingIssues(
+              transaction,
+              existing.workspaceId,
+            ),
+            reason: 'READ_ALL' as const,
+          }
+        : undefined;
+
     // Before the snapshot-version migration, only the event envelope time was
     // stored. An older API snapshot may bootstrap its version only when the
     // access-critical state agrees; it must not regress a newer legacy event.
@@ -463,7 +536,7 @@ export class PaddleBillingService {
         existing.cancelAtPeriodEnd !==
           (data.scheduledChange?.action === 'cancel')
       )
-        return;
+        return existingHealthyNotificationChange;
     }
 
     // resolve() locks the workspace and re-reads the subscription. The lock is
@@ -474,13 +547,14 @@ export class PaddleBillingService {
     const incomingVersion =
       existing.paddleSnapshotAt || reconciliation ? snapshotAt : occurredAt;
     if (existing.paddleSubscriptionId === data.id && previousVersion) {
-      if (previousVersion > incomingVersion) return;
+      if (previousVersion > incomingVersion)
+        return existingHealthyNotificationChange;
       if (
         previousVersion.getTime() === incomingVersion.getTime() &&
         subscriptionStatusPriority(status) <=
           subscriptionStatusPriority(existing.status)
       )
-        return;
+        return existingHealthyNotificationChange;
       // Exact timestamp ties favor the more restrictive status, irrespective
       // of delivery order. Duplicate/equally ranked snapshots are not reapplied.
     }
@@ -552,6 +626,8 @@ export class PaddleBillingService {
           status: 'COMPLETED',
           completedAt: occurredAt,
           failureCode: null,
+          retryAfterSeconds: null,
+          retryAt: null,
         },
       });
     } else if (status === BillingSubscriptionStatus.CANCELED) {
@@ -562,11 +638,16 @@ export class PaddleBillingService {
           status: { in: PENDING_PLAN_CHANGE_STATUSES },
           sourceUpdatedAt: { lt: occurredAt },
         },
-        data: { status: 'FAILED', failureCode: 'SUBSCRIPTION_ENDED' },
+        data: {
+          status: 'FAILED',
+          failureCode: 'SUBSCRIPTION_ENDED',
+          retryAfterSeconds: null,
+          retryAt: null,
+        },
       });
     }
     if (status === BillingSubscriptionStatus.PAST_DUE) {
-      return this.notifications.createBillingIssue(
+      const recipientUserIds = await this.notifications.createBillingIssue(
         transaction,
         existing.workspaceId,
         {
@@ -576,6 +657,16 @@ export class PaddleBillingService {
           dedupeKey: `billing-payment:${data.id}:${currentPeriod?.startsAt ?? snapshotAt.toISOString()}`,
         },
       );
+      return { recipientUserIds, reason: 'CREATED' as const };
+    }
+    if (incomingHasBillingAccess) {
+      if (existingHealthyNotificationChange)
+        return existingHealthyNotificationChange;
+      const recipientUserIds = await this.notifications.resolveBillingIssues(
+        transaction,
+        existing.workspaceId,
+      );
+      return { recipientUserIds, reason: 'READ_ALL' as const };
     }
   }
 

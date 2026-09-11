@@ -5,7 +5,7 @@ import {
 } from "@/lib/api/billing.server"
 import { getBillingWorkspace } from "@/lib/billing-workspace.server"
 import { BillingAccessNotice } from "@/components/dashboard/billing/billing-access-notice"
-import { BillingWorkspaceHeader } from "@/components/dashboard/billing/billing-workspace-header"
+import { BillingShellHeader } from "@/components/dashboard/billing/billing-shell-header"
 
 export default async function BillingPage({
   params,
@@ -21,7 +21,7 @@ export default async function BillingPage({
   ])
   return (
     <>
-      <BillingWorkspaceHeader workspace={workspace} />
+      <BillingShellHeader />
       <BillingOverview
         workspaceId={workspace.id}
         summary={summary}

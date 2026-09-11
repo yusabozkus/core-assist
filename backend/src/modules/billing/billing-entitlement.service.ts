@@ -55,7 +55,13 @@ export class BillingEntitlementService {
       }),
       this.prisma.billingPlanChange.findFirst({
         where: { workspaceId, status: { in: PENDING_PLAN_CHANGE_STATUSES } },
-        select: { id: true, plan: true, cycle: true, status: true },
+        select: {
+          id: true,
+          plan: true,
+          cycle: true,
+          status: true,
+          retryAt: true,
+        },
       }),
       this.prisma.billingCheckout.findFirst({
         where: { workspaceId, status: 'OPEN', boundAt: null },

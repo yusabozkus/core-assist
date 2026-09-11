@@ -16,7 +16,10 @@ import {
 } from './dto/list-notifications-query.dto';
 import { MarkAllNotificationsReadDto } from './dto/mark-all-notifications-read.dto';
 import { UpdateNotificationPreferencesDto } from './dto/update-notification-preferences.dto';
-import { NotificationStreamService } from './notification-stream.service';
+import {
+  NotificationStreamService,
+  type NotificationChangeReason,
+} from './notification-stream.service';
 import { NotificationDeliveryService } from './notification-delivery.service';
 import { UpdateNotificationDeliverySettingsDto } from './dto/update-notification-delivery-settings.dto';
 import {
@@ -395,8 +398,45 @@ export class NotificationsService {
     return result.count > 0 ? recipients : [];
   }
 
-  emitBillingChange(recipientUserIds: string[]) {
-    this.streamEvents.emit(recipientUserIds, null, 'CREATED');
+  async resolveBillingIssues(
+    transaction: Prisma.TransactionClient,
+    workspaceId: string,
+  ) {
+    const unresolved = await transaction.notification.findMany({
+      where: {
+        type: NotificationType.BILLING_PAYMENT_ISSUE,
+        entityType: 'BILLING_WORKSPACE',
+        entityId: workspaceId,
+        readAt: null,
+      },
+      select: { recipientUserId: true },
+    });
+    if (unresolved.length === 0) return [];
+
+    const resolvedAt = new Date();
+    const updated = await transaction.notification.updateMany({
+      where: {
+        type: NotificationType.BILLING_PAYMENT_ISSUE,
+        entityType: 'BILLING_WORKSPACE',
+        entityId: workspaceId,
+        readAt: null,
+      },
+      data: { readAt: resolvedAt },
+    });
+    if (updated.count === 0) return [];
+
+    return [
+      ...new Set(
+        unresolved.map((notification) => notification.recipientUserId),
+      ),
+    ];
+  }
+
+  emitBillingChange(
+    recipientUserIds: string[],
+    reason: NotificationChangeReason = 'CREATED',
+  ) {
+    this.streamEvents.emit(recipientUserIds, null, reason);
   }
 
   async createForStoreMembers(input: StoreNotificationInput) {

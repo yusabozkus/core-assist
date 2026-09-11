@@ -15,9 +15,11 @@ import { PendingPlanChange } from "@/components/dashboard/billing/pending-plan-c
 import { PlanQuestions } from "@/components/dashboard/billing/plan-questions"
 import { AppLogo } from "@/components/shared/brand/app-logo"
 import { Button } from "@/components/ui/button"
-import { BILLING_TRIAL, SUBSCRIPTION_PLANS } from "@/constants/billing"
+import { SUBSCRIPTION_PLANS } from "@/constants/billing"
+import { formatBillingDate } from "@/lib/billing"
 import { billingRoutes } from "@/lib/billing-routes"
 import { APP_ROUTES } from "@/constants/site"
+import { commonAnnualDiscount, usePaddlePricing } from "@/lib/paddle-pricing"
 import type {
   BillingCycle,
   BillingPlanId,
@@ -27,11 +29,9 @@ import type {
 export function PlansClient({
   initialBillingSummary,
   workspaceId,
-  workspaceName,
 }: {
   initialBillingSummary: BillingSummary | null
   workspaceId: string
-  workspaceName: string
 }) {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(
     initialBillingSummary?.subscription.cycle === "ANNUAL"
@@ -44,6 +44,8 @@ export function PlansClient({
     key: number
   } | null>(null)
   const [changeOpen, setChangeOpen] = useState(false)
+  const pricing = usePaddlePricing()
+  const annualDiscount = commonAnnualDiscount(pricing.prices)
   const managed = Boolean(
     initialBillingSummary?.subscription.managedByPaddle &&
     !["CANCELED", "EXPIRED"].includes(initialBillingSummary.subscription.status)
@@ -63,20 +65,18 @@ export function PlansClient({
     (initialBillingSummary?.subscription.status === "TRIALING"
       ? "Ücretsiz deneme"
       : "Aktif plan yok")
+  const trialActive = Boolean(
+    initialBillingSummary?.subscription.status === "TRIALING" &&
+    initialBillingSummary.subscription.active
+  )
+  const trialEndsAt = trialActive
+    ? initialBillingSummary?.subscription.trialEndsAt
+    : null
   return (
     <main className="themed-scrollbar fixed inset-0 z-40 overflow-y-auto overscroll-y-contain bg-background">
       <header className="sticky top-0 z-10 border-b border-border bg-background/95">
         <div className="mx-auto flex h-18 w-full max-w-[1440px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-10">
-          <div className="flex min-w-0 items-center gap-4">
-            <AppLogo href={billingRoutes(workspaceId).overview} />
-            <Link
-              href="/billing?choose=1"
-              className="max-w-40 truncate border-l border-border pl-4 text-xs text-muted-foreground hover:text-foreground"
-              title="Çalışma alanını değiştir"
-            >
-              {workspaceName}
-            </Link>
-          </div>
+          <AppLogo href={billingRoutes(workspaceId).overview} />
           <div className="flex items-center gap-5">
             <span className="hidden text-xs text-muted-foreground sm:block">
               Mevcut planınız{" "}
@@ -107,7 +107,11 @@ export function PlansClient({
               <HugeiconsIcon icon={CalendarCheck01Icon} className="size-4" />
               {managed
                 ? "Mevcut aboneliğinizi yönetin"
-                : `Kart gerektirmeden ${BILLING_TRIAL.days} gün ücretsiz deneme`}
+                : trialActive
+                  ? trialEndsAt
+                    ? `Ücretsiz denemeniz ${formatBillingDate(trialEndsAt)} tarihine kadar aktif`
+                    : "Ücretsiz denemeniz aktif"
+                  : "Ücretli aboneliğinizi başlatın"}
             </p>
             <h1 className="text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">
               İşinize uygun kapasiteyi seçin.
@@ -121,11 +125,14 @@ export function PlansClient({
             <BillingCycleToggle
               value={billingCycle}
               onChange={setBillingCycle}
+              annualDiscount={annualDiscount}
             />
             <p className="text-xs text-muted-foreground">
-              {billingCycle === "annual"
-                ? "Yıllık ödemede %10 tasarruf edin."
-                : "Yıllık ödemeyi seçin, %10 daha az ödeyin."}
+              {pricing.loading
+                ? "Paddle üzerinden güncel fiyatlar hesaplanıyor."
+                : annualDiscount
+                  ? `Yıllık ödemede %${annualDiscount.toLocaleString("tr-TR", { maximumFractionDigits: 1 })} tasarruf edin.`
+                  : "Yıllık plan avantajını güncel fiyatlarda inceleyin."}
             </p>
           </div>
         </section>
@@ -150,6 +157,25 @@ export function PlansClient({
             </Link>
           </p>
         )}
+        {pricing.error ? (
+          <div
+            role="alert"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/25 bg-amber-500/5 px-4 py-3"
+          >
+            <p className="text-xs text-muted-foreground">
+              Güncel Paddle fiyatları alınamadı. Plan seçmeden önce tekrar
+              deneyin.
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={pricing.retry}
+            >
+              Fiyatları yenile
+            </Button>
+          </div>
+        ) : null}
         <section
           aria-label="Abonelik planları"
           className="grid items-stretch gap-4 lg:grid-cols-3"
@@ -159,10 +185,12 @@ export function PlansClient({
               key={plan.id}
               plan={plan}
               billingCycle={billingCycle}
+              price={pricing.prices?.[plan.id][billingCycle] ?? null}
+              priceLoading={pricing.loading}
               checkoutHref={`${APP_ROUTES.checkout}?workspaceId=${encodeURIComponent(workspaceId)}&plan=${plan.id}&cycle=${billingCycle}`}
-              managed={managed}
               disabled={
                 !initialBillingSummary ||
+                !pricing.prices ||
                 Boolean(pendingChange) ||
                 (managed && !canChange)
               }

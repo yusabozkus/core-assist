@@ -10,7 +10,12 @@ import type {
   BillingSummary,
   BillingPlanChangePreview,
   BillingPlanChangeResult,
+  BillingPricingConfig,
 } from "@/types/billing"
+
+export function getBillingPricingConfig(signal?: AbortSignal) {
+  return apiFetch<BillingPricingConfig>("/billing/pricing", { signal })
+}
 
 export function getBillingSummary(workspaceId: string, signal?: AbortSignal) {
   return apiFetch<BillingSummary>(
@@ -131,9 +136,9 @@ export function getBillingPlanChange(
   )
 }
 
-export function createBillingWorkspace(name: string) {
+export function prepareBillingWorkspace(signal?: AbortSignal) {
   return apiFetch<BillingWorkspace>("/billing/workspaces", {
     method: "POST",
-    body: JSON.stringify({ name }),
+    signal,
   })
 }

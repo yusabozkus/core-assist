@@ -34,7 +34,6 @@ export function ProfileForm({
       />
       <ActiveSessions initialSessions={overview.sessions} />
       <AccountDataControls
-        ownedWorkspaceCount={overview.ownedWorkspaceCount}
         ownedStoreCount={overview.ownedStoreCount}
       />
     </div>

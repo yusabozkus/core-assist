@@ -15,7 +15,7 @@ const questions = [
   {
     question: "Yıllık ödemede ne kadar avantajım var?",
     answer:
-      "Aylık plan ücretinin 12 katına %10 indirim uygulanır. Yıllık toplam tek seferde faturalandırılır; soru hakları her ay yenilenir.",
+      "Yıllık planın güncel toplamı ve aylık plana göre avantajı plan kartlarında Paddle verisiyle gösterilir. Yıllık toplam tek seferde faturalandırılır; soru hakları her ay yenilenir.",
   },
   {
     question: "Soru hakkı nasıl hesaplanır?",

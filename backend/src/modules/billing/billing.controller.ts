@@ -53,7 +53,9 @@ export class BillingController {
     @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Body() input: CreateBillingCheckoutDto,
+    @Headers('origin') origin: string | undefined,
   ) {
+    assertBillingActionOrigin(origin);
     return this.paddleBilling.createCheckout(
       workspaceId,
       user.id,
@@ -133,7 +135,9 @@ export class BillingController {
   createPortalSession(
     @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: AuthenticatedUser,
+    @Headers('origin') origin: string | undefined,
   ) {
+    assertBillingActionOrigin(origin);
     return this.paddleBilling.createPortalSession(workspaceId, user.id);
   }
 

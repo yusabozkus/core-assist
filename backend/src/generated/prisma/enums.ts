@@ -77,6 +77,7 @@ export type BillingCheckoutStatus = (typeof BillingCheckoutStatus)[keyof typeof 
 export const BillingPlanChangeStatus = {
   PREVIEWED: 'PREVIEWED',
   PROCESSING: 'PROCESSING',
+  RETRY_SCHEDULED: 'RETRY_SCHEDULED',
   AWAITING_WEBHOOK: 'AWAITING_WEBHOOK',
   COMPLETED: 'COMPLETED',
   FAILED: 'FAILED',

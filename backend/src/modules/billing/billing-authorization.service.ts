@@ -6,8 +6,8 @@ import { WorkspaceRole } from '../../generated/prisma/enums';
 export class BillingAuthorizationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  listWorkspaces(userId: string) {
-    return this.prisma.workspace.findMany({
+  async listWorkspaces(userId: string) {
+    const workspaces = await this.prisma.workspace.findMany({
       where: {
         OR: [
           { ownerId: userId },
@@ -21,9 +21,18 @@ export class BillingAuthorizationService {
           },
         ],
       },
-      select: { id: true, name: true },
+      select: { id: true, name: true, ownerId: true },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     });
+
+    // The account's own billing is the default. Existing delegated finance
+    // permissions remain valid, but never replace the owner's default account.
+    return workspaces
+      .sort(
+        (left, right) =>
+          Number(right.ownerId === userId) - Number(left.ownerId === userId),
+      )
+      .map(({ id, name }) => ({ id, name }));
   }
 
   async getWorkspaceAccess(workspaceId: string, userId: string) {
@@ -66,6 +75,6 @@ function billingForbidden() {
   return new ForbiddenException({
     code: 'BILLING_FORBIDDEN',
     message:
-      'Finans işlemleri için çalışma alanı sahibi veya yöneticisi olmalısınız.',
+      'Finans işlemleri için hesap sahibi olmalı veya finans yetkisine sahip olmalısınız.',
   });
 }

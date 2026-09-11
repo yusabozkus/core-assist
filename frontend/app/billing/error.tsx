@@ -16,7 +16,7 @@ export default function BillingError({ reset }: { reset: () => void }) {
       <div className="flex gap-3">
         <Button onClick={reset}>Tekrar dene</Button>
         <Button asChild variant="outline">
-          <Link href="/billing?choose=1">Çalışma alanlarına dön</Link>
+          <Link href="/billing">Aboneliğe dön</Link>
         </Button>
       </div>
     </main>

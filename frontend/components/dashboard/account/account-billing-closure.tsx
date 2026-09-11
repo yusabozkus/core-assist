@@ -110,7 +110,6 @@ export function AccountBillingClosure({
       </div>
       {status?.workspaces.map((workspace) => (
         <div key={workspace.id} className="space-y-2 text-sm">
-          <p className="font-medium">{workspace.name}</p>
           {workspace.subscriptions.map((subscription) => (
             <div
               key={subscription.id}

@@ -31,7 +31,6 @@ export type AccountSessionSummary = {
 
 export type AccountOverview = {
   createdAt: string
-  ownedWorkspaceCount: number
   ownedStoreCount: number
   accounts: AuthAccountSummary[]
   sessions: AccountSessionSummary[]

@@ -6,7 +6,6 @@ export type SubscriptionPlan = {
   id: BillingPlanId
   name: string
   description: string
-  monthlyPrice: number
   questions: number
   stores: number
   members: number
@@ -15,6 +14,29 @@ export type SubscriptionPlan = {
   features: readonly string[]
   highlighted?: boolean
 }
+
+export type BillingPricingConfig = {
+  environment: "sandbox" | "production"
+  items: Array<{
+    plan: Uppercase<BillingPlanId>
+    cycle: Uppercase<BillingCycle>
+    priceId: string
+  }>
+}
+
+export type BillingPlanPrice = {
+  priceId: string
+  currencyCode: string
+  monthly: string
+  total: string
+  saving: string | null
+  discountPercentage: number | null
+}
+
+export type BillingPlanPrices = Record<
+  BillingPlanId,
+  Record<BillingCycle, BillingPlanPrice>
+>
 
 export type BillingSubscriptionStatus =
   "TRIALING" | "ACTIVE" | "PAST_DUE" | "PAUSED" | "CANCELED" | "EXPIRED"
@@ -29,7 +51,7 @@ type BillingCapacityUsage = {
 export type BillingSummary = {
   pendingPlanChange?: Pick<
     BillingPlanChangeResult,
-    "id" | "plan" | "cycle" | "status"
+    "id" | "plan" | "cycle" | "status" | "retryAt"
   > | null
   subscription: {
     id: string
@@ -75,6 +97,7 @@ export type BillingPlanChangeResult = {
   status:
     | "PREVIEWED"
     | "PROCESSING"
+    | "RETRY_SCHEDULED"
     | "AWAITING_WEBHOOK"
     | "COMPLETED"
     | "FAILED"
@@ -82,6 +105,9 @@ export type BillingPlanChangeResult = {
   plan: BillingSummary["subscription"]["plan"]
   cycle: BillingSummary["subscription"]["cycle"]
   failureCode?: string | null
+  retryAfterSeconds?: number | null
+  retryAt?: string | null
+  retryCount?: number
   completedAt?: string | null
 }
 

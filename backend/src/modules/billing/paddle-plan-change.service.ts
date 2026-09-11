@@ -25,10 +25,17 @@ import {
   resolvePlanChangePolicy,
   subscriptionFingerprint,
 } from './billing-plan-change.policy';
+import {
+  assertPaidRecurringPrice,
+  requirePaidRecurringPrice,
+} from './paddle-price.policy';
 
 type Change = Prisma.BillingPlanChangeGetPayload<object>;
 type LocalSubscription = Prisma.BillingSubscriptionGetPayload<object>;
 const PREVIEW_TTL_MS = 5 * 60_000;
+const DEFAULT_RATE_LIMIT_RETRY_SECONDS = 60;
+const MAX_RATE_LIMIT_RETRY_SECONDS = 24 * 60 * 60;
+const MAX_RATE_LIMIT_RETRIES = 5;
 
 @Injectable()
 export class PaddlePlanChangeService {
@@ -56,6 +63,7 @@ export class PaddlePlanChangeService {
         'Plan fiyatı yapılandırması doğrulanamadı. Destek ile iletişime geçin.',
       );
     }
+    await requirePaidRecurringPrice(this.getClient(), targetPriceId, cycle);
     const local = await this.prisma.billingSubscription.findUnique({
       where: { workspaceId },
     });
@@ -143,12 +151,21 @@ export class PaddlePlanChangeService {
       workspaceId,
       changeId,
     );
-    if (existingChange.status !== 'PREVIEWED') {
+    if (
+      existingChange.status !== 'PREVIEWED' &&
+      existingChange.status !== 'RETRY_SCHEDULED'
+    ) {
       if (existingChange.requestedByUserId !== userId)
         throw planChangeConflict(
           'BILLING_PREVIEW_OWNER_MISMATCH',
           'Kendi hesabınızdan yeni bir önizleme alın.',
         );
+      return changeResult(existingChange);
+    }
+    if (
+      existingChange.status === 'RETRY_SCHEDULED' &&
+      (!existingChange.retryAt || existingChange.retryAt.getTime() > Date.now())
+    ) {
       return changeResult(existingChange);
     }
     // The reservation survives a process crash, page reload and duplicate POST.
@@ -161,10 +178,18 @@ export class PaddlePlanChangeService {
           'Kendi hesabınızdan yeni bir önizleme alın.',
         );
       }
-      if (change.status !== 'PREVIEWED') return { change, claimed: false };
-      if (change.expiresAt.getTime() <= Date.now()) throw stalePreview();
+      const isScheduledRetry = change.status === 'RETRY_SCHEDULED';
+      if (change.status !== 'PREVIEWED' && !isScheduledRetry)
+        return { change, claimed: false };
+      if (
+        isScheduledRetry &&
+        (!change.retryAt || change.retryAt.getTime() > Date.now())
+      )
+        return { change, claimed: false };
+      if (!isScheduledRetry && change.expiresAt.getTime() <= Date.now())
+        throw stalePreview();
       assertEnvironmentAndPrice(change);
-      await this.assertNoPending(tx, workspaceId);
+      await this.assertNoPending(tx, workspaceId, change.id);
       const subscription = await tx.billingSubscription.findUnique({
         where: { workspaceId },
       });
@@ -175,7 +200,12 @@ export class PaddlePlanChangeService {
         claimed: true,
         change: await tx.billingPlanChange.update({
           where: { id: change.id },
-          data: { status: 'PROCESSING', submittedAt: new Date() },
+          data: {
+            status: 'PROCESSING',
+            submittedAt: change.submittedAt ?? new Date(),
+            retryAfterSeconds: null,
+            retryAt: null,
+          },
         }),
       };
     });
@@ -190,6 +220,11 @@ export class PaddlePlanChangeService {
       });
       assertChangeable(subscription);
       assertQuoteSubscription(change, subscription);
+      await requirePaidRecurringPrice(
+        this.getClient(),
+        change.targetPriceId,
+        change.cycle,
+      );
       const remote = await this.loadRemote(subscription);
       if (subscriptionFingerprint(remote) !== change.sourceFingerprint)
         throw stalePreview();
@@ -214,7 +249,8 @@ export class PaddlePlanChangeService {
         });
         assertChangeable(current);
         assertQuoteSubscription(change, current);
-        if (change.expiresAt.getTime() <= Date.now()) throw stalePreview();
+        if (change.retryCount === 0 && change.expiresAt.getTime() <= Date.now())
+          throw stalePreview();
         assertCapacity(await this.capacity(tx, workspaceId, change.plan));
       });
     } catch (error) {
@@ -246,11 +282,54 @@ export class PaddlePlanChangeService {
       ) {
         throw new Error('Unexpected subscription update response');
       }
-      await this.prisma.billingPlanChange.updateMany({
-        where: { id: change.id, status: 'PROCESSING' },
-        data: { status: 'AWAITING_WEBHOOK' },
-      });
+      assertPaidRecurringPrice(
+        remote.items[0].price,
+        change.targetPriceId,
+        change.cycle,
+      );
+      const reconcileAfter = new Date();
+      await this.prisma.$transaction([
+        this.prisma.billingPlanChange.updateMany({
+          where: { id: change.id, status: 'PROCESSING' },
+          data: { status: 'AWAITING_WEBHOOK' },
+        }),
+        this.prisma.billingSubscription.updateMany({
+          where: {
+            workspaceId,
+            paddleSubscriptionId: change.paddleSubscriptionId,
+            paddleCustomerId: change.paddleCustomerId,
+          },
+          data: { reconcileAfter },
+        }),
+      ]);
     } catch (error) {
+      if (isPaddleRateLimit(error)) {
+        const retryCount = change.retryCount + 1;
+        const retryAfterSeconds = rateLimitRetrySeconds(error);
+        const retriesExhausted = retryCount > MAX_RATE_LIMIT_RETRIES;
+        await this.prisma.billingPlanChange.updateMany({
+          where: { id: change.id, status: 'PROCESSING' },
+          data: retriesExhausted
+            ? {
+                status: 'FAILED',
+                failureCode: 'PADDLE_RATE_LIMIT_RETRIES_EXHAUSTED',
+                retryAfterSeconds: null,
+                retryAt: null,
+                retryCount,
+              }
+            : {
+                status: 'RETRY_SCHEDULED',
+                failureCode: 'PADDLE_RATE_LIMITED',
+                retryAfterSeconds,
+                retryAt: new Date(Date.now() + retryAfterSeconds * 1000),
+                retryCount,
+              },
+        });
+        this.logFailure('rate-limit', change.id, error);
+        return changeResult(
+          await this.findChange(this.prisma, workspaceId, change.id),
+        );
+      }
       // Never repeat an ambiguous PATCH: it may have charged the customer.
       // A subsequent verified webhook can complete this same operation.
       const rejected =
@@ -258,13 +337,28 @@ export class PaddlePlanChangeService {
         error.type === 'request_error' &&
         error.code !== 'conflict' &&
         error.code !== 'too_many_requests';
-      await this.prisma.billingPlanChange.updateMany({
+      const resultUpdate = this.prisma.billingPlanChange.updateMany({
         where: { id: change.id, status: 'PROCESSING' },
         data: {
           status: rejected ? 'FAILED' : 'REVIEW_REQUIRED',
           failureCode: rejected ? 'PADDLE_REJECTED' : 'PADDLE_RESULT_UNKNOWN',
         },
       });
+      if (rejected) {
+        await resultUpdate;
+      } else {
+        await this.prisma.$transaction([
+          resultUpdate,
+          this.prisma.billingSubscription.updateMany({
+            where: {
+              workspaceId,
+              paddleSubscriptionId: change.paddleSubscriptionId,
+              paddleCustomerId: change.paddleCustomerId,
+            },
+            data: { reconcileAfter: new Date() },
+          }),
+        ]);
+      }
       this.logFailure('apply', change.id, error);
     }
     // Only the signed subscription webhook updates local plan/entitlements.
@@ -278,6 +372,42 @@ export class PaddlePlanChangeService {
     return changeResult(
       await this.findChange(this.prisma, workspaceId, changeId),
     );
+  }
+
+  async retryScheduled(changeId: string) {
+    const change = await this.prisma.billingPlanChange.findUnique({
+      where: { id: changeId },
+      select: {
+        id: true,
+        workspaceId: true,
+        requestedByUserId: true,
+        status: true,
+        retryAt: true,
+      },
+    });
+    if (
+      !change ||
+      change.status !== 'RETRY_SCHEDULED' ||
+      !change.retryAt ||
+      change.retryAt.getTime() > Date.now()
+    )
+      return false;
+    if (!change.requestedByUserId) {
+      await this.failScheduledRetry(change.id, 'PLAN_CHANGE_OWNER_MISSING');
+      return false;
+    }
+    try {
+      await this.confirm(
+        change.workspaceId,
+        change.requestedByUserId,
+        change.id,
+      );
+      return true;
+    } catch (error) {
+      await this.failScheduledRetry(change.id, 'PLAN_CHANGE_RETRY_REJECTED');
+      this.logFailure('scheduled-retry', change.id, error);
+      return false;
+    }
   }
 
   private async findChange(
@@ -411,10 +541,15 @@ export class PaddlePlanChangeService {
   private async assertNoPending(
     tx: Prisma.TransactionClient,
     workspaceId: string,
+    excludedChangeId?: string,
   ) {
     const [pendingChange, pendingCheckout] = await Promise.all([
       tx.billingPlanChange.findFirst({
-        where: { workspaceId, status: { in: PENDING_PLAN_CHANGE_STATUSES } },
+        where: {
+          workspaceId,
+          status: { in: PENDING_PLAN_CHANGE_STATUSES },
+          ...(excludedChangeId ? { id: { not: excludedChangeId } } : {}),
+        },
         select: { id: true },
       }),
       tx.billingCheckout.findFirst({
@@ -431,6 +566,18 @@ export class PaddlePlanChangeService {
         'Bekleyen bir ödeme veya plan değişikliği var. Durumu yenileyin; işlem sonuçlanmadan yeni bir değişiklik başlatılamaz.',
       );
     }
+  }
+
+  private async failScheduledRetry(id: string, failureCode: string) {
+    await this.prisma.billingPlanChange.updateMany({
+      where: { id, status: 'RETRY_SCHEDULED' },
+      data: {
+        status: 'FAILED',
+        failureCode,
+        retryAfterSeconds: null,
+        retryAt: null,
+      },
+    });
   }
 
   private withWorkspaceLock<T>(
@@ -564,6 +711,20 @@ function changeResult(change: Change) {
     plan: change.plan,
     cycle: change.cycle,
     failureCode: change.failureCode,
+    retryAfterSeconds: change.retryAfterSeconds,
+    retryAt: change.retryAt,
+    retryCount: change.retryCount,
     completedAt: change.completedAt,
   };
+}
+
+function isPaddleRateLimit(error: unknown): error is ApiError {
+  return error instanceof ApiError && error.code === 'too_many_requests';
+}
+
+function rateLimitRetrySeconds(error: ApiError) {
+  const retryAfter = error.retryAfter;
+  if (!retryAfter || !Number.isFinite(retryAfter) || retryAfter <= 0)
+    return DEFAULT_RATE_LIMIT_RETRY_SECONDS;
+  return Math.min(Math.ceil(retryAfter), MAX_RATE_LIMIT_RETRY_SECONDS);
 }

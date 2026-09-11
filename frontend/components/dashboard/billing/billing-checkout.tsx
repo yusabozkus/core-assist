@@ -12,7 +12,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { AppLogo } from "@/components/shared/brand/app-logo"
 import { Button } from "@/components/ui/button"
-import { BILLING_TRIAL, INCLUDED_MARKETPLACES } from "@/constants/billing"
+import { INCLUDED_MARKETPLACES } from "@/constants/billing"
 import { billingRoutes } from "@/lib/billing-routes"
 import { APP_ROUTES } from "@/constants/site"
 import {
@@ -20,8 +20,8 @@ import {
   createBillingCheckout,
   getBillingSummary,
 } from "@/lib/api/billing"
-import { getPlanPrice } from "@/lib/billing"
 import { getPaddle, subscribeToPaddleEvents } from "@/lib/paddle"
+import { usePaddlePricing } from "@/lib/paddle-pricing"
 import type { BillingCycle, SubscriptionPlan } from "@/types/billing"
 
 const PADDLE_FRAME_TARGET = "coreassist-paddle-checkout"
@@ -30,13 +30,11 @@ const BILLING_SYNC_INTERVAL_MS = 600
 
 export function BillingCheckout({
   workspaceId,
-  workspaceName,
   customerEmail,
   plan,
   billingCycle,
 }: {
   workspaceId: string
-  workspaceName: string
   customerEmail: string
   plan: SubscriptionPlan
   billingCycle: BillingCycle
@@ -56,7 +54,8 @@ export function BillingCheckout({
   const completionStartedRef = useRef(false)
   const completionAbortRef = useRef<AbortController | null>(null)
   const paddleRef = useRef<Awaited<ReturnType<typeof getPaddle>> | null>(null)
-  const price = getPlanPrice(plan, billingCycle)
+  const pricing = usePaddlePricing()
+  const price = pricing.prices?.[plan.id][billingCycle] ?? null
 
   const completeCheckout = useCallback(async () => {
     completionAbortRef.current?.abort()
@@ -256,15 +255,7 @@ export function BillingCheckout({
 
       <header className="relative z-30 bg-background/65 backdrop-blur-xl">
         <div className="mx-auto flex h-17 w-full max-w-[1180px] items-center justify-between gap-4 border-b border-border/60 px-5 sm:px-8">
-          <div className="flex min-w-0 items-center gap-4">
-            <AppLogo href={billingRoutes(workspaceId).plans} />
-            <span
-              className="max-w-40 truncate border-l border-border pl-4 text-xs text-muted-foreground"
-              title={workspaceName}
-            >
-              {workspaceName}
-            </span>
-          </div>
+          <AppLogo href={billingRoutes(workspaceId).plans} />
           <div className="flex items-center gap-2 sm:gap-4">
             <span className="hidden items-center gap-2 text-[11px] font-medium text-muted-foreground md:flex">
               <HugeiconsIcon
@@ -322,15 +313,19 @@ export function BillingCheckout({
                     : "Aylık faturalandırma"}
                 </p>
                 <p className="mt-1.5 text-3xl font-semibold tracking-[-0.04em] tabular-nums">
-                  {price.monthly}
+                  {price?.monthly ?? "—"}
                   <span className="ml-1.5 text-sm font-normal tracking-normal text-muted-foreground">
                     / ay
                   </span>
                 </p>
               </div>
-              {billingCycle === "annual" ? (
+              {billingCycle === "annual" && price?.discountPercentage ? (
                 <span className="rounded-full bg-primary/9 px-2.5 py-1 text-[11px] font-semibold text-primary ring-1 ring-primary/12">
-                  %10 tasarruf
+                  %
+                  {price.discountPercentage.toLocaleString("tr-TR", {
+                    maximumFractionDigits: 1,
+                  })}{" "}
+                  tasarruf
                 </span>
               ) : null}
             </div>
@@ -349,10 +344,23 @@ export function BillingCheckout({
                 label={
                   billingCycle === "annual" ? "Yıllık toplam" : "Ara toplam"
                 }
-                value={price.total}
+                value={price?.total ?? "Paddle ödeme formunda"}
                 emphasized
               />
             </dl>
+            {pricing.loading ? (
+              <p className="mt-3 text-[11px] text-muted-foreground">
+                Güncel fiyat Paddle üzerinden hesaplanıyor.
+              </p>
+            ) : pricing.error ? (
+              <button
+                type="button"
+                className="mt-3 text-left text-[11px] font-medium text-primary underline underline-offset-4"
+                onClick={pricing.retry}
+              >
+                Fiyat özeti alınamadı. Yeniden deneyin.
+              </button>
+            ) : null}
           </div>
 
           <ul className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
@@ -399,9 +407,6 @@ export function BillingCheckout({
                   Bilgilerinizi girin ve planınızı etkinleştirin.
                 </p>
               </div>
-              <span className="hidden rounded-full bg-muted/60 px-2.5 py-1 text-[10px] font-medium text-muted-foreground ring-1 ring-border/60 sm:inline-flex">
-                {BILLING_TRIAL.days} gün deneme
-              </span>
             </div>
 
             <div className="relative min-h-[650px] border-t border-border/55 bg-background/28 px-4">

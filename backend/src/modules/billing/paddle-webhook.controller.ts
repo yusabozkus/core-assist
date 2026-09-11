@@ -10,14 +10,18 @@ import {
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
 import { PaddleBillingService } from './paddle-billing.service';
+import { PaddleWebhookQueueService } from './paddle-webhook-queue.service';
 
 @Controller('billing/webhooks')
 export class PaddleWebhookController {
-  constructor(private readonly paddleBilling: PaddleBillingService) {}
+  constructor(
+    private readonly paddleBilling: PaddleBillingService,
+    private readonly webhookQueue: PaddleWebhookQueueService,
+  ) {}
 
   @Post('paddle')
   @HttpCode(HttpStatus.OK)
-  handlePaddleWebhook(
+  async handlePaddleWebhook(
     @Req() request: RawBodyRequest<Request>,
     @Headers('paddle-signature') signature?: string,
   ) {
@@ -25,9 +29,11 @@ export class PaddleWebhookController {
       throw new BadRequestException('Webhook gövdesi okunamadı.');
     }
 
-    return this.paddleBilling.handleWebhook(
+    const event = await this.paddleBilling.verifyWebhook(
       request.rawBody.toString('utf8'),
       signature,
     );
+
+    return this.webhookQueue.enqueue(event);
   }
 }

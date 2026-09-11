@@ -24,6 +24,7 @@ export type PlanChangePolicy = {
 
 export const PENDING_PLAN_CHANGE_STATUSES: BillingPlanChangeStatus[] = [
   BillingPlanChangeStatus.PROCESSING,
+  BillingPlanChangeStatus.RETRY_SCHEDULED,
   BillingPlanChangeStatus.AWAITING_WEBHOOK,
   BillingPlanChangeStatus.REVIEW_REQUIRED,
 ];

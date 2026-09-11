@@ -15,7 +15,10 @@ export class WorkspacesController {
     @CurrentUser() user: AuthenticatedUser,
     @Body() createWorkspaceDto: CreateWorkspaceDto,
   ) {
-    return this.workspacesService.create(user.id, createWorkspaceDto);
+    return this.workspacesService.getOrCreateOwnedWorkspace(
+      user.id,
+      createWorkspaceDto.name,
+    );
   }
 
   @Get()

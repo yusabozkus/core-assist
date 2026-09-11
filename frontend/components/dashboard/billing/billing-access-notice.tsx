@@ -16,16 +16,16 @@ export function BillingAccessNotice({
         <h1 className="mt-2 text-xl font-semibold tracking-tight">
           {unavailable
             ? "Finans yetkisi doğrulanamadı"
-            : "Çalışma alanı yetkisi gerekiyor"}
+            : "Finans yetkisi gerekiyor"}
         </h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
           {unavailable
             ? "Yetkinizi şu anda kontrol edemiyoruz. Lütfen daha sonra tekrar deneyin."
-            : "Faturaları görüntülemek ve aboneliği yönetmek için çalışma alanı sahibi veya yöneticisi olmalısınız. Mağaza yöneticiliği bu yetkiyi kapsamaz."}
+            : "Faturaları görüntülemek ve aboneliği yönetmek için hesap sahibinden finans yetkisi almalısınız. Mağaza yöneticiliği bu yetkiyi kapsamaz."}
         </p>
         <Button asChild variant="outline" className="mt-6">
           <Link href={APP_ROUTES.dashboard.settings.billing}>
-            Çalışma alanlarına dön
+            Aboneliğe dön
           </Link>
         </Button>
       </div>

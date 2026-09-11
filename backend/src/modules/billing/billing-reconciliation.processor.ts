@@ -6,10 +6,14 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { hasBillingAccess } from './billing-access.policy';
 import { PaddleBillingService } from './paddle-billing.service';
 import { paddleCheckoutEnvironment } from './paddle-billing.config';
+import { PaddlePlanChangeService } from './paddle-plan-change.service';
+import { BillingRetentionService } from './billing-retention.service';
 
 export const BILLING_RECOVERY_QUEUE = 'billing-recovery';
 const RECONCILE_BILLING = 'RECONCILE_BILLING';
+const CLEANUP_BILLING_RECORDS = 'CLEANUP_BILLING_RECORDS';
 const MINUTE = 60_000;
+const DAY = 24 * 60 * MINUTE;
 
 @Processor(BILLING_RECOVERY_QUEUE, { concurrency: 1 })
 export class BillingReconciliationProcessor
@@ -22,28 +26,61 @@ export class BillingReconciliationProcessor
     @InjectQueue(BILLING_RECOVERY_QUEUE) private readonly queue: Queue,
     private readonly prisma: PrismaService,
     private readonly paddle: PaddleBillingService,
+    private readonly planChanges: PaddlePlanChangeService,
     private readonly notifications: NotificationsService,
+    private readonly retention: BillingRetentionService,
   ) {
     super();
   }
 
   async onModuleInit() {
-    await this.queue.upsertJobScheduler(
-      'billing-reconciliation',
-      { every: MINUTE },
-      {
-        name: RECONCILE_BILLING,
-        data: {},
-        opts: { removeOnComplete: true, removeOnFail: { count: 25 } },
-      },
-    );
+    await Promise.all([
+      this.queue.upsertJobScheduler(
+        'billing-reconciliation',
+        { every: MINUTE },
+        {
+          name: RECONCILE_BILLING,
+          data: {},
+          opts: { removeOnComplete: true, removeOnFail: { count: 25 } },
+        },
+      ),
+      this.queue.upsertJobScheduler(
+        'billing-retention-cleanup',
+        { every: DAY },
+        {
+          name: CLEANUP_BILLING_RECORDS,
+          data: {},
+          opts: {
+            attempts: 3,
+            backoff: { type: 'exponential', delay: 5_000 },
+            removeOnComplete: true,
+            removeOnFail: { count: 25 },
+          },
+        },
+      ),
+    ]);
   }
 
   async process(job: Job) {
+    if (job.name === CLEANUP_BILLING_RECORDS) return this.retention.cleanup();
     if (job.name !== RECONCILE_BILLING)
       throw new Error('Unsupported billing recovery job');
     if (!process.env.PADDLE_API_KEY?.trim()) return { configured: false };
     const now = new Date();
+    const scheduledPlanChanges = await this.prisma.billingPlanChange.findMany({
+      where: {
+        status: 'RETRY_SCHEDULED',
+        retryAt: { lte: now },
+      },
+      orderBy: [{ retryAt: 'asc' }, { id: 'asc' }],
+      take: 20,
+      select: { id: true },
+    });
+    let planChangesRetried = 0;
+    for (const change of scheduledPlanChanges) {
+      if (await this.planChanges.retryScheduled(change.id))
+        planChangesRetried += 1;
+    }
     const candidates = await this.prisma.billingSubscription.findMany({
       where: {
         reconcileAfter: { lte: now },
@@ -97,11 +134,25 @@ export class BillingReconciliationProcessor
         await this.paddle.reconcileWorkspace(candidate.workspaceId);
         const current = await this.prisma.billingSubscription.findUnique({
           where: { id: candidate.id },
+          include: {
+            workspace: {
+              select: {
+                billingPlanChanges: {
+                  where: {
+                    status: { in: ['AWAITING_WEBHOOK', 'REVIEW_REQUIRED'] },
+                  },
+                  take: 1,
+                  select: { id: true },
+                },
+              },
+            },
+          },
         });
         if (!current) continue;
         const checkedAt = new Date();
         const urgent =
           candidate.workspace.billingCheckouts.length > 0 ||
+          current.workspace.billingPlanChanges.length > 0 ||
           current.status === 'PAST_DUE' ||
           !current.paddleSubscriptionId ||
           Math.abs(current.currentPeriodEnd.getTime() - checkedAt.getTime()) <
@@ -167,7 +218,7 @@ export class BillingReconciliationProcessor
         });
       }
     }
-    return { checked: candidates.length };
+    return { checked: candidates.length, planChangesRetried };
   }
 }
 

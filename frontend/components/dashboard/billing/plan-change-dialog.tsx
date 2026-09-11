@@ -61,9 +61,12 @@ export function PlanChangeDialog({
   const pending = Boolean(
     changeId &&
     (!result ||
-      ["PROCESSING", "AWAITING_WEBHOOK", "REVIEW_REQUIRED"].includes(
-        result.status
-      ))
+      [
+        "PROCESSING",
+        "RETRY_SCHEDULED",
+        "AWAITING_WEBHOOK",
+        "REVIEW_REQUIRED",
+      ].includes(result.status))
   )
 
   useEffect(() => {
@@ -83,7 +86,6 @@ export function PlanChangeDialog({
     if (!open || !changeId || !pending) return
     const abort = new AbortController()
     let timer: ReturnType<typeof setTimeout> | undefined
-    let attempts = 0
     async function poll() {
       try {
         const next = await getBillingPlanChange(
@@ -98,11 +100,12 @@ export function PlanChangeDialog({
           return
         }
         if (next.status === "FAILED") return
+        timer = setTimeout(() => void poll(), nextPlanChangePollDelay(next))
       } catch (cause) {
         if (abort.signal.aborted) return
         setError(message(cause))
+        timer = setTimeout(() => void poll(), 5000)
       }
-      if (++attempts < 30) timer = setTimeout(() => void poll(), 2000)
     }
     void poll()
     return () => {
@@ -255,9 +258,9 @@ export function PlanChangeDialog({
               {deferredDowngrade ? (
                 <>
                   Yeni plan ve limitler onaydan sonra hemen uygulanır. Kalan
-                  süreden doğan alacak {formatBillingDate(amounts.nextBilledAt)}
-                  {" "}tarihli Paddle faturasına mahsup edilir; kartınıza anlık
-                  nakit iade yapılmaz.
+                  süreden doğan alacak {formatBillingDate(amounts.nextBilledAt)}{" "}
+                  tarihli Paddle faturasına mahsup edilir; kartınıza anlık nakit
+                  iade yapılmaz.
                 </>
               ) : (
                 <>
@@ -322,14 +325,16 @@ export function PlanChangeDialog({
           <div role="status" className="space-y-3 py-4">
             <div className="flex items-center gap-3 font-medium">
               <Loader />{" "}
-              {result?.status === "REVIEW_REQUIRED"
-                ? "İşlem sonucu doğrulanıyor"
-                : "Plan değişikliği işleniyor"}
+              {result?.status === "RETRY_SCHEDULED"
+                ? "Paddle yoğunluğu nedeniyle yeniden denenecek"
+                : result?.status === "REVIEW_REQUIRED"
+                  ? "İşlem sonucu doğrulanıyor"
+                  : "Plan değişikliği işleniyor"}
             </div>
             <p className="text-sm leading-6 text-muted-foreground">
-              Paddle doğrulaması geldiğinde planınız ve limitleriniz
-              güncellenecek. Bu pencereyi kapatabilirsiniz; tekrar ödeme
-              başlatılmayacak.
+              {result?.status === "RETRY_SCHEDULED"
+                ? `${formatRetryAt(result.retryAt) ?? "Belirlenen zamandan"} sonra otomatik olarak yeniden denenecek. Yeni bir işlem başlatmanıza gerek yok.`
+                : "Paddle doğrulaması geldiğinde planınız ve limitleriniz güncellenecek. Bu pencereyi kapatabilirsiniz; tekrar ödeme başlatılmayacak."}
             </p>
             {result?.status === "REVIEW_REQUIRED" && (
               <p className="text-sm text-muted-foreground">
@@ -420,6 +425,21 @@ function message(cause: unknown) {
   return cause instanceof Error
     ? cause.message
     : "İşlem şu anda tamamlanamadı. Lütfen tekrar deneyin."
+}
+function nextPlanChangePollDelay(result: BillingPlanChangeResult) {
+  if (result.status !== "RETRY_SCHEDULED" || !result.retryAt) return 2000
+  return Math.min(
+    60_000,
+    Math.max(2000, Date.parse(result.retryAt) - Date.now() + 1000)
+  )
+}
+function formatRetryAt(value?: string | null) {
+  if (!value) return null
+  return new Intl.DateTimeFormat("tr-TR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(new Date(value))
 }
 function formatMinorAmount(value: string, currency: string) {
   const digits = new Intl.NumberFormat("tr-TR", {

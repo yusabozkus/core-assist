@@ -4,6 +4,25 @@ CoreAssist, ödeme ekranını Paddle.js ile açar; plan ve fiyat seçimini backe
 üzerinden doğrular. Abonelik durumu tarayıcıdaki ödeme sonucuna göre değil,
 imzası doğrulanmış Paddle webhook olaylarına göre güncellenir.
 
+## Hesap ve abonelik kapsamı
+
+Her kullanıcı hesabı en fazla bir dahili `Workspace` kaydının sahibidir. Bu kayıt
+mağazaları, aboneliği ve kullanım kotasını aynı çatı altında tutar; kullanıcıya
+çalışma alanı oluşturma veya seçme ekranı gösterilmez.
+
+- `Workspace.ownerId` benzersizdir. Genel oluşturma endpointi, onboarding ve
+  faturalandırma hazırlığı aynı servisi ve kullanıcı satırı kilidini kullanır.
+  Tekrar veya eşzamanlı gelen istekler mevcut kaydı döndürür; ikinci bir kayıt,
+  yeni deneme hakkı veya yeni abonelik oluşturmaz.
+- `/billing` hesabın aboneliğine yönlendirir. Henüz dahili kayıt yoksa otomatik
+  hazırlanır; mağaza veya tamamlanmış onboarding gerekmez. Bu hazırlık ödeme
+  başlatmaz ve mevcut abonelik/kurulum durumunu sıfırlamaz.
+- Mağaza yöneticiliği finans yetkisi vermez. Mevcut finans yetkilendirmeleri ve
+  ödeme–workspace eşleştirmesinin güvenlik kontrolleri korunur.
+- `20260911120000_enforce_single_owned_workspace` migration'ı eski veride aynı
+  sahibin birden fazla kaydı varsa açıklayıcı bir hatayla durur. Mağazaları veya
+  finans kayıtlarını otomatik birleştirmez/silmez; önce bu kayıtlar incelenmelidir.
+
 ## 1. Ortam değişkenleri
 
 Sandbox değerlerini `backend/.env` dosyasına ekleyin:
@@ -52,6 +71,8 @@ adresinin sonuna ekleyin.
 - `subscription.resumed`
 - `subscription.canceled`
 - `transaction.completed`
+- `transaction.created`
+- `transaction.ready`
 - `transaction.payment_failed`
 - `transaction.past_due`
 
@@ -98,6 +119,15 @@ için **hiçbir zaman kullanılmaz**. Bu ayrım önemlidir çünkü custom data,
 İlk transaction kimliğinin hangi olayda geldiği
 [subscription.created belgesinde](https://developer.paddle.com/webhooks/subscriptions/subscription-created/)
 açıklanır.
+
+Paddle transaction oluşturulduktan sonra uygulama, transaction kimliğini yerel
+kayda yazamadan kapanırsa imzası doğrulanmış `transaction.created`,
+`transaction.ready` veya `transaction.completed` olayı kurtarma amacıyla
+kullanılır. `coreassist_checkout_id` yalnızca yerel rezervasyonu bulur; tek başına
+yetki vermez. Backend ayrıca API kaynağını, çalışma alanını, ortamı, yapılandırılmış
+fiyatı, planı, dönemi, müşteriyi ve önceki abonelik durumunu doğrular. Eşleşme
+başarılıysa transaction kimliği koşullu olarak bağlanır ve reconciliation erkene
+alınır. Abonelik erişimi transaction webhook'u ile açılmaz.
 
 Fiyat kimliği backend yapılandırmasında tanınmalı; ilk bağlantıda kaydedilen
 plan ve fiyatla da eşleşmelidir. Abonelik tek kalem, bir adet ve ilgili aylık
@@ -222,6 +252,18 @@ Bu adım için yeni migration veya yeni Paddle ortam değişkeni gerekmez.
 
 ## 7. Başarısız webhook ve yeniden teslim
 
+Webhook endpoint'i ham gövdeyi değiştirmeden kullanarak Paddle imzasını
+doğrular. Doğrulanmış olay `paddle-webhooks` BullMQ kuyruğuna event ID tabanlı
+tekil bir iş olarak yazıldığında endpoint hemen `200` döner. Abonelik,
+checkout ve bildirim işlemleri HTTP isteğinden bağımsız worker'da yapılır.
+
+- İmza veya olay zarfı geçersizse olay kuyruğa alınmaz ve `400` döner.
+- Redis'e yazma 3,5 saniye içinde onaylanamazsa `503` döner; Paddle teslimi
+  yeniden deneyebilir. Geç tamamlanan kuyruk yazımı event ID ile tekilleştirilir.
+- Worker geçici hatalarda olayı artan bekleme süresiyle 10 kez dener. Tükenen
+  işler yedi gün tutulur; aynı event ID yeniden teslim edilirse başarısız iş
+  yeniden kuyruğa alınır.
+
 Tekrar kontrolü yalnızca `billing_webhook_event.id` üzerindeki
 `INSERT ... ON CONFLICT ("id") DO NOTHING` ile yapılır. Müşteri, abonelik veya
 checkout alanlarındaki unique çakışmaları (`P2002`) tekrar teslim sayılmaz.
@@ -232,8 +274,8 @@ checkout alanlarındaki unique çakışmaları (`P2002`) tekrar teslim sayılmaz
 - Eşzamanlı aynı event ID teslimleri veritabanında bekleşir. İlk işlem başarılı
   olursa ikincisi `duplicate: true` alır; ilk işlem geri alınırsa diğeri aynı
   olayı işlemeyi deneyebilir.
-- Eşleşmeyen abonelik olayları `409`, geçersiz olay verisi `400`, beklenmeyen
-  işlem/veritabanı hataları `503` döner. Hatalar `200` ile onaylanmaz.
+- Worker'daki eşleştirme veya veritabanı hataları HTTP yanıtını değiştirmez;
+  BullMQ tekrar denemelerine ve başarısız iş kaydına dönüşür.
 - Backend logunda `eventId`, `eventType`, `errorCode` ve unique hatalarında
   `constraintFields` bulunur. Webhook gövdesi, imza, müşteri bilgileri ve ham
   veritabanı hata mesajı bu loga veya hata yanıtına yazılmaz.
@@ -395,10 +437,20 @@ devam eder; mevcut abonelikle doğrudan `/checkout` açmak planlar sayfasına d�
   fiyat değişmişse kullanıcıdan yeni önizleme/onay istenir. Prorasyon dakikaya
   bağlı olduğu için beklerken tutar değişmesi normaldir.
 - Çalışma alanı kilidi ve kısmi benzersiz indeks, aynı anda yalnızca bir
-  `PROCESSING` / `AWAITING_WEBHOOK` / `REVIEW_REQUIRED` işleme izin verir.
+  `PROCESSING` / `RETRY_SCHEDULED` / `AWAITING_WEBHOOK` / `REVIEW_REQUIRED`
+  işleme izin verir.
   Gönderim rezervasyonu dış API çağrısından **önce** kalıcılaşır.
 - Çift tıklama, ikinci sekme veya tekrar POST aynı işlemi yeniden göndermez.
   Belirsiz bağlantı hatası/yeni süreç başlangıcı rezervasyonu düşürmez.
+  Paddle `too_many_requests` döndürürse işlem belirsiz kabul edilmez.
+  `Retry-After` süresi `retryAfterSeconds` ve `retryAt` alanlarında saklanır,
+  durum `RETRY_SCHEDULED` olur ve billing recovery worker süreden önce istek
+  göndermeden işlemi otomatik tekrar dener. Beş otomatik yeniden deneme de
+  rate-limit ile sonuçlanırsa kayıt `FAILED` yapılarak kalıcı kilit önlenir.
+  Paddle plan güncellemesini kabul ettiğinde aboneliğin `reconcileAfter`
+  zamanı hemen öne çekilir. `AWAITING_WEBHOOK` veya `REVIEW_REQUIRED` işlemi
+  sürdüğü müddetçe uzlaştırma aralığı beş dakikayı geçmez; böylece kaçırılan
+  `subscription.updated` webhook'u saatlik rutin kontrolü beklemeden onarılır.
   `REVIEW_REQUIRED` durumunda ilgili işlem referansı loglanır; yeni PATCH
   gönderilmez. Paddle panelindeki abonelik ve işlem geçmişi doğrulanmalı,
   ilgili `subscription.updated` webhook'u yeniden gönderilmelidir. Uygulanmış
@@ -648,3 +700,62 @@ Gerçek ortamda test amacıyla tahsilat veya iptal yapmayın.
 Resmî kaynaklar: [Paddle erişim ve periyodik karşılaştırma rehberi](https://developer.paddle.com/build/subscriptions/provision-access-webhooks/),
 [abonelik okuma](https://developer.paddle.com/api-reference/subscriptions/get-subscription/).
 30 dakikalık pencere Paddle'ın zorunlu kuralı değil, CoreAssist'in ürün politikasıdır.
+
+## Dinamik plan fiyatları
+
+Plan ücretleri ve yıllık plan avantajı frontend sabitlerinden hesaplanmaz.
+`GET /billing/pricing` yalnızca backend'de yapılandırılmış altı Paddle fiyat
+kimliğini ve sandbox/production ortamını yayınlar; Paddle API anahtarı veya başka
+bir gizli değer döndürmez. Landing, plan seçimi, ödeme özeti ve mevcut plan
+ekranları bu kataloğu tek bir `Paddle.PricePreview()` isteğiyle hesaplar.
+
+Gösterilen tutar Paddle'ın ziyaretçi konumu, para birimi, vergi ve fiyat
+yapılandırmasına göre döndürdüğü toplamdır. Yıllık aylık karşılığı ve tasarruf
+oranı da aylık/yıllık Paddle toplamlarından türetilir; kodda sabit indirim oranı
+bulunmaz. Fiyat ortamı istemci ortamıyla eşleşmezse veya katalog eksikse plan
+seçimi kapatılır ve kullanıcıya yeniden deneme sunulur. Ödeme formunun gösterdiği
+tutar her durumda nihai kaynaktır.
+
+CoreAssist'in 10 günlük kart gerektirmeyen denemesi yerel abonelik kaydıyla
+yönetilir ve yalnızca bir kez başlatılır. Paddle ürünlerindeki aylık ve yıllık
+fiyatlarda **Trials anahtarı kapalı olmalıdır**. CoreAssist fiyat önizlemesinde,
+ilk checkout öncesinde, plan değişikliği öncesinde ve webhook bağlama sırasında
+`trial_period` bulunmadığını doğrular. Trial içeren bir Paddle fiyatı ödeme veya
+plan yetkisi veremez; böylece kullanıcı ikinci bir denemeye ya da ücretli plan
+yerine 100 soruluk yerel deneme limitine geçirilmez.
+
+Fiyatların beş dakikalık tarayıcı/backend cache süresi nedeniyle Paddle'daki bir
+değişiklik kısa süre gecikmeli görünebilir. Yeni fiyatları yayınlarken ilgili
+`PADDLE_PRICE_*` değişkenlerini güncelleyin ve backend'i yeniden başlatın.
+
+Resmî kaynaklar: [Paddle.PricePreview](https://developer.paddle.com/paddle-js/methods/paddle-pricepreview/),
+[dinamik fiyatlandırma sayfası](https://developer.paddle.com/build/checkout/build-pricing-page/).
+
+## Operasyonel faturalandırma kayıtlarını saklama
+
+`billing-retention-cleanup` işi BullMQ tarafından günde bir çalıştırılır.
+Temizlik her koleksiyonu en eski kayıttan başlayarak 500'lük partiler halinde
+ve bir çalışmada en fazla 10.000 kayıtla sınırlı olarak işler. Böylece büyük
+bir silme işlemi canlı checkout veya webhook transaction'larını uzun süre
+kilitlemez; birikmiş kayıtlar sonraki günlerde kademeli olarak temizlenir.
+
+Saklama politikası:
+
+- Başarıyla işlenmiş `billing_webhook_event` kimlikleri 180 gün tutulur.
+  Bu süre Paddle'ın olağan yeniden teslim penceresinden uzundur; daha eski bir
+  olay yeniden gelirse abonelik snapshot/tarih kontrolleri durumun gerilemesini
+  engellemeye devam eder.
+- Bir aboneliğe bağlanmamış `CANCELED` ve `FAILED` checkout kayıtları 90 gün
+  tutulur. `CREATING`, `OPEN` ve `REVIEW_REQUIRED` kayıtlar otomatik silinmez.
+- `COMPLETED` checkout kayıtları Paddle transaction/abonelik eşleştirmesinin
+  güven zinciridir; çalışma alanı silinene kadar korunur.
+- Süresi dolmuş `PREVIEWED` plan değişiklikleri 24 saat ek süreden sonra,
+  `FAILED` kayıtlar 90 gün sonra, `COMPLETED` kayıtlar bir yıl sonra silinir.
+- `PROCESSING`, `RETRY_SCHEDULED`, `AWAITING_WEBHOOK` ve `REVIEW_REQUIRED` plan
+  değişiklikleri sonuçlanmadan otomatik temizlenmez.
+
+Bu kayıtlar operasyonel eşleştirme ve hata ayıklama verileridir. Paddle'daki
+fatura ve yasal finans kayıtları bu iş tarafından silinmez. Temizlik sorguları
+`processedAt`, `status + updatedAt` ve `status + expiresAt` indekslerini kullanır.
+`20260912120000_add_billing_retention_indexes` migration'ı production'a deploy
+edilmeden zamanlanmış temizliğe geçilmemelidir.

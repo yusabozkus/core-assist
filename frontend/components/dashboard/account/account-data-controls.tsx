@@ -23,12 +23,10 @@ import { AccountBillingClosure } from "./account-billing-closure"
 const DELETE_CONFIRMATION = "HESABIMI SİL"
 
 type AccountDataControlsProps = {
-  ownedWorkspaceCount: number
   ownedStoreCount: number
 }
 
 export function AccountDataControls({
-  ownedWorkspaceCount,
   ownedStoreCount,
 }: AccountDataControlsProps) {
   const [isExporting, setIsExporting] = useState(false)
@@ -156,7 +154,7 @@ export function AccountDataControls({
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium">Hesabı kalıcı olarak silin</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Profiliniz ve sahibi olduğunuz tüm çalışma alanları geri alınamaz
+              Profiliniz ve hesabınıza bağlı mağazalar geri alınamaz
               biçimde silinir.
             </p>
           </div>
@@ -224,8 +222,8 @@ export function AccountDataControls({
               Bu işlem geri alınamaz.
             </p>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              {ownedWorkspaceCount.toLocaleString("tr-TR")} çalışma alanı ve bu
-              alanlara bağlı {ownedStoreCount.toLocaleString("tr-TR")} mağaza;
+              Hesabınız ve hesabınıza bağlı{" "}
+              {ownedStoreCount.toLocaleString("tr-TR")} mağaza;
               ürünleri, kanal bağlantıları, soruları, AI taslakları ve
               yanıtlarıyla birlikte silinecek. Bağlı Google veya Microsoft
               hesabınızın kendisi silinmez.

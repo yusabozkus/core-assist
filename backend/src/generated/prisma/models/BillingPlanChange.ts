@@ -20,8 +20,20 @@ export type BillingPlanChangeModel = runtime.Types.Result.DefaultSelection<Prism
 
 export type AggregateBillingPlanChange = {
   _count: BillingPlanChangeCountAggregateOutputType | null
+  _avg: BillingPlanChangeAvgAggregateOutputType | null
+  _sum: BillingPlanChangeSumAggregateOutputType | null
   _min: BillingPlanChangeMinAggregateOutputType | null
   _max: BillingPlanChangeMaxAggregateOutputType | null
+}
+
+export type BillingPlanChangeAvgAggregateOutputType = {
+  retryAfterSeconds: number | null
+  retryCount: number | null
+}
+
+export type BillingPlanChangeSumAggregateOutputType = {
+  retryAfterSeconds: number | null
+  retryCount: number | null
 }
 
 export type BillingPlanChangeMinAggregateOutputType = {
@@ -40,6 +52,9 @@ export type BillingPlanChangeMinAggregateOutputType = {
   cycle: $Enums.BillingCycle | null
   expiresAt: Date | null
   submittedAt: Date | null
+  retryAfterSeconds: number | null
+  retryAt: Date | null
+  retryCount: number | null
   completedAt: Date | null
   failureCode: string | null
   createdAt: Date | null
@@ -62,6 +77,9 @@ export type BillingPlanChangeMaxAggregateOutputType = {
   cycle: $Enums.BillingCycle | null
   expiresAt: Date | null
   submittedAt: Date | null
+  retryAfterSeconds: number | null
+  retryAt: Date | null
+  retryCount: number | null
   completedAt: Date | null
   failureCode: string | null
   createdAt: Date | null
@@ -85,6 +103,9 @@ export type BillingPlanChangeCountAggregateOutputType = {
   preview: number
   expiresAt: number
   submittedAt: number
+  retryAfterSeconds: number
+  retryAt: number
+  retryCount: number
   completedAt: number
   failureCode: number
   createdAt: number
@@ -92,6 +113,16 @@ export type BillingPlanChangeCountAggregateOutputType = {
   _all: number
 }
 
+
+export type BillingPlanChangeAvgAggregateInputType = {
+  retryAfterSeconds?: true
+  retryCount?: true
+}
+
+export type BillingPlanChangeSumAggregateInputType = {
+  retryAfterSeconds?: true
+  retryCount?: true
+}
 
 export type BillingPlanChangeMinAggregateInputType = {
   id?: true
@@ -109,6 +140,9 @@ export type BillingPlanChangeMinAggregateInputType = {
   cycle?: true
   expiresAt?: true
   submittedAt?: true
+  retryAfterSeconds?: true
+  retryAt?: true
+  retryCount?: true
   completedAt?: true
   failureCode?: true
   createdAt?: true
@@ -131,6 +165,9 @@ export type BillingPlanChangeMaxAggregateInputType = {
   cycle?: true
   expiresAt?: true
   submittedAt?: true
+  retryAfterSeconds?: true
+  retryAt?: true
+  retryCount?: true
   completedAt?: true
   failureCode?: true
   createdAt?: true
@@ -154,6 +191,9 @@ export type BillingPlanChangeCountAggregateInputType = {
   preview?: true
   expiresAt?: true
   submittedAt?: true
+  retryAfterSeconds?: true
+  retryAt?: true
+  retryCount?: true
   completedAt?: true
   failureCode?: true
   createdAt?: true
@@ -199,6 +239,18 @@ export type BillingPlanChangeAggregateArgs<ExtArgs extends runtime.Types.Extensi
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: BillingPlanChangeAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: BillingPlanChangeSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: BillingPlanChangeMinAggregateInputType
@@ -229,6 +281,8 @@ export type BillingPlanChangeGroupByArgs<ExtArgs extends runtime.Types.Extension
   take?: number
   skip?: number
   _count?: BillingPlanChangeCountAggregateInputType | true
+  _avg?: BillingPlanChangeAvgAggregateInputType
+  _sum?: BillingPlanChangeSumAggregateInputType
   _min?: BillingPlanChangeMinAggregateInputType
   _max?: BillingPlanChangeMaxAggregateInputType
 }
@@ -250,11 +304,16 @@ export type BillingPlanChangeGroupByOutputType = {
   preview: runtime.JsonValue
   expiresAt: Date
   submittedAt: Date | null
+  retryAfterSeconds: number | null
+  retryAt: Date | null
+  retryCount: number
   completedAt: Date | null
   failureCode: string | null
   createdAt: Date
   updatedAt: Date
   _count: BillingPlanChangeCountAggregateOutputType | null
+  _avg: BillingPlanChangeAvgAggregateOutputType | null
+  _sum: BillingPlanChangeSumAggregateOutputType | null
   _min: BillingPlanChangeMinAggregateOutputType | null
   _max: BillingPlanChangeMaxAggregateOutputType | null
 }
@@ -294,6 +353,9 @@ export type BillingPlanChangeWhereInput = {
   preview?: Prisma.JsonFilter<"BillingPlanChange">
   expiresAt?: Prisma.DateTimeFilter<"BillingPlanChange"> | Date | string
   submittedAt?: Prisma.DateTimeNullableFilter<"BillingPlanChange"> | Date | string | null
+  retryAfterSeconds?: Prisma.IntNullableFilter<"BillingPlanChange"> | number | null
+  retryAt?: Prisma.DateTimeNullableFilter<"BillingPlanChange"> | Date | string | null
+  retryCount?: Prisma.IntFilter<"BillingPlanChange"> | number
   completedAt?: Prisma.DateTimeNullableFilter<"BillingPlanChange"> | Date | string | null
   failureCode?: Prisma.StringNullableFilter<"BillingPlanChange"> | string | null
   createdAt?: Prisma.DateTimeFilter<"BillingPlanChange"> | Date | string
@@ -319,6 +381,9 @@ export type BillingPlanChangeOrderByWithRelationInput = {
   preview?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   submittedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  retryAfterSeconds?: Prisma.SortOrderInput | Prisma.SortOrder
+  retryAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  retryCount?: Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   failureCode?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -347,6 +412,9 @@ export type BillingPlanChangeWhereUniqueInput = Prisma.AtLeast<{
   preview?: Prisma.JsonFilter<"BillingPlanChange">
   expiresAt?: Prisma.DateTimeFilter<"BillingPlanChange"> | Date | string
   submittedAt?: Prisma.DateTimeNullableFilter<"BillingPlanChange"> | Date | string | null
+  retryAfterSeconds?: Prisma.IntNullableFilter<"BillingPlanChange"> | number | null
+  retryAt?: Prisma.DateTimeNullableFilter<"BillingPlanChange"> | Date | string | null
+  retryCount?: Prisma.IntFilter<"BillingPlanChange"> | number
   completedAt?: Prisma.DateTimeNullableFilter<"BillingPlanChange"> | Date | string | null
   failureCode?: Prisma.StringNullableFilter<"BillingPlanChange"> | string | null
   createdAt?: Prisma.DateTimeFilter<"BillingPlanChange"> | Date | string
@@ -372,13 +440,18 @@ export type BillingPlanChangeOrderByWithAggregationInput = {
   preview?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   submittedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  retryAfterSeconds?: Prisma.SortOrderInput | Prisma.SortOrder
+  retryAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  retryCount?: Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   failureCode?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.BillingPlanChangeCountOrderByAggregateInput
+  _avg?: Prisma.BillingPlanChangeAvgOrderByAggregateInput
   _max?: Prisma.BillingPlanChangeMaxOrderByAggregateInput
   _min?: Prisma.BillingPlanChangeMinOrderByAggregateInput
+  _sum?: Prisma.BillingPlanChangeSumOrderByAggregateInput
 }
 
 export type BillingPlanChangeScalarWhereWithAggregatesInput = {
@@ -401,6 +474,9 @@ export type BillingPlanChangeScalarWhereWithAggregatesInput = {
   preview?: Prisma.JsonWithAggregatesFilter<"BillingPlanChange">
   expiresAt?: Prisma.DateTimeWithAggregatesFilter<"BillingPlanChange"> | Date | string
   submittedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"BillingPlanChange"> | Date | string | null
+  retryAfterSeconds?: Prisma.IntNullableWithAggregatesFilter<"BillingPlanChange"> | number | null
+  retryAt?: Prisma.DateTimeNullableWithAggregatesFilter<"BillingPlanChange"> | Date | string | null
+  retryCount?: Prisma.IntWithAggregatesFilter<"BillingPlanChange"> | number
   completedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"BillingPlanChange"> | Date | string | null
   failureCode?: Prisma.StringNullableWithAggregatesFilter<"BillingPlanChange"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"BillingPlanChange"> | Date | string
@@ -422,6 +498,9 @@ export type BillingPlanChangeCreateInput = {
   preview: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt: Date | string
   submittedAt?: Date | string | null
+  retryAfterSeconds?: number | null
+  retryAt?: Date | string | null
+  retryCount?: number
   completedAt?: Date | string | null
   failureCode?: string | null
   createdAt?: Date | string
@@ -447,6 +526,9 @@ export type BillingPlanChangeUncheckedCreateInput = {
   preview: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt: Date | string
   submittedAt?: Date | string | null
+  retryAfterSeconds?: number | null
+  retryAt?: Date | string | null
+  retryCount?: number
   completedAt?: Date | string | null
   failureCode?: string | null
   createdAt?: Date | string
@@ -468,6 +550,9 @@ export type BillingPlanChangeUpdateInput = {
   preview?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryAfterSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  retryAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryCount?: Prisma.IntFieldUpdateOperationsInput | number
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   failureCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -493,6 +578,9 @@ export type BillingPlanChangeUncheckedUpdateInput = {
   preview?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryAfterSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  retryAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryCount?: Prisma.IntFieldUpdateOperationsInput | number
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   failureCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -516,6 +604,9 @@ export type BillingPlanChangeCreateManyInput = {
   preview: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt: Date | string
   submittedAt?: Date | string | null
+  retryAfterSeconds?: number | null
+  retryAt?: Date | string | null
+  retryCount?: number
   completedAt?: Date | string | null
   failureCode?: string | null
   createdAt?: Date | string
@@ -537,6 +628,9 @@ export type BillingPlanChangeUpdateManyMutationInput = {
   preview?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryAfterSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  retryAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryCount?: Prisma.IntFieldUpdateOperationsInput | number
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   failureCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -560,6 +654,9 @@ export type BillingPlanChangeUncheckedUpdateManyInput = {
   preview?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryAfterSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  retryAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryCount?: Prisma.IntFieldUpdateOperationsInput | number
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   failureCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -593,10 +690,18 @@ export type BillingPlanChangeCountOrderByAggregateInput = {
   preview?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   submittedAt?: Prisma.SortOrder
+  retryAfterSeconds?: Prisma.SortOrder
+  retryAt?: Prisma.SortOrder
+  retryCount?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   failureCode?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type BillingPlanChangeAvgOrderByAggregateInput = {
+  retryAfterSeconds?: Prisma.SortOrder
+  retryCount?: Prisma.SortOrder
 }
 
 export type BillingPlanChangeMaxOrderByAggregateInput = {
@@ -615,6 +720,9 @@ export type BillingPlanChangeMaxOrderByAggregateInput = {
   cycle?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   submittedAt?: Prisma.SortOrder
+  retryAfterSeconds?: Prisma.SortOrder
+  retryAt?: Prisma.SortOrder
+  retryCount?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   failureCode?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -637,10 +745,18 @@ export type BillingPlanChangeMinOrderByAggregateInput = {
   cycle?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   submittedAt?: Prisma.SortOrder
+  retryAfterSeconds?: Prisma.SortOrder
+  retryAt?: Prisma.SortOrder
+  retryCount?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   failureCode?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type BillingPlanChangeSumOrderByAggregateInput = {
+  retryAfterSeconds?: Prisma.SortOrder
+  retryCount?: Prisma.SortOrder
 }
 
 export type BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput = {
@@ -731,6 +847,14 @@ export type EnumBillingPlanChangeStatusFieldUpdateOperationsInput = {
   set?: $Enums.BillingPlanChangeStatus
 }
 
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type BillingPlanChangeCreateWithoutRequestedByUserInput = {
   id?: string
   environment: $Enums.PaddleEnvironment
@@ -746,6 +870,9 @@ export type BillingPlanChangeCreateWithoutRequestedByUserInput = {
   preview: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt: Date | string
   submittedAt?: Date | string | null
+  retryAfterSeconds?: number | null
+  retryAt?: Date | string | null
+  retryCount?: number
   completedAt?: Date | string | null
   failureCode?: string | null
   createdAt?: Date | string
@@ -769,6 +896,9 @@ export type BillingPlanChangeUncheckedCreateWithoutRequestedByUserInput = {
   preview: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt: Date | string
   submittedAt?: Date | string | null
+  retryAfterSeconds?: number | null
+  retryAt?: Date | string | null
+  retryCount?: number
   completedAt?: Date | string | null
   failureCode?: string | null
   createdAt?: Date | string
@@ -821,6 +951,9 @@ export type BillingPlanChangeScalarWhereInput = {
   preview?: Prisma.JsonFilter<"BillingPlanChange">
   expiresAt?: Prisma.DateTimeFilter<"BillingPlanChange"> | Date | string
   submittedAt?: Prisma.DateTimeNullableFilter<"BillingPlanChange"> | Date | string | null
+  retryAfterSeconds?: Prisma.IntNullableFilter<"BillingPlanChange"> | number | null
+  retryAt?: Prisma.DateTimeNullableFilter<"BillingPlanChange"> | Date | string | null
+  retryCount?: Prisma.IntFilter<"BillingPlanChange"> | number
   completedAt?: Prisma.DateTimeNullableFilter<"BillingPlanChange"> | Date | string | null
   failureCode?: Prisma.StringNullableFilter<"BillingPlanChange"> | string | null
   createdAt?: Prisma.DateTimeFilter<"BillingPlanChange"> | Date | string
@@ -842,6 +975,9 @@ export type BillingPlanChangeCreateWithoutWorkspaceInput = {
   preview: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt: Date | string
   submittedAt?: Date | string | null
+  retryAfterSeconds?: number | null
+  retryAt?: Date | string | null
+  retryCount?: number
   completedAt?: Date | string | null
   failureCode?: string | null
   createdAt?: Date | string
@@ -865,6 +1001,9 @@ export type BillingPlanChangeUncheckedCreateWithoutWorkspaceInput = {
   preview: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt: Date | string
   submittedAt?: Date | string | null
+  retryAfterSeconds?: number | null
+  retryAt?: Date | string | null
+  retryCount?: number
   completedAt?: Date | string | null
   failureCode?: string | null
   createdAt?: Date | string
@@ -913,6 +1052,9 @@ export type BillingPlanChangeCreateManyRequestedByUserInput = {
   preview: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt: Date | string
   submittedAt?: Date | string | null
+  retryAfterSeconds?: number | null
+  retryAt?: Date | string | null
+  retryCount?: number
   completedAt?: Date | string | null
   failureCode?: string | null
   createdAt?: Date | string
@@ -934,6 +1076,9 @@ export type BillingPlanChangeUpdateWithoutRequestedByUserInput = {
   preview?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryAfterSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  retryAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryCount?: Prisma.IntFieldUpdateOperationsInput | number
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   failureCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -957,6 +1102,9 @@ export type BillingPlanChangeUncheckedUpdateWithoutRequestedByUserInput = {
   preview?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryAfterSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  retryAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryCount?: Prisma.IntFieldUpdateOperationsInput | number
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   failureCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -979,6 +1127,9 @@ export type BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserInput = {
   preview?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryAfterSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  retryAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryCount?: Prisma.IntFieldUpdateOperationsInput | number
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   failureCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1001,6 +1152,9 @@ export type BillingPlanChangeCreateManyWorkspaceInput = {
   preview: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt: Date | string
   submittedAt?: Date | string | null
+  retryAfterSeconds?: number | null
+  retryAt?: Date | string | null
+  retryCount?: number
   completedAt?: Date | string | null
   failureCode?: string | null
   createdAt?: Date | string
@@ -1022,6 +1176,9 @@ export type BillingPlanChangeUpdateWithoutWorkspaceInput = {
   preview?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryAfterSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  retryAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryCount?: Prisma.IntFieldUpdateOperationsInput | number
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   failureCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1045,6 +1202,9 @@ export type BillingPlanChangeUncheckedUpdateWithoutWorkspaceInput = {
   preview?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryAfterSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  retryAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryCount?: Prisma.IntFieldUpdateOperationsInput | number
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   failureCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1067,6 +1227,9 @@ export type BillingPlanChangeUncheckedUpdateManyWithoutWorkspaceInput = {
   preview?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryAfterSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  retryAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  retryCount?: Prisma.IntFieldUpdateOperationsInput | number
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   failureCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1092,6 +1255,9 @@ export type BillingPlanChangeSelect<ExtArgs extends runtime.Types.Extensions.Int
   preview?: boolean
   expiresAt?: boolean
   submittedAt?: boolean
+  retryAfterSeconds?: boolean
+  retryAt?: boolean
+  retryCount?: boolean
   completedAt?: boolean
   failureCode?: boolean
   createdAt?: boolean
@@ -1117,6 +1283,9 @@ export type BillingPlanChangeSelectCreateManyAndReturn<ExtArgs extends runtime.T
   preview?: boolean
   expiresAt?: boolean
   submittedAt?: boolean
+  retryAfterSeconds?: boolean
+  retryAt?: boolean
+  retryCount?: boolean
   completedAt?: boolean
   failureCode?: boolean
   createdAt?: boolean
@@ -1142,6 +1311,9 @@ export type BillingPlanChangeSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   preview?: boolean
   expiresAt?: boolean
   submittedAt?: boolean
+  retryAfterSeconds?: boolean
+  retryAt?: boolean
+  retryCount?: boolean
   completedAt?: boolean
   failureCode?: boolean
   createdAt?: boolean
@@ -1167,13 +1339,16 @@ export type BillingPlanChangeSelectScalar = {
   preview?: boolean
   expiresAt?: boolean
   submittedAt?: boolean
+  retryAfterSeconds?: boolean
+  retryAt?: boolean
+  retryCount?: boolean
   completedAt?: boolean
   failureCode?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type BillingPlanChangeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "workspaceId" | "requestedByUserId" | "environment" | "status" | "paddleSubscriptionId" | "paddleCustomerId" | "sourcePriceId" | "sourceUpdatedAt" | "sourceFingerprint" | "targetPriceId" | "plan" | "cycle" | "preview" | "expiresAt" | "submittedAt" | "completedAt" | "failureCode" | "createdAt" | "updatedAt", ExtArgs["result"]["billingPlanChange"]>
+export type BillingPlanChangeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "workspaceId" | "requestedByUserId" | "environment" | "status" | "paddleSubscriptionId" | "paddleCustomerId" | "sourcePriceId" | "sourceUpdatedAt" | "sourceFingerprint" | "targetPriceId" | "plan" | "cycle" | "preview" | "expiresAt" | "submittedAt" | "retryAfterSeconds" | "retryAt" | "retryCount" | "completedAt" | "failureCode" | "createdAt" | "updatedAt", ExtArgs["result"]["billingPlanChange"]>
 export type BillingPlanChangeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
   requestedByUser?: boolean | Prisma.BillingPlanChange$requestedByUserArgs<ExtArgs>
@@ -1210,6 +1385,9 @@ export type $BillingPlanChangePayload<ExtArgs extends runtime.Types.Extensions.I
     preview: runtime.JsonValue
     expiresAt: Date
     submittedAt: Date | null
+    retryAfterSeconds: number | null
+    retryAt: Date | null
+    retryCount: number
     completedAt: Date | null
     failureCode: string | null
     createdAt: Date
@@ -1655,6 +1833,9 @@ export interface BillingPlanChangeFieldRefs {
   readonly preview: Prisma.FieldRef<"BillingPlanChange", 'Json'>
   readonly expiresAt: Prisma.FieldRef<"BillingPlanChange", 'DateTime'>
   readonly submittedAt: Prisma.FieldRef<"BillingPlanChange", 'DateTime'>
+  readonly retryAfterSeconds: Prisma.FieldRef<"BillingPlanChange", 'Int'>
+  readonly retryAt: Prisma.FieldRef<"BillingPlanChange", 'DateTime'>
+  readonly retryCount: Prisma.FieldRef<"BillingPlanChange", 'Int'>
   readonly completedAt: Prisma.FieldRef<"BillingPlanChange", 'DateTime'>
   readonly failureCode: Prisma.FieldRef<"BillingPlanChange", 'String'>
   readonly createdAt: Prisma.FieldRef<"BillingPlanChange", 'DateTime'>

@@ -58,7 +58,6 @@ export default async function CheckoutPage({
     <BillingCheckout
       key={`${workspace.id}:${plan.id}:${billingCycle}`}
       workspaceId={workspace.id}
-      workspaceName={workspace.name}
       customerEmail={currentUser.user.email}
       plan={plan}
       billingCycle={billingCycle}

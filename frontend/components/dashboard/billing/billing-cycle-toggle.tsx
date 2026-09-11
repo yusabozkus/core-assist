@@ -6,9 +6,11 @@ import type { BillingCycle } from "@/types/billing"
 export function BillingCycleToggle({
   value,
   onChange,
+  annualDiscount,
 }: {
   value: BillingCycle
   onChange: (cycle: BillingCycle) => void
+  annualDiscount?: number | null
 }) {
   return (
     <div
@@ -37,11 +39,14 @@ export function BillingCycleToggle({
           )}
         >
           {cycle === "monthly" ? "Aylık" : "Yıllık"}
-          {cycle === "annual" && (
+          {cycle === "annual" && annualDiscount ? (
             <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-              −%10
+              −%
+              {annualDiscount.toLocaleString("tr-TR", {
+                maximumFractionDigits: 1,
+              })}
             </span>
-          )}
+          ) : null}
         </button>
       ))}
     </div>

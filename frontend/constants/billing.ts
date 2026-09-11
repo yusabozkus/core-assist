@@ -1,7 +1,5 @@
 import type { SubscriptionPlan } from "@/types/billing"
 
-export const ANNUAL_DISCOUNT_RATE = 0.1
-
 export const BILLING_TRIAL = {
   days: 10,
   questions: 100,
@@ -17,7 +15,6 @@ export const SUBSCRIPTION_PLANS: readonly SubscriptionPlan[] = [
     name: "Starter",
     description:
       "Tek mağazayla başlayın, günlük sorulara daha hızlı yanıt verin.",
-    monthlyPrice: 2300,
     questions: 1500,
     stores: 1,
     members: 1,
@@ -35,7 +32,6 @@ export const SUBSCRIPTION_PLANS: readonly SubscriptionPlan[] = [
     name: "Growth",
     description:
       "Büyüyen kataloğunuzu ve birden fazla mağazanızı birlikte yönetin.",
-    monthlyPrice: 6000,
     questions: 5000,
     stores: 5,
     members: 3,
@@ -53,7 +49,6 @@ export const SUBSCRIPTION_PLANS: readonly SubscriptionPlan[] = [
     id: "business",
     name: "Business",
     description: "Yoğun soru trafiğine ve geniş operasyonlara yer açın.",
-    monthlyPrice: 10000,
     questions: 15000,
     stores: 15,
     members: 10,

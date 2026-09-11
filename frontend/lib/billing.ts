@@ -1,13 +1,5 @@
 import { formatCurrency } from "@/lib/format-currency"
-import { ANNUAL_DISCOUNT_RATE } from "@/constants/billing"
-import type {
-  BillingCycle,
-  InvoiceRecord,
-  SubscriptionPlan,
-} from "@/types/billing"
-
-export const formatPlanPrice = (amount: number) =>
-  formatCurrency(amount, "TRY", { maximumFractionDigits: 0 })
+import type { InvoiceRecord } from "@/types/billing"
 
 export const formatBillingAmount = (amount: number, currency = "TRY") =>
   formatCurrency(amount, currency, {
@@ -45,15 +37,4 @@ export function getInvoiceDescription(invoice: InvoiceRecord) {
   return [getBillingPlanName(invoice.plan), getBillingCycleName(invoice.cycle)]
     .filter(Boolean)
     .join(" · ")
-}
-
-export function getPlanPrice(plan: SubscriptionPlan, cycle: BillingCycle) {
-  const monthly =
-    plan.monthlyPrice *
-    (cycle === "annual" ? 1 - ANNUAL_DISCOUNT_RATE : 1)
-  return {
-    monthly: formatPlanPrice(monthly),
-    total: formatPlanPrice(cycle === "annual" ? monthly * 12 : monthly),
-    saving: formatPlanPrice(plan.monthlyPrice * 12 * ANNUAL_DISCOUNT_RATE),
-  }
 }

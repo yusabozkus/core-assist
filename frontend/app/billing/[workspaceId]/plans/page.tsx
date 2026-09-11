@@ -16,7 +16,6 @@ export default async function PlansPage({
     <PlansClient
       key={workspace.id}
       workspaceId={workspace.id}
-      workspaceName={workspace.name}
       initialBillingSummary={billing}
     />
   )

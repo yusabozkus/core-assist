@@ -1,20 +1,43 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '../../generated/prisma/client';
 import { WorkspaceRole } from '../../generated/prisma/enums';
-import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
 export class WorkspacesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: string, createWorkspaceDto: CreateWorkspaceDto) {
-    return this.prisma.workspace.create({
+  getOrCreateOwnedWorkspace(userId: string, name?: string) {
+    return this.prisma.$transaction((transaction) =>
+      this.getOrCreateOwnedWorkspaceInTransaction(transaction, userId, name),
+    );
+  }
+
+  async getOrCreateOwnedWorkspaceInTransaction(
+    transaction: Prisma.TransactionClient,
+    userId: string,
+    name?: string,
+  ) {
+    // All creation paths use this lock, including onboarding and billing.
+    // Keep it until the caller commits any dependent store/setup changes.
+    const [owner] = await transaction.$queryRaw<
+      Array<{ id: string; name: string }>
+    >`SELECT "id", "name" FROM "user" WHERE "id" = ${userId} FOR UPDATE`;
+    if (!owner) throw new NotFoundException('Kullanıcı bulunamadı.');
+
+    const existing = await transaction.workspace.findUnique({
+      where: { ownerId: userId },
+    });
+    if (existing) return existing;
+
+    // Provisioning an internal workspace never resets billing or onboarding.
+    return transaction.workspace.create({
       data: {
-        name: createWorkspaceDto.name,
+        name: (name?.trim() || owner.name.trim() || 'CoreAssist').slice(0, 80),
         ownerId: userId,
         members: {
           create: {
-            userId: userId,
+            userId,
             role: WorkspaceRole.OWNER,
           },
         },

@@ -11,16 +11,13 @@ import { CancelSubscriptionDialog } from "@/components/dashboard/billing/cancel-
 import { SubscriptionUsage } from "@/components/dashboard/billing/subscription-usage"
 import { PendingPlanChange } from "@/components/dashboard/billing/pending-plan-change"
 import { BillingRecoveryNotice } from "@/components/dashboard/billing/billing-recovery-notice"
+import { PaddlePlanPrice } from "@/components/dashboard/billing/paddle-plan-price"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { SUBSCRIPTION_PLANS } from "@/constants/billing"
 import { billingRoutes } from "@/lib/billing-routes"
 
-import {
-  formatBillingDate,
-  formatBillingPeriod,
-  getPlanPrice,
-} from "@/lib/billing"
+import { formatBillingDate, formatBillingPeriod } from "@/lib/billing"
 import type {
   BillingCycle,
   BillingHistory,
@@ -54,7 +51,6 @@ export function BillingOverview({
       (candidate) => candidate.id === summary.subscription.plan.toLowerCase()
     ) ?? SUBSCRIPTION_PLANS[0]
   const cycle = summary.subscription.cycle.toLowerCase() as BillingCycle
-  const price = getPlanPrice(plan, cycle)
   const cancellationScheduled = summary.subscription.cancelAtPeriodEnd
   const status = cancellationScheduled
     ? ({ label: "Dönem sonunda sona erecek", variant: "warning" } as const)
@@ -145,7 +141,15 @@ export function BillingOverview({
                 {isTrial ? "CoreAssist Deneme" : plan.name}
               </h2>
               <p className="text-2xl font-medium tracking-tight tabular-nums">
-                {isTrial ? "Ücretsiz" : price.monthly}{" "}
+                {isTrial ? (
+                  "Ücretsiz"
+                ) : (
+                  <PaddlePlanPrice
+                    planId={plan.id}
+                    cycle={cycle}
+                    value="monthly"
+                  />
+                )}{" "}
                 {!isTrial ? (
                   <span className="text-sm font-normal text-muted-foreground">
                     / ay
@@ -204,7 +208,11 @@ export function BillingOverview({
                 <div className="flex justify-between gap-3">
                   <dt className="text-muted-foreground">Dönem ücreti</dt>
                   <dd className="font-medium tabular-nums">
-                    {cycle === "annual" ? price.total : price.monthly}
+                    <PaddlePlanPrice
+                      planId={plan.id}
+                      cycle={cycle}
+                      value={cycle === "annual" ? "total" : "monthly"}
+                    />
                   </dd>
                 </div>
               ) : null}

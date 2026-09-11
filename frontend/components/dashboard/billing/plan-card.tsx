@@ -8,30 +8,33 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { Button } from "@/components/ui/button"
-import { BILLING_TRIAL } from "@/constants/billing"
-import { getPlanPrice } from "@/lib/billing"
 import { cn } from "@/lib/utils"
-import type { BillingCycle, SubscriptionPlan } from "@/types/billing"
+import type {
+  BillingCycle,
+  BillingPlanPrice,
+  SubscriptionPlan,
+} from "@/types/billing"
 
 export function PlanCard({
   plan,
   billingCycle,
+  price,
+  priceLoading,
   checkoutHref,
   current = false,
   onSelect,
   disabled = false,
-  managed = false,
 }: {
   plan: SubscriptionPlan
   billingCycle: BillingCycle
+  price: BillingPlanPrice | null
+  priceLoading: boolean
   checkoutHref: string
   current?: boolean
   onSelect?: () => void
   disabled?: boolean
-  managed?: boolean
 }) {
   const reducedMotion = useReducedMotion()
-  const price = getPlanPrice(plan, billingCycle)
   const limits = [
     { label: "Mağaza", value: plan.stores.toLocaleString("tr-TR") },
     {
@@ -80,21 +83,23 @@ export function PlanCard({
             aria-live="polite"
             aria-atomic="true"
           >
-            <span className="sr-only">{price.monthly} / ay</span>
+            <span className="sr-only">
+              {price ? `${price.monthly} / ay` : "Fiyat yükleniyor"}
+            </span>
             <span
               aria-hidden="true"
               className="relative inline-grid overflow-hidden py-1 text-4xl font-semibold tracking-[-0.055em] tabular-nums"
             >
               <AnimatePresence initial={false} mode="popLayout">
                 <motion.span
-                  key={billingCycle}
+                  key={`${billingCycle}:${price?.priceId ?? "unavailable"}`}
                   className="[grid-area:1/1]"
                   initial={{ y: reducedMotion ? 0 : -25, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: reducedMotion ? 0 : 25, opacity: 0 }}
                   transition={{ duration: reducedMotion ? 0 : 0.22 }}
                 >
-                  {price.monthly}
+                  {price?.monthly ?? "—"}
                 </motion.span>
               </AnimatePresence>
             </span>
@@ -103,9 +108,13 @@ export function PlanCard({
             </span>
           </p>
           <p className="mt-2 min-h-10 text-xs leading-5 text-muted-foreground">
-            {billingCycle === "annual"
-              ? `Yıllık ${price.total} olarak ödenir. ${price.saving} tasarruf edin.`
-              : "Aylık faturalandırılır. Vergiler ödeme adresine göre hesaplanır."}
+            {priceLoading
+              ? "Paddle üzerinden güncel fiyat hesaplanıyor…"
+              : !price
+                ? "Güncel fiyat şu anda alınamıyor."
+                : billingCycle === "annual"
+                  ? `Yıllık ${price.total} olarak ödenir.${price.saving ? ` ${price.saving} tasarruf edin.` : ""}`
+                  : "Aylık faturalandırılır. Konumunuza göre hesaplanan tahmini vergiler dahildir."}
           </p>
         </div>
         {current ? (
@@ -118,7 +127,7 @@ export function PlanCard({
             Mevcut planınız
             <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-4" />
           </Button>
-        ) : onSelect || disabled ? (
+        ) : onSelect ? (
           <Button
             type="button"
             onClick={onSelect}
@@ -127,6 +136,16 @@ export function PlanCard({
             className="mt-5 w-full justify-between shadow-none"
           >
             Değişikliği incele
+            <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" />
+          </Button>
+        ) : disabled ? (
+          <Button
+            type="button"
+            disabled
+            variant={plan.highlighted ? "default" : "outline"}
+            className="mt-5 w-full justify-between shadow-none"
+          >
+            Planı seç
             <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" />
           </Button>
         ) : (
@@ -141,11 +160,6 @@ export function PlanCard({
             </Link>
           </Button>
         )}
-        {!managed ? (
-          <p className="mt-3 text-center text-[11px] text-muted-foreground">
-            Kart gerektirmeden {BILLING_TRIAL.days} gün ücretsiz deneme
-          </p>
-        ) : null}
         <div className="mt-6 border-y border-border py-4">
           <p className="text-2xl font-semibold tracking-tight tabular-nums">
             {plan.questions.toLocaleString("tr-TR")}{" "}

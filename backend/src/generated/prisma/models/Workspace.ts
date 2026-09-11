@@ -210,11 +210,11 @@ export type WorkspaceOrderByWithRelationInput = {
 
 export type WorkspaceWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  ownerId?: string
   AND?: Prisma.WorkspaceWhereInput | Prisma.WorkspaceWhereInput[]
   OR?: Prisma.WorkspaceWhereInput[]
   NOT?: Prisma.WorkspaceWhereInput | Prisma.WorkspaceWhereInput[]
   name?: Prisma.StringFilter<"Workspace"> | string
-  ownerId?: Prisma.StringFilter<"Workspace"> | string
   createdAt?: Prisma.DateTimeFilter<"Workspace"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Workspace"> | Date | string
   owner?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -225,7 +225,7 @@ export type WorkspaceWhereUniqueInput = Prisma.AtLeast<{
   billingUsageEvents?: Prisma.BillingUsageEventListRelationFilter
   billingCheckouts?: Prisma.BillingCheckoutListRelationFilter
   billingPlanChanges?: Prisma.BillingPlanChangeListRelationFilter
-}, "id">
+}, "id" | "ownerId">
 
 export type WorkspaceOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -254,7 +254,7 @@ export type WorkspaceCreateInput = {
   name: string
   createdAt?: Date | string
   updatedAt?: Date | string
-  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspacesInput
+  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspaceInput
   members?: Prisma.WorkspaceMemberCreateNestedManyWithoutWorkspaceInput
   stores?: Prisma.StoreCreateNestedManyWithoutWorkspaceInput
   billingSubscription?: Prisma.BillingSubscriptionCreateNestedOneWithoutWorkspaceInput
@@ -284,7 +284,7 @@ export type WorkspaceUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspaceNestedInput
   members?: Prisma.WorkspaceMemberUpdateManyWithoutWorkspaceNestedInput
   stores?: Prisma.StoreUpdateManyWithoutWorkspaceNestedInput
   billingSubscription?: Prisma.BillingSubscriptionUpdateOneWithoutWorkspaceNestedInput
@@ -332,14 +332,9 @@ export type WorkspaceUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type WorkspaceListRelationFilter = {
-  every?: Prisma.WorkspaceWhereInput
-  some?: Prisma.WorkspaceWhereInput
-  none?: Prisma.WorkspaceWhereInput
-}
-
-export type WorkspaceOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
+export type WorkspaceNullableScalarRelationFilter = {
+  is?: Prisma.WorkspaceWhereInput | null
+  isNot?: Prisma.WorkspaceWhereInput | null
 }
 
 export type WorkspaceCountOrderByAggregateInput = {
@@ -371,46 +366,36 @@ export type WorkspaceScalarRelationFilter = {
   isNot?: Prisma.WorkspaceWhereInput
 }
 
-export type WorkspaceCreateNestedManyWithoutOwnerInput = {
-  create?: Prisma.XOR<Prisma.WorkspaceCreateWithoutOwnerInput, Prisma.WorkspaceUncheckedCreateWithoutOwnerInput> | Prisma.WorkspaceCreateWithoutOwnerInput[] | Prisma.WorkspaceUncheckedCreateWithoutOwnerInput[]
-  connectOrCreate?: Prisma.WorkspaceCreateOrConnectWithoutOwnerInput | Prisma.WorkspaceCreateOrConnectWithoutOwnerInput[]
-  createMany?: Prisma.WorkspaceCreateManyOwnerInputEnvelope
-  connect?: Prisma.WorkspaceWhereUniqueInput | Prisma.WorkspaceWhereUniqueInput[]
+export type WorkspaceCreateNestedOneWithoutOwnerInput = {
+  create?: Prisma.XOR<Prisma.WorkspaceCreateWithoutOwnerInput, Prisma.WorkspaceUncheckedCreateWithoutOwnerInput>
+  connectOrCreate?: Prisma.WorkspaceCreateOrConnectWithoutOwnerInput
+  connect?: Prisma.WorkspaceWhereUniqueInput
 }
 
-export type WorkspaceUncheckedCreateNestedManyWithoutOwnerInput = {
-  create?: Prisma.XOR<Prisma.WorkspaceCreateWithoutOwnerInput, Prisma.WorkspaceUncheckedCreateWithoutOwnerInput> | Prisma.WorkspaceCreateWithoutOwnerInput[] | Prisma.WorkspaceUncheckedCreateWithoutOwnerInput[]
-  connectOrCreate?: Prisma.WorkspaceCreateOrConnectWithoutOwnerInput | Prisma.WorkspaceCreateOrConnectWithoutOwnerInput[]
-  createMany?: Prisma.WorkspaceCreateManyOwnerInputEnvelope
-  connect?: Prisma.WorkspaceWhereUniqueInput | Prisma.WorkspaceWhereUniqueInput[]
+export type WorkspaceUncheckedCreateNestedOneWithoutOwnerInput = {
+  create?: Prisma.XOR<Prisma.WorkspaceCreateWithoutOwnerInput, Prisma.WorkspaceUncheckedCreateWithoutOwnerInput>
+  connectOrCreate?: Prisma.WorkspaceCreateOrConnectWithoutOwnerInput
+  connect?: Prisma.WorkspaceWhereUniqueInput
 }
 
-export type WorkspaceUpdateManyWithoutOwnerNestedInput = {
-  create?: Prisma.XOR<Prisma.WorkspaceCreateWithoutOwnerInput, Prisma.WorkspaceUncheckedCreateWithoutOwnerInput> | Prisma.WorkspaceCreateWithoutOwnerInput[] | Prisma.WorkspaceUncheckedCreateWithoutOwnerInput[]
-  connectOrCreate?: Prisma.WorkspaceCreateOrConnectWithoutOwnerInput | Prisma.WorkspaceCreateOrConnectWithoutOwnerInput[]
-  upsert?: Prisma.WorkspaceUpsertWithWhereUniqueWithoutOwnerInput | Prisma.WorkspaceUpsertWithWhereUniqueWithoutOwnerInput[]
-  createMany?: Prisma.WorkspaceCreateManyOwnerInputEnvelope
-  set?: Prisma.WorkspaceWhereUniqueInput | Prisma.WorkspaceWhereUniqueInput[]
-  disconnect?: Prisma.WorkspaceWhereUniqueInput | Prisma.WorkspaceWhereUniqueInput[]
-  delete?: Prisma.WorkspaceWhereUniqueInput | Prisma.WorkspaceWhereUniqueInput[]
-  connect?: Prisma.WorkspaceWhereUniqueInput | Prisma.WorkspaceWhereUniqueInput[]
-  update?: Prisma.WorkspaceUpdateWithWhereUniqueWithoutOwnerInput | Prisma.WorkspaceUpdateWithWhereUniqueWithoutOwnerInput[]
-  updateMany?: Prisma.WorkspaceUpdateManyWithWhereWithoutOwnerInput | Prisma.WorkspaceUpdateManyWithWhereWithoutOwnerInput[]
-  deleteMany?: Prisma.WorkspaceScalarWhereInput | Prisma.WorkspaceScalarWhereInput[]
+export type WorkspaceUpdateOneWithoutOwnerNestedInput = {
+  create?: Prisma.XOR<Prisma.WorkspaceCreateWithoutOwnerInput, Prisma.WorkspaceUncheckedCreateWithoutOwnerInput>
+  connectOrCreate?: Prisma.WorkspaceCreateOrConnectWithoutOwnerInput
+  upsert?: Prisma.WorkspaceUpsertWithoutOwnerInput
+  disconnect?: Prisma.WorkspaceWhereInput | boolean
+  delete?: Prisma.WorkspaceWhereInput | boolean
+  connect?: Prisma.WorkspaceWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.WorkspaceUpdateToOneWithWhereWithoutOwnerInput, Prisma.WorkspaceUpdateWithoutOwnerInput>, Prisma.WorkspaceUncheckedUpdateWithoutOwnerInput>
 }
 
-export type WorkspaceUncheckedUpdateManyWithoutOwnerNestedInput = {
-  create?: Prisma.XOR<Prisma.WorkspaceCreateWithoutOwnerInput, Prisma.WorkspaceUncheckedCreateWithoutOwnerInput> | Prisma.WorkspaceCreateWithoutOwnerInput[] | Prisma.WorkspaceUncheckedCreateWithoutOwnerInput[]
-  connectOrCreate?: Prisma.WorkspaceCreateOrConnectWithoutOwnerInput | Prisma.WorkspaceCreateOrConnectWithoutOwnerInput[]
-  upsert?: Prisma.WorkspaceUpsertWithWhereUniqueWithoutOwnerInput | Prisma.WorkspaceUpsertWithWhereUniqueWithoutOwnerInput[]
-  createMany?: Prisma.WorkspaceCreateManyOwnerInputEnvelope
-  set?: Prisma.WorkspaceWhereUniqueInput | Prisma.WorkspaceWhereUniqueInput[]
-  disconnect?: Prisma.WorkspaceWhereUniqueInput | Prisma.WorkspaceWhereUniqueInput[]
-  delete?: Prisma.WorkspaceWhereUniqueInput | Prisma.WorkspaceWhereUniqueInput[]
-  connect?: Prisma.WorkspaceWhereUniqueInput | Prisma.WorkspaceWhereUniqueInput[]
-  update?: Prisma.WorkspaceUpdateWithWhereUniqueWithoutOwnerInput | Prisma.WorkspaceUpdateWithWhereUniqueWithoutOwnerInput[]
-  updateMany?: Prisma.WorkspaceUpdateManyWithWhereWithoutOwnerInput | Prisma.WorkspaceUpdateManyWithWhereWithoutOwnerInput[]
-  deleteMany?: Prisma.WorkspaceScalarWhereInput | Prisma.WorkspaceScalarWhereInput[]
+export type WorkspaceUncheckedUpdateOneWithoutOwnerNestedInput = {
+  create?: Prisma.XOR<Prisma.WorkspaceCreateWithoutOwnerInput, Prisma.WorkspaceUncheckedCreateWithoutOwnerInput>
+  connectOrCreate?: Prisma.WorkspaceCreateOrConnectWithoutOwnerInput
+  upsert?: Prisma.WorkspaceUpsertWithoutOwnerInput
+  disconnect?: Prisma.WorkspaceWhereInput | boolean
+  delete?: Prisma.WorkspaceWhereInput | boolean
+  connect?: Prisma.WorkspaceWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.WorkspaceUpdateToOneWithWhereWithoutOwnerInput, Prisma.WorkspaceUpdateWithoutOwnerInput>, Prisma.WorkspaceUncheckedUpdateWithoutOwnerInput>
 }
 
 export type WorkspaceCreateNestedOneWithoutMembersInput = {
@@ -544,36 +529,43 @@ export type WorkspaceCreateOrConnectWithoutOwnerInput = {
   create: Prisma.XOR<Prisma.WorkspaceCreateWithoutOwnerInput, Prisma.WorkspaceUncheckedCreateWithoutOwnerInput>
 }
 
-export type WorkspaceCreateManyOwnerInputEnvelope = {
-  data: Prisma.WorkspaceCreateManyOwnerInput | Prisma.WorkspaceCreateManyOwnerInput[]
-  skipDuplicates?: boolean
-}
-
-export type WorkspaceUpsertWithWhereUniqueWithoutOwnerInput = {
-  where: Prisma.WorkspaceWhereUniqueInput
+export type WorkspaceUpsertWithoutOwnerInput = {
   update: Prisma.XOR<Prisma.WorkspaceUpdateWithoutOwnerInput, Prisma.WorkspaceUncheckedUpdateWithoutOwnerInput>
   create: Prisma.XOR<Prisma.WorkspaceCreateWithoutOwnerInput, Prisma.WorkspaceUncheckedCreateWithoutOwnerInput>
+  where?: Prisma.WorkspaceWhereInput
 }
 
-export type WorkspaceUpdateWithWhereUniqueWithoutOwnerInput = {
-  where: Prisma.WorkspaceWhereUniqueInput
+export type WorkspaceUpdateToOneWithWhereWithoutOwnerInput = {
+  where?: Prisma.WorkspaceWhereInput
   data: Prisma.XOR<Prisma.WorkspaceUpdateWithoutOwnerInput, Prisma.WorkspaceUncheckedUpdateWithoutOwnerInput>
 }
 
-export type WorkspaceUpdateManyWithWhereWithoutOwnerInput = {
-  where: Prisma.WorkspaceScalarWhereInput
-  data: Prisma.XOR<Prisma.WorkspaceUpdateManyMutationInput, Prisma.WorkspaceUncheckedUpdateManyWithoutOwnerInput>
+export type WorkspaceUpdateWithoutOwnerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.WorkspaceMemberUpdateManyWithoutWorkspaceNestedInput
+  stores?: Prisma.StoreUpdateManyWithoutWorkspaceNestedInput
+  billingSubscription?: Prisma.BillingSubscriptionUpdateOneWithoutWorkspaceNestedInput
+  billingUsagePeriods?: Prisma.BillingUsagePeriodUpdateManyWithoutWorkspaceNestedInput
+  billingUsageEvents?: Prisma.BillingUsageEventUpdateManyWithoutWorkspaceNestedInput
+  billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutWorkspaceNestedInput
+  billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutWorkspaceNestedInput
 }
 
-export type WorkspaceScalarWhereInput = {
-  AND?: Prisma.WorkspaceScalarWhereInput | Prisma.WorkspaceScalarWhereInput[]
-  OR?: Prisma.WorkspaceScalarWhereInput[]
-  NOT?: Prisma.WorkspaceScalarWhereInput | Prisma.WorkspaceScalarWhereInput[]
-  id?: Prisma.StringFilter<"Workspace"> | string
-  name?: Prisma.StringFilter<"Workspace"> | string
-  ownerId?: Prisma.StringFilter<"Workspace"> | string
-  createdAt?: Prisma.DateTimeFilter<"Workspace"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"Workspace"> | Date | string
+export type WorkspaceUncheckedUpdateWithoutOwnerInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutWorkspaceNestedInput
+  stores?: Prisma.StoreUncheckedUpdateManyWithoutWorkspaceNestedInput
+  billingSubscription?: Prisma.BillingSubscriptionUncheckedUpdateOneWithoutWorkspaceNestedInput
+  billingUsagePeriods?: Prisma.BillingUsagePeriodUncheckedUpdateManyWithoutWorkspaceNestedInput
+  billingUsageEvents?: Prisma.BillingUsageEventUncheckedUpdateManyWithoutWorkspaceNestedInput
+  billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutWorkspaceNestedInput
+  billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceCreateWithoutMembersInput = {
@@ -581,7 +573,7 @@ export type WorkspaceCreateWithoutMembersInput = {
   name: string
   createdAt?: Date | string
   updatedAt?: Date | string
-  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspacesInput
+  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspaceInput
   stores?: Prisma.StoreCreateNestedManyWithoutWorkspaceInput
   billingSubscription?: Prisma.BillingSubscriptionCreateNestedOneWithoutWorkspaceInput
   billingUsagePeriods?: Prisma.BillingUsagePeriodCreateNestedManyWithoutWorkspaceInput
@@ -625,7 +617,7 @@ export type WorkspaceUpdateWithoutMembersInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspaceNestedInput
   stores?: Prisma.StoreUpdateManyWithoutWorkspaceNestedInput
   billingSubscription?: Prisma.BillingSubscriptionUpdateOneWithoutWorkspaceNestedInput
   billingUsagePeriods?: Prisma.BillingUsagePeriodUpdateManyWithoutWorkspaceNestedInput
@@ -653,7 +645,7 @@ export type WorkspaceCreateWithoutBillingSubscriptionInput = {
   name: string
   createdAt?: Date | string
   updatedAt?: Date | string
-  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspacesInput
+  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspaceInput
   members?: Prisma.WorkspaceMemberCreateNestedManyWithoutWorkspaceInput
   stores?: Prisma.StoreCreateNestedManyWithoutWorkspaceInput
   billingUsagePeriods?: Prisma.BillingUsagePeriodCreateNestedManyWithoutWorkspaceInput
@@ -697,7 +689,7 @@ export type WorkspaceUpdateWithoutBillingSubscriptionInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspaceNestedInput
   members?: Prisma.WorkspaceMemberUpdateManyWithoutWorkspaceNestedInput
   stores?: Prisma.StoreUpdateManyWithoutWorkspaceNestedInput
   billingUsagePeriods?: Prisma.BillingUsagePeriodUpdateManyWithoutWorkspaceNestedInput
@@ -725,7 +717,7 @@ export type WorkspaceCreateWithoutBillingCheckoutsInput = {
   name: string
   createdAt?: Date | string
   updatedAt?: Date | string
-  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspacesInput
+  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspaceInput
   members?: Prisma.WorkspaceMemberCreateNestedManyWithoutWorkspaceInput
   stores?: Prisma.StoreCreateNestedManyWithoutWorkspaceInput
   billingSubscription?: Prisma.BillingSubscriptionCreateNestedOneWithoutWorkspaceInput
@@ -769,7 +761,7 @@ export type WorkspaceUpdateWithoutBillingCheckoutsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspaceNestedInput
   members?: Prisma.WorkspaceMemberUpdateManyWithoutWorkspaceNestedInput
   stores?: Prisma.StoreUpdateManyWithoutWorkspaceNestedInput
   billingSubscription?: Prisma.BillingSubscriptionUpdateOneWithoutWorkspaceNestedInput
@@ -797,7 +789,7 @@ export type WorkspaceCreateWithoutBillingPlanChangesInput = {
   name: string
   createdAt?: Date | string
   updatedAt?: Date | string
-  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspacesInput
+  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspaceInput
   members?: Prisma.WorkspaceMemberCreateNestedManyWithoutWorkspaceInput
   stores?: Prisma.StoreCreateNestedManyWithoutWorkspaceInput
   billingSubscription?: Prisma.BillingSubscriptionCreateNestedOneWithoutWorkspaceInput
@@ -841,7 +833,7 @@ export type WorkspaceUpdateWithoutBillingPlanChangesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspaceNestedInput
   members?: Prisma.WorkspaceMemberUpdateManyWithoutWorkspaceNestedInput
   stores?: Prisma.StoreUpdateManyWithoutWorkspaceNestedInput
   billingSubscription?: Prisma.BillingSubscriptionUpdateOneWithoutWorkspaceNestedInput
@@ -869,7 +861,7 @@ export type WorkspaceCreateWithoutBillingUsagePeriodsInput = {
   name: string
   createdAt?: Date | string
   updatedAt?: Date | string
-  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspacesInput
+  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspaceInput
   members?: Prisma.WorkspaceMemberCreateNestedManyWithoutWorkspaceInput
   stores?: Prisma.StoreCreateNestedManyWithoutWorkspaceInput
   billingSubscription?: Prisma.BillingSubscriptionCreateNestedOneWithoutWorkspaceInput
@@ -913,7 +905,7 @@ export type WorkspaceUpdateWithoutBillingUsagePeriodsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspaceNestedInput
   members?: Prisma.WorkspaceMemberUpdateManyWithoutWorkspaceNestedInput
   stores?: Prisma.StoreUpdateManyWithoutWorkspaceNestedInput
   billingSubscription?: Prisma.BillingSubscriptionUpdateOneWithoutWorkspaceNestedInput
@@ -941,7 +933,7 @@ export type WorkspaceCreateWithoutBillingUsageEventsInput = {
   name: string
   createdAt?: Date | string
   updatedAt?: Date | string
-  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspacesInput
+  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspaceInput
   members?: Prisma.WorkspaceMemberCreateNestedManyWithoutWorkspaceInput
   stores?: Prisma.StoreCreateNestedManyWithoutWorkspaceInput
   billingSubscription?: Prisma.BillingSubscriptionCreateNestedOneWithoutWorkspaceInput
@@ -985,7 +977,7 @@ export type WorkspaceUpdateWithoutBillingUsageEventsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspaceNestedInput
   members?: Prisma.WorkspaceMemberUpdateManyWithoutWorkspaceNestedInput
   stores?: Prisma.StoreUpdateManyWithoutWorkspaceNestedInput
   billingSubscription?: Prisma.BillingSubscriptionUpdateOneWithoutWorkspaceNestedInput
@@ -1013,7 +1005,7 @@ export type WorkspaceCreateWithoutStoresInput = {
   name: string
   createdAt?: Date | string
   updatedAt?: Date | string
-  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspacesInput
+  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspaceInput
   members?: Prisma.WorkspaceMemberCreateNestedManyWithoutWorkspaceInput
   billingSubscription?: Prisma.BillingSubscriptionCreateNestedOneWithoutWorkspaceInput
   billingUsagePeriods?: Prisma.BillingUsagePeriodCreateNestedManyWithoutWorkspaceInput
@@ -1057,7 +1049,7 @@ export type WorkspaceUpdateWithoutStoresInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspacesNestedInput
+  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspaceNestedInput
   members?: Prisma.WorkspaceMemberUpdateManyWithoutWorkspaceNestedInput
   billingSubscription?: Prisma.BillingSubscriptionUpdateOneWithoutWorkspaceNestedInput
   billingUsagePeriods?: Prisma.BillingUsagePeriodUpdateManyWithoutWorkspaceNestedInput
@@ -1078,48 +1070,6 @@ export type WorkspaceUncheckedUpdateWithoutStoresInput = {
   billingUsageEvents?: Prisma.BillingUsageEventUncheckedUpdateManyWithoutWorkspaceNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutWorkspaceNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutWorkspaceNestedInput
-}
-
-export type WorkspaceCreateManyOwnerInput = {
-  id?: string
-  name: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-}
-
-export type WorkspaceUpdateWithoutOwnerInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  members?: Prisma.WorkspaceMemberUpdateManyWithoutWorkspaceNestedInput
-  stores?: Prisma.StoreUpdateManyWithoutWorkspaceNestedInput
-  billingSubscription?: Prisma.BillingSubscriptionUpdateOneWithoutWorkspaceNestedInput
-  billingUsagePeriods?: Prisma.BillingUsagePeriodUpdateManyWithoutWorkspaceNestedInput
-  billingUsageEvents?: Prisma.BillingUsageEventUpdateManyWithoutWorkspaceNestedInput
-  billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutWorkspaceNestedInput
-  billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutWorkspaceNestedInput
-}
-
-export type WorkspaceUncheckedUpdateWithoutOwnerInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  members?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutWorkspaceNestedInput
-  stores?: Prisma.StoreUncheckedUpdateManyWithoutWorkspaceNestedInput
-  billingSubscription?: Prisma.BillingSubscriptionUncheckedUpdateOneWithoutWorkspaceNestedInput
-  billingUsagePeriods?: Prisma.BillingUsagePeriodUncheckedUpdateManyWithoutWorkspaceNestedInput
-  billingUsageEvents?: Prisma.BillingUsageEventUncheckedUpdateManyWithoutWorkspaceNestedInput
-  billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutWorkspaceNestedInput
-  billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutWorkspaceNestedInput
-}
-
-export type WorkspaceUncheckedUpdateManyWithoutOwnerInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 

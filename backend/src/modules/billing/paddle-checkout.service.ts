@@ -23,6 +23,10 @@ import {
   paddleCheckoutEnvironment,
   paddlePriceId,
 } from './paddle-billing.config';
+import {
+  assertPaidRecurringPrice,
+  requirePaidRecurringPrice,
+} from './paddle-price.policy';
 
 type Checkout = Prisma.BillingCheckoutGetPayload<object>;
 type Selection = {
@@ -315,6 +319,20 @@ export class PaddleCheckoutService {
   }
 
   private async createTransaction(checkout: Checkout, client: Paddle) {
+    try {
+      await requirePaidRecurringPrice(
+        client,
+        checkout.paddlePriceId,
+        checkout.cycle,
+      );
+    } catch (error) {
+      await this.prisma.billingCheckout.updateMany({
+        where: { id: checkout.id, status: BillingCheckoutStatus.CREATING },
+        data: { status: BillingCheckoutStatus.FAILED },
+      });
+      throw error;
+    }
+
     let remote: Transaction;
     try {
       remote = await client.transactions.create({
@@ -364,13 +382,22 @@ export class PaddleCheckoutService {
               status: BillingCheckoutStatus.OPEN,
             },
           });
-          if (claimed.count !== 1) throw reviewRequired();
-          return tx.billingCheckout.findUniqueOrThrow({
+          const current = await tx.billingCheckout.findUniqueOrThrow({
             where: { id: checkout.id },
           });
+          if (
+            claimed.count !== 1 &&
+            (current.paddleTransactionId !== remote.id ||
+              (current.status !== BillingCheckoutStatus.OPEN &&
+                current.status !== BillingCheckoutStatus.COMPLETED))
+          )
+            throw reviewRequired();
+          return current;
         },
       );
       validateTransaction(saved, remote);
+      if (saved.status === BillingCheckoutStatus.COMPLETED)
+        return checkoutResult(saved, 'payment_pending');
       if (remote.status !== 'draft' && remote.status !== 'ready')
         throw reviewRequired();
       return checkoutResult(saved, 'ready');
@@ -429,6 +456,8 @@ function validateTransaction(checkout: Checkout, remote: Transaction) {
       remote.customerId !== checkout.expectedPaddleCustomerId)
   )
     throw reviewRequired();
+
+  assertPaidRecurringPrice(item.price, checkout.paddlePriceId, checkout.cycle);
 }
 
 function checkoutResult(

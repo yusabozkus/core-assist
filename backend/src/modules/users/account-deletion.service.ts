@@ -403,7 +403,7 @@ export class AccountDeletionService {
       const outstanding = this.getClient().transactions.list({
         customerId: [customerId],
         status: ['draft', 'ready', 'billed', 'past_due', 'paid'],
-        perPage: 100,
+        perPage: 30,
       });
       for await (const transaction of outstanding)
         transactions.set(transaction.id, transaction);

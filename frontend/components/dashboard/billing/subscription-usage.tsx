@@ -19,13 +19,13 @@ export function SubscriptionUsage({ summary }: { summary: BillingSummary }) {
     },
     {
       label: "Mağazalar",
-      description: "Çalışma alanınızdaki aktif mağazalar",
+      description: "Hesabınızdaki aktif mağazalar",
       usage: summary.usage.stores,
       icon: Store01Icon,
     },
     {
       label: "Kullanıcılar",
-      description: "Çalışma alanına erişimi bulunan kullanıcılar",
+      description: "Hesabınıza bağlı ekip üyeleri",
       usage: summary.usage.members,
       icon: UserCircleIcon,
     },

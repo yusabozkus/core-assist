@@ -5,8 +5,10 @@ import {
   BillingReconciliationProcessor,
 } from './billing-reconciliation.processor';
 import { AuthModule } from '../auth/auth.module';
+import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { BillingController } from './billing.controller';
+import { BillingPricingController } from './billing-pricing.controller';
 import { BillingWorkspacesController } from './billing-workspaces.controller';
 import { BillingAuthorizationService } from './billing-authorization.service';
 import { BillingEntitlementService } from './billing-entitlement.service';
@@ -18,15 +20,24 @@ import { PaddleWebhookController } from './paddle-webhook.controller';
 import { PaddleCheckoutBindingService } from './paddle-checkout-binding.service';
 import { PaddleCheckoutService } from './paddle-checkout.service';
 import { PaddlePlanChangeService } from './paddle-plan-change.service';
+import { PADDLE_WEBHOOK_QUEUE } from './paddle-webhook.constants';
+import { PaddleWebhookQueueService } from './paddle-webhook-queue.service';
+import { PaddleWebhookProcessor } from './paddle-webhook.processor';
+import { BillingRetentionService } from './billing-retention.service';
 
 @Module({
   imports: [
     AuthModule,
+    WorkspacesModule,
     NotificationsModule,
-    BullModule.registerQueue({ name: BILLING_RECOVERY_QUEUE }),
+    BullModule.registerQueue(
+      { name: BILLING_RECOVERY_QUEUE },
+      { name: PADDLE_WEBHOOK_QUEUE },
+    ),
   ],
   controllers: [
     BillingController,
+    BillingPricingController,
     BillingWorkspacesController,
     PaddleWebhookController,
   ],
@@ -41,6 +52,9 @@ import { PaddlePlanChangeService } from './paddle-plan-change.service';
     PaddleCheckoutBindingService,
     PaddleCheckoutService,
     PaddlePlanChangeService,
+    PaddleWebhookQueueService,
+    PaddleWebhookProcessor,
+    BillingRetentionService,
   ],
   exports: [
     BillingSubscriptionService,

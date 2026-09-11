@@ -68,7 +68,7 @@ export class UsersService {
             expiresAt: true,
           },
         },
-        ownedWorkspaces: {
+        ownedWorkspace: {
           select: {
             _count: { select: { stores: true } },
           },
@@ -82,11 +82,7 @@ export class UsersService {
 
     return {
       createdAt: user.createdAt,
-      ownedWorkspaceCount: user.ownedWorkspaces.length,
-      ownedStoreCount: user.ownedWorkspaces.reduce(
-        (total, workspace) => total + workspace._count.stores,
-        0,
-      ),
+      ownedStoreCount: user.ownedWorkspace?._count.stores ?? 0,
       accounts: user.accounts,
       sessions: user.sessions.map((session) => ({
         ...session,
@@ -189,7 +185,7 @@ export class UsersService {
             },
           },
         },
-        ownedWorkspaces: {
+        ownedWorkspace: {
           select: {
             id: true,
             name: true,
@@ -334,7 +330,7 @@ export class UsersService {
     }
 
     return {
-      schemaVersion: 1,
+      schemaVersion: 2,
       exportedAt: new Date(),
       notice:
         'OAuth erişim anahtarları, oturum anahtarları ve pazaryeri kimlik bilgileri güvenlik nedeniyle dışa aktarıma dahil edilmemiştir.',

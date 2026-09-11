@@ -9,7 +9,6 @@ import {
   IntegrationEnvironment,
   StoreRole,
   StoreStatus,
-  WorkspaceRole,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { ChannelsService } from '../channels/channels.service';
@@ -20,6 +19,7 @@ import {
 } from './dto/complete-onboarding.dto';
 import { createDefaultStoreAiInstructions } from '../knowledge/default-ai-instructions';
 import { BillingEntitlementService } from '../billing/billing-entitlement.service';
+import { WorkspacesService } from '../workspaces/workspaces.service';
 
 const CHANNEL_PROVIDER_KEY: Record<OnboardingChannel, string> = {
   [OnboardingChannel.TRENDYOL]: 'trendyol',
@@ -39,6 +39,7 @@ export class OnboardingService {
     private readonly prisma: PrismaService,
     private readonly channels: ChannelsService,
     private readonly billingEntitlements: BillingEntitlementService,
+    private readonly workspaces: WorkspacesService,
   ) {}
 
   async getStatus(userId: string) {
@@ -166,10 +167,14 @@ export class OnboardingService {
 
   async provision(userId: string, dto: ProvisionOnboardingDto) {
     const setup = await this.prisma.$transaction(async (transaction) => {
-      await transaction.$queryRaw`SELECT "id" FROM "user" WHERE "id" = ${userId} FOR UPDATE`;
-      let workspace = await transaction.workspace.findFirst({
-        where: { ownerId: userId },
-        orderBy: { createdAt: 'asc' },
+      const ownedWorkspace =
+        await this.workspaces.getOrCreateOwnedWorkspaceInTransaction(
+          transaction,
+          userId,
+          dto.storeName,
+        );
+      const workspace = await transaction.workspace.findUniqueOrThrow({
+        where: { id: ownedWorkspace.id },
         include: {
           stores: {
             where: {
@@ -190,38 +195,6 @@ export class OnboardingService {
       });
 
       let storeCreated = false;
-
-      if (!workspace) {
-        workspace = await transaction.workspace.create({
-          data: {
-            name: dto.storeName,
-            ownerId: userId,
-            members: {
-              create: {
-                userId,
-                role: WorkspaceRole.OWNER,
-              },
-            },
-          },
-          include: {
-            stores: {
-              where: {
-                members: {
-                  some: { userId },
-                },
-              },
-              orderBy: { createdAt: 'asc' },
-              take: 1,
-              include: {
-                channelConnections: {
-                  where: { removedAt: null },
-                  select: channelConnectionSelect,
-                },
-              },
-            },
-          },
-        });
-      }
 
       let store = workspace.stores[0] ?? null;
 
