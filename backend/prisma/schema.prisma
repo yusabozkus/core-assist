@@ -30,6 +30,7 @@ model User {
   webPushSubscriptions         WebPushSubscription[]
   billingCheckouts              BillingCheckout[]
   billingPlanChanges            BillingPlanChange[]
+  sentWorkspaceInvitations      WorkspaceInvitation[]         @relation("WorkspaceInvitationSender")
 
   @@map("user")
 }
@@ -94,6 +95,7 @@ model Workspace {
   billingUsageEvents  BillingUsageEvent[]
   billingCheckouts    BillingCheckout[]
   billingPlanChanges  BillingPlanChange[]
+  invitations         WorkspaceInvitation[]
 
   @@map("workspace")
 }
@@ -109,6 +111,7 @@ model WorkspaceMember {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId])
   @@unique([workspaceId, userId])
   @@map("workspace_member")
 }
@@ -117,6 +120,51 @@ enum WorkspaceRole {
   OWNER
   ADMIN
   MEMBER
+}
+
+enum WorkspaceInvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+model WorkspaceInvitation {
+  id              String                    @id @default(uuid())
+  workspaceId     String
+  email           String
+  emailNormalized String
+  role            WorkspaceRole             @default(MEMBER)
+  tokenHash       String                    @unique
+  status          WorkspaceInvitationStatus @default(PENDING)
+  invitedByUserId String?
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  revokedAt       DateTime?
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+
+  workspace    Workspace                        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy    User?                            @relation("WorkspaceInvitationSender", fields: [invitedByUserId], references: [id], onDelete: SetNull)
+  storeAccesses WorkspaceInvitationStoreAccess[]
+
+  @@index([workspaceId, status, expiresAt])
+  @@index([emailNormalized, status])
+  @@map("workspace_invitation")
+}
+
+model WorkspaceInvitationStoreAccess {
+  invitationId String
+  storeId      String
+  role         StoreRole @default(AGENT)
+  createdAt    DateTime  @default(now())
+
+  invitation WorkspaceInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  store      Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@id([invitationId, storeId])
+  @@index([storeId])
+  @@map("workspace_invitation_store_access")
 }
 
 enum BillingPlan {
@@ -342,6 +390,7 @@ model Store {
 
   workspace                    Workspace                     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   members                      StoreMember[]
+  invitationAccesses           WorkspaceInvitationStoreAccess[]
   channelConnections           ChannelConnection[]
   products                     Product[]
   productIdentities            ProductIdentity[]

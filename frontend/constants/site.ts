@@ -7,6 +7,7 @@ import {
   PlugSocketIcon,
   RefreshIcon,
   Settings02Icon,
+  UserGroupIcon,
   WorkflowSquare01Icon,
 } from "@hugeicons/core-free-icons"
 import type { IconSvgElement } from "@hugeicons/react"
@@ -88,6 +89,12 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
   },
   primaryItems: [],
   footerItems: [
+    {
+      title: "Ekip ve Yetkiler",
+      url: APP_ROUTES.dashboard.team,
+      icon: UserGroupIcon,
+      exact: true,
+    },
     {
       title: "Mağaza Ayarları",
       url: APP_ROUTES.dashboard.settings.root,

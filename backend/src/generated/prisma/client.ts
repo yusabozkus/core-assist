@@ -70,6 +70,16 @@ export type Workspace = Prisma.WorkspaceModel
  */
 export type WorkspaceMember = Prisma.WorkspaceMemberModel
 /**
+ * Model WorkspaceInvitation
+ * 
+ */
+export type WorkspaceInvitation = Prisma.WorkspaceInvitationModel
+/**
+ * Model WorkspaceInvitationStoreAccess
+ * 
+ */
+export type WorkspaceInvitationStoreAccess = Prisma.WorkspaceInvitationStoreAccessModel
+/**
  * Model BillingSubscription
  * 
  */

@@ -200,6 +200,7 @@ export type StoreWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Store"> | Date | string
   workspace?: Prisma.XOR<Prisma.WorkspaceScalarRelationFilter, Prisma.WorkspaceWhereInput>
   members?: Prisma.StoreMemberListRelationFilter
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessListRelationFilter
   channelConnections?: Prisma.ChannelConnectionListRelationFilter
   products?: Prisma.ProductListRelationFilter
   productIdentities?: Prisma.ProductIdentityListRelationFilter
@@ -226,6 +227,7 @@ export type StoreOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   workspace?: Prisma.WorkspaceOrderByWithRelationInput
   members?: Prisma.StoreMemberOrderByRelationAggregateInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessOrderByRelationAggregateInput
   channelConnections?: Prisma.ChannelConnectionOrderByRelationAggregateInput
   products?: Prisma.ProductOrderByRelationAggregateInput
   productIdentities?: Prisma.ProductIdentityOrderByRelationAggregateInput
@@ -255,6 +257,7 @@ export type StoreWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"Store"> | Date | string
   workspace?: Prisma.XOR<Prisma.WorkspaceScalarRelationFilter, Prisma.WorkspaceWhereInput>
   members?: Prisma.StoreMemberListRelationFilter
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessListRelationFilter
   channelConnections?: Prisma.ChannelConnectionListRelationFilter
   products?: Prisma.ProductListRelationFilter
   productIdentities?: Prisma.ProductIdentityListRelationFilter
@@ -306,6 +309,7 @@ export type StoreCreateInput = {
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
@@ -331,6 +335,7 @@ export type StoreUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
@@ -356,6 +361,7 @@ export type StoreUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
@@ -381,6 +387,7 @@ export type StoreUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
@@ -436,6 +443,11 @@ export type StoreOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type StoreScalarRelationFilter = {
+  is?: Prisma.StoreWhereInput
+  isNot?: Prisma.StoreWhereInput
+}
+
 export type StoreCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   workspaceId?: Prisma.SortOrder
@@ -464,11 +476,6 @@ export type StoreMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-}
-
-export type StoreScalarRelationFilter = {
-  is?: Prisma.StoreWhereInput
-  isNot?: Prisma.StoreWhereInput
 }
 
 export type StoreNullableScalarRelationFilter = {
@@ -516,6 +523,20 @@ export type StoreUncheckedUpdateManyWithoutWorkspaceNestedInput = {
   update?: Prisma.StoreUpdateWithWhereUniqueWithoutWorkspaceInput | Prisma.StoreUpdateWithWhereUniqueWithoutWorkspaceInput[]
   updateMany?: Prisma.StoreUpdateManyWithWhereWithoutWorkspaceInput | Prisma.StoreUpdateManyWithWhereWithoutWorkspaceInput[]
   deleteMany?: Prisma.StoreScalarWhereInput | Prisma.StoreScalarWhereInput[]
+}
+
+export type StoreCreateNestedOneWithoutInvitationAccessesInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutInvitationAccessesInput, Prisma.StoreUncheckedCreateWithoutInvitationAccessesInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutInvitationAccessesInput
+  connect?: Prisma.StoreWhereUniqueInput
+}
+
+export type StoreUpdateOneRequiredWithoutInvitationAccessesNestedInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutInvitationAccessesInput, Prisma.StoreUncheckedCreateWithoutInvitationAccessesInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutInvitationAccessesInput
+  upsert?: Prisma.StoreUpsertWithoutInvitationAccessesInput
+  connect?: Prisma.StoreWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutInvitationAccessesInput, Prisma.StoreUpdateWithoutInvitationAccessesInput>, Prisma.StoreUncheckedUpdateWithoutInvitationAccessesInput>
 }
 
 export type EnumStoreStatusFieldUpdateOperationsInput = {
@@ -742,6 +763,7 @@ export type StoreCreateWithoutWorkspaceInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
@@ -766,6 +788,7 @@ export type StoreUncheckedCreateWithoutWorkspaceInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
@@ -821,6 +844,122 @@ export type StoreScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Store"> | Date | string
 }
 
+export type StoreCreateWithoutInvitationAccessesInput = {
+  id?: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
+  members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+}
+
+export type StoreUncheckedCreateWithoutInvitationAccessesInput = {
+  id?: string
+  workspaceId: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+}
+
+export type StoreCreateOrConnectWithoutInvitationAccessesInput = {
+  where: Prisma.StoreWhereUniqueInput
+  create: Prisma.XOR<Prisma.StoreCreateWithoutInvitationAccessesInput, Prisma.StoreUncheckedCreateWithoutInvitationAccessesInput>
+}
+
+export type StoreUpsertWithoutInvitationAccessesInput = {
+  update: Prisma.XOR<Prisma.StoreUpdateWithoutInvitationAccessesInput, Prisma.StoreUncheckedUpdateWithoutInvitationAccessesInput>
+  create: Prisma.XOR<Prisma.StoreCreateWithoutInvitationAccessesInput, Prisma.StoreUncheckedCreateWithoutInvitationAccessesInput>
+  where?: Prisma.StoreWhereInput
+}
+
+export type StoreUpdateToOneWithWhereWithoutInvitationAccessesInput = {
+  where?: Prisma.StoreWhereInput
+  data: Prisma.XOR<Prisma.StoreUpdateWithoutInvitationAccessesInput, Prisma.StoreUncheckedUpdateWithoutInvitationAccessesInput>
+}
+
+export type StoreUpdateWithoutInvitationAccessesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
+  members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreUncheckedUpdateWithoutInvitationAccessesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+}
+
 export type StoreCreateWithoutKnowledgeProfileInput = {
   id?: string
   name: string
@@ -830,6 +969,7 @@ export type StoreCreateWithoutKnowledgeProfileInput = {
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
@@ -854,6 +994,7 @@ export type StoreUncheckedCreateWithoutKnowledgeProfileInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
@@ -894,6 +1035,7 @@ export type StoreUpdateWithoutKnowledgeProfileInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
@@ -918,6 +1060,7 @@ export type StoreUncheckedUpdateWithoutKnowledgeProfileInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
@@ -942,6 +1085,7 @@ export type StoreCreateWithoutKnowledgeFaqsInput = {
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
@@ -966,6 +1110,7 @@ export type StoreUncheckedCreateWithoutKnowledgeFaqsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
@@ -1006,6 +1151,7 @@ export type StoreUpdateWithoutKnowledgeFaqsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
@@ -1030,6 +1176,7 @@ export type StoreUncheckedUpdateWithoutKnowledgeFaqsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
@@ -1054,6 +1201,7 @@ export type StoreCreateWithoutAiInstructionsInput = {
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
@@ -1078,6 +1226,7 @@ export type StoreUncheckedCreateWithoutAiInstructionsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
@@ -1118,6 +1267,7 @@ export type StoreUpdateWithoutAiInstructionsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
@@ -1142,6 +1292,7 @@ export type StoreUncheckedUpdateWithoutAiInstructionsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
@@ -1166,6 +1317,7 @@ export type StoreCreateWithoutChannelKnowledgeInput = {
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
@@ -1190,6 +1342,7 @@ export type StoreUncheckedCreateWithoutChannelKnowledgeInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
@@ -1230,6 +1383,7 @@ export type StoreUpdateWithoutChannelKnowledgeInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
@@ -1254,6 +1408,7 @@ export type StoreUncheckedUpdateWithoutChannelKnowledgeInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
@@ -1278,6 +1433,7 @@ export type StoreCreateWithoutChannelConnectionsInput = {
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
@@ -1302,6 +1458,7 @@ export type StoreUncheckedCreateWithoutChannelConnectionsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
@@ -1342,6 +1499,7 @@ export type StoreUpdateWithoutChannelConnectionsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
@@ -1366,6 +1524,7 @@ export type StoreUncheckedUpdateWithoutChannelConnectionsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
@@ -1390,6 +1549,7 @@ export type StoreCreateWithoutProductsInput = {
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
@@ -1414,6 +1574,7 @@ export type StoreUncheckedCreateWithoutProductsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
@@ -1454,6 +1615,7 @@ export type StoreUpdateWithoutProductsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
@@ -1478,6 +1640,7 @@ export type StoreUncheckedUpdateWithoutProductsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
@@ -1502,6 +1665,7 @@ export type StoreCreateWithoutProductIdentitiesInput = {
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
@@ -1526,6 +1690,7 @@ export type StoreUncheckedCreateWithoutProductIdentitiesInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
@@ -1566,6 +1731,7 @@ export type StoreUpdateWithoutProductIdentitiesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
@@ -1590,6 +1756,7 @@ export type StoreUncheckedUpdateWithoutProductIdentitiesInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
@@ -1614,6 +1781,7 @@ export type StoreCreateWithoutIncomingEventsInput = {
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
@@ -1638,6 +1806,7 @@ export type StoreUncheckedCreateWithoutIncomingEventsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
@@ -1678,6 +1847,7 @@ export type StoreUpdateWithoutIncomingEventsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
@@ -1702,6 +1872,7 @@ export type StoreUncheckedUpdateWithoutIncomingEventsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
@@ -1726,6 +1897,7 @@ export type StoreCreateWithoutProductQuestionsInput = {
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
@@ -1750,6 +1922,7 @@ export type StoreUncheckedCreateWithoutProductQuestionsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
@@ -1790,6 +1963,7 @@ export type StoreUpdateWithoutProductQuestionsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
@@ -1814,6 +1988,7 @@ export type StoreUncheckedUpdateWithoutProductQuestionsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
@@ -1838,6 +2013,7 @@ export type StoreCreateWithoutAiDraftAttemptsInput = {
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
@@ -1862,6 +2038,7 @@ export type StoreUncheckedCreateWithoutAiDraftAttemptsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
@@ -1902,6 +2079,7 @@ export type StoreUpdateWithoutAiDraftAttemptsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
@@ -1926,6 +2104,7 @@ export type StoreUncheckedUpdateWithoutAiDraftAttemptsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
@@ -1950,6 +2129,7 @@ export type StoreCreateWithoutQuestionAnswersInput = {
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
@@ -1974,6 +2154,7 @@ export type StoreUncheckedCreateWithoutQuestionAnswersInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
@@ -2014,6 +2195,7 @@ export type StoreUpdateWithoutQuestionAnswersInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
@@ -2038,6 +2220,7 @@ export type StoreUncheckedUpdateWithoutQuestionAnswersInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
@@ -2061,6 +2244,7 @@ export type StoreCreateWithoutMembersInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
@@ -2085,6 +2269,7 @@ export type StoreUncheckedCreateWithoutMembersInput = {
   status?: $Enums.StoreStatus
   createdAt?: Date | string
   updatedAt?: Date | string
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
@@ -2125,6 +2310,7 @@ export type StoreUpdateWithoutMembersInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
@@ -2149,6 +2335,7 @@ export type StoreUncheckedUpdateWithoutMembersInput = {
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
@@ -2174,6 +2361,7 @@ export type StoreCreateWithoutNotificationsInput = {
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
@@ -2198,6 +2386,7 @@ export type StoreUncheckedCreateWithoutNotificationsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
@@ -2238,6 +2427,7 @@ export type StoreUpdateWithoutNotificationsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
@@ -2262,6 +2452,7 @@ export type StoreUncheckedUpdateWithoutNotificationsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
@@ -2286,6 +2477,7 @@ export type StoreCreateWithoutNotificationPreferencesInput = {
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
@@ -2310,6 +2502,7 @@ export type StoreUncheckedCreateWithoutNotificationPreferencesInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
@@ -2350,6 +2543,7 @@ export type StoreUpdateWithoutNotificationPreferencesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
@@ -2374,6 +2568,7 @@ export type StoreUncheckedUpdateWithoutNotificationPreferencesInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
@@ -2398,6 +2593,7 @@ export type StoreCreateWithoutNotificationDeliverySettingsInput = {
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
@@ -2422,6 +2618,7 @@ export type StoreUncheckedCreateWithoutNotificationDeliverySettingsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
   channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
   products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
   productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
@@ -2462,6 +2659,7 @@ export type StoreUpdateWithoutNotificationDeliverySettingsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
@@ -2486,6 +2684,7 @@ export type StoreUncheckedUpdateWithoutNotificationDeliverySettingsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
@@ -2518,6 +2717,7 @@ export type StoreUpdateWithoutWorkspaceInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
@@ -2542,6 +2742,7 @@ export type StoreUncheckedUpdateWithoutWorkspaceInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
   productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
@@ -2574,6 +2775,7 @@ export type StoreUncheckedUpdateManyWithoutWorkspaceInput = {
 
 export type StoreCountOutputType = {
   members: number
+  invitationAccesses: number
   channelConnections: number
   products: number
   productIdentities: number
@@ -2591,6 +2793,7 @@ export type StoreCountOutputType = {
 
 export type StoreCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   members?: boolean | StoreCountOutputTypeCountMembersArgs
+  invitationAccesses?: boolean | StoreCountOutputTypeCountInvitationAccessesArgs
   channelConnections?: boolean | StoreCountOutputTypeCountChannelConnectionsArgs
   products?: boolean | StoreCountOutputTypeCountProductsArgs
   productIdentities?: boolean | StoreCountOutputTypeCountProductIdentitiesArgs
@@ -2621,6 +2824,13 @@ export type StoreCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extens
  */
 export type StoreCountOutputTypeCountMembersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.StoreMemberWhereInput
+}
+
+/**
+ * StoreCountOutputType without action
+ */
+export type StoreCountOutputTypeCountInvitationAccessesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WorkspaceInvitationStoreAccessWhereInput
 }
 
 /**
@@ -2725,6 +2935,7 @@ export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   updatedAt?: boolean
   workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
   members?: boolean | Prisma.Store$membersArgs<ExtArgs>
+  invitationAccesses?: boolean | Prisma.Store$invitationAccessesArgs<ExtArgs>
   channelConnections?: boolean | Prisma.Store$channelConnectionsArgs<ExtArgs>
   products?: boolean | Prisma.Store$productsArgs<ExtArgs>
   productIdentities?: boolean | Prisma.Store$productIdentitiesArgs<ExtArgs>
@@ -2778,6 +2989,7 @@ export type StoreOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = ru
 export type StoreInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
   members?: boolean | Prisma.Store$membersArgs<ExtArgs>
+  invitationAccesses?: boolean | Prisma.Store$invitationAccessesArgs<ExtArgs>
   channelConnections?: boolean | Prisma.Store$channelConnectionsArgs<ExtArgs>
   products?: boolean | Prisma.Store$productsArgs<ExtArgs>
   productIdentities?: boolean | Prisma.Store$productIdentitiesArgs<ExtArgs>
@@ -2806,6 +3018,7 @@ export type $StorePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   objects: {
     workspace: Prisma.$WorkspacePayload<ExtArgs>
     members: Prisma.$StoreMemberPayload<ExtArgs>[]
+    invitationAccesses: Prisma.$WorkspaceInvitationStoreAccessPayload<ExtArgs>[]
     channelConnections: Prisma.$ChannelConnectionPayload<ExtArgs>[]
     products: Prisma.$ProductPayload<ExtArgs>[]
     productIdentities: Prisma.$ProductIdentityPayload<ExtArgs>[]
@@ -3225,6 +3438,7 @@ export interface Prisma__StoreClient<T, Null = never, ExtArgs extends runtime.Ty
   readonly [Symbol.toStringTag]: "PrismaPromise"
   workspace<T extends Prisma.WorkspaceDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.WorkspaceDefaultArgs<ExtArgs>>): Prisma.Prisma__WorkspaceClient<runtime.Types.Result.GetResult<Prisma.$WorkspacePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   members<T extends Prisma.Store$membersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$membersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StoreMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  invitationAccesses<T extends Prisma.Store$invitationAccessesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$invitationAccessesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkspaceInvitationStoreAccessPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   channelConnections<T extends Prisma.Store$channelConnectionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$channelConnectionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChannelConnectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   products<T extends Prisma.Store$productsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$productsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   productIdentities<T extends Prisma.Store$productIdentitiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$productIdentitiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductIdentityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -3697,6 +3911,30 @@ export type Store$membersArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.StoreMemberScalarFieldEnum | Prisma.StoreMemberScalarFieldEnum[]
+}
+
+/**
+ * Store.invitationAccesses
+ */
+export type Store$invitationAccessesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WorkspaceInvitationStoreAccess
+   */
+  select?: Prisma.WorkspaceInvitationStoreAccessSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WorkspaceInvitationStoreAccess
+   */
+  omit?: Prisma.WorkspaceInvitationStoreAccessOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WorkspaceInvitationStoreAccessInclude<ExtArgs> | null
+  where?: Prisma.WorkspaceInvitationStoreAccessWhereInput
+  orderBy?: Prisma.WorkspaceInvitationStoreAccessOrderByWithRelationInput | Prisma.WorkspaceInvitationStoreAccessOrderByWithRelationInput[]
+  cursor?: Prisma.WorkspaceInvitationStoreAccessWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WorkspaceInvitationStoreAccessScalarFieldEnum | Prisma.WorkspaceInvitationStoreAccessScalarFieldEnum[]
 }
 
 /**

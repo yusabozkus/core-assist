@@ -18,6 +18,7 @@ import { SearchModule } from './modules/search/search.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { getRedisConnection } from './infrastructure/queue/redis-connection';
+import { TeamModule } from './modules/team/team.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { getRedisConnection } from './infrastructure/queue/redis-connection';
     SearchModule,
     NotificationsModule,
     BillingModule,
+    TeamModule,
   ],
   controllers: [AppController],
   providers: [AppService],

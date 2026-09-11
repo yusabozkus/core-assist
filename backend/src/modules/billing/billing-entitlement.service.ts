@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
-import { ProductStatus } from '../../generated/prisma/enums';
+import {
+  ProductStatus,
+  WorkspaceInvitationStatus,
+} from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import {
   BillingAccessRequiredException,
@@ -46,7 +49,7 @@ export class BillingEntitlementService {
       this.prisma.store.count({
         where: { workspaceId, status: 'ACTIVE' },
       }),
-      this.prisma.workspaceMember.count({ where: { workspaceId } }),
+      this.countOccupiedMemberSeats(workspaceId, now),
       this.prisma.product.count({
         where: {
           store: { workspaceId },
@@ -140,15 +143,26 @@ export class BillingEntitlementService {
   async assertMemberCapacityInTransaction(
     transaction: Prisma.TransactionClient,
     workspaceId: string,
+    options: { excludeInvitationId?: string } = {},
   ) {
     const limits = await this.getActiveLimitsInTransaction(
       transaction,
       workspaceId,
     );
-    const members = await transaction.workspaceMember.count({
-      where: { workspaceId },
-    });
-    if (members >= limits.members) {
+    const [members, pendingInvitations] = await Promise.all([
+      transaction.workspaceMember.count({ where: { workspaceId } }),
+      transaction.workspaceInvitation.count({
+        where: {
+          workspaceId,
+          status: WorkspaceInvitationStatus.PENDING,
+          expiresAt: { gt: new Date() },
+          ...(options.excludeInvitationId
+            ? { id: { not: options.excludeInvitationId } }
+            : {}),
+        },
+      }),
+    ]);
+    if (members + pendingInvitations >= limits.members) {
       throw new BillingPlanLimitException('members', limits.members);
     }
   }
@@ -240,6 +254,21 @@ export class BillingEntitlementService {
       members: Math.min(limits.members, target.members),
       activeProducts: Math.min(limits.activeProducts, target.activeProducts),
     };
+  }
+
+  private async countOccupiedMemberSeats(workspaceId: string, now: Date) {
+    const [members, pendingInvitations] = await Promise.all([
+      this.prisma.workspaceMember.count({ where: { workspaceId } }),
+      this.prisma.workspaceInvitation.count({
+        where: {
+          workspaceId,
+          status: WorkspaceInvitationStatus.PENDING,
+          expiresAt: { gt: now },
+        },
+      }),
+    ]);
+
+    return members + pendingInvitations;
   }
 }
 

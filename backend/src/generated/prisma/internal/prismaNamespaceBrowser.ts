@@ -57,6 +57,8 @@ export const ModelName = {
   Verification: 'Verification',
   Workspace: 'Workspace',
   WorkspaceMember: 'WorkspaceMember',
+  WorkspaceInvitation: 'WorkspaceInvitation',
+  WorkspaceInvitationStoreAccess: 'WorkspaceInvitationStoreAccess',
   BillingSubscription: 'BillingSubscription',
   BillingWebhookEvent: 'BillingWebhookEvent',
   BillingClosureRecord: 'BillingClosureRecord',
@@ -187,6 +189,35 @@ export const WorkspaceMemberScalarFieldEnum = {
 } as const
 
 export type WorkspaceMemberScalarFieldEnum = (typeof WorkspaceMemberScalarFieldEnum)[keyof typeof WorkspaceMemberScalarFieldEnum]
+
+
+export const WorkspaceInvitationScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  email: 'email',
+  emailNormalized: 'emailNormalized',
+  role: 'role',
+  tokenHash: 'tokenHash',
+  status: 'status',
+  invitedByUserId: 'invitedByUserId',
+  expiresAt: 'expiresAt',
+  acceptedAt: 'acceptedAt',
+  revokedAt: 'revokedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WorkspaceInvitationScalarFieldEnum = (typeof WorkspaceInvitationScalarFieldEnum)[keyof typeof WorkspaceInvitationScalarFieldEnum]
+
+
+export const WorkspaceInvitationStoreAccessScalarFieldEnum = {
+  invitationId: 'invitationId',
+  storeId: 'storeId',
+  role: 'role',
+  createdAt: 'createdAt'
+} as const
+
+export type WorkspaceInvitationStoreAccessScalarFieldEnum = (typeof WorkspaceInvitationStoreAccessScalarFieldEnum)[keyof typeof WorkspaceInvitationStoreAccessScalarFieldEnum]
 
 
 export const BillingSubscriptionScalarFieldEnum = {

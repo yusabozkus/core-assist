@@ -54,6 +54,9 @@ export function AppSidebar({
   const primaryItems = [overview, ...DASHBOARD_NAVIGATION.primaryItems]
   const activeShop = shops.find((shop) => shop.id === activeShopId)
   const isStoreArchived = activeShop?.status === "INACTIVE"
+  const footerItems = DASHBOARD_NAVIGATION.footerItems.filter(
+    (item) => item.url !== APP_ROUTES.dashboard.team || canManageBilling
+  )
   const settingsItem = [
     ...DASHBOARD_NAVIGATION.footerItems,
     ...DASHBOARD_NAVIGATION.navGroups.flatMap((group) => group.items),
@@ -178,7 +181,7 @@ export function AppSidebar({
       <SidebarFooter>
         {!isStoreArchived ? (
           <SidebarMenu>
-            {DASHBOARD_NAVIGATION.footerItems.map((item) => {
+            {footerItems.map((item) => {
               const isActive = isPathActive(pathname, item.url, item.exact)
 
               return (

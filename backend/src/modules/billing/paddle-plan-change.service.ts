@@ -7,7 +7,11 @@ import {
 import { ApiError, Paddle, type Subscription } from '@paddle/paddle-node-sdk';
 import { PrismaService } from '../../database/prisma.service';
 import { Prisma } from '../../generated/prisma/client';
-import { BillingCycle, BillingPlan } from '../../generated/prisma/enums';
+import {
+  BillingCycle,
+  BillingPlan,
+  WorkspaceInvitationStatus,
+} from '../../generated/prisma/enums';
 import { BillingAuthorizationService } from './billing-authorization.service';
 import { BillingUsageService } from './billing-usage.service';
 import { PLAN_ENTITLEMENTS } from './billing-plan.config';
@@ -511,9 +515,16 @@ export class PaddlePlanChangeService {
     plan: BillingPlan,
   ) {
     const limits = PLAN_ENTITLEMENTS[plan];
-    const [stores, members, products] = await Promise.all([
+    const [stores, members, pendingInvitations, products] = await Promise.all([
       tx.store.count({ where: { workspaceId, status: 'ACTIVE' } }),
       tx.workspaceMember.count({ where: { workspaceId } }),
+      tx.workspaceInvitation.count({
+        where: {
+          workspaceId,
+          status: WorkspaceInvitationStatus.PENDING,
+          expiresAt: { gt: new Date() },
+        },
+      }),
       tx.product.count({ where: { store: { workspaceId }, status: 'ACTIVE' } }),
     ]);
     return [
@@ -526,7 +537,7 @@ export class PaddlePlanChangeService {
       {
         key: 'members',
         label: 'Kullanıcı',
-        used: members,
+        used: members + pendingInvitations,
         limit: limits.members,
       },
       {

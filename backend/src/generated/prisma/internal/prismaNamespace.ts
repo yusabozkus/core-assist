@@ -403,6 +403,8 @@ export const ModelName = {
   Verification: 'Verification',
   Workspace: 'Workspace',
   WorkspaceMember: 'WorkspaceMember',
+  WorkspaceInvitation: 'WorkspaceInvitation',
+  WorkspaceInvitationStoreAccess: 'WorkspaceInvitationStoreAccess',
   BillingSubscription: 'BillingSubscription',
   BillingWebhookEvent: 'BillingWebhookEvent',
   BillingClosureRecord: 'BillingClosureRecord',
@@ -449,7 +451,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "billingSubscription" | "billingWebhookEvent" | "billingClosureRecord" | "billingCheckout" | "billingPlanChange" | "billingUsagePeriod" | "billingUsageEvent" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "webPushSubscription"
+    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "workspaceInvitation" | "workspaceInvitationStoreAccess" | "billingSubscription" | "billingWebhookEvent" | "billingClosureRecord" | "billingCheckout" | "billingPlanChange" | "billingUsagePeriod" | "billingUsageEvent" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "webPushSubscription"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -894,6 +896,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.WorkspaceMemberCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.WorkspaceMemberCountAggregateOutputType> | number
+        }
+      }
+    }
+    WorkspaceInvitation: {
+      payload: Prisma.$WorkspaceInvitationPayload<ExtArgs>
+      fields: Prisma.WorkspaceInvitationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WorkspaceInvitationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WorkspaceInvitationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationPayload>
+        }
+        findFirst: {
+          args: Prisma.WorkspaceInvitationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WorkspaceInvitationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationPayload>
+        }
+        findMany: {
+          args: Prisma.WorkspaceInvitationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationPayload>[]
+        }
+        create: {
+          args: Prisma.WorkspaceInvitationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationPayload>
+        }
+        createMany: {
+          args: Prisma.WorkspaceInvitationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WorkspaceInvitationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationPayload>[]
+        }
+        delete: {
+          args: Prisma.WorkspaceInvitationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationPayload>
+        }
+        update: {
+          args: Prisma.WorkspaceInvitationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationPayload>
+        }
+        deleteMany: {
+          args: Prisma.WorkspaceInvitationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WorkspaceInvitationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WorkspaceInvitationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationPayload>[]
+        }
+        upsert: {
+          args: Prisma.WorkspaceInvitationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationPayload>
+        }
+        aggregate: {
+          args: Prisma.WorkspaceInvitationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWorkspaceInvitation>
+        }
+        groupBy: {
+          args: Prisma.WorkspaceInvitationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WorkspaceInvitationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WorkspaceInvitationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WorkspaceInvitationCountAggregateOutputType> | number
+        }
+      }
+    }
+    WorkspaceInvitationStoreAccess: {
+      payload: Prisma.$WorkspaceInvitationStoreAccessPayload<ExtArgs>
+      fields: Prisma.WorkspaceInvitationStoreAccessFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WorkspaceInvitationStoreAccessFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationStoreAccessPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WorkspaceInvitationStoreAccessFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationStoreAccessPayload>
+        }
+        findFirst: {
+          args: Prisma.WorkspaceInvitationStoreAccessFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationStoreAccessPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WorkspaceInvitationStoreAccessFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationStoreAccessPayload>
+        }
+        findMany: {
+          args: Prisma.WorkspaceInvitationStoreAccessFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationStoreAccessPayload>[]
+        }
+        create: {
+          args: Prisma.WorkspaceInvitationStoreAccessCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationStoreAccessPayload>
+        }
+        createMany: {
+          args: Prisma.WorkspaceInvitationStoreAccessCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WorkspaceInvitationStoreAccessCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationStoreAccessPayload>[]
+        }
+        delete: {
+          args: Prisma.WorkspaceInvitationStoreAccessDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationStoreAccessPayload>
+        }
+        update: {
+          args: Prisma.WorkspaceInvitationStoreAccessUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationStoreAccessPayload>
+        }
+        deleteMany: {
+          args: Prisma.WorkspaceInvitationStoreAccessDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WorkspaceInvitationStoreAccessUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WorkspaceInvitationStoreAccessUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationStoreAccessPayload>[]
+        }
+        upsert: {
+          args: Prisma.WorkspaceInvitationStoreAccessUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WorkspaceInvitationStoreAccessPayload>
+        }
+        aggregate: {
+          args: Prisma.WorkspaceInvitationStoreAccessAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWorkspaceInvitationStoreAccess>
+        }
+        groupBy: {
+          args: Prisma.WorkspaceInvitationStoreAccessGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WorkspaceInvitationStoreAccessGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WorkspaceInvitationStoreAccessCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WorkspaceInvitationStoreAccessCountAggregateOutputType> | number
         }
       }
     }
@@ -3313,6 +3463,35 @@ export const WorkspaceMemberScalarFieldEnum = {
 export type WorkspaceMemberScalarFieldEnum = (typeof WorkspaceMemberScalarFieldEnum)[keyof typeof WorkspaceMemberScalarFieldEnum]
 
 
+export const WorkspaceInvitationScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  email: 'email',
+  emailNormalized: 'emailNormalized',
+  role: 'role',
+  tokenHash: 'tokenHash',
+  status: 'status',
+  invitedByUserId: 'invitedByUserId',
+  expiresAt: 'expiresAt',
+  acceptedAt: 'acceptedAt',
+  revokedAt: 'revokedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WorkspaceInvitationScalarFieldEnum = (typeof WorkspaceInvitationScalarFieldEnum)[keyof typeof WorkspaceInvitationScalarFieldEnum]
+
+
+export const WorkspaceInvitationStoreAccessScalarFieldEnum = {
+  invitationId: 'invitationId',
+  storeId: 'storeId',
+  role: 'role',
+  createdAt: 'createdAt'
+} as const
+
+export type WorkspaceInvitationStoreAccessScalarFieldEnum = (typeof WorkspaceInvitationStoreAccessScalarFieldEnum)[keyof typeof WorkspaceInvitationStoreAccessScalarFieldEnum]
+
+
 export const BillingSubscriptionScalarFieldEnum = {
   id: 'id',
   workspaceId: 'workspaceId',
@@ -3999,6 +4178,34 @@ export type ListEnumWorkspaceRoleFieldRefInput<$PrismaModel> = FieldRefInputType
 
 
 /**
+ * Reference to a field of type 'WorkspaceInvitationStatus'
+ */
+export type EnumWorkspaceInvitationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WorkspaceInvitationStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'WorkspaceInvitationStatus[]'
+ */
+export type ListEnumWorkspaceInvitationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WorkspaceInvitationStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'StoreRole'
+ */
+export type EnumStoreRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreRole'>
+    
+
+
+/**
+ * Reference to a field of type 'StoreRole[]'
+ */
+export type ListEnumStoreRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreRole[]'>
+    
+
+
+/**
  * Reference to a field of type 'BillingPlan'
  */
 export type EnumBillingPlanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BillingPlan'>
@@ -4531,20 +4738,6 @@ export type ListEnumQuestionAnswerStatusFieldRefInput<$PrismaModel> = FieldRefIn
 
 
 /**
- * Reference to a field of type 'StoreRole'
- */
-export type EnumStoreRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreRole'>
-    
-
-
-/**
- * Reference to a field of type 'StoreRole[]'
- */
-export type ListEnumStoreRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreRole[]'>
-    
-
-
-/**
  * Reference to a field of type 'NotificationType'
  */
 export type EnumNotificationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NotificationType'>
@@ -4728,6 +4921,8 @@ export type GlobalOmitConfig = {
   verification?: Prisma.VerificationOmit
   workspace?: Prisma.WorkspaceOmit
   workspaceMember?: Prisma.WorkspaceMemberOmit
+  workspaceInvitation?: Prisma.WorkspaceInvitationOmit
+  workspaceInvitationStoreAccess?: Prisma.WorkspaceInvitationStoreAccessOmit
   billingSubscription?: Prisma.BillingSubscriptionOmit
   billingWebhookEvent?: Prisma.BillingWebhookEventOmit
   billingClosureRecord?: Prisma.BillingClosureRecordOmit

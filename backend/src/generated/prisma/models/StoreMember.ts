@@ -431,10 +431,6 @@ export type StoreMemberUncheckedUpdateManyWithoutStoreNestedInput = {
   deleteMany?: Prisma.StoreMemberScalarWhereInput | Prisma.StoreMemberScalarWhereInput[]
 }
 
-export type EnumStoreRoleFieldUpdateOperationsInput = {
-  set?: $Enums.StoreRole
-}
-
 export type StoreMemberCreateWithoutUserInput = {
   id?: string
   role?: $Enums.StoreRole

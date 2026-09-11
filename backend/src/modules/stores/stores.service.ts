@@ -51,19 +51,26 @@ export class StoresService {
         transaction,
         membership.workspaceId,
       );
+      const workspaceManagers = await transaction.workspaceMember.findMany({
+        where: {
+          workspaceId: membership.workspaceId,
+          role: { in: [WorkspaceRole.OWNER, WorkspaceRole.ADMIN] },
+        },
+        select: { userId: true, role: true },
+      });
 
       return transaction.store.create({
         data: {
           name: createStoreDto.name,
           workspaceId: membership.workspaceId,
           members: {
-            create: {
-              userId,
+            create: workspaceManagers.map((manager) => ({
+              userId: manager.userId,
               role:
-                membership.role === WorkspaceRole.OWNER
+                manager.role === WorkspaceRole.OWNER
                   ? StoreRole.OWNER
                   : StoreRole.ADMIN,
-            },
+            })),
           },
           aiInstructions: {
             create: createDefaultStoreAiInstructions(),

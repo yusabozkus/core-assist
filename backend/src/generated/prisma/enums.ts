@@ -18,6 +18,16 @@ export const WorkspaceRole = {
 export type WorkspaceRole = (typeof WorkspaceRole)[keyof typeof WorkspaceRole]
 
 
+export const WorkspaceInvitationStatus = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  REVOKED: 'REVOKED',
+  EXPIRED: 'EXPIRED'
+} as const
+
+export type WorkspaceInvitationStatus = (typeof WorkspaceInvitationStatus)[keyof typeof WorkspaceInvitationStatus]
+
+
 export const BillingPlan = {
   STARTER: 'STARTER',
   GROWTH: 'GROWTH',
