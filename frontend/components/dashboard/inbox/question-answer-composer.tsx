@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { QuestionDraftHistory } from "@/components/dashboard/inbox/question-draft-history"
 import { useBillingUsage } from "@/components/dashboard/billing/billing-usage-provider"
+import { AiQuotaDialog } from "@/components/dashboard/billing/ai-quota-dialog"
 import { ApiError } from "@/lib/api/client"
 import {
   answerProductQuestion,
@@ -51,6 +52,7 @@ export function QuestionAnswerComposer({
         : ""
   )
   const [error, setError] = useState<string | null>(null)
+  const [isQuotaDialogOpen, setIsQuotaDialogOpen] = useState(false)
   const [optimisticQueuedAt, setOptimisticQueuedAt] = useState<string | null>(
     null
   )
@@ -172,6 +174,15 @@ export function QuestionAnswerComposer({
       } catch (caughtError) {
         if (
           caughtError instanceof ApiError &&
+          caughtError.code === "AI_QUESTION_QUOTA_EXCEEDED"
+        ) {
+          setIsQuotaDialogOpen(true)
+          void refreshBillingUsage()
+          return
+        }
+
+        if (
+          caughtError instanceof ApiError &&
           caughtError.status === 429 &&
           caughtError.retryAfterSeconds
         ) {
@@ -187,118 +198,124 @@ export function QuestionAnswerComposer({
   }
 
   return (
-    <div className="shrink-0 border-t border-border bg-background px-4 py-4 sm:px-6 lg:px-8">
-      <form onSubmit={submitAnswer} className="mx-auto w-full max-w-4xl">
-        <div className="flex items-center justify-between gap-3">
-          <label
-            htmlFor={`question-answer-${question.id}`}
-            className="text-sm font-semibold text-foreground"
-          >
-            Cevabınız
-          </label>
-          <span className="text-xs text-muted-foreground tabular-nums">
-            {answer.length}/{MAX_ANSWER_LENGTH}
-          </span>
-        </div>
-        <Textarea
-          id={`question-answer-${question.id}`}
-          value={answer}
-          onChange={(event) => {
-            setAnswer(event.target.value)
-            setDraftContext(null)
-          }}
-          maxLength={MAX_ANSWER_LENGTH}
-          rows={4}
-          disabled={isSubmitting || isQueued || isDrafting}
-          placeholder="Müşteriye göndermek istediğiniz cevabı yazın..."
-          className="mt-2.5 min-h-24 resize-y bg-card"
-          aria-invalid={Boolean(error || delivery?.lastError)}
-        />
-        {draftContext ? (
-          <DraftReliabilityNotice context={draftContext} />
-        ) : null}
-        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-h-5 text-xs" aria-live="polite">
-            {error ? <p className="text-destructive">{error}</p> : null}
-            {!error && delivery?.status === "FAILED" ? (
-              <p className="text-destructive">
-                {delivery.lastError ??
-                  "Cevap gönderilemedi. Tekrar deneyebilirsiniz."}
-              </p>
-            ) : null}
-            {!error && isQueued ? (
-              <p className="text-muted-foreground">
-                Cevap güvenli gönderim kuyruğunda işleniyor.
-              </p>
-            ) : null}
+    <>
+      <div className="shrink-0 border-t border-border bg-background px-4 py-4 sm:px-6 lg:px-8">
+        <form onSubmit={submitAnswer} className="mx-auto w-full max-w-4xl">
+          <div className="flex items-center justify-between gap-3">
+            <label
+              htmlFor={`question-answer-${question.id}`}
+              className="text-sm font-semibold text-foreground"
+            >
+              Cevabınız
+            </label>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {answer.length}/{MAX_ANSWER_LENGTH}
+            </span>
           </div>
-          <div className="-ml-4 flex w-full flex-row items-center justify-between">
-            {question.draftAttempts?.length ? (
-              <div className="flex min-h-8 items-center">
-                <QuestionDraftHistory
-                  attempts={question.draftAttempts}
-                  delivery={question.answerDelivery}
-                />
+          <Textarea
+            id={`question-answer-${question.id}`}
+            value={answer}
+            onChange={(event) => {
+              setAnswer(event.target.value)
+              setDraftContext(null)
+            }}
+            maxLength={MAX_ANSWER_LENGTH}
+            rows={4}
+            disabled={isSubmitting || isQueued || isDrafting}
+            placeholder="Müşteriye göndermek istediğiniz cevabı yazın..."
+            className="mt-2.5 min-h-24 resize-y bg-card"
+            aria-invalid={Boolean(error || delivery?.lastError)}
+          />
+          {draftContext ? (
+            <DraftReliabilityNotice context={draftContext} />
+          ) : null}
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-h-5 text-xs" aria-live="polite">
+              {error ? <p className="text-destructive">{error}</p> : null}
+              {!error && delivery?.status === "FAILED" ? (
+                <p className="text-destructive">
+                  {delivery.lastError ??
+                    "Cevap gönderilemedi. Tekrar deneyebilirsiniz."}
+                </p>
+              ) : null}
+              {!error && isQueued ? (
+                <p className="text-muted-foreground">
+                  Cevap güvenli gönderim kuyruğunda işleniyor.
+                </p>
+              ) : null}
+            </div>
+            <div className="-ml-4 flex w-full flex-row items-center justify-between">
+              {question.draftAttempts?.length ? (
+                <div className="flex min-h-8 items-center">
+                  <QuestionDraftHistory
+                    attempts={question.draftAttempts}
+                    delivery={question.answerDelivery}
+                  />
+                </div>
+              ) : (
+                <div className="flex min-h-8 items-center" />
+              )}
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={generateDraft}
+                  disabled={
+                    isDrafting ||
+                    isSubmitting ||
+                    isQueued ||
+                    !question.product ||
+                    draftRetrySeconds > 0
+                  }
+                  title={
+                    question.product
+                      ? undefined
+                      : "Taslak için sorunun bir ürünle eşleşmesi gerekir."
+                  }
+                >
+                  <HugeiconsIcon
+                    icon={isDrafting ? RefreshIcon : MagicWand01Icon}
+                    className={`size-3.5 ${isDrafting ? "animate-spin" : ""}`}
+                  />
+                  {isDrafting
+                    ? "Hazırlanıyor..."
+                    : draftRetrySeconds > 0
+                      ? `${draftRetrySeconds} sn sonra dene`
+                      : question.status === "DRAFTED"
+                        ? "Taslağı yenile"
+                        : "Taslak oluştur"}
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={
+                    isSubmitting ||
+                    isQueued ||
+                    isDrafting ||
+                    answer.trim().length < 2
+                  }
+                >
+                  <HugeiconsIcon
+                    icon={isQueued ? RefreshIcon : SendIcon}
+                    className={`size-4 ${isQueued ? "animate-spin" : ""}`}
+                  />
+                  {isQueued
+                    ? "Gönderiliyor..."
+                    : delivery?.status === "FAILED"
+                      ? "Tekrar gönder"
+                      : "Cevabı gönder"}
+                </Button>
               </div>
-            ) : (
-              <div className="flex min-h-8 items-center" />
-            )}
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={generateDraft}
-                disabled={
-                  isDrafting ||
-                  isSubmitting ||
-                  isQueued ||
-                  !question.product ||
-                  draftRetrySeconds > 0
-                }
-                title={
-                  question.product
-                    ? undefined
-                    : "Taslak için sorunun bir ürünle eşleşmesi gerekir."
-                }
-              >
-                <HugeiconsIcon
-                  icon={isDrafting ? RefreshIcon : MagicWand01Icon}
-                  className={`size-3.5 ${isDrafting ? "animate-spin" : ""}`}
-                />
-                {isDrafting
-                  ? "Hazırlanıyor..."
-                  : draftRetrySeconds > 0
-                    ? `${draftRetrySeconds} sn sonra dene`
-                    : question.status === "DRAFTED"
-                      ? "Taslağı yenile"
-                      : "Taslak oluştur"}
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={
-                  isSubmitting ||
-                  isQueued ||
-                  isDrafting ||
-                  answer.trim().length < 2
-                }
-              >
-                <HugeiconsIcon
-                  icon={isQueued ? RefreshIcon : SendIcon}
-                  className={`size-4 ${isQueued ? "animate-spin" : ""}`}
-                />
-                {isQueued
-                  ? "Gönderiliyor..."
-                  : delivery?.status === "FAILED"
-                    ? "Tekrar gönder"
-                    : "Cevabı gönder"}
-              </Button>
             </div>
           </div>
-        </div>
-      </form>
-    </div>
+        </form>
+      </div>
+      <AiQuotaDialog
+        open={isQuotaDialogOpen}
+        onOpenChange={setIsQuotaDialogOpen}
+      />
+    </>
   )
 }
 

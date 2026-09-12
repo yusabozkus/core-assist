@@ -10,11 +10,13 @@ import {
   ShieldCheckIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { PaddleEventData } from "@paddle/paddle-js"
 import { AppLogo } from "@/components/shared/brand/app-logo"
 import { Button } from "@/components/ui/button"
 import { INCLUDED_MARKETPLACES } from "@/constants/billing"
 import { billingRoutes } from "@/lib/billing-routes"
 import { APP_ROUTES } from "@/constants/site"
+import { formatCurrency } from "@/lib/format-currency"
 import {
   cancelPendingBillingCheckout,
   createBillingCheckout,
@@ -50,10 +52,13 @@ export function BillingCheckout({
   const [pendingCheckoutPlan, setPendingCheckoutPlan] = useState<string | null>(
     null
   )
+  const [checkoutSummary, setCheckoutSummary] =
+    useState<CheckoutSummary | null>(null)
   const mountedRef = useRef(false)
   const completionStartedRef = useRef(false)
   const completionAbortRef = useRef<AbortController | null>(null)
   const paddleRef = useRef<Awaited<ReturnType<typeof getPaddle>> | null>(null)
+  const transactionIdRef = useRef<string | null>(null)
   const pricing = usePaddlePricing()
   const price = pricing.prices?.[plan.id][billingCycle] ?? null
 
@@ -93,6 +98,15 @@ export function BillingCheckout({
 
     const unsubscribe = subscribeToPaddleEvents((event) => {
       if (!mountedRef.current) return
+
+      if (
+        event.data &&
+        (!transactionIdRef.current ||
+          event.data.transaction_id === transactionIdRef.current)
+      ) {
+        const nextSummary = checkoutSummaryFromEvent(event.data)
+        if (nextSummary) setCheckoutSummary(nextSummary)
+      }
 
       if (event.name === "checkout.loaded") {
         setIsLoading(false)
@@ -189,6 +203,7 @@ export function BillingCheckout({
 
         paddleRef.current?.Checkout.close()
         paddleRef.current = paddle
+        transactionIdRef.current = checkout.transactionId
         paddle.Checkout.open({
           transactionId: checkout.transactionId,
           customer: { email: customerEmail },
@@ -242,6 +257,8 @@ export function BillingCheckout({
     setCompletionError(null)
     setPendingCheckoutHref(null)
     setPendingCheckoutPlan(null)
+    setCheckoutSummary(null)
+    transactionIdRef.current = null
     completionStartedRef.current = false
     setAttempt((current) => current + 1)
   }
@@ -313,9 +330,9 @@ export function BillingCheckout({
                     : "Aylık faturalandırma"}
                 </p>
                 <p className="mt-1.5 text-3xl font-semibold tracking-[-0.04em] tabular-nums">
-                  {price?.monthly ?? "—"}
+                  {price?.total ?? "—"}
                   <span className="ml-1.5 text-sm font-normal tracking-normal text-muted-foreground">
-                    / ay
+                    / {billingCycle === "annual" ? "yıl" : "ay"} + KDV
                   </span>
                 </p>
               </div>
@@ -340,13 +357,6 @@ export function BillingCheckout({
                 value={`${plan.stores} mağaza · ${plan.members} kullanıcı`}
               />
               <SummaryRow label="Pazaryerleri" value={INCLUDED_MARKETPLACES} />
-              <SummaryRow
-                label={
-                  billingCycle === "annual" ? "Yıllık toplam" : "Ara toplam"
-                }
-                value={price?.total ?? "Paddle ödeme formunda"}
-                emphasized
-              />
             </dl>
             {pricing.loading ? (
               <p className="mt-3 text-[11px] text-muted-foreground">
@@ -408,6 +418,12 @@ export function BillingCheckout({
                 </p>
               </div>
             </div>
+
+            <CheckoutTotals
+              subtotal={checkoutSummary?.subtotal ?? price?.total ?? null}
+              tax={checkoutSummary?.tax ?? null}
+              total={checkoutSummary?.total ?? null}
+            />
 
             <div className="relative min-h-[650px] border-t border-border/55 bg-background/28 px-4">
               {isLoading ? <CheckoutLoading /> : null}
@@ -474,6 +490,40 @@ function formatPlanName(plan: "STARTER" | "GROWTH" | "BUSINESS") {
   return `${plan.charAt(0)}${plan.slice(1).toLowerCase()}`
 }
 
+type CheckoutSummary = {
+  subtotal: string
+  tax: string
+  total: string
+}
+
+function checkoutSummaryFromEvent(
+  data: NonNullable<PaddleEventData["data"]>
+): CheckoutSummary | null {
+  const amounts = [data.totals.subtotal, data.totals.tax, data.totals.total]
+  if (amounts.some((amount) => !Number.isFinite(amount) || amount < 0)) {
+    return null
+  }
+
+  return {
+    subtotal: formatCheckoutAmount(data.totals.subtotal, data.currency_code),
+    tax: formatCheckoutAmount(data.totals.tax, data.currency_code),
+    total: formatCheckoutAmount(data.totals.total, data.currency_code),
+  }
+}
+
+function formatCheckoutAmount(amount: number, currencyCode: string) {
+  const fractionDigits =
+    new Intl.NumberFormat("tr-TR", {
+      style: "currency",
+      currency: currencyCode,
+    }).resolvedOptions().maximumFractionDigits ?? 2
+
+  return formatCurrency(amount, currencyCode, {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  })
+}
+
 function CheckoutCompletion({
   isCompleting,
   error,
@@ -512,25 +562,51 @@ function CheckoutCompletion({
   )
 }
 
+function CheckoutTotals({
+  subtotal,
+  tax,
+  total,
+}: {
+  subtotal: string | null
+  tax: string | null
+  total: string | null
+}) {
+  const items = [
+    { label: "Plan bedeli", value: subtotal },
+    { label: "Vergi", value: tax },
+    { label: "Toplam", value: total, emphasized: true },
+  ]
+
+  return (
+    <dl
+      aria-label="Ödeme özeti"
+      className="grid grid-cols-3 divide-x divide-border/55 border-t border-border/55 bg-muted/12"
+    >
+      {items.map((item) => (
+        <div key={item.label} className="min-w-0 px-4 py-3.5 sm:px-6">
+          <dt className="text-[10px] text-muted-foreground">{item.label}</dt>
+          <dd
+            className={`mt-1 truncate text-xs tabular-nums sm:text-sm ${item.emphasized ? "font-semibold text-foreground" : "font-medium"}`}
+          >
+            {item.value ?? "Hesaplanıyor"}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
 function SummaryRow({
   label,
   value,
-  emphasized = false,
 }: {
   label: string
   value: string
-  emphasized?: boolean
 }) {
   return (
     <div className="flex items-center justify-between gap-5 py-3.5 text-xs">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd
-        className={
-          emphasized
-            ? "font-semibold text-foreground"
-            : "font-medium text-foreground/85"
-        }
-      >
+      <dd className="font-medium text-foreground/85">
         {value}
       </dd>
     </div>

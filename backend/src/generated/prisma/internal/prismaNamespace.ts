@@ -3867,6 +3867,7 @@ export const CatalogSyncRunScalarFieldEnum = {
   productsCreated: 'productsCreated',
   productsUpdated: 'productsUpdated',
   productsUnchanged: 'productsUnchanged',
+  productsSkipped: 'productsSkipped',
   variantsProcessed: 'variantsProcessed',
   variantsUpdated: 'variantsUpdated',
   variantsUnchanged: 'variantsUnchanged',

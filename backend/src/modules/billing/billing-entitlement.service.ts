@@ -14,7 +14,7 @@ import { BillingSubscriptionService } from './billing-subscription.service';
 import { BillingUsageService } from './billing-usage.service';
 import { BillingAuthorizationService } from './billing-authorization.service';
 import { PENDING_PLAN_CHANGE_STATUSES } from './billing-plan-change.policy';
-import { PLAN_ENTITLEMENTS } from './billing-plan.config';
+import { planEntitlementsFor } from './billing-plan.config';
 import { isAwaitingRenewal, renewalGraceEndsAt } from './billing-access.policy';
 
 @Injectable()
@@ -277,7 +277,7 @@ export class BillingEntitlementService {
     if (!pending) return limits;
     // Keep capacity below BOTH plans while a downgrade is being submitted.
     // Capacity writers already hold the same workspace lock as confirmation.
-    const target = PLAN_ENTITLEMENTS[pending.plan];
+    const target = planEntitlementsFor(pending.plan);
     return {
       ...limits,
       stores: Math.min(limits.stores, target.stores),

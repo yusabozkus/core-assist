@@ -127,13 +127,11 @@ export class BillingUsageService {
     }
 
     const includedRegeneration = successfulDrafts > 0 && successfulDrafts < 3;
-    if (!includedRegeneration) {
-      await this.assertAiQuestionAvailable(
-        store.workspaceId,
-        successfulDrafts === 0 ? `ai-question:${questionId}` : undefined,
-        now,
-      );
-    }
+    await this.assertAiQuestionAvailable(
+      store.workspaceId,
+      successfulDrafts === 0 ? `ai-question:${questionId}` : undefined,
+      now,
+    );
 
     return {
       successfulDrafts,

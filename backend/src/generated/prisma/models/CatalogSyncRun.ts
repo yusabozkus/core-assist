@@ -32,6 +32,7 @@ export type CatalogSyncRunAvgAggregateOutputType = {
   productsCreated: number | null
   productsUpdated: number | null
   productsUnchanged: number | null
+  productsSkipped: number | null
   variantsProcessed: number | null
   variantsUpdated: number | null
   variantsUnchanged: number | null
@@ -46,6 +47,7 @@ export type CatalogSyncRunSumAggregateOutputType = {
   productsCreated: number | null
   productsUpdated: number | null
   productsUnchanged: number | null
+  productsSkipped: number | null
   variantsProcessed: number | null
   variantsUpdated: number | null
   variantsUnchanged: number | null
@@ -67,6 +69,7 @@ export type CatalogSyncRunMinAggregateOutputType = {
   productsCreated: number | null
   productsUpdated: number | null
   productsUnchanged: number | null
+  productsSkipped: number | null
   variantsProcessed: number | null
   variantsUpdated: number | null
   variantsUnchanged: number | null
@@ -94,6 +97,7 @@ export type CatalogSyncRunMaxAggregateOutputType = {
   productsCreated: number | null
   productsUpdated: number | null
   productsUnchanged: number | null
+  productsSkipped: number | null
   variantsProcessed: number | null
   variantsUpdated: number | null
   variantsUnchanged: number | null
@@ -121,6 +125,7 @@ export type CatalogSyncRunCountAggregateOutputType = {
   productsCreated: number
   productsUpdated: number
   productsUnchanged: number
+  productsSkipped: number
   variantsProcessed: number
   variantsUpdated: number
   variantsUnchanged: number
@@ -143,6 +148,7 @@ export type CatalogSyncRunAvgAggregateInputType = {
   productsCreated?: true
   productsUpdated?: true
   productsUnchanged?: true
+  productsSkipped?: true
   variantsProcessed?: true
   variantsUpdated?: true
   variantsUnchanged?: true
@@ -157,6 +163,7 @@ export type CatalogSyncRunSumAggregateInputType = {
   productsCreated?: true
   productsUpdated?: true
   productsUnchanged?: true
+  productsSkipped?: true
   variantsProcessed?: true
   variantsUpdated?: true
   variantsUnchanged?: true
@@ -178,6 +185,7 @@ export type CatalogSyncRunMinAggregateInputType = {
   productsCreated?: true
   productsUpdated?: true
   productsUnchanged?: true
+  productsSkipped?: true
   variantsProcessed?: true
   variantsUpdated?: true
   variantsUnchanged?: true
@@ -205,6 +213,7 @@ export type CatalogSyncRunMaxAggregateInputType = {
   productsCreated?: true
   productsUpdated?: true
   productsUnchanged?: true
+  productsSkipped?: true
   variantsProcessed?: true
   variantsUpdated?: true
   variantsUnchanged?: true
@@ -232,6 +241,7 @@ export type CatalogSyncRunCountAggregateInputType = {
   productsCreated?: true
   productsUpdated?: true
   productsUnchanged?: true
+  productsSkipped?: true
   variantsProcessed?: true
   variantsUpdated?: true
   variantsUnchanged?: true
@@ -346,6 +356,7 @@ export type CatalogSyncRunGroupByOutputType = {
   productsCreated: number
   productsUpdated: number
   productsUnchanged: number
+  productsSkipped: number
   variantsProcessed: number
   variantsUpdated: number
   variantsUnchanged: number
@@ -396,6 +407,7 @@ export type CatalogSyncRunWhereInput = {
   productsCreated?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsUpdated?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsUnchanged?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  productsSkipped?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsUpdated?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsUnchanged?: Prisma.IntFilter<"CatalogSyncRun"> | number
@@ -424,6 +436,7 @@ export type CatalogSyncRunOrderByWithRelationInput = {
   productsCreated?: Prisma.SortOrder
   productsUpdated?: Prisma.SortOrder
   productsUnchanged?: Prisma.SortOrder
+  productsSkipped?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
   variantsUpdated?: Prisma.SortOrder
   variantsUnchanged?: Prisma.SortOrder
@@ -455,6 +468,7 @@ export type CatalogSyncRunWhereUniqueInput = Prisma.AtLeast<{
   productsCreated?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsUpdated?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsUnchanged?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  productsSkipped?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsUpdated?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsUnchanged?: Prisma.IntFilter<"CatalogSyncRun"> | number
@@ -483,6 +497,7 @@ export type CatalogSyncRunOrderByWithAggregationInput = {
   productsCreated?: Prisma.SortOrder
   productsUpdated?: Prisma.SortOrder
   productsUnchanged?: Prisma.SortOrder
+  productsSkipped?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
   variantsUpdated?: Prisma.SortOrder
   variantsUnchanged?: Prisma.SortOrder
@@ -518,6 +533,7 @@ export type CatalogSyncRunScalarWhereWithAggregatesInput = {
   productsCreated?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
   productsUpdated?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
   productsUnchanged?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
+  productsSkipped?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
   variantsProcessed?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
   variantsUpdated?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
   variantsUnchanged?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
@@ -544,6 +560,7 @@ export type CatalogSyncRunCreateInput = {
   productsCreated?: number
   productsUpdated?: number
   productsUnchanged?: number
+  productsSkipped?: number
   variantsProcessed?: number
   variantsUpdated?: number
   variantsUnchanged?: number
@@ -572,6 +589,7 @@ export type CatalogSyncRunUncheckedCreateInput = {
   productsCreated?: number
   productsUpdated?: number
   productsUnchanged?: number
+  productsSkipped?: number
   variantsProcessed?: number
   variantsUpdated?: number
   variantsUnchanged?: number
@@ -598,6 +616,7 @@ export type CatalogSyncRunUpdateInput = {
   productsCreated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
+  productsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
@@ -626,6 +645,7 @@ export type CatalogSyncRunUncheckedUpdateInput = {
   productsCreated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
+  productsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
@@ -653,6 +673,7 @@ export type CatalogSyncRunCreateManyInput = {
   productsCreated?: number
   productsUpdated?: number
   productsUnchanged?: number
+  productsSkipped?: number
   variantsProcessed?: number
   variantsUpdated?: number
   variantsUnchanged?: number
@@ -679,6 +700,7 @@ export type CatalogSyncRunUpdateManyMutationInput = {
   productsCreated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
+  productsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
@@ -706,6 +728,7 @@ export type CatalogSyncRunUncheckedUpdateManyInput = {
   productsCreated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
+  productsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
@@ -743,6 +766,7 @@ export type CatalogSyncRunCountOrderByAggregateInput = {
   productsCreated?: Prisma.SortOrder
   productsUpdated?: Prisma.SortOrder
   productsUnchanged?: Prisma.SortOrder
+  productsSkipped?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
   variantsUpdated?: Prisma.SortOrder
   variantsUnchanged?: Prisma.SortOrder
@@ -763,6 +787,7 @@ export type CatalogSyncRunAvgOrderByAggregateInput = {
   productsCreated?: Prisma.SortOrder
   productsUpdated?: Prisma.SortOrder
   productsUnchanged?: Prisma.SortOrder
+  productsSkipped?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
   variantsUpdated?: Prisma.SortOrder
   variantsUnchanged?: Prisma.SortOrder
@@ -784,6 +809,7 @@ export type CatalogSyncRunMaxOrderByAggregateInput = {
   productsCreated?: Prisma.SortOrder
   productsUpdated?: Prisma.SortOrder
   productsUnchanged?: Prisma.SortOrder
+  productsSkipped?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
   variantsUpdated?: Prisma.SortOrder
   variantsUnchanged?: Prisma.SortOrder
@@ -811,6 +837,7 @@ export type CatalogSyncRunMinOrderByAggregateInput = {
   productsCreated?: Prisma.SortOrder
   productsUpdated?: Prisma.SortOrder
   productsUnchanged?: Prisma.SortOrder
+  productsSkipped?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
   variantsUpdated?: Prisma.SortOrder
   variantsUnchanged?: Prisma.SortOrder
@@ -831,6 +858,7 @@ export type CatalogSyncRunSumOrderByAggregateInput = {
   productsCreated?: Prisma.SortOrder
   productsUpdated?: Prisma.SortOrder
   productsUnchanged?: Prisma.SortOrder
+  productsSkipped?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
   variantsUpdated?: Prisma.SortOrder
   variantsUnchanged?: Prisma.SortOrder
@@ -909,6 +937,7 @@ export type CatalogSyncRunCreateWithoutConnectionInput = {
   productsCreated?: number
   productsUpdated?: number
   productsUnchanged?: number
+  productsSkipped?: number
   variantsProcessed?: number
   variantsUpdated?: number
   variantsUnchanged?: number
@@ -935,6 +964,7 @@ export type CatalogSyncRunUncheckedCreateWithoutConnectionInput = {
   productsCreated?: number
   productsUpdated?: number
   productsUnchanged?: number
+  productsSkipped?: number
   variantsProcessed?: number
   variantsUpdated?: number
   variantsUnchanged?: number
@@ -991,6 +1021,7 @@ export type CatalogSyncRunScalarWhereInput = {
   productsCreated?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsUpdated?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsUnchanged?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  productsSkipped?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsUpdated?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsUnchanged?: Prisma.IntFilter<"CatalogSyncRun"> | number
@@ -1017,6 +1048,7 @@ export type CatalogSyncRunCreateManyConnectionInput = {
   productsCreated?: number
   productsUpdated?: number
   productsUnchanged?: number
+  productsSkipped?: number
   variantsProcessed?: number
   variantsUpdated?: number
   variantsUnchanged?: number
@@ -1043,6 +1075,7 @@ export type CatalogSyncRunUpdateWithoutConnectionInput = {
   productsCreated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
+  productsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1069,6 +1102,7 @@ export type CatalogSyncRunUncheckedUpdateWithoutConnectionInput = {
   productsCreated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
+  productsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1095,6 +1129,7 @@ export type CatalogSyncRunUncheckedUpdateManyWithoutConnectionInput = {
   productsCreated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
+  productsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1124,6 +1159,7 @@ export type CatalogSyncRunSelect<ExtArgs extends runtime.Types.Extensions.Intern
   productsCreated?: boolean
   productsUpdated?: boolean
   productsUnchanged?: boolean
+  productsSkipped?: boolean
   variantsProcessed?: boolean
   variantsUpdated?: boolean
   variantsUnchanged?: boolean
@@ -1152,6 +1188,7 @@ export type CatalogSyncRunSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   productsCreated?: boolean
   productsUpdated?: boolean
   productsUnchanged?: boolean
+  productsSkipped?: boolean
   variantsProcessed?: boolean
   variantsUpdated?: boolean
   variantsUnchanged?: boolean
@@ -1180,6 +1217,7 @@ export type CatalogSyncRunSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   productsCreated?: boolean
   productsUpdated?: boolean
   productsUnchanged?: boolean
+  productsSkipped?: boolean
   variantsProcessed?: boolean
   variantsUpdated?: boolean
   variantsUnchanged?: boolean
@@ -1208,6 +1246,7 @@ export type CatalogSyncRunSelectScalar = {
   productsCreated?: boolean
   productsUpdated?: boolean
   productsUnchanged?: boolean
+  productsSkipped?: boolean
   variantsProcessed?: boolean
   variantsUpdated?: boolean
   variantsUnchanged?: boolean
@@ -1222,7 +1261,7 @@ export type CatalogSyncRunSelectScalar = {
   updatedAt?: boolean
 }
 
-export type CatalogSyncRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "connectionId" | "kind" | "status" | "trigger" | "stage" | "progress" | "retryOfId" | "productsProcessed" | "productsCreated" | "productsUpdated" | "productsUnchanged" | "variantsProcessed" | "variantsUpdated" | "variantsUnchanged" | "questionsProcessed" | "questionsUnchanged" | "productsArchived" | "cursor" | "errorMessage" | "startedAt" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["catalogSyncRun"]>
+export type CatalogSyncRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "connectionId" | "kind" | "status" | "trigger" | "stage" | "progress" | "retryOfId" | "productsProcessed" | "productsCreated" | "productsUpdated" | "productsUnchanged" | "productsSkipped" | "variantsProcessed" | "variantsUpdated" | "variantsUnchanged" | "questionsProcessed" | "questionsUnchanged" | "productsArchived" | "cursor" | "errorMessage" | "startedAt" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["catalogSyncRun"]>
 export type CatalogSyncRunInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   connection?: boolean | Prisma.ChannelConnectionDefaultArgs<ExtArgs>
 }
@@ -1251,6 +1290,7 @@ export type $CatalogSyncRunPayload<ExtArgs extends runtime.Types.Extensions.Inte
     productsCreated: number
     productsUpdated: number
     productsUnchanged: number
+    productsSkipped: number
     variantsProcessed: number
     variantsUpdated: number
     variantsUnchanged: number
@@ -1699,6 +1739,7 @@ export interface CatalogSyncRunFieldRefs {
   readonly productsCreated: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
   readonly productsUpdated: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
   readonly productsUnchanged: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
+  readonly productsSkipped: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
   readonly variantsProcessed: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
   readonly variantsUpdated: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
   readonly variantsUnchanged: Prisma.FieldRef<"CatalogSyncRun", 'Int'>

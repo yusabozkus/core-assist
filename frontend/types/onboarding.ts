@@ -61,6 +61,8 @@ export type OnboardingStatus = {
       | "COMPLETED"
       | "FAILED"
     progress: number
+    productsProcessed: number
+    productsSkipped: number
     errorMessage: string | null
   } | null
 }

@@ -218,7 +218,7 @@ async function waitForCatalogSync(
     const syncRun = await getChannelSyncRun(storeId, syncRunId, signal)
     onProgress(syncRun.progress)
 
-    if (syncRun.status === "COMPLETED") return
+    if (syncRun.status === "COMPLETED") return syncRun
 
     if (syncRun.status === "FAILED") {
       throw new Error(
@@ -276,6 +276,18 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
   const [syncProgress, setSyncProgress] = React.useState(
     initialStatus.catalogSync?.progress ?? 0
   )
+  const [catalogImportSummary, setCatalogImportSummary] = React.useState<{
+    processed: number
+    skipped: number
+  } | null>(() => {
+    const sync = initialStatus.catalogSync
+    return sync && sync.productsSkipped > 0
+      ? {
+          processed: sync.productsProcessed,
+          skipped: sync.productsSkipped,
+        }
+      : null
+  })
   const [submitError, setSubmitError] = React.useState<string | null>(() =>
     initialStatus.catalogSync?.status === "FAILED"
       ? (initialStatus.catalogSync.errorMessage ??
@@ -348,10 +360,18 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
       (nextProgress) => setSyncProgress(nextProgress),
       controller.signal
     )
-      .then(() => {
+      .then((syncRun) => {
         if (controller.signal.aborted) return
 
         setSyncProgress(100)
+        setCatalogImportSummary(
+          syncRun.productsSkipped > 0
+            ? {
+                processed: syncRun.productsProcessed,
+                skipped: syncRun.productsSkipped,
+              }
+            : null
+        )
         setProvisionedStore(store)
         setDirection(1)
         setCurrentStep(3)
@@ -470,7 +490,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
       const controller = new AbortController()
       syncAbortControllerRef.current = controller
 
-      await waitForCatalogSync(
+      const syncRun = await waitForCatalogSync(
         result.store.id,
         result.catalogSync.syncRunId,
         (nextProgress) => setSyncProgress(nextProgress),
@@ -478,6 +498,14 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
       )
 
       setSyncProgress(100)
+      setCatalogImportSummary(
+        syncRun.productsSkipped > 0
+          ? {
+              processed: syncRun.productsProcessed,
+              skipped: syncRun.productsSkipped,
+            }
+          : null
+      )
       setProvisionedStore(result.store)
       await new Promise((resolve) => window.setTimeout(resolve, 300))
       advanceToStep(3)
@@ -774,6 +802,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                         <AiPreferencesStep
                           tone={profileDraft.tone}
                           responseLength={profileDraft.responseLength}
+                          catalogImportSummary={catalogImportSummary}
                           onToneChange={(value) => updateProfile("tone", value)}
                           onResponseLengthChange={(value) =>
                             updateProfile("responseLength", value)
@@ -1178,11 +1207,13 @@ function CatalogSyncProgress({
 function AiPreferencesStep({
   tone,
   responseLength,
+  catalogImportSummary,
   onToneChange,
   onResponseLengthChange,
 }: {
   tone: AiTone
   responseLength: AiResponseLength
+  catalogImportSummary: { processed: number; skipped: number } | null
   onToneChange: (value: AiTone) => void
   onResponseLengthChange: (value: AiResponseLength) => void
 }) {
@@ -1199,6 +1230,24 @@ function AiPreferencesStep({
         title="AI müşterilerinizle nasıl konuşsun?"
         description="Başlangıç için yalnızca iletişim tonunu ve hedef yanıt uzunluğunu seçin. Daha ayrıntılı kuralları panelden ekleyebilirsiniz."
       />
+
+      {catalogImportSummary ? (
+        <div className="mb-7 flex max-w-3xl items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/8 px-4 py-3 text-xs leading-5">
+          <HugeiconsIcon
+            icon={InformationCircleIcon}
+            className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400"
+          />
+          <p className="text-muted-foreground">
+            <span className="font-medium text-foreground">
+              {catalogImportSummary.processed.toLocaleString("tr-TR")} ürün
+              kataloğunuza eklendi.
+            </span>{" "}
+            {catalogImportSummary.skipped.toLocaleString("tr-TR")} ürün plan
+            kapasitesi nedeniyle beklemede. Kuruluma devam edebilir, daha sonra
+            planınızı yükselterek kalan ürünleri alabilirsiniz.
+          </p>
+        </div>
+      ) : null}
 
       <div className="max-w-3xl divide-y divide-border">
         <section className="pb-8">

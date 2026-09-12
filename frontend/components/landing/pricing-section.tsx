@@ -249,8 +249,8 @@ export function PricingSection() {
                         : !price
                           ? "Güncel fiyat ödeme öncesinde gösterilir"
                           : annual
-                            ? `Yıllık ${price.total} olarak ödenir${price.saving ? ` · ${price.saving} tasarruf` : ""}`
-                            : "Aylık faturalandırılır"}
+                            ? `Yıllık ${price.total} olarak ödenir${price.saving ? ` · ${price.saving} tasarruf` : ""} · Vergiler hariç`
+                            : "Aylık faturalandırılır · Vergiler hariç"}
                     </AnimatedBillingNote>
                   </p>
                   <Link

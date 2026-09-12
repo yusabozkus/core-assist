@@ -91,6 +91,8 @@ export class OnboardingService {
                       status: true,
                       stage: true,
                       progress: true,
+                      productsProcessed: true,
+                      productsSkipped: true,
                       errorMessage: true,
                       startedAt: true,
                     },
@@ -159,6 +161,8 @@ export class OnboardingService {
             status: latestCatalogSync.status,
             stage: latestCatalogSync.stage,
             progress: latestCatalogSync.progress,
+            productsProcessed: latestCatalogSync.productsProcessed,
+            productsSkipped: latestCatalogSync.productsSkipped,
             errorMessage: latestCatalogSync.errorMessage,
           }
         : null,

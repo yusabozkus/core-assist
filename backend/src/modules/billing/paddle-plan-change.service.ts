@@ -14,7 +14,7 @@ import {
 } from '../../generated/prisma/enums';
 import { BillingAuthorizationService } from './billing-authorization.service';
 import { BillingUsageService } from './billing-usage.service';
-import { PLAN_ENTITLEMENTS } from './billing-plan.config';
+import { planEntitlementsFor } from './billing-plan.config';
 import {
   paddleCheckoutEnvironment,
   paddleEnvironment,
@@ -141,7 +141,7 @@ export class PaddlePlanChangeService {
         canConfirm: capacity.every((item) => item.used <= item.limit),
         questions: {
           used: questionUsage.used,
-          limit: PLAN_ENTITLEMENTS[plan].monthlyAiQuestions,
+          limit: planEntitlementsFor(plan).monthlyAiQuestions,
           resetsAt: questionUsage.periodEnd,
         },
       };
@@ -514,7 +514,7 @@ export class PaddlePlanChangeService {
     workspaceId: string,
     plan: BillingPlan,
   ) {
-    const limits = PLAN_ENTITLEMENTS[plan];
+    const limits = planEntitlementsFor(plan);
     const [stores, members, pendingInvitations, products] = await Promise.all([
       tx.store.count({ where: { workspaceId, status: 'ACTIVE' } }),
       tx.workspaceMember.count({ where: { workspaceId } }),

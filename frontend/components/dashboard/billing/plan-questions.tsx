@@ -20,7 +20,7 @@ const questions = [
   {
     question: "Soru hakkı nasıl hesaplanır?",
     answer:
-      "Bir pazaryeri sorusu ilk kez başarıyla analiz edilip taslağı hazırlandığında bir kullanım sayılır. Taslağı düzenlemek, göndermek veya aynı soru için ilk üç taslağı oluşturmak ek kullanım oluşturmaz. Dördüncü ve sonraki her taslak bir ek kullanım sayılır; başarısız AI istekleri kotadan düşmez.",
+      "Bir pazaryeri sorusu ilk kez başarıyla analiz edilip taslağı hazırlandığında bir kullanım sayılır. Taslağı düzenlemek, göndermek veya aynı soru için ilk üç taslağı oluşturmak ek kullanım oluşturmaz. Dördüncü ve sonraki her taslak bir ek kullanım sayılır; başarısız AI istekleri kotadan düşmez. Kota tamamen dolduğunda ücretsiz tekrarlar dahil yeni taslak üretimi dönem yenilenene kadar durur.",
   },
   {
     question: "Soru hakkım biterse ne olur?",

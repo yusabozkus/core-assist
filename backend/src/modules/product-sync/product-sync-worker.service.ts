@@ -50,6 +50,7 @@ type SyncCounters = {
   productsCreated: number;
   productsUpdated: number;
   productsUnchanged: number;
+  productsSkipped: number;
   variantsUpdated: number;
   variantsUnchanged: number;
   lowStockAlerts: number;
@@ -148,6 +149,7 @@ export class ProductSyncWorkerService {
     }
 
     await this.completeSync(data, counters);
+    await this.notifyProductLimit(data, counters);
     await this.notifyInventoryAlerts(data, counters);
     await updateProgress(100);
   }
@@ -259,6 +261,7 @@ export class ProductSyncWorkerService {
     let productsCreated = 0;
     let productsUpdated = 0;
     let productsUnchanged = 0;
+    let productsSkipped = 0;
 
     do {
       await this.billing.assertStoreAccess(
@@ -276,17 +279,22 @@ export class ProductSyncWorkerService {
         BILLING_SYNC_STOPPED_MESSAGE,
       );
       for (const product of batch.products) {
-        const change = await this.saveNormalizedProduct(
-          data.storeId,
-          connection.id,
-          data.syncRunId,
-          product,
-        );
-        if (change === 'CREATED') productsCreated += 1;
-        if (change === 'UPDATED') productsUpdated += 1;
-        if (change === 'UNCHANGED') productsUnchanged += 1;
-        productsProcessed += 1;
-        variantsProcessed += uniqueVariants(product.variants).length;
+        try {
+          const change = await this.saveNormalizedProduct(
+            data.storeId,
+            connection.id,
+            data.syncRunId,
+            product,
+          );
+          if (change === 'CREATED') productsCreated += 1;
+          if (change === 'UPDATED') productsUpdated += 1;
+          if (change === 'UNCHANGED') productsUnchanged += 1;
+          productsProcessed += 1;
+          variantsProcessed += uniqueVariants(product.variants).length;
+        } catch (error) {
+          if (!(error instanceof BillingPlanLimitException)) throw error;
+          productsSkipped += 1;
+        }
       }
 
       cursor = batch.nextCursor;
@@ -297,6 +305,7 @@ export class ProductSyncWorkerService {
         productsCreated,
         productsUpdated,
         productsUnchanged,
+        productsSkipped,
         stage: 'PERSISTING',
         progress: Math.min(80, 20 + batchCount * 5),
         cursor,
@@ -330,6 +339,7 @@ export class ProductSyncWorkerService {
       productsCreated,
       productsUpdated,
       productsUnchanged,
+      productsSkipped,
       variantsUpdated: 0,
       variantsUnchanged: 0,
       lowStockAlerts: 0,
@@ -403,6 +413,7 @@ export class ProductSyncWorkerService {
       productsCreated: 0,
       productsUpdated: 0,
       productsUnchanged: 0,
+      productsSkipped: 0,
       variantsUpdated,
       variantsUnchanged,
       lowStockAlerts,
@@ -1091,6 +1102,7 @@ export class ProductSyncWorkerService {
       productsCreated?: number;
       productsUpdated?: number;
       productsUnchanged?: number;
+      productsSkipped?: number;
       variantsUpdated?: number;
       variantsUnchanged?: number;
       stage?: 'FETCHING' | 'PERSISTING' | 'RECONCILING';
@@ -1106,6 +1118,7 @@ export class ProductSyncWorkerService {
         productsCreated: data.productsCreated,
         productsUpdated: data.productsUpdated,
         productsUnchanged: data.productsUnchanged,
+        productsSkipped: data.productsSkipped,
         variantsUpdated: data.variantsUpdated,
         variantsUnchanged: data.variantsUnchanged,
         stage: data.stage,
@@ -1142,6 +1155,7 @@ export class ProductSyncWorkerService {
           productsCreated: counters.productsCreated,
           productsUpdated: counters.productsUpdated,
           productsUnchanged: counters.productsUnchanged,
+          productsSkipped: counters.productsSkipped,
           variantsUpdated: counters.variantsUpdated,
           variantsUnchanged: counters.variantsUnchanged,
           cursor: null,
@@ -1153,6 +1167,31 @@ export class ProductSyncWorkerService {
         data: connectionData,
       }),
     ]);
+  }
+
+  private async notifyProductLimit(
+    data: ProductSyncJobData,
+    counters: SyncCounters,
+  ) {
+    if (data.kind !== 'FULL' || counters.productsSkipped === 0) return;
+
+    try {
+      await this.notifications.createForStoreMembers({
+        storeId: data.storeId,
+        type: NotificationType.BILLING_PLAN_LIMIT,
+        severity: NotificationSeverity.WARNING,
+        title: 'Katalog plan kapasitesine ulaştı',
+        message: `${counters.productsProcessed.toLocaleString('tr-TR')} ürün aktarıldı, ${counters.productsSkipped.toLocaleString('tr-TR')} ürün plan kapasitesi nedeniyle beklemede kaldı. Eksik ürünleri almak için planınızı yükseltebilirsiniz.`,
+        actionUrl: '/billing',
+        entityType: 'CATALOG_SYNC_RUN',
+        entityId: data.syncRunId,
+        dedupeKey: `billing-product-limit:${data.connectionId}`,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Product limit notification could not be created: ${errorMessage(error)}`,
+      );
+    }
   }
 
   private async reconcileQuestionProductLinks(

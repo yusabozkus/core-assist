@@ -181,7 +181,7 @@ function getProcessedLabel(run: SyncHistoryItem) {
 
 function getDeltaLabel(run: SyncHistoryItem) {
   if (run.kind === "FULL") {
-    return `${run.productsCreated} yeni · ${run.productsUpdated} güncellendi · ${run.productsUnchanged} değişmedi${run.productsArchived ? ` · ${run.productsArchived} arşivlendi` : ""}`
+    return `${run.productsCreated} yeni · ${run.productsUpdated} güncellendi · ${run.productsUnchanged} değişmedi${run.productsSkipped ? ` · ${run.productsSkipped} limit nedeniyle bekliyor` : ""}${run.productsArchived ? ` · ${run.productsArchived} arşivlendi` : ""}`
   }
   if (run.kind === "INVENTORY") {
     return `${run.variantsUpdated} güncellendi · ${run.variantsUnchanged} değişmedi`

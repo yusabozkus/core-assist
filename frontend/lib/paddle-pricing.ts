@@ -124,13 +124,11 @@ function normalizePricing(
     const monthly = previewAmount(
       configuredPrice(configured, planId, "monthly"),
       "monthly",
-      response,
       lineItems
     )
     const annual = previewAmount(
       configuredPrice(configured, planId, "annual"),
       "annual",
-      response,
       lineItems
     )
     if (monthly.currencyCode !== annual.currencyCode) {
@@ -164,7 +162,6 @@ function normalizePricing(
 function previewAmount(
   priceId: string,
   cycle: BillingCycle,
-  response: PricePreviewResponse,
   lineItems: Map<
     string,
     PricePreviewResponse["data"]["details"]["lineItems"][number]
@@ -178,17 +175,19 @@ function previewAmount(
     item.price.billingCycle?.frequency !== 1 ||
     item.price.billingCycle.interval !== expectedInterval ||
     item.price.trialPeriod !== null ||
-    !/^\d+$/.test(item.totals.total)
+    !/^\d+$/.test(item.price.unitPrice.amount)
   ) {
     throw new Error(
       "Paddle plan fiyatı doğrulanamadı. Ücretli plan fiyatlarında deneme süresi bulunmamalıdır."
     )
   }
-  const minorAmount = Number(item.totals.total)
+  // Marketing surfaces show the catalog price before tax. Paddle Checkout
+  // remains authoritative for location-specific tax and the payable total.
+  const minorAmount = Number(item.price.unitPrice.amount)
   if (!Number.isSafeInteger(minorAmount)) {
     throw new Error("Paddle plan tutarı güvenli aralığın dışında.")
   }
-  const currencyCode = response.data.currencyCode
+  const currencyCode = item.price.unitPrice.currencyCode
   const fractionDigits =
     new Intl.NumberFormat("tr-TR", {
       style: "currency",

@@ -28,6 +28,7 @@ export type SyncHistoryItem = {
   productsCreated: number
   productsUpdated: number
   productsUnchanged: number
+  productsSkipped: number
   variantsUpdated: number
   variantsUnchanged: number
   questionsUnchanged: number

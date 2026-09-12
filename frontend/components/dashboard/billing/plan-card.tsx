@@ -113,8 +113,8 @@ export function PlanCard({
               : !price
                 ? "Güncel fiyat şu anda alınamıyor."
                 : billingCycle === "annual"
-                  ? `Yıllık ${price.total} olarak ödenir.${price.saving ? ` ${price.saving} tasarruf edin.` : ""}`
-                  : "Aylık faturalandırılır. Konumunuza göre hesaplanan tahmini vergiler dahildir."}
+                  ? `Yıllık ${price.total} olarak ödenir.${price.saving ? ` ${price.saving} tasarruf edin.` : ""} Vergiler hariçtir.`
+                  : "Aylık faturalandırılır. Vergiler ödeme adımında eklenir."}
           </p>
         </div>
         {current ? (

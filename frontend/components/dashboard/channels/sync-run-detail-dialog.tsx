@@ -244,6 +244,7 @@ function getResultMetrics(run: SyncHistoryItem) {
     { label: "Yeni ürün", value: run.productsCreated },
     { label: "Güncellenen", value: run.productsUpdated },
     { label: "Değişmeyen", value: run.productsUnchanged },
+    { label: "Plan limiti nedeniyle bekleyen", value: run.productsSkipped },
     { label: "İşlenen varyant", value: run.variantsProcessed },
     { label: "Arşivlenen", value: run.productsArchived },
   ]

@@ -800,6 +800,7 @@ model CatalogSyncRun {
   productsCreated    Int                @default(0)
   productsUpdated    Int                @default(0)
   productsUnchanged  Int                @default(0)
+  productsSkipped    Int                @default(0)
   variantsProcessed  Int                @default(0)
   variantsUpdated    Int                @default(0)
   variantsUnchanged  Int                @default(0)
