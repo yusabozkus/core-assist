@@ -11,6 +11,7 @@ import {
 import {
   EventName,
   Paddle,
+  type AdjustmentNotification,
   type EventEntity,
   type SubscriptionNotification,
   type Subscription,
@@ -22,6 +23,8 @@ import {
   BillingCycle,
   BillingPlan,
   BillingSubscriptionStatus,
+  NotificationSeverity,
+  NotificationType,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { BillingSubscriptionService } from './billing-subscription.service';
@@ -54,6 +57,11 @@ const TRANSACTION_RECOVERY_EVENTS = new Set<string>([
   EventName.TransactionCreated,
   EventName.TransactionReady,
   EventName.TransactionCompleted,
+]);
+
+const ADJUSTMENT_EVENTS = new Set<string>([
+  EventName.AdjustmentCreated,
+  EventName.AdjustmentUpdated,
 ]);
 
 @Injectable()
@@ -332,6 +340,18 @@ export class PaddleBillingService {
           return { received: true, processed: true, notificationChange };
         }
 
+        if (ADJUSTMENT_EVENTS.has(event.eventType)) {
+          const notificationChange = await this.syncAdjustment(
+            transaction,
+            event.data as AdjustmentNotification,
+          );
+          return {
+            received: true,
+            processed: Boolean(notificationChange),
+            notificationChange,
+          };
+        }
+
         if (TRANSACTION_RECOVERY_EVENTS.has(event.eventType)) {
           const recovered = await this.checkoutBindings.recoverTransaction(
             transaction,
@@ -504,6 +524,20 @@ export class PaddleBillingService {
           ? parseDate(data.scheduledChange.effectiveAt)
           : null,
     });
+    const cancellationScheduled =
+      !existing.cancelAtPeriodEnd &&
+      data.scheduledChange?.action === 'cancel' &&
+      Boolean(parseDate(data.scheduledChange.effectiveAt));
+    const cancellationCompleted =
+      existing.status !== BillingSubscriptionStatus.CANCELED &&
+      status === BillingSubscriptionStatus.CANCELED;
+    const subscriptionActivated =
+      existing.paddleSubscriptionId !== data.id &&
+      (status === BillingSubscriptionStatus.ACTIVE ||
+        status === BillingSubscriptionStatus.TRIALING);
+    const planChanged =
+      existing.paddleSubscriptionId === data.id &&
+      (existing.plan !== selection.plan || existing.cycle !== selection.cycle);
 
     const existingHealthyNotificationChange =
       existing.paddleSubscriptionId === data.id &&
@@ -611,6 +645,75 @@ export class PaddleBillingService {
               : null,
       },
     });
+    const createdNotificationUserIds = new Set<string>();
+    if (subscriptionActivated || planChanged) {
+      const recipientUserIds =
+        await this.notifications.createWorkspaceFinanceNotification(
+          transaction,
+          existing.workspaceId,
+          {
+            type: NotificationType.BILLING_SUBSCRIPTION_CHANGED,
+            severity: NotificationSeverity.INFO,
+            title: subscriptionActivated
+              ? 'Aboneliğiniz etkinleştirildi'
+              : 'Abonelik planınız değiştirildi',
+            message: `${billingPlanLabel(selection.plan)} planı ${billingCycleLabel(selection.cycle)} ödeme dönemiyle etkinleştirildi.`,
+            actionUrl: `/billing/${existing.workspaceId}`,
+            entityType: 'BILLING_SUBSCRIPTION',
+            entityId: existing.id,
+            dedupeKey: subscriptionActivated
+              ? `billing-subscription-activated:${data.id}`
+              : `billing-subscription-changed:${data.id}:${snapshotAt.toISOString()}`,
+          },
+        );
+      recipientUserIds.forEach((userId) =>
+        createdNotificationUserIds.add(userId),
+      );
+    }
+    if (cancellationScheduled) {
+      const accessEndsAt = parseDate(data.scheduledChange?.effectiveAt);
+      const recipientUserIds =
+        await this.notifications.createWorkspaceFinanceNotification(
+          transaction,
+          existing.workspaceId,
+          {
+            type: NotificationType.BILLING_CANCELLATION,
+            severity: NotificationSeverity.WARNING,
+            title: 'Abonelik iptali planlandı',
+            message: accessEndsAt
+              ? `Aboneliğiniz ${formatBillingNotificationDate(accessEndsAt)} tarihinde sona erecek. Bu tarihe kadar plan haklarınızı kullanabilirsiniz.`
+              : 'Aboneliğiniz mevcut faturalandırma döneminin sonunda sona erecek.',
+            actionUrl: `/billing/${existing.workspaceId}`,
+            entityType: 'BILLING_SUBSCRIPTION',
+            entityId: existing.id,
+            dedupeKey: `billing-cancellation-scheduled:${data.id}:${accessEndsAt?.toISOString() ?? snapshotAt.toISOString()}`,
+          },
+        );
+      recipientUserIds.forEach((userId) =>
+        createdNotificationUserIds.add(userId),
+      );
+    }
+    if (cancellationCompleted) {
+      const recipientUserIds =
+        await this.notifications.createWorkspaceFinanceNotification(
+          transaction,
+          existing.workspaceId,
+          {
+            type: NotificationType.BILLING_CANCELLATION,
+            severity: NotificationSeverity.WARNING,
+            title: 'Aboneliğiniz sona erdi',
+            message:
+              'Ücretli planınız sona erdi. Kayıtlı verilerinize erişebilir ve mevcut soruları manuel yanıtlayabilirsiniz.',
+            actionUrl: `/billing/${existing.workspaceId}`,
+            entityType: 'BILLING_SUBSCRIPTION',
+            entityId: existing.id,
+            dedupeKey: `billing-cancellation-completed:${data.id}`,
+          },
+        );
+      recipientUserIds.forEach((userId) =>
+        createdNotificationUserIds.add(userId),
+      );
+    }
     if (status === BillingSubscriptionStatus.ACTIVE) {
       await transaction.billingPlanChange.updateMany({
         where: {
@@ -657,17 +760,82 @@ export class PaddleBillingService {
           dedupeKey: `billing-payment:${data.id}:${currentPeriod?.startsAt ?? snapshotAt.toISOString()}`,
         },
       );
-      return { recipientUserIds, reason: 'CREATED' as const };
+      recipientUserIds.forEach((userId) =>
+        createdNotificationUserIds.add(userId),
+      );
+      return {
+        recipientUserIds: [...createdNotificationUserIds],
+        reason: 'CREATED' as const,
+      };
     }
     if (incomingHasBillingAccess) {
-      if (existingHealthyNotificationChange)
-        return existingHealthyNotificationChange;
-      const recipientUserIds = await this.notifications.resolveBillingIssues(
-        transaction,
-        existing.workspaceId,
-      );
-      return { recipientUserIds, reason: 'READ_ALL' as const };
+      const resolvedRecipientUserIds = existingHealthyNotificationChange
+        ? existingHealthyNotificationChange.recipientUserIds
+        : await this.notifications.resolveBillingIssues(
+            transaction,
+            existing.workspaceId,
+          );
+      const recipientUserIds = [
+        ...new Set([
+          ...createdNotificationUserIds,
+          ...resolvedRecipientUserIds,
+        ]),
+      ];
+      return {
+        recipientUserIds,
+        reason:
+          createdNotificationUserIds.size > 0
+            ? ('CREATED' as const)
+            : ('READ_ALL' as const),
+      };
     }
+    if (createdNotificationUserIds.size > 0) {
+      return {
+        recipientUserIds: [...createdNotificationUserIds],
+        reason: 'CREATED' as const,
+      };
+    }
+  }
+
+  private async syncAdjustment(
+    transaction: Prisma.TransactionClient,
+    data: AdjustmentNotification,
+  ) {
+    if (data.action !== 'refund' || data.status !== 'approved') return;
+
+    const subscription = await transaction.billingSubscription.findFirst({
+      where: {
+        paddleCustomerId: data.customerId,
+        ...(data.subscriptionId
+          ? { paddleSubscriptionId: data.subscriptionId }
+          : {}),
+      },
+      select: { id: true, workspaceId: true },
+    });
+    if (!subscription) return;
+
+    const amount = formatBillingNotificationAmount(
+      data.totals.total,
+      data.currencyCode,
+    );
+    const recipientUserIds =
+      await this.notifications.createWorkspaceFinanceNotification(
+        transaction,
+        subscription.workspaceId,
+        {
+          type: NotificationType.BILLING_REFUND,
+          severity: NotificationSeverity.INFO,
+          title: 'Ödeme iadeniz tamamlandı',
+          message: `${amount} tutarındaki iade Paddle tarafından onaylandı. İşlemi faturalar bölümünden inceleyebilirsiniz.`,
+          actionUrl: `/billing/${subscription.workspaceId}?tab=invoices`,
+          entityType: 'PADDLE_ADJUSTMENT',
+          entityId: data.id,
+          dedupeKey: `billing-refund:${data.id}`,
+        },
+      );
+    return recipientUserIds.length
+      ? { recipientUserIds, reason: 'CREATED' as const }
+      : undefined;
   }
 
   private getClient() {
@@ -810,6 +978,35 @@ function moneyFromMinorUnits(value: string, currency: string) {
 }
 
 const ZERO_DECIMAL_CURRENCIES = new Set(['JPY', 'KRW']);
+
+function formatBillingNotificationAmount(value: string, currency: string) {
+  const amount = new Intl.NumberFormat('tr-TR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(moneyFromMinorUnits(value, currency));
+  return `${amount} ${currency === 'TRY' ? '₺' : currency}`;
+}
+
+function formatBillingNotificationDate(value: Date) {
+  return new Intl.DateTimeFormat('tr-TR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(value);
+}
+
+function billingPlanLabel(plan: BillingPlan) {
+  const labels: Record<BillingPlan, string> = {
+    [BillingPlan.STARTER]: 'Starter',
+    [BillingPlan.GROWTH]: 'Growth',
+    [BillingPlan.BUSINESS]: 'Business',
+  };
+  return labels[plan];
+}
+
+function billingCycleLabel(cycle: BillingCycle) {
+  return cycle === BillingCycle.ANNUAL ? 'yıllık' : 'aylık';
+}
 
 function mapPaddleStatus(status: SubscriptionNotification['status']) {
   switch (status) {

@@ -4,6 +4,19 @@ CoreAssist bildirimleri varsayılan olarak uygulama içinde ve canlı SSE akış
 çalışır. Tarayıcı ve e-posta teslimatı isteğe bağlıdır; gerekli ortam değişkenleri
 tanımlanmadığında ayar ekranındaki ilgili seçenekler pasif görünür.
 
+## Alıcı ve tercih politikası
+
+- AI inceleme ve yanıt hataları mağaza yöneticileriyle temsilcilere gider.
+- Senkronizasyon, kanal ve stok sorunları mağaza yöneticilerine gider.
+- Finans ve kota olayları yalnızca hesap sahibiyle hesap yöneticilerine gider.
+- Ekip erişimi ve hesap güvenliği olayları doğrudan ilgili kullanıcıya gider.
+- Viewer rolü operasyonel bildirim almaz.
+
+AI, senkronizasyon, kanal ve stok bildirimleri mağaza bazında kapatılabilir.
+Finans, ekip erişimi ve hesap güvenliği bildirimleri zorunludur. Başarılı rutin
+senkronizasyonlar, her yeni soru ve kullanıcının kendi başlattığı davet
+oluşturma/iptal işlemleri bildirim üretmez.
+
 ## Tarayıcı bildirimleri
 
 VAPID anahtarlarını bir kez üretin:

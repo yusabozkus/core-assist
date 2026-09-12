@@ -186,9 +186,22 @@ export class QuestionDraftWorkerService {
       },
     });
 
-    // Billing has workspace-level notices. Do not send one "AI error" for
-    // every pending question after a quota/access change.
-    if (updated.count > 0 && !billingBlocked) {
+    if (updated.count > 0 && billingBlocked) {
+      const quotaBlocked = error instanceof BillingQuotaExceededException;
+      await this.notifications.createForStoreMembers({
+        storeId: data.storeId,
+        type: NotificationType.AI_AUTOMATION_PAUSED,
+        severity: NotificationSeverity.WARNING,
+        title: 'AI otomasyonu durduruldu',
+        message: quotaBlocked
+          ? 'Aylık AI soru hakkı dolduğu için yeni otomatik taslaklar hazırlanmıyor.'
+          : 'Aktif abonelik bulunmadığı için yeni otomatik taslaklar hazırlanmıyor.',
+        actionUrl: '/billing',
+        entityType: 'STORE',
+        entityId: data.storeId,
+        dedupeKey: `ai-automation-paused:${data.storeId}:${quotaBlocked ? 'quota' : 'billing'}`,
+      });
+    } else if (updated.count > 0) {
       await this.notifications.createForStoreMembers({
         storeId: data.storeId,
         type: NotificationType.AI_DRAFT_FAILED,

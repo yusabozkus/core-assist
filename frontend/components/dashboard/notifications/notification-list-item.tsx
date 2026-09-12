@@ -8,6 +8,8 @@ import {
   Package01Icon,
   PlugSocketIcon,
   RefreshIcon,
+  Shield01Icon,
+  UserGroupIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
@@ -26,8 +28,15 @@ const NOTIFICATION_TYPE_DETAILS: Record<
     icon: typeof AlertCircleIcon
   }
 > = {
+  BILLING_SUBSCRIPTION_CHANGED: {
+    label: "Abonelik",
+    icon: Package01Icon,
+  },
+  BILLING_CANCELLATION: { label: "Abonelik", icon: Package01Icon },
+  BILLING_REFUND: { label: "Ödeme iadesi", icon: Package01Icon },
   AI_REVIEW_REQUIRED: { label: "İnceleme", icon: AiBrain01Icon },
   AI_DRAFT_FAILED: { label: "AI taslağı", icon: AiBrain01Icon },
+  AI_AUTOMATION_PAUSED: { label: "AI otomasyonu", icon: AiBrain01Icon },
   AI_USAGE_LIMIT: { label: "Plan kullanımı", icon: AiBrain01Icon },
   ANSWER_DELIVERY_FAILED: { label: "Yanıt", icon: InboxIcon },
   PRODUCT_SYNC_FAILED: { label: "Ürün senkronizasyonu", icon: RefreshIcon },
@@ -37,6 +46,13 @@ const NOTIFICATION_TYPE_DETAILS: Record<
   CHANNEL_CONNECTION_ERROR: { label: "Kanal", icon: PlugSocketIcon },
   BILLING_PLAN_LIMIT: { label: "Plan limiti", icon: Package01Icon },
   BILLING_PAYMENT_ISSUE: { label: "Abonelik ödemesi", icon: Package01Icon },
+  TEAM_INVITATION_ACCEPTED: { label: "Ekip", icon: UserGroupIcon },
+  TEAM_ACCESS_CHANGED: { label: "Ekip erişimi", icon: UserGroupIcon },
+  SECURITY_ACCOUNT_CHANGED: { label: "Hesap güvenliği", icon: Shield01Icon },
+  SECURITY_SESSIONS_REVOKED: {
+    label: "Hesap güvenliği",
+    icon: Shield01Icon,
+  },
 }
 
 const SEVERITY_STYLES: Record<

@@ -9,6 +9,8 @@ import {
 import { createHash, randomBytes } from 'node:crypto';
 import { Prisma } from '../../generated/prisma/client';
 import {
+  NotificationSeverity,
+  NotificationType,
   StoreRole,
   StoreStatus,
   WorkspaceInvitationStatus,
@@ -16,6 +18,7 @@ import {
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { BillingEntitlementService } from '../billing/billing-entitlement.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   CreateWorkspaceInvitationDto,
   TeamAccessLevel,
@@ -25,7 +28,7 @@ import {
 const INVITATION_LIFETIME_MS = 7 * 24 * 60 * 60 * 1_000;
 
 const invitationInclude = {
-  workspace: { select: { id: true, name: true } },
+  workspace: { select: { id: true, name: true, ownerId: true } },
   invitedBy: { select: { id: true, name: true } },
   storeAccesses: {
     include: { store: { select: { id: true, name: true, status: true } } },
@@ -38,6 +41,7 @@ export class TeamService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly billingEntitlements: BillingEntitlementService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async getTeam(workspaceId: string, actorUserId: string) {
@@ -262,7 +266,7 @@ export class TeamService {
     actorUserId: string,
     dto: UpdateWorkspaceMemberDto,
   ) {
-    return this.prisma.$transaction(async (transaction) => {
+    const result = await this.prisma.$transaction(async (transaction) => {
       const actor = await this.requireManager(
         transaction,
         workspaceId,
@@ -290,7 +294,7 @@ export class TeamService {
       await transaction.storeMember.deleteMany({
         where: { userId: targetUserId, store: { workspaceId } },
       });
-      await transaction.workspaceMember.update({
+      const updatedMember = await transaction.workspaceMember.update({
         where: { id: target.id },
         data: { role: workspaceRoleFor(dto.accessLevel) },
       });
@@ -304,8 +308,26 @@ export class TeamService {
           skipDuplicates: true,
         });
       }
-      return { updated: true, userId: targetUserId };
+      const notificationRecipientIds =
+        await this.notifications.createForUsersInTransaction(transaction, {
+          recipientUserIds: [targetUserId],
+          type: NotificationType.TEAM_ACCESS_CHANGED,
+          severity: NotificationSeverity.INFO,
+          title: 'Ekip erişiminiz güncellendi',
+          message:
+            'Çalışma alanındaki rolünüz veya erişebildiğiniz mağazalar bir yönetici tarafından değiştirildi.',
+          actionUrl: '/dashboard',
+          entityType: 'WORKSPACE_MEMBER',
+          entityId: target.id,
+          dedupeKey: `team-access-changed:${target.id}:${updatedMember.updatedAt.toISOString()}`,
+        });
+      return {
+        response: { updated: true, userId: targetUserId },
+        notificationRecipientIds,
+      };
     });
+    this.notifications.emitChange(result.notificationRecipientIds, null);
+    return result.response;
   }
 
   async removeMember(
@@ -355,7 +377,7 @@ export class TeamService {
 
   async acceptInvitation(
     token: string,
-    user: { id: string; email: string; emailVerified: boolean },
+    user: { id: string; name: string; email: string; emailVerified: boolean },
   ) {
     if (!user.emailVerified) {
       throw new ForbiddenException(
@@ -364,7 +386,7 @@ export class TeamService {
     }
     const tokenHash = hashToken(token);
     try {
-      return await this.prisma.$transaction(async (transaction) => {
+      const result = await this.prisma.$transaction(async (transaction) => {
         const locked = await transaction.$queryRaw<Array<{ id: string }>>`
         SELECT "id"
         FROM "workspace_invitation"
@@ -455,15 +477,43 @@ export class TeamService {
           }),
         ]);
 
+        const notificationRecipientIds =
+          await this.notifications.createForUsersInTransaction(transaction, {
+            recipientUserIds: [
+              ...new Set(
+                [
+                  invitation.workspace.ownerId,
+                  invitation.invitedByUserId,
+                ].filter(
+                  (recipientUserId): recipientUserId is string =>
+                    Boolean(recipientUserId) && recipientUserId !== user.id,
+                ),
+              ),
+            ],
+            type: NotificationType.TEAM_INVITATION_ACCEPTED,
+            severity: NotificationSeverity.INFO,
+            title: 'Ekip daveti kabul edildi',
+            message: `${user.name}, ${invitation.workspace.name} ekibine katıldı.`,
+            actionUrl: '/dashboard/team',
+            entityType: 'WORKSPACE_INVITATION',
+            entityId: invitation.id,
+            dedupeKey: `team-invitation-accepted:${invitation.id}`,
+          });
+
         return {
-          accepted: true,
-          workspace: {
-            id: invitation.workspaceId,
-            name: invitation.workspace.name,
+          response: {
+            accepted: true,
+            workspace: {
+              id: invitation.workspaceId,
+              name: invitation.workspace.name,
+            },
+            nextPath: '/dashboard',
           },
-          nextPath: '/dashboard',
+          notificationRecipientIds,
         };
       });
+      this.notifications.emitChange(result.notificationRecipientIds, null);
+      return result.response;
     } catch (error) {
       if (isUniqueConstraintError(error)) {
         throw new ConflictException(

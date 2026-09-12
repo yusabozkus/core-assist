@@ -320,7 +320,19 @@ export function NotificationCenter({ storeId }: { storeId: string }) {
 }
 
 function getSafeActionUrl(actionUrl: string | null) {
-  return actionUrl?.startsWith("/dashboard")
+  return isInternalNotificationUrl(actionUrl)
     ? actionUrl
     : APP_ROUTES.dashboard.settings.notifications
+}
+
+function isInternalNotificationUrl(
+  actionUrl: string | null
+): actionUrl is string {
+  return Boolean(
+    actionUrl &&
+    (actionUrl === "/dashboard" ||
+      actionUrl.startsWith("/dashboard/") ||
+      actionUrl === "/billing" ||
+      actionUrl.startsWith("/billing/"))
+  )
 }

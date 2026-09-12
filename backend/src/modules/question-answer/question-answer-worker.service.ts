@@ -482,7 +482,9 @@ export class QuestionAnswerWorkerService {
     if (requiresReview) {
       await this.notifications.createForStoreMembers({
         storeId: data.storeId,
-        type: NotificationType.AI_REVIEW_REQUIRED,
+        type: billingBlocked
+          ? NotificationType.AI_AUTOMATION_PAUSED
+          : NotificationType.AI_REVIEW_REQUIRED,
         severity: NotificationSeverity.WARNING,
         title: billingBlocked
           ? 'Otomatik gönderim durduruldu'
@@ -491,9 +493,11 @@ export class QuestionAnswerWorkerService {
           ? BILLING_AUTOMATION_STOPPED_MESSAGE
           : 'Otomatik gönderim güvenlik kontrolünü geçemedi. Taslağı kontrol ederek manuel gönderebilirsiniz.',
         actionUrl: `/dashboard/inbox?question=${questionId}`,
-        entityType: 'PRODUCT_QUESTION',
-        entityId: questionId,
-        dedupeKey: `ai-review-required:${questionId}`,
+        entityType: billingBlocked ? 'STORE' : 'PRODUCT_QUESTION',
+        entityId: billingBlocked ? data.storeId : questionId,
+        dedupeKey: billingBlocked
+          ? `ai-automation-paused:${data.storeId}:billing`
+          : `ai-review-required:${questionId}`,
       });
     }
   }

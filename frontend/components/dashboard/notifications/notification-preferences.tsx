@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import {
   AiBrain01Icon,
-  CreditCardIcon,
   InboxIcon,
   Package01Icon,
   RefreshIcon,
@@ -55,6 +54,12 @@ const PREFERENCE_GROUPS: Array<{
           "Taslak üretimi kalıcı olarak başarısız olduğunda bildirin.",
       },
       {
+        type: "AI_AUTOMATION_PAUSED",
+        title: "Durdurulan AI otomasyonu",
+        description:
+          "Abonelik veya güvenlik kontrolü otomatik gönderimi durdurduğunda bildirin.",
+      },
+      {
         type: "ANSWER_DELIVERY_FAILED",
         title: "Gönderilemeyen yanıtlar",
         description: "Pazaryerine iletilemeyen yanıtlar için bildirim alın.",
@@ -82,26 +87,6 @@ const PREFERENCE_GROUPS: Array<{
         type: "CHANNEL_CONNECTION_ERROR",
         title: "Kanal bağlantı sorunları",
         description: "Bağlı bir pazaryerinin erişimi kesildiğinde bildirin.",
-      },
-    ],
-  },
-  {
-    title: "Plan ve kullanım",
-    description: "Abonelik haklarınızın kalan kapasitesini takip edin.",
-    icon: CreditCardIcon,
-    iconClassName: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    preferences: [
-      {
-        type: "AI_USAGE_LIMIT",
-        title: "AI kullanım limiti",
-        description:
-          "Aylık soru hakkınız kritik kullanım eşiklerine ulaştığında bildirin.",
-      },
-      {
-        type: "BILLING_PLAN_LIMIT",
-        title: "Plan kapasitesi",
-        description:
-          "Mağaza veya ürün kapasitesi bir işlemi engellediğinde bildirin.",
       },
     ],
   },

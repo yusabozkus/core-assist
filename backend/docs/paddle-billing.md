@@ -75,6 +75,8 @@ adresinin sonuna ekleyin.
 - `transaction.ready`
 - `transaction.payment_failed`
 - `transaction.past_due`
+- `adjustment.created`
+- `adjustment.updated`
 
 Destination oluşturulduktan sonra gösterilen endpoint secret değerini
 `PADDLE_WEBHOOK_SECRET` olarak kaydedin.

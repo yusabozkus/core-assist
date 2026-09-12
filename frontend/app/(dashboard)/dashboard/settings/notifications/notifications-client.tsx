@@ -171,7 +171,7 @@ export function NotificationsClient({
         .catch(() => void loadNotifications())
     }
 
-    if (notification.actionUrl?.startsWith("/dashboard")) {
+    if (isInternalNotificationUrl(notification.actionUrl)) {
       router.push(notification.actionUrl)
     }
   }
@@ -376,5 +376,17 @@ export function NotificationsClient({
         ) : null}
       </main>
     </div>
+  )
+}
+
+function isInternalNotificationUrl(
+  actionUrl: string | null
+): actionUrl is string {
+  return Boolean(
+    actionUrl &&
+    (actionUrl === "/dashboard" ||
+      actionUrl.startsWith("/dashboard/") ||
+      actionUrl === "/billing" ||
+      actionUrl.startsWith("/billing/"))
   )
 }

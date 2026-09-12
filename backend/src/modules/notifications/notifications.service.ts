@@ -8,6 +8,8 @@ import { Prisma } from '../../generated/prisma/client';
 import {
   NotificationSeverity,
   NotificationType,
+  StoreRole,
+  WorkspaceRole,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import {
@@ -38,6 +40,49 @@ export type StoreNotificationInput = {
   entityId?: string;
   dedupeKey: string;
 };
+
+type DirectNotificationInput = Omit<StoreNotificationInput, 'storeId'> & {
+  recipientUserIds: string[];
+  storeId?: string | null;
+};
+
+type WorkspaceNotificationInput = Omit<StoreNotificationInput, 'storeId'>;
+
+type UserNotificationInput = Omit<StoreNotificationInput, 'storeId'> & {
+  recipientUserId: string;
+  storeId?: string | null;
+};
+
+const STORE_NOTIFICATION_ROLES: Partial<
+  Record<NotificationType, readonly StoreRole[]>
+> = {
+  [NotificationType.AI_REVIEW_REQUIRED]: [StoreRole.ADMIN, StoreRole.AGENT],
+  [NotificationType.AI_DRAFT_FAILED]: [StoreRole.ADMIN, StoreRole.AGENT],
+  [NotificationType.ANSWER_DELIVERY_FAILED]: [StoreRole.ADMIN, StoreRole.AGENT],
+  [NotificationType.AI_AUTOMATION_PAUSED]: [StoreRole.ADMIN],
+  [NotificationType.PRODUCT_SYNC_FAILED]: [StoreRole.ADMIN],
+  [NotificationType.QUESTION_SYNC_FAILED]: [StoreRole.ADMIN],
+  [NotificationType.CHANNEL_CONNECTION_ERROR]: [StoreRole.ADMIN],
+  [NotificationType.LOW_STOCK]: [StoreRole.ADMIN],
+  [NotificationType.OUT_OF_STOCK]: [StoreRole.ADMIN],
+};
+
+const WORKSPACE_FINANCE_NOTIFICATION_TYPES = new Set<NotificationType>([
+  NotificationType.AI_USAGE_LIMIT,
+  NotificationType.BILLING_PLAN_LIMIT,
+]);
+
+const USER_CONFIGURABLE_NOTIFICATION_TYPES = new Set<NotificationType>([
+  NotificationType.AI_REVIEW_REQUIRED,
+  NotificationType.AI_DRAFT_FAILED,
+  NotificationType.AI_AUTOMATION_PAUSED,
+  NotificationType.ANSWER_DELIVERY_FAILED,
+  NotificationType.PRODUCT_SYNC_FAILED,
+  NotificationType.QUESTION_SYNC_FAILED,
+  NotificationType.LOW_STOCK,
+  NotificationType.OUT_OF_STOCK,
+  NotificationType.CHANNEL_CONNECTION_ERROR,
+]);
 
 @Injectable()
 export class NotificationsService {
@@ -70,7 +115,7 @@ export class NotificationsService {
 
     return {
       storeId,
-      preferences: Object.values(NotificationType).map((type) => ({
+      preferences: [...USER_CONFIGURABLE_NOTIFICATION_TYPES].map((type) => ({
         type,
         enabled: savedByType.get(type) ?? true,
       })),
@@ -82,6 +127,16 @@ export class NotificationsService {
     body: UpdateNotificationPreferencesDto,
   ) {
     await this.assertStoreMembership(userId, body.storeId);
+
+    const unsupportedPreference = body.preferences.find(
+      (preference) =>
+        !USER_CONFIGURABLE_NOTIFICATION_TYPES.has(preference.type),
+    );
+    if (unsupportedPreference) {
+      throw new BadRequestException(
+        'Finans, ekip erişimi ve hesap güvenliği bildirimleri kapatılamaz.',
+      );
+    }
 
     await this.prisma.$transaction(
       body.preferences.map((preference) =>
@@ -237,10 +292,7 @@ export class NotificationsService {
       recipientUserId: userId,
       ...(query.storeId
         ? {
-            OR: [
-              { storeId: query.storeId },
-              { storeId: null, type: NotificationType.BILLING_PAYMENT_ISSUE },
-            ],
+            OR: [{ storeId: query.storeId }, { storeId: null }],
           }
         : {}),
       ...(query.type ? { type: query.type } : {}),
@@ -276,10 +328,7 @@ export class NotificationsService {
         readAt: null,
         ...(storeId
           ? {
-              OR: [
-                { storeId },
-                { storeId: null, type: NotificationType.BILLING_PAYMENT_ISSUE },
-              ],
+              OR: [{ storeId }, { storeId: null }],
             }
           : {}),
       },
@@ -319,10 +368,7 @@ export class NotificationsService {
         readAt: null,
         ...(body.storeId
           ? {
-              OR: [
-                { storeId: body.storeId },
-                { storeId: null, type: NotificationType.BILLING_PAYMENT_ISSUE },
-              ],
+              OR: [{ storeId: body.storeId }, { storeId: null }],
             }
           : {}),
       },
@@ -398,6 +444,95 @@ export class NotificationsService {
     return result.count > 0 ? recipients : [];
   }
 
+  async createWorkspaceFinanceNotification(
+    transaction: Prisma.TransactionClient,
+    workspaceId: string,
+    input: WorkspaceNotificationInput,
+  ) {
+    const recipients = await this.getWorkspaceFinanceRecipients(
+      transaction,
+      workspaceId,
+    );
+    return this.createForUsersInTransaction(transaction, {
+      ...input,
+      recipientUserIds: recipients,
+      storeId: null,
+    });
+  }
+
+  async createForUsersInTransaction(
+    transaction: Prisma.TransactionClient,
+    input: DirectNotificationInput,
+  ) {
+    const recipientUserIds = [...new Set(input.recipientUserIds)];
+    if (recipientUserIds.length === 0) return [];
+
+    const result = await transaction.notification.createMany({
+      data: recipientUserIds.map((recipientUserId) => ({
+        recipientUserId,
+        storeId: input.storeId ?? null,
+        type: input.type,
+        severity: input.severity,
+        title: input.title.slice(0, 160),
+        message: input.message.slice(0, 1_000),
+        actionUrl: input.actionUrl,
+        entityType: input.entityType,
+        entityId: input.entityId,
+        dedupeKey: input.dedupeKey,
+      })),
+      skipDuplicates: true,
+    });
+
+    return result.count > 0 ? recipientUserIds : [];
+  }
+
+  async createForUser(input: UserNotificationInput) {
+    try {
+      const now = new Date();
+      await this.prisma.notification.upsert({
+        where: {
+          recipientUserId_dedupeKey: {
+            recipientUserId: input.recipientUserId,
+            dedupeKey: input.dedupeKey,
+          },
+        },
+        create: {
+          recipientUserId: input.recipientUserId,
+          storeId: input.storeId ?? null,
+          type: input.type,
+          severity: input.severity,
+          title: input.title.slice(0, 160),
+          message: input.message.slice(0, 1_000),
+          actionUrl: input.actionUrl,
+          entityType: input.entityType,
+          entityId: input.entityId,
+          dedupeKey: input.dedupeKey,
+          lastOccurredAt: now,
+        },
+        update: {
+          severity: input.severity,
+          title: input.title.slice(0, 160),
+          message: input.message.slice(0, 1_000),
+          actionUrl: input.actionUrl,
+          occurrenceCount: { increment: 1 },
+          readAt: null,
+          lastOccurredAt: now,
+        },
+      });
+      this.streamEvents.emit(
+        [input.recipientUserId],
+        input.storeId ?? null,
+        'CREATED',
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Bilinmeyen bildirim hatası';
+      this.logger.error(
+        `${input.type} kullanıcı bildirimi oluşturulamadı (${input.recipientUserId}): ${message}`,
+      );
+    }
+  }
+
   async resolveBillingIssues(
     transaction: Prisma.TransactionClient,
     workspaceId: string,
@@ -439,34 +574,70 @@ export class NotificationsService {
     this.streamEvents.emit(recipientUserIds, null, reason);
   }
 
+  emitChange(
+    recipientUserIds: string[],
+    storeId: string | null,
+    reason: NotificationChangeReason = 'CREATED',
+  ) {
+    this.streamEvents.emit(recipientUserIds, storeId, reason);
+  }
+
   async createForStoreMembers(input: StoreNotificationInput) {
     try {
       const store = await this.prisma.store.findUnique({
         where: { id: input.storeId },
         select: {
-          members: { select: { userId: true } },
-          workspace: { select: { ownerId: true } },
+          members: { select: { userId: true, role: true } },
+          workspace: {
+            select: {
+              ownerId: true,
+              members: {
+                where: { role: WorkspaceRole.ADMIN },
+                select: { userId: true },
+              },
+            },
+          },
         },
       });
 
       if (!store) return;
 
-      const recipientUserIds = [
-        ...new Set([
-          store.workspace.ownerId,
-          ...store.members.map((member) => member.userId),
-        ]),
-      ];
-      const disabledPreferences =
-        await this.prisma.notificationPreference.findMany({
-          where: {
-            storeId: input.storeId,
-            type: input.type,
-            enabled: false,
-            userId: { in: recipientUserIds },
-          },
-          select: { userId: true },
-        });
+      const storeRoles = STORE_NOTIFICATION_ROLES[input.type] ?? [];
+      const storeRecipientIds = store.members
+        .filter(
+          (member) =>
+            member.role === StoreRole.OWNER || storeRoles.includes(member.role),
+        )
+        .map((member) => member.userId);
+      const workspaceFinanceNotification =
+        WORKSPACE_FINANCE_NOTIFICATION_TYPES.has(input.type);
+      const recipientUserIds = workspaceFinanceNotification
+        ? [
+            ...new Set([
+              store.workspace.ownerId,
+              ...store.workspace.members.map((member) => member.userId),
+            ]),
+          ]
+        : [
+            ...new Set([
+              store.workspace.ownerId,
+              ...store.workspace.members.map((member) => member.userId),
+              ...storeRecipientIds,
+            ]),
+          ];
+      const disabledPreferences = USER_CONFIGURABLE_NOTIFICATION_TYPES.has(
+        input.type,
+      )
+        ? await this.prisma.notificationPreference.findMany({
+            where: {
+              storeId: input.storeId,
+              type: input.type,
+              enabled: false,
+              userId: { in: recipientUserIds },
+            },
+            select: { userId: true },
+          })
+        : [];
       const disabledUserIds = new Set(
         disabledPreferences.map((preference) => preference.userId),
       );
@@ -491,7 +662,7 @@ export class NotificationsService {
             },
             create: {
               recipientUserId,
-              storeId: input.storeId,
+              storeId: workspaceFinanceNotification ? null : input.storeId,
               type: input.type,
               severity: input.severity,
               title,
@@ -503,6 +674,7 @@ export class NotificationsService {
               lastOccurredAt: now,
             },
             update: {
+              storeId: workspaceFinanceNotification ? null : input.storeId,
               type: input.type,
               severity: input.severity,
               title,
@@ -517,7 +689,11 @@ export class NotificationsService {
           }),
         ),
       );
-      this.streamEvents.emit(enabledRecipientUserIds, input.storeId, 'CREATED');
+      this.streamEvents.emit(
+        enabledRecipientUserIds,
+        workspaceFinanceNotification ? null : input.storeId,
+        'CREATED',
+      );
       try {
         await this.delivery.deliverToUsers(enabledRecipientUserIds, {
           storeId: input.storeId,
@@ -561,6 +737,29 @@ export class NotificationsService {
       entityId: connectionId,
       dedupeKey: `channel-connection-error:${connectionId}`,
     });
+  }
+
+  private async getWorkspaceFinanceRecipients(
+    transaction: Prisma.TransactionClient,
+    workspaceId: string,
+  ) {
+    const workspace = await transaction.workspace.findUnique({
+      where: { id: workspaceId },
+      select: {
+        ownerId: true,
+        members: {
+          where: { role: { in: [WorkspaceRole.OWNER, WorkspaceRole.ADMIN] } },
+          select: { userId: true },
+        },
+      },
+    });
+    if (!workspace) return [];
+    return [
+      ...new Set([
+        workspace.ownerId,
+        ...workspace.members.map((member) => member.userId),
+      ]),
+    ];
   }
 
   private async assertStoreMembership(userId: string, storeId: string) {
