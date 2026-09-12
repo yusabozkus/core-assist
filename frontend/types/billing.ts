@@ -48,6 +48,20 @@ type BillingCapacityUsage = {
   percentage: number
 }
 
+export type StoreBillingUsageOverview = {
+  plan: "STARTER" | "GROWTH" | "BUSINESS"
+  status: BillingSubscriptionStatus
+  periodEnd: string
+  cancelAtPeriodEnd: boolean
+  questions: BillingCapacityUsage
+  capacity: {
+    stores: BillingCapacityUsage
+    members: BillingCapacityUsage
+    activeProducts: BillingCapacityUsage
+  } | null
+  canManageBilling: boolean
+}
+
 export type BillingSummary = {
   pendingPlanChange?: Pick<
     BillingPlanChangeResult,

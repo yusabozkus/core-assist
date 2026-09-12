@@ -21,6 +21,8 @@ import { IntentAnalysis } from "@/components/dashboard/analytics/intent-analysis
 import { ProviderComparison } from "@/components/dashboard/analytics/provider-comparison"
 import { AiActivityList } from "@/components/dashboard/analytics/ai-activity-list"
 import { PerformanceOverview } from "@/components/dashboard/analytics/performance-overview"
+import { AiQuotaIndicator } from "@/components/dashboard/analytics/ai-quota-indicator"
+import { useBillingUsage } from "@/components/dashboard/billing/billing-usage-provider"
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import { getProviderName } from "@/components/dashboard/catalog/products/product-catalog-utils"
 import { Button } from "@/components/ui/button"
@@ -56,9 +58,9 @@ function SectionHeading({
   description: string
 }) {
   return (
-    <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-      <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
-      <p className="max-w-2xl text-[11px] leading-5 text-muted-foreground sm:text-right">
+    <div className="border-l-2 border-primary/50 pl-3">
+      <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+      <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
         {description}
       </p>
     </div>
@@ -80,6 +82,7 @@ export function AnalyticsClient({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [pending, startTransition] = useTransition()
+  const { refresh: refreshBillingUsage } = useBillingUsage()
   const providers = [
     ...new Set([
       ...(performance?.availableProviders ?? []),
@@ -114,6 +117,11 @@ export function AnalyticsClient({
     )
   }
 
+  function refreshPerformance() {
+    void refreshBillingUsage()
+    startTransition(() => router.refresh())
+  }
+
   return (
     <div className="mx-auto w-full max-w-[1440px] space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
@@ -139,7 +147,7 @@ export function AnalyticsClient({
                 className="size-9 bg-card"
                 aria-label="Performans verilerini güncelle"
                 disabled={pending}
-                onClick={() => startTransition(() => router.refresh())}
+                onClick={refreshPerformance}
               >
                 <HugeiconsIcon
                   icon={RefreshIcon}
@@ -212,14 +220,14 @@ export function AnalyticsClient({
             </SelectContent>
           </Select>
         </div>
-        {performance && (
+        {performance ? (
           <p className="text-[10px] text-muted-foreground">
             {performance.from
               ? `${dateFormatter.format(new Date(performance.from))} – ${dateFormatter.format(new Date(performance.generatedAt))}`
               : "Tüm kayıtlar"}{" "}
             · <span title={performance.timezone}>Yerel saat</span>
           </p>
-        )}
+        ) : null}
       </div>
 
       {!performance ? (
@@ -244,7 +252,7 @@ export function AnalyticsClient({
             size="sm"
             className="mt-5"
             disabled={pending}
-            onClick={() => startTransition(() => router.refresh())}
+            onClick={refreshPerformance}
           >
             Tekrar dene
           </Button>
@@ -253,22 +261,25 @@ export function AnalyticsClient({
         <div
           aria-busy={pending}
           className={cn(
-            "space-y-5",
+            "space-y-8",
             pending && "pointer-events-none opacity-60"
           )}
         >
-          <PerformanceOverview data={performance} />
-          <div className="space-y-3">
+          <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.8fr)]">
+            <PerformanceOverview data={performance} />
+            <AiQuotaIndicator className="h-full" />
+          </div>
+          <section className="space-y-4">
             <SectionHeading
-              title="Temel sonuçlar"
-              description="Seçili dönemde AI'ın ürettiği, müşteriye ulaştırdığı ve kullanıcı kontrolüne bıraktığı yanıtların özeti."
+              title="Öne çıkan metrikler"
+              description="AI üretim hacmini, müşteriye ulaşan yanıtları ve kullanıcı kontrolü ihtiyacını birlikte değerlendirin."
             />
             <AnalyticsSummary data={performance} />
-          </div>
-          <div className="space-y-3">
+          </section>
+          <section className="space-y-4 border-t border-border pt-7">
             <SectionHeading
-              title="Taslaklardan müşteri yanıtına"
-              description="Üretim hacmini ve her taslak için verilen ilk kararı birlikte değerlendirin."
+              title="Taslak akışı"
+              description="Taslakların zaman içindeki değişimini ve güven kontrollerinden sonra verilen ilk kararı görün."
             />
             <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.8fr)_minmax(18rem,1fr)]">
               <AiActivityChart
@@ -277,21 +288,27 @@ export function AnalyticsClient({
               />
               <DraftOutcomes data={performance} />
             </div>
-          </div>
-          <div className="space-y-3">
+          </section>
+          <section className="space-y-4 border-t border-border pt-7">
             <SectionHeading
               title="Otomasyon ve insan kontrolü"
-              description="Hangi yanıtların otomatik ilerlediğini ve diğerlerinin neden kullanıcıya bırakıldığını görün."
+              description="Hangi yanıtların otomatik ilerlediğini ve diğer taslakların neden ekibe bırakıldığını inceleyin."
             />
             <div className="grid items-stretch gap-5 lg:grid-cols-2">
               <AutomationImpact data={performance} />
               <ReviewReasons data={performance} />
             </div>
-          </div>
-          <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(0,2fr)]">
-            <ProviderComparison providers={performance.providers} />
-            <IntentAnalysis intents={performance.intents} />
-          </div>
+          </section>
+          <section className="space-y-4 border-t border-border pt-7">
+            <SectionHeading
+              title="Kanal ve soru türü analizi"
+              description="Pazaryerleri arasındaki sonuçları karşılaştırın ve AI'ın hangi soru türlerinde daha fazla kontrole ihtiyaç duyduğunu bulun."
+            />
+            <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(0,2fr)]">
+              <ProviderComparison providers={performance.providers} />
+              <IntentAnalysis intents={performance.intents} />
+            </div>
+          </section>
           <AiActivityList
             activity={performance.recentActivity}
             timezone={performance.timezone}

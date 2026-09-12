@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { QuestionDraftHistory } from "@/components/dashboard/inbox/question-draft-history"
+import { useBillingUsage } from "@/components/dashboard/billing/billing-usage-provider"
 import { ApiError } from "@/lib/api/client"
 import {
   answerProductQuestion,
@@ -61,6 +62,7 @@ export function QuestionAnswerComposer({
       createPersistedDraftContext(question)
     )
   const [policyBlocked, setPolicyBlocked] = useState(false)
+  const { refresh: refreshBillingUsage } = useBillingUsage()
   const isQueued =
     (optimisticQueuedAt !== null &&
       delivery?.queuedAt !== optimisticQueuedAt) ||
@@ -165,6 +167,7 @@ export function QuestionAnswerComposer({
         }
         setAnswer(result.answer)
         setDraftContext(result.context)
+        void refreshBillingUsage()
         void onQuestionUpdated?.()
       } catch (caughtError) {
         if (
@@ -229,7 +232,7 @@ export function QuestionAnswerComposer({
               </p>
             ) : null}
           </div>
-          <div className="flex flex-row items-center justify-between w-full -ml-4">
+          <div className="-ml-4 flex w-full flex-row items-center justify-between">
             {question.draftAttempts?.length ? (
               <div className="flex min-h-8 items-center">
                 <QuestionDraftHistory
@@ -237,7 +240,9 @@ export function QuestionAnswerComposer({
                   delivery={question.answerDelivery}
                 />
               </div>
-            ) : <div className="flex min-h-8 items-center" />}
+            ) : (
+              <div className="flex min-h-8 items-center" />
+            )}
             <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
               <Button
                 type="button"
@@ -307,10 +312,11 @@ function DraftReliabilityNotice({
 
   return (
     <div
-      className={`mt-3 rounded-lg border px-3.5 py-3 text-xs ${needsReview
-        ? "border-amber-500/25 bg-amber-500/10 text-amber-950 dark:text-amber-100"
-        : "border-emerald-500/20 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100"
-        }`}
+      className={`mt-3 rounded-lg border px-3.5 py-3 text-xs ${
+        needsReview
+          ? "border-amber-500/25 bg-amber-500/10 text-amber-950 dark:text-amber-100"
+          : "border-emerald-500/20 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100"
+      }`}
       aria-live="polite"
     >
       <div className="flex flex-wrap items-center gap-2">

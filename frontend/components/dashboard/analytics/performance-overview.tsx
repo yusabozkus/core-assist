@@ -80,7 +80,6 @@ export function PerformanceOverview({ data }: { data: AiPerformance }) {
     {
       label: "Ortalama AI güveni",
       value: formatPercent(data.summary.averageConfidence * 100),
-      description: "Modelin kendi güven puanı; doğruluk oranı değildir.",
     },
     {
       label: "Gönderim başarısı",
@@ -88,12 +87,10 @@ export function PerformanceOverview({ data }: { data: AiPerformance }) {
         data.delivery.successRate === null
           ? "—"
           : formatPercent(data.delivery.successRate),
-      description: "Kuyruktan pazaryerine başarıyla ulaşan yanıtlar.",
     },
     {
       label: "Aktif yanıt modu",
       value: automationLabels[data.automation.mode],
-      description: "Yeni soruların nasıl işleneceğini belirleyen mağaza ayarı.",
     },
   ]
 
@@ -102,26 +99,33 @@ export function PerformanceOverview({ data }: { data: AiPerformance }) {
       aria-labelledby="performance-overview-title"
       className={`overflow-hidden rounded-xl border ${state.tone}`}
     >
-      <div className="grid lg:grid-cols-[minmax(0,1.35fr)_minmax(24rem,1fr)]">
-        <div className="flex flex-col items-start p-5 sm:p-6 lg:p-7">
+      <div className="flex h-full flex-col">
+        <div className="flex flex-1 flex-col items-start gap-4 p-5 sm:flex-row sm:p-6">
           <span
-            className={`flex size-9 items-center justify-center rounded-lg ${state.iconTone}`}
+            className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${state.iconTone}`}
           >
             <HugeiconsIcon icon={state.icon} className="size-4.5" />
           </span>
-          <p className="mt-5 text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-            Bu dönemin kısa özeti
-          </p>
-          <h2
-            id="performance-overview-title"
-            className="mt-2 max-w-xl text-lg font-semibold tracking-tight sm:text-xl"
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+              Bu dönemin kısa özeti
+            </p>
+            <h2
+              id="performance-overview-title"
+              className="mt-1.5 text-base font-semibold tracking-tight"
+            >
+              {state.title}
+            </h2>
+            <p className="mt-1.5 max-w-2xl text-xs leading-5 text-muted-foreground">
+              {state.description}
+            </p>
+          </div>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="shrink-0 bg-card"
           >
-            {state.title}
-          </h2>
-          <p className="mt-2 max-w-2xl text-xs leading-6 text-muted-foreground">
-            {state.description}
-          </p>
-          <Button asChild variant="outline" size="sm" className="mt-5 bg-card">
             <Link href={state.actionHref}>
               {state.actionLabel}
               <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
@@ -129,25 +133,18 @@ export function PerformanceOverview({ data }: { data: AiPerformance }) {
           </Button>
         </div>
 
-        <dl className="grid border-t border-border/70 sm:grid-cols-3 lg:grid-cols-1 lg:border-t-0 lg:border-l">
+        <dl className="grid grid-cols-3 border-t border-border/70">
           {metrics.map((metric, index) => (
             <div
               key={metric.label}
-              className={`px-5 py-4 sm:px-6 ${
-                index > 0
-                  ? "border-t border-border/70 sm:border-t-0 sm:border-l lg:border-t lg:border-l-0"
-                  : ""
-              }`}
+              className={`min-w-0 px-4 py-3.5 sm:px-5 ${index > 0 ? "border-l border-border/70" : ""}`}
             >
               <dt className="text-[10px] font-medium text-muted-foreground">
                 {metric.label}
               </dt>
-              <dd className="mt-1.5 text-base font-semibold tracking-tight tabular-nums">
+              <dd className="mt-1.5 truncate text-sm font-semibold tracking-tight tabular-nums sm:text-base">
                 {metric.value}
               </dd>
-              <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
-                {metric.description}
-              </p>
             </div>
           ))}
         </dl>

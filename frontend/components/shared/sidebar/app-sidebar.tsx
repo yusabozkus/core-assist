@@ -34,6 +34,7 @@ import {
 import { isPathActive } from "@/lib/utils"
 import { ShopSwitcher, type SidebarShop } from "./shop-switcher"
 import { SidebarUser, type SidebarUserData } from "./sidebar-user"
+import { SidebarUsageAlert } from "./sidebar-usage-alert"
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   user: SidebarUserData
@@ -179,6 +180,7 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter>
+        {!isStoreArchived ? <SidebarUsageAlert /> : null}
         {!isStoreArchived ? (
           <SidebarMenu>
             {footerItems.map((item) => {

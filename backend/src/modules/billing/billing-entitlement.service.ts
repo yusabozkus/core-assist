@@ -31,6 +31,36 @@ export class BillingEntitlementService {
     return this.getSummaryForWorkspace(workspaceId);
   }
 
+  async getStoreUsageOverview(storeId: string, userId: string) {
+    const store = await this.prisma.store.findUnique({
+      where: { id: storeId },
+      select: { workspaceId: true },
+    });
+    if (!store) throw new NotFoundException('Mağaza bulunamadı.');
+
+    const access = await this.authorization.getWorkspaceAccess(
+      store.workspaceId,
+      userId,
+    );
+    const summary = await this.getSummaryForWorkspace(store.workspaceId);
+
+    return {
+      plan: summary.subscription.plan,
+      status: summary.subscription.status,
+      periodEnd: summary.subscription.currentPeriodEnd,
+      cancelAtPeriodEnd: summary.subscription.cancelAtPeriodEnd,
+      questions: summary.usage.questions,
+      capacity: access.canManageBilling
+        ? {
+            stores: summary.usage.stores,
+            members: summary.usage.members,
+            activeProducts: summary.usage.activeProducts,
+          }
+        : null,
+      canManageBilling: access.canManageBilling,
+    };
+  }
+
   async getSummaryForWorkspace(workspaceId: string, now = new Date()) {
     const subscription = await this.subscriptions.getOrCreateForWorkspace(
       workspaceId,

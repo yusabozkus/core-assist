@@ -16,7 +16,6 @@ export function AnalyticsSummary({ data }: { data: AiPerformance }) {
       value: formatCount(data.summary.totalDrafts),
       icon: AiSparklesIcon,
       description: `${formatCount(data.summary.uniqueQuestions)} farklı müşteri sorusu için üretildi.`,
-      note: "Aynı soru için yeniden oluşturulan taslaklar ayrı sayılır.",
       tone: "text-primary",
     },
     {
@@ -26,7 +25,6 @@ export function AnalyticsSummary({ data }: { data: AiPerformance }) {
       description: data.answers.totalSent
         ? `Gönderilen tüm yanıtların ${formatPercent(data.summary.aiCoverageRate)}’i AI desteği kullandı.`
         : "Henüz müşteriye gönderilmiş bir yanıt yok.",
-      note: "Otomatik ve kullanıcı onaylı gönderimler dahildir.",
       tone: "text-primary",
     },
     {
@@ -38,7 +36,6 @@ export function AnalyticsSummary({ data }: { data: AiPerformance }) {
       description: data.summary.reviewedAnswers
         ? `${formatCount(data.summary.reviewedAnswers)} kullanıcı gönderiminin ${formatCount(data.answers.acceptedUnchanged)} tanesi olduğu gibi onaylandı.`
         : "Bu oran için henüz kullanıcı onaylı gönderim yok.",
-      note: "Yüksek oran, taslakların daha az düzenleme istediğini gösterir.",
       tone: "text-primary",
     },
     {
@@ -48,7 +45,6 @@ export function AnalyticsSummary({ data }: { data: AiPerformance }) {
         : "—",
       icon: AiEditingIcon,
       description: `${formatCount(data.draftDecisions.needsReview)} taslak kullanıcı kontrolüne bırakıldı.`,
-      note: "Eksik veya riskli bilgiler otomatik gönderilmez.",
       tone: "text-amber-600 dark:text-amber-400",
     },
   ]
@@ -75,11 +71,8 @@ export function AnalyticsSummary({ data }: { data: AiPerformance }) {
           <p className="mt-4 text-[32px] leading-none font-semibold tracking-tight tabular-nums">
             {item.value}
           </p>
-          <p className="mt-3 text-[11px] leading-5 text-foreground">
+          <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
             {item.description}
-          </p>
-          <p className="mt-auto border-t border-border/60 pt-3 text-[10px] leading-4 text-muted-foreground">
-            {item.note}
           </p>
         </div>
       ))}

@@ -24,6 +24,7 @@ import { PADDLE_WEBHOOK_QUEUE } from './paddle-webhook.constants';
 import { PaddleWebhookQueueService } from './paddle-webhook-queue.service';
 import { PaddleWebhookProcessor } from './paddle-webhook.processor';
 import { BillingRetentionService } from './billing-retention.service';
+import { StoreBillingController } from './store-billing.controller';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { BillingRetentionService } from './billing-retention.service';
     BillingController,
     BillingPricingController,
     BillingWorkspacesController,
+    StoreBillingController,
     PaddleWebhookController,
   ],
   providers: [

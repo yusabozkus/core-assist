@@ -11,6 +11,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { ProductDetailDialog } from "@/components/dashboard/catalog/products/product-detail-dialog"
+import { useBillingUsage } from "@/components/dashboard/billing/billing-usage-provider"
 import { DashboardMetrics } from "@/components/dashboard/overview/dashboard-metrics"
 import { QuestionVolumeChart } from "@/components/dashboard/overview/question-volume-chart"
 import { DashboardQueue } from "@/components/dashboard/overview/dashboard-queue"
@@ -21,6 +22,7 @@ import {
   DashboardCatalog,
 } from "@/components/dashboard/overview/dashboard-catalog"
 import { DashboardShortcuts } from "@/components/dashboard/overview/dashboard-shortcuts"
+import { DashboardPlanUsage } from "@/components/dashboard/overview/dashboard-plan-usage"
 import { DashboardOverviewSkeleton } from "@/components/skeletons/dashboard-overview-skeleton"
 import { Button } from "@/components/ui/button"
 import {
@@ -59,6 +61,7 @@ export function DashboardClient({
     null
   )
   const requestRef = useRef<AbortController | null>(null)
+  const { refresh: refreshBillingUsage } = useBillingUsage()
 
   const refresh = useCallback(async () => {
     if (requestRef.current) return
@@ -74,6 +77,7 @@ export function DashboardClient({
       if (controller.signal.aborted) return
       setData(result)
       setError(null)
+      void refreshBillingUsage()
     } catch {
       if (!controller.signal.aborted)
         setError(
@@ -83,7 +87,7 @@ export function DashboardClient({
       if (requestRef.current === controller) requestRef.current = null
       if (!controller.signal.aborted) setRefreshing(false)
     }
-  }, [storeId, range])
+  }, [storeId, range, refreshBillingUsage])
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -212,6 +216,7 @@ export function DashboardClient({
           aria-busy={isChangingRange || refreshing}
         >
           <DashboardMetrics data={data} />
+          <DashboardPlanUsage />
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,1fr)]">
             <QuestionVolumeChart data={data} />
             <DashboardQueue data={data} />

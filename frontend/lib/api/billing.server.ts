@@ -6,6 +6,7 @@ import type {
   BillingWorkspace,
   BillingHistory,
   BillingSummary,
+  StoreBillingUsageOverview,
 } from "@/types/billing"
 
 const apiUrl = (
@@ -29,6 +30,12 @@ export async function getServerBillingHistory(workspaceId: string) {
 // Request-scoped deduplication only; permissions are never cached across users.
 export const getServerBillingWorkspaces = cache(() =>
   billingServerFetch<BillingWorkspace[]>("/billing/workspaces")
+)
+
+export const getServerStoreBillingUsage = cache((storeId: string) =>
+  billingServerFetch<StoreBillingUsageOverview>(
+    `/stores/${encodeURIComponent(storeId)}/billing/usage`
+  )
 )
 
 async function billingServerFetch<T>(path: string) {

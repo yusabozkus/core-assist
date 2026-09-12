@@ -11,6 +11,7 @@ import type {
   BillingPlanChangePreview,
   BillingPlanChangeResult,
   BillingPricingConfig,
+  StoreBillingUsageOverview,
 } from "@/types/billing"
 
 export function getBillingPricingConfig(signal?: AbortSignal) {
@@ -23,6 +24,13 @@ export function getBillingSummary(workspaceId: string, signal?: AbortSignal) {
     {
       signal,
     }
+  )
+}
+
+export function getStoreBillingUsage(storeId: string, signal?: AbortSignal) {
+  return apiFetch<StoreBillingUsageOverview>(
+    `/stores/${encodeURIComponent(storeId)}/billing/usage`,
+    { signal }
   )
 }
 
