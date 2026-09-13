@@ -16,6 +16,7 @@
     "smoke:catalog-sync": "npm run build && node dist/src/scripts/catalog-sync-smoke.js",
     "smoke:question-sync": "npm run build && node dist/src/scripts/question-sync-smoke.js",
     "smoke:gemini": "npm run build && node dist/src/scripts/gemini-smoke.js",
+    "simulate:questions": "npm run build && node dist/src/scripts/simulate-incoming-questions.js",
     "eval:answer-context": "npm run build && node dist/src/scripts/answer-reliability-eval.js",
     "eval:ai-drafts": "npm run build && node dist/src/scripts/answer-reliability-eval.js --with-ai",
     "eval:ai-targeted": "npm run build && node dist/src/scripts/answer-reliability-eval.js --with-ai --targeted-only",

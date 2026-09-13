@@ -47,6 +47,7 @@ export class TrendyolConnector
     return {
       products,
       nextCursor: getNextCursor(payload, cursor),
+      progress: getCatalogProgress(payload, cursor),
     };
   }
 
@@ -60,6 +61,7 @@ export class TrendyolConnector
     return {
       variants,
       nextCursor: getNextCursor(payload, cursor),
+      progress: getCatalogProgress(payload, cursor),
     };
   }
 
@@ -619,4 +621,16 @@ function getNextCursor(
   const page = Number(currentCursor);
   const totalPages = firstNumber(payload, ['totalPages'], page + 1);
   return page + 1 < totalPages ? String(page + 1) : undefined;
+}
+
+function getCatalogProgress(
+  payload: Record<string, unknown>,
+  currentCursor: string,
+) {
+  const totalPages = firstOptionalNumber(payload, ['totalPages']);
+  if (!totalPages || totalPages <= 0) return undefined;
+
+  const fallbackPage = /^\d+$/.test(currentCursor) ? Number(currentCursor) : 0;
+  const page = firstNumber(payload, ['page'], fallbackPage);
+  return Math.min(1, Math.max(0, (page + 1) / totalPages));
 }

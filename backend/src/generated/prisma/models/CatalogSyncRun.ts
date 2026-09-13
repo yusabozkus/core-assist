@@ -33,9 +33,12 @@ export type CatalogSyncRunAvgAggregateOutputType = {
   productsUpdated: number | null
   productsUnchanged: number | null
   productsSkipped: number | null
+  batchesProcessed: number | null
   variantsProcessed: number | null
   variantsUpdated: number | null
   variantsUnchanged: number | null
+  lowStockAlerts: number | null
+  outOfStockAlerts: number | null
   questionsProcessed: number | null
   questionsUnchanged: number | null
   productsArchived: number | null
@@ -48,9 +51,12 @@ export type CatalogSyncRunSumAggregateOutputType = {
   productsUpdated: number | null
   productsUnchanged: number | null
   productsSkipped: number | null
+  batchesProcessed: number | null
   variantsProcessed: number | null
   variantsUpdated: number | null
   variantsUnchanged: number | null
+  lowStockAlerts: number | null
+  outOfStockAlerts: number | null
   questionsProcessed: number | null
   questionsUnchanged: number | null
   productsArchived: number | null
@@ -70,9 +76,13 @@ export type CatalogSyncRunMinAggregateOutputType = {
   productsUpdated: number | null
   productsUnchanged: number | null
   productsSkipped: number | null
+  batchesProcessed: number | null
+  fetchCompleted: boolean | null
   variantsProcessed: number | null
   variantsUpdated: number | null
   variantsUnchanged: number | null
+  lowStockAlerts: number | null
+  outOfStockAlerts: number | null
   questionsProcessed: number | null
   questionsUnchanged: number | null
   productsArchived: number | null
@@ -98,9 +108,13 @@ export type CatalogSyncRunMaxAggregateOutputType = {
   productsUpdated: number | null
   productsUnchanged: number | null
   productsSkipped: number | null
+  batchesProcessed: number | null
+  fetchCompleted: boolean | null
   variantsProcessed: number | null
   variantsUpdated: number | null
   variantsUnchanged: number | null
+  lowStockAlerts: number | null
+  outOfStockAlerts: number | null
   questionsProcessed: number | null
   questionsUnchanged: number | null
   productsArchived: number | null
@@ -126,9 +140,13 @@ export type CatalogSyncRunCountAggregateOutputType = {
   productsUpdated: number
   productsUnchanged: number
   productsSkipped: number
+  batchesProcessed: number
+  fetchCompleted: number
   variantsProcessed: number
   variantsUpdated: number
   variantsUnchanged: number
+  lowStockAlerts: number
+  outOfStockAlerts: number
   questionsProcessed: number
   questionsUnchanged: number
   productsArchived: number
@@ -149,9 +167,12 @@ export type CatalogSyncRunAvgAggregateInputType = {
   productsUpdated?: true
   productsUnchanged?: true
   productsSkipped?: true
+  batchesProcessed?: true
   variantsProcessed?: true
   variantsUpdated?: true
   variantsUnchanged?: true
+  lowStockAlerts?: true
+  outOfStockAlerts?: true
   questionsProcessed?: true
   questionsUnchanged?: true
   productsArchived?: true
@@ -164,9 +185,12 @@ export type CatalogSyncRunSumAggregateInputType = {
   productsUpdated?: true
   productsUnchanged?: true
   productsSkipped?: true
+  batchesProcessed?: true
   variantsProcessed?: true
   variantsUpdated?: true
   variantsUnchanged?: true
+  lowStockAlerts?: true
+  outOfStockAlerts?: true
   questionsProcessed?: true
   questionsUnchanged?: true
   productsArchived?: true
@@ -186,9 +210,13 @@ export type CatalogSyncRunMinAggregateInputType = {
   productsUpdated?: true
   productsUnchanged?: true
   productsSkipped?: true
+  batchesProcessed?: true
+  fetchCompleted?: true
   variantsProcessed?: true
   variantsUpdated?: true
   variantsUnchanged?: true
+  lowStockAlerts?: true
+  outOfStockAlerts?: true
   questionsProcessed?: true
   questionsUnchanged?: true
   productsArchived?: true
@@ -214,9 +242,13 @@ export type CatalogSyncRunMaxAggregateInputType = {
   productsUpdated?: true
   productsUnchanged?: true
   productsSkipped?: true
+  batchesProcessed?: true
+  fetchCompleted?: true
   variantsProcessed?: true
   variantsUpdated?: true
   variantsUnchanged?: true
+  lowStockAlerts?: true
+  outOfStockAlerts?: true
   questionsProcessed?: true
   questionsUnchanged?: true
   productsArchived?: true
@@ -242,9 +274,13 @@ export type CatalogSyncRunCountAggregateInputType = {
   productsUpdated?: true
   productsUnchanged?: true
   productsSkipped?: true
+  batchesProcessed?: true
+  fetchCompleted?: true
   variantsProcessed?: true
   variantsUpdated?: true
   variantsUnchanged?: true
+  lowStockAlerts?: true
+  outOfStockAlerts?: true
   questionsProcessed?: true
   questionsUnchanged?: true
   productsArchived?: true
@@ -357,9 +393,13 @@ export type CatalogSyncRunGroupByOutputType = {
   productsUpdated: number
   productsUnchanged: number
   productsSkipped: number
+  batchesProcessed: number
+  fetchCompleted: boolean
   variantsProcessed: number
   variantsUpdated: number
   variantsUnchanged: number
+  lowStockAlerts: number
+  outOfStockAlerts: number
   questionsProcessed: number
   questionsUnchanged: number
   productsArchived: number
@@ -408,9 +448,13 @@ export type CatalogSyncRunWhereInput = {
   productsUpdated?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsUnchanged?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsSkipped?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  batchesProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  fetchCompleted?: Prisma.BoolFilter<"CatalogSyncRun"> | boolean
   variantsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsUpdated?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsUnchanged?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  lowStockAlerts?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  outOfStockAlerts?: Prisma.IntFilter<"CatalogSyncRun"> | number
   questionsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
   questionsUnchanged?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsArchived?: Prisma.IntFilter<"CatalogSyncRun"> | number
@@ -437,9 +481,13 @@ export type CatalogSyncRunOrderByWithRelationInput = {
   productsUpdated?: Prisma.SortOrder
   productsUnchanged?: Prisma.SortOrder
   productsSkipped?: Prisma.SortOrder
+  batchesProcessed?: Prisma.SortOrder
+  fetchCompleted?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
   variantsUpdated?: Prisma.SortOrder
   variantsUnchanged?: Prisma.SortOrder
+  lowStockAlerts?: Prisma.SortOrder
+  outOfStockAlerts?: Prisma.SortOrder
   questionsProcessed?: Prisma.SortOrder
   questionsUnchanged?: Prisma.SortOrder
   productsArchived?: Prisma.SortOrder
@@ -469,9 +517,13 @@ export type CatalogSyncRunWhereUniqueInput = Prisma.AtLeast<{
   productsUpdated?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsUnchanged?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsSkipped?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  batchesProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  fetchCompleted?: Prisma.BoolFilter<"CatalogSyncRun"> | boolean
   variantsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsUpdated?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsUnchanged?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  lowStockAlerts?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  outOfStockAlerts?: Prisma.IntFilter<"CatalogSyncRun"> | number
   questionsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
   questionsUnchanged?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsArchived?: Prisma.IntFilter<"CatalogSyncRun"> | number
@@ -498,9 +550,13 @@ export type CatalogSyncRunOrderByWithAggregationInput = {
   productsUpdated?: Prisma.SortOrder
   productsUnchanged?: Prisma.SortOrder
   productsSkipped?: Prisma.SortOrder
+  batchesProcessed?: Prisma.SortOrder
+  fetchCompleted?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
   variantsUpdated?: Prisma.SortOrder
   variantsUnchanged?: Prisma.SortOrder
+  lowStockAlerts?: Prisma.SortOrder
+  outOfStockAlerts?: Prisma.SortOrder
   questionsProcessed?: Prisma.SortOrder
   questionsUnchanged?: Prisma.SortOrder
   productsArchived?: Prisma.SortOrder
@@ -534,9 +590,13 @@ export type CatalogSyncRunScalarWhereWithAggregatesInput = {
   productsUpdated?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
   productsUnchanged?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
   productsSkipped?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
+  batchesProcessed?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
+  fetchCompleted?: Prisma.BoolWithAggregatesFilter<"CatalogSyncRun"> | boolean
   variantsProcessed?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
   variantsUpdated?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
   variantsUnchanged?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
+  lowStockAlerts?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
+  outOfStockAlerts?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
   questionsProcessed?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
   questionsUnchanged?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
   productsArchived?: Prisma.IntWithAggregatesFilter<"CatalogSyncRun"> | number
@@ -561,9 +621,13 @@ export type CatalogSyncRunCreateInput = {
   productsUpdated?: number
   productsUnchanged?: number
   productsSkipped?: number
+  batchesProcessed?: number
+  fetchCompleted?: boolean
   variantsProcessed?: number
   variantsUpdated?: number
   variantsUnchanged?: number
+  lowStockAlerts?: number
+  outOfStockAlerts?: number
   questionsProcessed?: number
   questionsUnchanged?: number
   productsArchived?: number
@@ -590,9 +654,13 @@ export type CatalogSyncRunUncheckedCreateInput = {
   productsUpdated?: number
   productsUnchanged?: number
   productsSkipped?: number
+  batchesProcessed?: number
+  fetchCompleted?: boolean
   variantsProcessed?: number
   variantsUpdated?: number
   variantsUnchanged?: number
+  lowStockAlerts?: number
+  outOfStockAlerts?: number
   questionsProcessed?: number
   questionsUnchanged?: number
   productsArchived?: number
@@ -617,9 +685,13 @@ export type CatalogSyncRunUpdateInput = {
   productsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
   productsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
+  batchesProcessed?: Prisma.IntFieldUpdateOperationsInput | number
+  fetchCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
+  lowStockAlerts?: Prisma.IntFieldUpdateOperationsInput | number
+  outOfStockAlerts?: Prisma.IntFieldUpdateOperationsInput | number
   questionsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   questionsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
   productsArchived?: Prisma.IntFieldUpdateOperationsInput | number
@@ -646,9 +718,13 @@ export type CatalogSyncRunUncheckedUpdateInput = {
   productsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
   productsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
+  batchesProcessed?: Prisma.IntFieldUpdateOperationsInput | number
+  fetchCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
+  lowStockAlerts?: Prisma.IntFieldUpdateOperationsInput | number
+  outOfStockAlerts?: Prisma.IntFieldUpdateOperationsInput | number
   questionsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   questionsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
   productsArchived?: Prisma.IntFieldUpdateOperationsInput | number
@@ -674,9 +750,13 @@ export type CatalogSyncRunCreateManyInput = {
   productsUpdated?: number
   productsUnchanged?: number
   productsSkipped?: number
+  batchesProcessed?: number
+  fetchCompleted?: boolean
   variantsProcessed?: number
   variantsUpdated?: number
   variantsUnchanged?: number
+  lowStockAlerts?: number
+  outOfStockAlerts?: number
   questionsProcessed?: number
   questionsUnchanged?: number
   productsArchived?: number
@@ -701,9 +781,13 @@ export type CatalogSyncRunUpdateManyMutationInput = {
   productsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
   productsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
+  batchesProcessed?: Prisma.IntFieldUpdateOperationsInput | number
+  fetchCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
+  lowStockAlerts?: Prisma.IntFieldUpdateOperationsInput | number
+  outOfStockAlerts?: Prisma.IntFieldUpdateOperationsInput | number
   questionsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   questionsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
   productsArchived?: Prisma.IntFieldUpdateOperationsInput | number
@@ -729,9 +813,13 @@ export type CatalogSyncRunUncheckedUpdateManyInput = {
   productsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
   productsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
+  batchesProcessed?: Prisma.IntFieldUpdateOperationsInput | number
+  fetchCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
+  lowStockAlerts?: Prisma.IntFieldUpdateOperationsInput | number
+  outOfStockAlerts?: Prisma.IntFieldUpdateOperationsInput | number
   questionsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   questionsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
   productsArchived?: Prisma.IntFieldUpdateOperationsInput | number
@@ -767,9 +855,13 @@ export type CatalogSyncRunCountOrderByAggregateInput = {
   productsUpdated?: Prisma.SortOrder
   productsUnchanged?: Prisma.SortOrder
   productsSkipped?: Prisma.SortOrder
+  batchesProcessed?: Prisma.SortOrder
+  fetchCompleted?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
   variantsUpdated?: Prisma.SortOrder
   variantsUnchanged?: Prisma.SortOrder
+  lowStockAlerts?: Prisma.SortOrder
+  outOfStockAlerts?: Prisma.SortOrder
   questionsProcessed?: Prisma.SortOrder
   questionsUnchanged?: Prisma.SortOrder
   productsArchived?: Prisma.SortOrder
@@ -788,9 +880,12 @@ export type CatalogSyncRunAvgOrderByAggregateInput = {
   productsUpdated?: Prisma.SortOrder
   productsUnchanged?: Prisma.SortOrder
   productsSkipped?: Prisma.SortOrder
+  batchesProcessed?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
   variantsUpdated?: Prisma.SortOrder
   variantsUnchanged?: Prisma.SortOrder
+  lowStockAlerts?: Prisma.SortOrder
+  outOfStockAlerts?: Prisma.SortOrder
   questionsProcessed?: Prisma.SortOrder
   questionsUnchanged?: Prisma.SortOrder
   productsArchived?: Prisma.SortOrder
@@ -810,9 +905,13 @@ export type CatalogSyncRunMaxOrderByAggregateInput = {
   productsUpdated?: Prisma.SortOrder
   productsUnchanged?: Prisma.SortOrder
   productsSkipped?: Prisma.SortOrder
+  batchesProcessed?: Prisma.SortOrder
+  fetchCompleted?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
   variantsUpdated?: Prisma.SortOrder
   variantsUnchanged?: Prisma.SortOrder
+  lowStockAlerts?: Prisma.SortOrder
+  outOfStockAlerts?: Prisma.SortOrder
   questionsProcessed?: Prisma.SortOrder
   questionsUnchanged?: Prisma.SortOrder
   productsArchived?: Prisma.SortOrder
@@ -838,9 +937,13 @@ export type CatalogSyncRunMinOrderByAggregateInput = {
   productsUpdated?: Prisma.SortOrder
   productsUnchanged?: Prisma.SortOrder
   productsSkipped?: Prisma.SortOrder
+  batchesProcessed?: Prisma.SortOrder
+  fetchCompleted?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
   variantsUpdated?: Prisma.SortOrder
   variantsUnchanged?: Prisma.SortOrder
+  lowStockAlerts?: Prisma.SortOrder
+  outOfStockAlerts?: Prisma.SortOrder
   questionsProcessed?: Prisma.SortOrder
   questionsUnchanged?: Prisma.SortOrder
   productsArchived?: Prisma.SortOrder
@@ -859,9 +962,12 @@ export type CatalogSyncRunSumOrderByAggregateInput = {
   productsUpdated?: Prisma.SortOrder
   productsUnchanged?: Prisma.SortOrder
   productsSkipped?: Prisma.SortOrder
+  batchesProcessed?: Prisma.SortOrder
   variantsProcessed?: Prisma.SortOrder
   variantsUpdated?: Prisma.SortOrder
   variantsUnchanged?: Prisma.SortOrder
+  lowStockAlerts?: Prisma.SortOrder
+  outOfStockAlerts?: Prisma.SortOrder
   questionsProcessed?: Prisma.SortOrder
   questionsUnchanged?: Prisma.SortOrder
   productsArchived?: Prisma.SortOrder
@@ -938,9 +1044,13 @@ export type CatalogSyncRunCreateWithoutConnectionInput = {
   productsUpdated?: number
   productsUnchanged?: number
   productsSkipped?: number
+  batchesProcessed?: number
+  fetchCompleted?: boolean
   variantsProcessed?: number
   variantsUpdated?: number
   variantsUnchanged?: number
+  lowStockAlerts?: number
+  outOfStockAlerts?: number
   questionsProcessed?: number
   questionsUnchanged?: number
   productsArchived?: number
@@ -965,9 +1075,13 @@ export type CatalogSyncRunUncheckedCreateWithoutConnectionInput = {
   productsUpdated?: number
   productsUnchanged?: number
   productsSkipped?: number
+  batchesProcessed?: number
+  fetchCompleted?: boolean
   variantsProcessed?: number
   variantsUpdated?: number
   variantsUnchanged?: number
+  lowStockAlerts?: number
+  outOfStockAlerts?: number
   questionsProcessed?: number
   questionsUnchanged?: number
   productsArchived?: number
@@ -1022,9 +1136,13 @@ export type CatalogSyncRunScalarWhereInput = {
   productsUpdated?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsUnchanged?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsSkipped?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  batchesProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  fetchCompleted?: Prisma.BoolFilter<"CatalogSyncRun"> | boolean
   variantsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsUpdated?: Prisma.IntFilter<"CatalogSyncRun"> | number
   variantsUnchanged?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  lowStockAlerts?: Prisma.IntFilter<"CatalogSyncRun"> | number
+  outOfStockAlerts?: Prisma.IntFilter<"CatalogSyncRun"> | number
   questionsProcessed?: Prisma.IntFilter<"CatalogSyncRun"> | number
   questionsUnchanged?: Prisma.IntFilter<"CatalogSyncRun"> | number
   productsArchived?: Prisma.IntFilter<"CatalogSyncRun"> | number
@@ -1049,9 +1167,13 @@ export type CatalogSyncRunCreateManyConnectionInput = {
   productsUpdated?: number
   productsUnchanged?: number
   productsSkipped?: number
+  batchesProcessed?: number
+  fetchCompleted?: boolean
   variantsProcessed?: number
   variantsUpdated?: number
   variantsUnchanged?: number
+  lowStockAlerts?: number
+  outOfStockAlerts?: number
   questionsProcessed?: number
   questionsUnchanged?: number
   productsArchived?: number
@@ -1076,9 +1198,13 @@ export type CatalogSyncRunUpdateWithoutConnectionInput = {
   productsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
   productsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
+  batchesProcessed?: Prisma.IntFieldUpdateOperationsInput | number
+  fetchCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
+  lowStockAlerts?: Prisma.IntFieldUpdateOperationsInput | number
+  outOfStockAlerts?: Prisma.IntFieldUpdateOperationsInput | number
   questionsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   questionsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
   productsArchived?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1103,9 +1229,13 @@ export type CatalogSyncRunUncheckedUpdateWithoutConnectionInput = {
   productsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
   productsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
+  batchesProcessed?: Prisma.IntFieldUpdateOperationsInput | number
+  fetchCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
+  lowStockAlerts?: Prisma.IntFieldUpdateOperationsInput | number
+  outOfStockAlerts?: Prisma.IntFieldUpdateOperationsInput | number
   questionsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   questionsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
   productsArchived?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1130,9 +1260,13 @@ export type CatalogSyncRunUncheckedUpdateManyWithoutConnectionInput = {
   productsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   productsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
   productsSkipped?: Prisma.IntFieldUpdateOperationsInput | number
+  batchesProcessed?: Prisma.IntFieldUpdateOperationsInput | number
+  fetchCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   variantsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUpdated?: Prisma.IntFieldUpdateOperationsInput | number
   variantsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
+  lowStockAlerts?: Prisma.IntFieldUpdateOperationsInput | number
+  outOfStockAlerts?: Prisma.IntFieldUpdateOperationsInput | number
   questionsProcessed?: Prisma.IntFieldUpdateOperationsInput | number
   questionsUnchanged?: Prisma.IntFieldUpdateOperationsInput | number
   productsArchived?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1160,9 +1294,13 @@ export type CatalogSyncRunSelect<ExtArgs extends runtime.Types.Extensions.Intern
   productsUpdated?: boolean
   productsUnchanged?: boolean
   productsSkipped?: boolean
+  batchesProcessed?: boolean
+  fetchCompleted?: boolean
   variantsProcessed?: boolean
   variantsUpdated?: boolean
   variantsUnchanged?: boolean
+  lowStockAlerts?: boolean
+  outOfStockAlerts?: boolean
   questionsProcessed?: boolean
   questionsUnchanged?: boolean
   productsArchived?: boolean
@@ -1189,9 +1327,13 @@ export type CatalogSyncRunSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   productsUpdated?: boolean
   productsUnchanged?: boolean
   productsSkipped?: boolean
+  batchesProcessed?: boolean
+  fetchCompleted?: boolean
   variantsProcessed?: boolean
   variantsUpdated?: boolean
   variantsUnchanged?: boolean
+  lowStockAlerts?: boolean
+  outOfStockAlerts?: boolean
   questionsProcessed?: boolean
   questionsUnchanged?: boolean
   productsArchived?: boolean
@@ -1218,9 +1360,13 @@ export type CatalogSyncRunSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   productsUpdated?: boolean
   productsUnchanged?: boolean
   productsSkipped?: boolean
+  batchesProcessed?: boolean
+  fetchCompleted?: boolean
   variantsProcessed?: boolean
   variantsUpdated?: boolean
   variantsUnchanged?: boolean
+  lowStockAlerts?: boolean
+  outOfStockAlerts?: boolean
   questionsProcessed?: boolean
   questionsUnchanged?: boolean
   productsArchived?: boolean
@@ -1247,9 +1393,13 @@ export type CatalogSyncRunSelectScalar = {
   productsUpdated?: boolean
   productsUnchanged?: boolean
   productsSkipped?: boolean
+  batchesProcessed?: boolean
+  fetchCompleted?: boolean
   variantsProcessed?: boolean
   variantsUpdated?: boolean
   variantsUnchanged?: boolean
+  lowStockAlerts?: boolean
+  outOfStockAlerts?: boolean
   questionsProcessed?: boolean
   questionsUnchanged?: boolean
   productsArchived?: boolean
@@ -1261,7 +1411,7 @@ export type CatalogSyncRunSelectScalar = {
   updatedAt?: boolean
 }
 
-export type CatalogSyncRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "connectionId" | "kind" | "status" | "trigger" | "stage" | "progress" | "retryOfId" | "productsProcessed" | "productsCreated" | "productsUpdated" | "productsUnchanged" | "productsSkipped" | "variantsProcessed" | "variantsUpdated" | "variantsUnchanged" | "questionsProcessed" | "questionsUnchanged" | "productsArchived" | "cursor" | "errorMessage" | "startedAt" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["catalogSyncRun"]>
+export type CatalogSyncRunOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "connectionId" | "kind" | "status" | "trigger" | "stage" | "progress" | "retryOfId" | "productsProcessed" | "productsCreated" | "productsUpdated" | "productsUnchanged" | "productsSkipped" | "batchesProcessed" | "fetchCompleted" | "variantsProcessed" | "variantsUpdated" | "variantsUnchanged" | "lowStockAlerts" | "outOfStockAlerts" | "questionsProcessed" | "questionsUnchanged" | "productsArchived" | "cursor" | "errorMessage" | "startedAt" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["catalogSyncRun"]>
 export type CatalogSyncRunInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   connection?: boolean | Prisma.ChannelConnectionDefaultArgs<ExtArgs>
 }
@@ -1291,9 +1441,13 @@ export type $CatalogSyncRunPayload<ExtArgs extends runtime.Types.Extensions.Inte
     productsUpdated: number
     productsUnchanged: number
     productsSkipped: number
+    batchesProcessed: number
+    fetchCompleted: boolean
     variantsProcessed: number
     variantsUpdated: number
     variantsUnchanged: number
+    lowStockAlerts: number
+    outOfStockAlerts: number
     questionsProcessed: number
     questionsUnchanged: number
     productsArchived: number
@@ -1740,9 +1894,13 @@ export interface CatalogSyncRunFieldRefs {
   readonly productsUpdated: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
   readonly productsUnchanged: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
   readonly productsSkipped: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
+  readonly batchesProcessed: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
+  readonly fetchCompleted: Prisma.FieldRef<"CatalogSyncRun", 'Boolean'>
   readonly variantsProcessed: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
   readonly variantsUpdated: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
   readonly variantsUnchanged: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
+  readonly lowStockAlerts: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
+  readonly outOfStockAlerts: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
   readonly questionsProcessed: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
   readonly questionsUnchanged: Prisma.FieldRef<"CatalogSyncRun", 'Int'>
   readonly productsArchived: Prisma.FieldRef<"CatalogSyncRun", 'Int'>

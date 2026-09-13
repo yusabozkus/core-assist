@@ -33,6 +33,15 @@ type RecoveryResult = {
   recovered: boolean;
 };
 
+const BOUND_SUBSCRIPTION_TRANSACTION_ORIGINS = new Set<
+  TransactionNotification['origin']
+>([
+  'subscription_charge',
+  'subscription_payment_method_change',
+  'subscription_recurring',
+  'subscription_update',
+]);
+
 @Injectable()
 export class PaddleCheckoutBindingService {
   async recoverTransaction(
@@ -67,6 +76,40 @@ export class PaddleCheckoutBindingService {
       }),
     ]);
     if (!checkout || !subscription) throw recoveryConflict();
+
+    const isCompletedBinding = Boolean(
+      checkout.status === BillingCheckoutStatus.COMPLETED &&
+      checkout.boundAt &&
+      checkout.paddleSubscriptionId,
+    );
+
+    if (
+      isCompletedBinding &&
+      checkout.paddleTransactionId !== notification.id
+    ) {
+      validateBoundSubscriptionTransaction(
+        checkout,
+        subscription,
+        notification,
+      );
+
+      // Paddle can inherit the initial checkout custom data into recurring,
+      // subscription-change, and other subscription transactions. These are
+      // not missing initial checkout bindings and must never replace the
+      // transaction ID stored on the completed checkout. They may, however,
+      // signal that the authoritative subscription snapshot should be checked
+      // promptly in case its webhook is delayed.
+      await transaction.billingSubscription.update({
+        where: { id: subscription.id },
+        data: { reconcileAfter: new Date() },
+      });
+
+      return {
+        checkoutId: checkout.id,
+        workspaceId: checkout.workspaceId,
+        recovered: false,
+      };
+    }
 
     validateRecoveryTransaction(checkout, subscription, notification);
 
@@ -310,6 +353,28 @@ function validateRecoveryTransaction(
       checkout.workspaceId ||
     customString(metadata, 'coreassist_plan') !== checkout.plan ||
     customString(metadata, 'coreassist_cycle') !== checkout.cycle
+  ) {
+    throw recoveryConflict();
+  }
+}
+
+function validateBoundSubscriptionTransaction(
+  checkout: Prisma.BillingCheckoutGetPayload<object>,
+  subscription: Prisma.BillingSubscriptionGetPayload<object>,
+  notification: TransactionNotification,
+) {
+  const metadata = notification.customData;
+
+  if (
+    !BOUND_SUBSCRIPTION_TRANSACTION_ORIGINS.has(notification.origin) ||
+    checkout.environment !== paddleCheckoutEnvironment() ||
+    checkout.workspaceId !== subscription.workspaceId ||
+    !checkout.paddleSubscriptionId ||
+    subscription.paddleSubscriptionId !== checkout.paddleSubscriptionId ||
+    notification.subscriptionId !== checkout.paddleSubscriptionId ||
+    !subscription.paddleCustomerId ||
+    notification.customerId !== subscription.paddleCustomerId ||
+    customString(metadata, 'coreassist_workspace_id') !== checkout.workspaceId
   ) {
     throw recoveryConflict();
   }

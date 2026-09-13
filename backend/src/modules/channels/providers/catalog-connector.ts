@@ -49,6 +49,7 @@ export type NormalizedProduct = {
 export type ProductBatch = {
   products: NormalizedProduct[];
   nextCursor?: string;
+  progress?: number;
 };
 
 export type NormalizedInventoryVariant = {
@@ -65,6 +66,7 @@ export type NormalizedInventoryVariant = {
 export type InventoryBatch = {
   variants: NormalizedInventoryVariant[];
   nextCursor?: string;
+  progress?: number;
 };
 
 export type InventoryLookup = {

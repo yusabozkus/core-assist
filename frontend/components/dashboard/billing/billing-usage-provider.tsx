@@ -19,7 +19,7 @@ type BillingUsageContextValue = {
 }
 
 const BillingUsageContext = createContext<BillingUsageContextValue | null>(null)
-const REFRESH_INTERVAL_MS = 60_000
+const REFRESH_INTERVAL_MS = 30_000
 
 export function BillingUsageProvider({
   storeId,

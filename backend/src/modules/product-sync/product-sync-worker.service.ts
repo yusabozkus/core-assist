@@ -33,8 +33,15 @@ import {
 import { BillingSubscriptionService } from '../billing/billing-subscription.service';
 import { BILLING_SYNC_STOPPED_MESSAGE } from '../billing/billing-access.policy';
 import type { QuestionDraftDispatcher } from '../questions/question-draft.types';
-import { PRODUCT_SYNC_MAX_BATCHES } from './product-sync.constants';
-import type { ProductSyncJobData } from './product-sync.types';
+import {
+  PRODUCT_SYNC_BATCHES_PER_JOB,
+  PRODUCT_SYNC_EXPECTED_MAX_BATCHES,
+  PRODUCT_SYNC_MAX_BATCHES,
+} from './product-sync.constants';
+import type {
+  ProductSyncJobData,
+  ProductSyncRunResult,
+} from './product-sync.types';
 
 type SyncConnection = {
   id: string;
@@ -69,6 +76,19 @@ type ProductIdentityCandidate = {
   value: string;
 };
 
+type SyncCheckpoint = SyncCounters & {
+  status: CatalogSyncStatus;
+  cursor: string | null;
+  batchesProcessed: number;
+  fetchCompleted: boolean;
+  progress: number;
+};
+
+type SyncChunkResult = {
+  counters: SyncCounters;
+  continuationBatch: number | null;
+};
+
 @Injectable()
 export class ProductSyncWorkerService {
   private readonly logger = new Logger(ProductSyncWorkerService.name);
@@ -89,16 +109,53 @@ export class ProductSyncWorkerService {
   async run(
     data: ProductSyncJobData,
     updateProgress: (progress: number) => Promise<void>,
-  ) {
+  ): Promise<ProductSyncRunResult> {
     await this.billing.assertStoreAccess(
       data.storeId,
       BILLING_SYNC_STOPPED_MESSAGE,
     );
+
+    const checkpoint = await this.loadCheckpoint(data);
+    if (!checkpoint) {
+      throw new Error('Senkronizasyon kaydı bulunamadı.');
+    }
+
+    if (checkpoint.status !== CatalogSyncStatus.RUNNING) {
+      return { continuationBatch: null };
+    }
+
+    if (
+      !checkpoint.fetchCompleted &&
+      checkpoint.batchesProcessed >= PRODUCT_SYNC_MAX_BATCHES
+    ) {
+      throw new Error(
+        'Senkronizasyon sağlayıcı kayıt güvenlik sınırına ulaştı.',
+      );
+    }
+
+    if (
+      data.checkpointBatch !== undefined &&
+      data.checkpointBatch > checkpoint.batchesProcessed
+    ) {
+      throw new Error('Senkronizasyon checkpoint sırası geçersiz.');
+    }
+
+    if (
+      data.checkpointBatch !== undefined &&
+      data.checkpointBatch < checkpoint.batchesProcessed &&
+      !checkpoint.fetchCompleted
+    ) {
+      return { continuationBatch: checkpoint.batchesProcessed };
+    }
+
+    const progress = Math.max(10, checkpoint.progress);
     await this.prisma.catalogSyncRun.updateMany({
       where: { id: data.syncRunId, connectionId: data.connectionId },
-      data: { stage: 'FETCHING', progress: 10 },
+      data: checkpoint.fetchCompleted
+        ? { stage: 'RECONCILING' }
+        : { stage: 'FETCHING', progress },
     });
-    await updateProgress(10);
+    await updateProgress(progress);
 
     const connection = await this.prisma.channelConnection.findFirst({
       where: {
@@ -125,20 +182,26 @@ export class ProductSyncWorkerService {
     const credentials = this.encryption.decrypt(
       syncConnection.credentialsEncrypted,
     );
-    const counters =
+    const chunk =
       data.kind === 'INVENTORY'
         ? await this.syncInventory(
             data,
             syncConnection,
             credentials,
+            checkpoint,
             updateProgress,
           )
         : await this.syncFullCatalog(
             data,
             syncConnection,
             credentials,
+            checkpoint,
             updateProgress,
           );
+
+    if (chunk.continuationBatch !== null) {
+      return { continuationBatch: chunk.continuationBatch };
+    }
 
     await this.billing.assertStoreAccess(
       data.storeId,
@@ -148,10 +211,11 @@ export class ProductSyncWorkerService {
       await this.reconcileQuestionProductLinks(data, updateProgress);
     }
 
-    await this.completeSync(data, counters);
-    await this.notifyProductLimit(data, counters);
-    await this.notifyInventoryAlerts(data, counters);
+    await this.completeSync(data, chunk.counters);
+    await this.notifyProductLimit(data, chunk.counters);
+    await this.notifyInventoryAlerts(data, chunk.counters);
     await updateProgress(100);
+    return { continuationBatch: null };
   }
 
   async markFinalFailure(data: ProductSyncJobData, error: unknown) {
@@ -252,69 +316,106 @@ export class ProductSyncWorkerService {
     data: ProductSyncJobData,
     connection: SyncConnection,
     credentials: Record<string, string>,
+    checkpoint: SyncCheckpoint,
     updateProgress: (progress: number) => Promise<void>,
-  ): Promise<SyncCounters> {
-    let cursor: string | undefined;
-    let productsProcessed = 0;
-    let variantsProcessed = 0;
-    let batchCount = 0;
-    let productsCreated = 0;
-    let productsUpdated = 0;
-    let productsUnchanged = 0;
-    let productsSkipped = 0;
+  ): Promise<SyncChunkResult> {
+    let cursor = checkpoint.cursor ?? undefined;
+    let productsProcessed = checkpoint.productsProcessed;
+    let variantsProcessed = checkpoint.variantsProcessed;
+    let batchesProcessed = checkpoint.batchesProcessed;
+    let productsCreated = checkpoint.productsCreated;
+    let productsUpdated = checkpoint.productsUpdated;
+    let productsUnchanged = checkpoint.productsUnchanged;
+    let productsSkipped = checkpoint.productsSkipped;
+    let capacityError: BillingPlanLimitException | undefined;
+    let chunkBatches = 0;
 
-    do {
-      await this.billing.assertStoreAccess(
-        data.storeId,
-        BILLING_SYNC_STOPPED_MESSAGE,
-      );
-      const batch = await this.providers.fetchProducts(
-        connection.providerKey,
-        { environment: connection.environment, credentials },
-        cursor,
-      );
+    if (!checkpoint.fetchCompleted) {
+      do {
+        await this.billing.assertStoreAccess(
+          data.storeId,
+          BILLING_SYNC_STOPPED_MESSAGE,
+        );
+        const requestedCursor = cursor;
+        const batch = await this.providers.fetchProducts(
+          connection.providerKey,
+          { environment: connection.environment, credentials },
+          requestedCursor,
+        );
+        assertCursorAdvanced(requestedCursor, batch.nextCursor);
 
-      await this.billing.assertStoreAccess(
-        data.storeId,
-        BILLING_SYNC_STOPPED_MESSAGE,
-      );
-      for (const product of batch.products) {
-        try {
-          const change = await this.saveNormalizedProduct(
-            data.storeId,
-            connection.id,
-            data.syncRunId,
-            product,
-          );
-          if (change === 'CREATED') productsCreated += 1;
-          if (change === 'UPDATED') productsUpdated += 1;
-          if (change === 'UNCHANGED') productsUnchanged += 1;
-          productsProcessed += 1;
-          variantsProcessed += uniqueVariants(product.variants).length;
-        } catch (error) {
-          if (!(error instanceof BillingPlanLimitException)) throw error;
-          productsSkipped += 1;
+        await this.billing.assertStoreAccess(
+          data.storeId,
+          BILLING_SYNC_STOPPED_MESSAGE,
+        );
+        for (const product of batch.products) {
+          try {
+            const change = await this.saveNormalizedProduct(
+              data.storeId,
+              connection.id,
+              data.syncRunId,
+              product,
+              capacityError,
+            );
+            if (change === 'CREATED') productsCreated += 1;
+            if (change === 'UPDATED') productsUpdated += 1;
+            if (change === 'UNCHANGED') productsUnchanged += 1;
+            productsProcessed += 1;
+            variantsProcessed += uniqueVariants(product.variants).length;
+          } catch (error) {
+            if (!(error instanceof BillingPlanLimitException)) throw error;
+            capacityError = error;
+            productsSkipped += 1;
+          }
         }
-      }
 
-      cursor = batch.nextCursor;
-      batchCount += 1;
-      await this.updateRunProgress(data.syncRunId, {
-        productsProcessed,
-        variantsProcessed,
-        productsCreated,
-        productsUpdated,
-        productsUnchanged,
-        productsSkipped,
-        stage: 'PERSISTING',
-        progress: Math.min(80, 20 + batchCount * 5),
-        cursor,
-      });
-      await updateProgress(Math.min(80, 20 + batchCount * 5));
-    } while (cursor && batchCount < PRODUCT_SYNC_MAX_BATCHES);
+        cursor = batch.nextCursor;
+        chunkBatches += 1;
+        batchesProcessed += 1;
+        const progress = fetchProgress(batchesProcessed, batch.progress);
+        await this.updateRunProgress(data.connectionId, data.syncRunId, {
+          productsProcessed,
+          variantsProcessed,
+          productsCreated,
+          productsUpdated,
+          productsUnchanged,
+          productsSkipped,
+          variantsUpdated: checkpoint.variantsUpdated,
+          variantsUnchanged: checkpoint.variantsUnchanged,
+          lowStockAlerts: checkpoint.lowStockAlerts,
+          outOfStockAlerts: checkpoint.outOfStockAlerts,
+          batchesProcessed,
+          fetchCompleted: !cursor,
+          stage: 'PERSISTING',
+          progress,
+          cursor,
+        });
+        await updateProgress(progress);
+
+        if (cursor && batchesProcessed >= PRODUCT_SYNC_MAX_BATCHES) {
+          throw new Error(
+            'Katalog senkronizasyonu sağlayıcı kayıt güvenlik sınırını aştı.',
+          );
+        }
+      } while (cursor && chunkBatches < PRODUCT_SYNC_BATCHES_PER_JOB);
+    }
+
+    const counters: SyncCounters = {
+      productsProcessed,
+      variantsProcessed,
+      productsArchived: checkpoint.productsArchived,
+      productsCreated,
+      productsUpdated,
+      productsUnchanged,
+      productsSkipped,
+      variantsUpdated: 0,
+      variantsUnchanged: 0,
+      lowStockAlerts: 0,
+      outOfStockAlerts: 0,
+    };
 
     if (cursor) {
-      throw new Error('Katalog senkronizasyonu güvenli batch sınırını aştı.');
+      return { counters, continuationBatch: batchesProcessed };
     }
 
     await this.billing.assertStoreAccess(
@@ -331,82 +432,96 @@ export class ProductSyncWorkerService {
       connection.id,
       data.syncRunId,
     );
-
-    return {
-      productsProcessed,
-      variantsProcessed,
+    counters.productsArchived = Math.max(
+      checkpoint.productsArchived,
       productsArchived,
-      productsCreated,
-      productsUpdated,
-      productsUnchanged,
-      productsSkipped,
-      variantsUpdated: 0,
-      variantsUnchanged: 0,
-      lowStockAlerts: 0,
-      outOfStockAlerts: 0,
-    };
+    );
+    await this.prisma.catalogSyncRun.update({
+      where: { id: data.syncRunId },
+      data: { productsArchived: counters.productsArchived },
+    });
+
+    return { counters, continuationBatch: null };
   }
 
   private async syncInventory(
     data: ProductSyncJobData,
     connection: SyncConnection,
     credentials: Record<string, string>,
+    checkpoint: SyncCheckpoint,
     updateProgress: (progress: number) => Promise<void>,
-  ): Promise<SyncCounters> {
-    let cursor: string | undefined;
-    let variantsProcessed = 0;
-    let batchCount = 0;
-    let variantsUpdated = 0;
-    let variantsUnchanged = 0;
-    let lowStockAlerts = 0;
-    let outOfStockAlerts = 0;
+  ): Promise<SyncChunkResult> {
+    let cursor = checkpoint.cursor ?? undefined;
+    let variantsProcessed = checkpoint.variantsProcessed;
+    let batchesProcessed = checkpoint.batchesProcessed;
+    let variantsUpdated = checkpoint.variantsUpdated;
+    let variantsUnchanged = checkpoint.variantsUnchanged;
+    let lowStockAlerts = checkpoint.lowStockAlerts;
+    let outOfStockAlerts = checkpoint.outOfStockAlerts;
+    let chunkBatches = 0;
 
-    do {
-      await this.billing.assertStoreAccess(
-        data.storeId,
-        BILLING_SYNC_STOPPED_MESSAGE,
-      );
-      const batch = await this.providers.fetchInventory(
-        connection.providerKey,
-        { environment: connection.environment, credentials },
-        cursor,
-      );
-
-      await this.billing.assertStoreAccess(
-        data.storeId,
-        BILLING_SYNC_STOPPED_MESSAGE,
-      );
-      for (const variant of batch.variants) {
-        const result = await this.updateInventoryVariant(
-          connection.id,
-          variant,
+    if (!checkpoint.fetchCompleted) {
+      do {
+        await this.billing.assertStoreAccess(
+          data.storeId,
+          BILLING_SYNC_STOPPED_MESSAGE,
         );
-        if (result) variantsProcessed += 1;
-        if (result?.change === 'UPDATED') variantsUpdated += 1;
-        if (result?.change === 'UNCHANGED') variantsUnchanged += 1;
-        if (result?.stockAlert === 'LOW_STOCK') lowStockAlerts += 1;
-        if (result?.stockAlert === 'OUT_OF_STOCK') outOfStockAlerts += 1;
-      }
+        const requestedCursor = cursor;
+        const batch = await this.providers.fetchInventory(
+          connection.providerKey,
+          { environment: connection.environment, credentials },
+          requestedCursor,
+        );
+        assertCursorAdvanced(requestedCursor, batch.nextCursor);
 
-      cursor = batch.nextCursor;
-      batchCount += 1;
-      await this.updateRunProgress(data.syncRunId, {
-        productsProcessed: 0,
-        variantsProcessed,
-        variantsUpdated,
-        variantsUnchanged,
-        stage: 'PERSISTING',
-        progress: Math.min(90, 20 + batchCount * 5),
-        cursor,
-      });
-      await updateProgress(Math.min(90, 20 + batchCount * 5));
-    } while (cursor && batchCount < PRODUCT_SYNC_MAX_BATCHES);
+        await this.billing.assertStoreAccess(
+          data.storeId,
+          BILLING_SYNC_STOPPED_MESSAGE,
+        );
+        for (const variant of batch.variants) {
+          const result = await this.updateInventoryVariant(
+            connection.id,
+            variant,
+          );
+          if (result) variantsProcessed += 1;
+          if (result?.change === 'UPDATED') variantsUpdated += 1;
+          if (result?.change === 'UNCHANGED') variantsUnchanged += 1;
+          if (result?.stockAlert === 'LOW_STOCK') lowStockAlerts += 1;
+          if (result?.stockAlert === 'OUT_OF_STOCK') outOfStockAlerts += 1;
+        }
 
-    if (cursor) {
-      throw new Error('Envanter senkronizasyonu güvenli batch sınırını aştı.');
+        cursor = batch.nextCursor;
+        chunkBatches += 1;
+        batchesProcessed += 1;
+        const progress = fetchProgress(batchesProcessed, batch.progress);
+        await this.updateRunProgress(data.connectionId, data.syncRunId, {
+          productsProcessed: checkpoint.productsProcessed,
+          variantsProcessed,
+          productsCreated: checkpoint.productsCreated,
+          productsUpdated: checkpoint.productsUpdated,
+          productsUnchanged: checkpoint.productsUnchanged,
+          productsSkipped: checkpoint.productsSkipped,
+          variantsUpdated,
+          variantsUnchanged,
+          lowStockAlerts,
+          outOfStockAlerts,
+          batchesProcessed,
+          fetchCompleted: !cursor,
+          stage: 'PERSISTING',
+          progress,
+          cursor,
+        });
+        await updateProgress(progress);
+
+        if (cursor && batchesProcessed >= PRODUCT_SYNC_MAX_BATCHES) {
+          throw new Error(
+            'Envanter senkronizasyonu sağlayıcı kayıt güvenlik sınırını aştı.',
+          );
+        }
+      } while (cursor && chunkBatches < PRODUCT_SYNC_BATCHES_PER_JOB);
     }
 
-    return {
+    const counters: SyncCounters = {
       productsProcessed: 0,
       variantsProcessed,
       productsArchived: 0,
@@ -419,6 +534,11 @@ export class ProductSyncWorkerService {
       lowStockAlerts,
       outOfStockAlerts,
     };
+
+    return {
+      counters,
+      continuationBatch: cursor ? batchesProcessed : null,
+    };
   }
 
   private async saveNormalizedProduct(
@@ -426,6 +546,7 @@ export class ProductSyncWorkerService {
     connectionId: string,
     syncRunId: string,
     normalized: NormalizedProduct,
+    capacityError?: BillingPlanLimitException,
   ) {
     const saved = await this.prisma.$transaction(async (transaction) => {
       const syncedAt = new Date();
@@ -476,6 +597,7 @@ export class ProductSyncWorkerService {
           transaction,
           storeId,
           productId,
+          capacityError,
         );
         await transaction.product.update({
           where: { id: productId },
@@ -512,6 +634,7 @@ export class ProductSyncWorkerService {
           transaction,
           storeId,
           productId,
+          capacityError,
         );
         await transaction.product.update({
           where: { id: productId },
@@ -546,7 +669,12 @@ export class ProductSyncWorkerService {
         });
         externalProductId = externalProduct.id;
       } else {
-        await this.assertProductActivationCapacity(transaction, storeId);
+        await this.assertProductActivationCapacity(
+          transaction,
+          storeId,
+          undefined,
+          capacityError,
+        );
         const product = await transaction.product.create({
           data: {
             storeId,
@@ -640,6 +768,7 @@ export class ProductSyncWorkerService {
     transaction: Prisma.TransactionClient,
     storeId: string,
     productId?: string,
+    capacityError?: BillingPlanLimitException,
   ) {
     if (productId) {
       const product = await transaction.product.findUnique({
@@ -648,6 +777,8 @@ export class ProductSyncWorkerService {
       });
       if (product?.status === ProductStatus.ACTIVE) return;
     }
+
+    if (capacityError) throw capacityError;
 
     await this.billingEntitlements.assertProductCapacityForStoreInTransaction(
       transaction,
@@ -1094,38 +1225,77 @@ export class ProductSyncWorkerService {
     return new Set(staleProducts.map((product) => product.productId)).size;
   }
 
+  private async loadCheckpoint(data: ProductSyncJobData) {
+    return this.prisma.catalogSyncRun.findFirst({
+      where: { id: data.syncRunId, connectionId: data.connectionId },
+      select: {
+        status: true,
+        progress: true,
+        cursor: true,
+        batchesProcessed: true,
+        fetchCompleted: true,
+        productsProcessed: true,
+        variantsProcessed: true,
+        productsArchived: true,
+        productsCreated: true,
+        productsUpdated: true,
+        productsUnchanged: true,
+        productsSkipped: true,
+        variantsUpdated: true,
+        variantsUnchanged: true,
+        lowStockAlerts: true,
+        outOfStockAlerts: true,
+      },
+    });
+  }
+
   private async updateRunProgress(
+    connectionId: string,
     syncRunId: string,
     data: {
       productsProcessed: number;
       variantsProcessed: number;
-      productsCreated?: number;
-      productsUpdated?: number;
-      productsUnchanged?: number;
-      productsSkipped?: number;
-      variantsUpdated?: number;
-      variantsUnchanged?: number;
+      productsCreated: number;
+      productsUpdated: number;
+      productsUnchanged: number;
+      productsSkipped: number;
+      variantsUpdated: number;
+      variantsUnchanged: number;
+      lowStockAlerts: number;
+      outOfStockAlerts: number;
+      batchesProcessed: number;
+      fetchCompleted: boolean;
       stage?: 'FETCHING' | 'PERSISTING' | 'RECONCILING';
       progress?: number;
       cursor?: string;
     },
   ) {
-    await this.prisma.catalogSyncRun.update({
-      where: { id: syncRunId },
-      data: {
-        productsProcessed: data.productsProcessed,
-        variantsProcessed: data.variantsProcessed,
-        productsCreated: data.productsCreated,
-        productsUpdated: data.productsUpdated,
-        productsUnchanged: data.productsUnchanged,
-        productsSkipped: data.productsSkipped,
-        variantsUpdated: data.variantsUpdated,
-        variantsUnchanged: data.variantsUnchanged,
-        stage: data.stage,
-        progress: data.progress,
-        cursor: data.cursor ?? null,
-      },
-    });
+    await this.prisma.$transaction([
+      this.prisma.catalogSyncRun.update({
+        where: { id: syncRunId },
+        data: {
+          productsProcessed: data.productsProcessed,
+          variantsProcessed: data.variantsProcessed,
+          productsCreated: data.productsCreated,
+          productsUpdated: data.productsUpdated,
+          productsUnchanged: data.productsUnchanged,
+          productsSkipped: data.productsSkipped,
+          variantsUpdated: data.variantsUpdated,
+          variantsUnchanged: data.variantsUnchanged,
+          lowStockAlerts: data.lowStockAlerts,
+          outOfStockAlerts: data.outOfStockAlerts,
+          batchesProcessed: data.batchesProcessed,
+          fetchCompleted: data.fetchCompleted,
+          stage: data.stage,
+          progress: data.progress,
+          cursor: data.cursor ?? null,
+        },
+      }),
+      this.prisma.channelConnection.updateMany({
+        where: { id: connectionId },
+        data: { processingStartedAt: new Date() },
+      }),
+    ]);
   }
 
   private async completeSync(data: ProductSyncJobData, counters: SyncCounters) {
@@ -1158,6 +1328,9 @@ export class ProductSyncWorkerService {
           productsSkipped: counters.productsSkipped,
           variantsUpdated: counters.variantsUpdated,
           variantsUnchanged: counters.variantsUnchanged,
+          lowStockAlerts: counters.lowStockAlerts,
+          outOfStockAlerts: counters.outOfStockAlerts,
+          fetchCompleted: true,
           cursor: null,
           completedAt,
         },
@@ -1238,6 +1411,28 @@ export class ProductSyncWorkerService {
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);
+}
+
+function fetchProgress(
+  batchesProcessed: number,
+  providerProgress: number | undefined,
+) {
+  const fetchShare =
+    providerProgress !== undefined && Number.isFinite(providerProgress)
+      ? Math.min(1, Math.max(0, providerProgress))
+      : Math.min(1, batchesProcessed / PRODUCT_SYNC_EXPECTED_MAX_BATCHES);
+  return Math.min(85, 10 + Math.ceil(fetchShare * 75));
+}
+
+function assertCursorAdvanced(
+  requestedCursor: string | undefined,
+  nextCursor: string | undefined,
+) {
+  if (nextCursor && nextCursor === requestedCursor) {
+    throw new Error(
+      'Sağlayıcı aynı sayfalama cursor değerini tekrar döndürdü; senkronizasyon güvenli biçimde durduruldu.',
+    );
+  }
 }
 
 function isSameProductSnapshot(

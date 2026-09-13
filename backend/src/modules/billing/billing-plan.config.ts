@@ -43,6 +43,10 @@ export const PLAN_ENTITLEMENTS: Readonly<
   },
 };
 
+export const MAX_PLAN_ACTIVE_PRODUCTS = Math.max(
+  ...Object.values(PLAN_ENTITLEMENTS).map((plan) => plan.activeProducts),
+);
+
 export const TRIAL_ENTITLEMENTS: BillingEntitlements = {
   monthlyAiQuestions: 100,
   stores: 1,

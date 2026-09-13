@@ -1,5 +1,5 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
-import type { Job } from 'bullmq';
+import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
+import type { Job, Queue } from 'bullmq';
 import { UnrecoverableError } from 'bullmq';
 import { BillingAccessRequiredException } from '../billing/billing.errors';
 import {
@@ -17,6 +17,8 @@ export class ProductSyncProcessor extends WorkerHost {
   constructor(
     private readonly syncWorker: ProductSyncWorkerService,
     private readonly scheduler: ProductSyncSchedulerService,
+    @InjectQueue(PRODUCT_SYNC_QUEUE)
+    private readonly queue: Queue<ProductSyncJobData>,
   ) {
     super();
   }
@@ -37,9 +39,16 @@ export class ProductSyncProcessor extends WorkerHost {
     const data = job.data as ProductSyncJobData;
 
     try {
-      await this.syncWorker.run(data, async (progress) => {
+      const result = await this.syncWorker.run(data, async (progress) => {
         await job.updateProgress(progress);
       });
+      if (result.continuationBatch !== null) {
+        await this.enqueueContinuation(
+          job.name,
+          data,
+          result.continuationBatch,
+        );
+      }
     } catch (error) {
       const maximumAttempts = job.opts.attempts ?? 1;
       const isFinalAttempt = job.attemptsMade + 1 >= maximumAttempts;
@@ -52,5 +61,23 @@ export class ProductSyncProcessor extends WorkerHost {
       if (accessBlocked) throw new UnrecoverableError(error.message);
       throw error;
     }
+  }
+
+  private async enqueueContinuation(
+    jobName: string,
+    data: ProductSyncJobData,
+    checkpointBatch: number,
+  ) {
+    await this.queue.add(
+      jobName,
+      { ...data, checkpointBatch },
+      {
+        jobId: `sync-${data.connectionId}-${data.syncRunId}-checkpoint-${checkpointBatch}`,
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2_000 },
+        removeOnComplete: { count: 100 },
+        removeOnFail: { count: 250 },
+      },
+    );
   }
 }

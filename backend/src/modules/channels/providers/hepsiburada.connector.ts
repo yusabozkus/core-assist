@@ -47,6 +47,7 @@ export class HepsiburadaConnector
     return {
       products: groupListings(listings).map(normalizeHepsiburadaListingGroup),
       nextCursor: getNextOffset(payload, offset, 100, listings.length),
+      progress: getCatalogProgress(payload, offset, listings.length),
     };
   }
 
@@ -61,6 +62,7 @@ export class HepsiburadaConnector
     return {
       variants: listings.map(normalizeHepsiburadaInventory),
       nextCursor: getNextOffset(payload, offset, 100, listings.length),
+      progress: getCatalogProgress(payload, offset, listings.length),
     };
   }
 
@@ -651,6 +653,21 @@ function getNextOffset(
   }
 
   return itemCount === limit ? String(offset + limit) : undefined;
+}
+
+function getCatalogProgress(
+  payload: Record<string, unknown>,
+  offset: number,
+  itemCount: number,
+) {
+  const totalCount = firstOptionalNumber(payload, [
+    'totalCount',
+    'totalElements',
+    'count',
+  ]);
+  if (!totalCount || totalCount <= 0) return undefined;
+
+  return Math.min(1, Math.max(0, (offset + itemCount) / totalCount));
 }
 
 function getQuestionItems(payload: unknown) {

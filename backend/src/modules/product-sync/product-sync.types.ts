@@ -3,6 +3,11 @@ export type ProductSyncJobData = {
   connectionId: string;
   syncRunId: string;
   kind: ProductSyncKind;
+  checkpointBatch?: number;
+};
+
+export type ProductSyncRunResult = {
+  continuationBatch: number | null;
 };
 
 export type ProductSyncKind = 'FULL' | 'INVENTORY';

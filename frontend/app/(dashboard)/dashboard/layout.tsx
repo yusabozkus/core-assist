@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 
 import { DashboardHeader } from "@/components/shared/dashboard/dashboard-header"
+import { BillingPaymentIssueShell } from "@/components/dashboard/billing/billing-payment-issue-banner"
 import { BillingUsageProvider } from "@/components/dashboard/billing/billing-usage-provider"
 import { AppSidebar } from "@/components/shared/sidebar/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -54,29 +55,31 @@ export default async function DashboardLayout({
       storeId={activeStore.id}
       initialUsage={billingUsage}
     >
-      <SidebarProvider>
-        <AppSidebar
-          variant="inset"
-          user={{
-            name: currentUser.user.name,
-            email: currentUser.user.email,
-            avatarUrl: currentUser.user.image,
-          }}
-          shops={stores}
-          activeShopId={activeStore.id}
-          canManageBilling={billingWorkspaces.length > 0}
-        />
-        <SidebarInset className="h-[98vh]">
-          <DashboardHeader
-            storeId={activeStore.id}
-            syncState={syncState}
-            isStoreArchived={activeStore.status === "INACTIVE"}
+      <BillingPaymentIssueShell workspaceId={billingWorkspaces[0]?.id}>
+        <SidebarProvider className="min-h-0 flex-1">
+          <AppSidebar
+            variant="inset"
+            user={{
+              name: currentUser.user.name,
+              email: currentUser.user.email,
+              avatarUrl: currentUser.user.image,
+            }}
+            shops={stores}
+            activeShopId={activeStore.id}
+            canManageBilling={billingWorkspaces.length > 0}
           />
-          <div className="min-h-0 flex-1 overflow-y-auto bg-background">
-            {children}
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+          <SidebarInset className="min-h-0">
+            <DashboardHeader
+              storeId={activeStore.id}
+              syncState={syncState}
+              isStoreArchived={activeStore.status === "INACTIVE"}
+            />
+            <div className="min-h-0 flex-1 overflow-y-auto bg-background">
+              {children}
+            </div>
+          </SidebarInset>
+        </SidebarProvider>
+      </BillingPaymentIssueShell>
     </BillingUsageProvider>
   )
 }

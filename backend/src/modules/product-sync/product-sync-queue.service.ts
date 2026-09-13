@@ -93,7 +93,7 @@ export class ProductSyncQueueService implements ProductSyncDispatcher {
         kind === 'INVENTORY'
           ? SYNC_STORE_INVENTORY_JOB
           : SYNC_STORE_PRODUCTS_JOB,
-        { storeId, connectionId, syncRunId, kind },
+        { storeId, connectionId, syncRunId, kind, checkpointBatch: 0 },
         {
           jobId: `sync-${connectionId}-${syncRunId}`,
           attempts: 3,
