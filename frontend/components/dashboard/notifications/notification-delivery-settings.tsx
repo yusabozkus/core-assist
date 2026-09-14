@@ -177,7 +177,7 @@ export function NotificationDeliverySettings({ storeId }: { storeId: string }) {
           title="Tarayıcı bildirimleri"
           description={
             settings.availability.browser
-              ? "CoreAssist kapalıyken de bu cihazda kritik uyarıları görün."
+              ? "Core Asistan kapalıyken de bu cihazda kritik uyarıları görün."
               : "Sunucuda VAPID anahtarları yapılandırıldığında kullanılabilir."
           }
           checked={settings.browserEnabled}

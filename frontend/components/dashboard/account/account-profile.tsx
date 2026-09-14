@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import {
   CheckmarkBadge01Icon,
+  InformationCircleIcon,
   Mail01Icon,
   UserCircleIcon,
 } from "@hugeicons/core-free-icons"
@@ -12,10 +13,20 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { updateCurrentUser } from "@/lib/api/users"
+import {
+  getTeamAccessDescription,
+  getTeamAccessLabel,
+} from "@/lib/team"
 import { getInitials } from "@/lib/utils"
+import type { TeamAccessLevel } from "@/types/team"
 
 type AccountProfileProps = {
   user: {
@@ -24,10 +35,13 @@ type AccountProfileProps = {
     emailVerified: boolean
     image?: string | null
   }
+  accessLevel: "OWNER" | TeamAccessLevel
 }
 
-export function AccountProfile({ user }: AccountProfileProps) {
+export function AccountProfile({ user, accessLevel }: AccountProfileProps) {
   const router = useRouter()
+  const accessLabel = getTeamAccessLabel(accessLevel)
+  const accessDescription = getTeamAccessDescription(accessLevel)
   const [name, setName] = useState(user.name)
   const [savedName, setSavedName] = useState(user.name)
   const [isSaving, setIsSaving] = useState(false)
@@ -78,12 +92,35 @@ export function AccountProfile({ user }: AccountProfileProps) {
             <h2 className="text-lg font-semibold tracking-[-0.02em]">
               Profil bilgileri
             </h2>
-            {user.emailVerified ? (
-              <Badge variant="success" className="text-[10px]">
-                <HugeiconsIcon icon={CheckmarkBadge01Icon} className="size-3" />
-                Doğrulandı
+            <div className="flex items-center gap-1">
+              <Badge variant="outline" className="bg-background text-[10px]">
+                {accessLabel}
               </Badge>
-            ) : null}
+              <HoverCard openDelay={180} closeDelay={100}>
+                <HoverCardTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label={`${accessLabel} rolü hakkında bilgi`}
+                    className="inline-flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                  >
+                    <HugeiconsIcon
+                      icon={InformationCircleIcon}
+                      className="size-3.5"
+                    />
+                  </button>
+                </HoverCardTrigger>
+                <HoverCardContent
+                  align="start"
+                  sideOffset={6}
+                  className="w-72 rounded-xl p-4"
+                >
+                  <p className="text-sm font-semibold">{accessLabel}</p>
+                  <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
+                    {accessDescription}
+                  </p>
+                </HoverCardContent>
+              </HoverCard>
+            </div>
           </div>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
             Panelde ve ekip alanlarında görünen kişisel bilgileriniz.
@@ -130,9 +167,6 @@ export function AccountProfile({ user }: AccountProfileProps) {
               disabled
               readOnly
             />
-            <p className="text-xs leading-5 text-muted-foreground">
-              E-posta adresiniz bağlı giriş sağlayıcınız tarafından yönetilir.
-            </p>
           </div>
         </div>
 

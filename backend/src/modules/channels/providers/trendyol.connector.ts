@@ -261,7 +261,7 @@ export class TrendyolConnector
         'Accept-Language': 'tr',
         Authorization: basicAuthorization(apiKey, apiSecret),
         'Content-Type': 'application/json',
-        'User-Agent': `${supplierId} - CoreAssist`,
+        'User-Agent': `${supplierId} - CoreAsistan`,
       },
       ...(options.body ? { body: JSON.stringify(options.body) } : {}),
       signal: options.signal ?? AbortSignal.timeout(15_000),

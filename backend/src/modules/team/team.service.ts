@@ -24,6 +24,7 @@ import {
   TeamAccessLevel,
   UpdateWorkspaceMemberDto,
 } from './dto/team-member-access.dto';
+import { resolveTeamAccessLevel } from './team-access';
 
 const INVITATION_LIFETIME_MS = 7 * 24 * 60 * 60 * 1_000;
 
@@ -105,7 +106,7 @@ export class TeamService {
         return {
           user: member.user,
           workspaceRole: member.role,
-          accessLevel: accessLevelForMember(member.role, accesses),
+          accessLevel: resolveTeamAccessLevel(member.role, accesses),
           stores:
             member.role === WorkspaceRole.OWNER ||
             member.role === WorkspaceRole.ADMIN
@@ -423,7 +424,7 @@ export class TeamService {
         );
         if (otherWorkspace) {
           throw new ConflictException(
-            'Bu hesap başka bir CoreAssist ekibine bağlı. Bir hesap yalnızca bir ekibe katılabilir.',
+            'Bu hesap başka bir Core Asistan ekibine bağlı. Bir hesap yalnızca bir ekibe katılabilir.',
           );
         }
         const currentMembership = memberships.find(
@@ -517,7 +518,7 @@ export class TeamService {
     } catch (error) {
       if (isUniqueConstraintError(error)) {
         throw new ConflictException(
-          'Bu hesap başka bir CoreAssist ekibine aynı anda katıldı. Davet kabul edilmedi.',
+          'Bu hesap başka bir Core Asistan ekibine aynı anda katıldı. Davet kabul edilmedi.',
         );
       }
       throw error;
@@ -667,7 +668,7 @@ export class TeamService {
     }
     if (user.workspaceMembers.length) {
       throw new ConflictException(
-        'Bu kullanıcı başka bir CoreAssist ekibine bağlı.',
+        'Bu kullanıcı başka bir Core Asistan ekibine bağlı.',
       );
     }
   }
@@ -709,27 +710,11 @@ function storeRoleFor(accessLevel: TeamAccessLevel) {
   return StoreRole.AGENT;
 }
 
-function accessLevelForMember(
-  workspaceRole: WorkspaceRole,
-  accesses: Array<{ role: StoreRole }>,
-) {
-  if (workspaceRole === WorkspaceRole.OWNER) return 'OWNER';
-  if (workspaceRole === WorkspaceRole.ADMIN)
-    return TeamAccessLevel.ACCOUNT_ADMIN;
-  if (accesses.some((access) => access.role === StoreRole.ADMIN)) {
-    return TeamAccessLevel.STORE_ADMIN;
-  }
-  if (accesses.some((access) => access.role === StoreRole.AGENT)) {
-    return TeamAccessLevel.AGENT;
-  }
-  return TeamAccessLevel.VIEWER;
-}
-
 function accessLevelForInvitation(invitation: {
   role: WorkspaceRole;
   storeAccesses: Array<{ role: StoreRole }>;
 }) {
-  return accessLevelForMember(invitation.role, invitation.storeAccesses);
+  return resolveTeamAccessLevel(invitation.role, invitation.storeAccesses);
 }
 
 function serializeInvitation<

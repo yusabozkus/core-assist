@@ -32,7 +32,7 @@ export default async function AuthLayout({
         <header className="flex items-center justify-between gap-4">
           <Link
             href="/"
-            aria-label="CoreAssist ana sayfa"
+            aria-label="Core Asistan ana sayfa"
             className="group flex items-center gap-3 rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:outline-none"
           >
             <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm motion-safe:transition-transform motion-safe:group-hover:-translate-y-0.5">
@@ -40,7 +40,7 @@ export default async function AuthLayout({
             </span>
             <span>
               <span className="block text-[16px] leading-none font-semibold tracking-[-0.035em] text-foreground">
-                CoreAssist
+                Core Asistan
               </span>
               <span className="mt-1.5 block text-[10px] leading-none text-muted-foreground">
                 Pazaryeri yanıt asistanınız
@@ -73,7 +73,7 @@ export default async function AuthLayout({
             Güvenli erişim
           </span>
           <span className="basis-full text-[10px] text-muted-foreground/70 sm:basis-auto">
-            © {new Date().getFullYear()} CoreAssist
+            © {new Date().getFullYear()} Core Asistan
           </span>
         </footer>
       </section>

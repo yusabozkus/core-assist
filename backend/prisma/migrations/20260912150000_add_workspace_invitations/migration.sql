@@ -1,6 +1,6 @@
 CREATE TYPE "WorkspaceInvitationStatus" AS ENUM ('PENDING', 'ACCEPTED', 'REVOKED', 'EXPIRED');
 
--- CoreAssist exposes one workspace per account. Enforcing it in PostgreSQL
+-- Core Asistan exposes one workspace per account. Enforcing it in PostgreSQL
 -- also closes the race where two invitations are accepted simultaneously.
 CREATE UNIQUE INDEX "workspace_member_userId_key" ON "workspace_member"("userId");
 

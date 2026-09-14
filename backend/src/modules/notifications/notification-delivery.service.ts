@@ -39,7 +39,7 @@ export class NotificationDeliveryService {
     if (this.browserConfigured) {
       webPush.setVapidDetails(
         process.env.WEB_PUSH_VAPID_SUBJECT?.trim() ||
-          'mailto:support@coreassist.app',
+          'mailto:support@coreasistan.com',
         this.vapidPublicKey!,
         this.vapidPrivateKey!,
       );
@@ -255,11 +255,11 @@ function buildEmailHtml(
   return `
     <div style="background:#f4f5f4;padding:32px 16px;font-family:Arial,sans-serif;color:#17201b">
       <div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e2e6e3;border-radius:16px;padding:28px">
-        <p style="margin:0 0 18px;color:#66736b;font-size:13px">CoreAssist</p>
+        <p style="margin:0 0 18px;color:#66736b;font-size:13px">Core Asistan</p>
         <h1 style="margin:0 0 12px;font-size:20px;line-height:1.35">${escapeHtml(title)}</h1>
         <p style="margin:0 0 10px;font-size:14px;line-height:1.7">Merhaba ${escapeHtml(name)},</p>
         <p style="margin:0 0 24px;color:#465149;font-size:14px;line-height:1.7">${escapeHtml(message)}</p>
-        <a href="${escapeHtml(actionUrl)}" style="display:inline-block;background:#177245;color:#fff;text-decoration:none;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:600">CoreAssist'te aç</a>
+        <a href="${escapeHtml(actionUrl)}" style="display:inline-block;background:#177245;color:#fff;text-decoration:none;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:600">Core Asistan'da aç</a>
       </div>
     </div>`;
 }

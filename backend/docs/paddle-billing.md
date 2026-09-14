@@ -1,6 +1,6 @@
 # Paddle Billing kurulumu
 
-CoreAssist, ödeme ekranını Paddle.js ile açar; plan ve fiyat seçimini backend
+Core Asistan, ödeme ekranını Paddle.js ile açar; plan ve fiyat seçimini backend
 üzerinden doğrular. Abonelik durumu tarayıcıdaki ödeme sonucuna göre değil,
 imzası doğrulanmış Paddle webhook olaylarına göre güncellenir.
 
@@ -701,7 +701,7 @@ Gerçek ortamda test amacıyla tahsilat veya iptal yapmayın.
 
 Resmî kaynaklar: [Paddle erişim ve periyodik karşılaştırma rehberi](https://developer.paddle.com/build/subscriptions/provision-access-webhooks/),
 [abonelik okuma](https://developer.paddle.com/api-reference/subscriptions/get-subscription/).
-30 dakikalık pencere Paddle'ın zorunlu kuralı değil, CoreAssist'in ürün politikasıdır.
+30 dakikalık pencere Paddle'ın zorunlu kuralı değil, Core Asistan'ın ürün politikasıdır.
 
 ## Dinamik plan fiyatları
 
@@ -718,9 +718,9 @@ bulunmaz. Fiyat ortamı istemci ortamıyla eşleşmezse veya katalog eksikse pla
 seçimi kapatılır ve kullanıcıya yeniden deneme sunulur. Ödeme formunun gösterdiği
 tutar her durumda nihai kaynaktır.
 
-CoreAssist'in 10 günlük kart gerektirmeyen denemesi yerel abonelik kaydıyla
+Core Asistan'ın 10 günlük kart gerektirmeyen denemesi yerel abonelik kaydıyla
 yönetilir ve yalnızca bir kez başlatılır. Paddle ürünlerindeki aylık ve yıllık
-fiyatlarda **Trials anahtarı kapalı olmalıdır**. CoreAssist fiyat önizlemesinde,
+fiyatlarda **Trials anahtarı kapalı olmalıdır**. Core Asistan fiyat önizlemesinde,
 ilk checkout öncesinde, plan değişikliği öncesinde ve webhook bağlama sırasında
 `trial_period` bulunmadığını doğrular. Trial içeren bir Paddle fiyatı ödeme veya
 plan yetkisi veremez; böylece kullanıcı ikinci bir denemeye ya da ücretli plan

@@ -218,7 +218,7 @@ export class HepsiburadaConnector
         Accept: 'application/json',
         Authorization: basicAuthorization(developerUser, serviceKey),
         'Content-Type': 'application/json',
-        'User-Agent': 'CoreAssist',
+        'User-Agent': 'CoreAsistan',
         ...options.headers,
       },
       ...(options.body ? { body: JSON.stringify(options.body) } : {}),

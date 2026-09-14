@@ -50,7 +50,7 @@ export function LandingFooter() {
             ))}
           </nav>
           <p className="text-[11px] text-[#8c9c7d]">
-            © {new Date().getFullYear()} CoreAssist
+            © {new Date().getFullYear()} Core Asistan
           </p>
         </div>
         <FooterWordmark

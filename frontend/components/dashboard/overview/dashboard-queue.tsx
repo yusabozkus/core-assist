@@ -26,7 +26,7 @@ const modeLabels = {
 export function DashboardQueue({ data }: { data: DashboardOverview }) {
   return (
     <section
-      className="flex min-w-0 flex-col rounded-xl border border-border bg-card p-5 shadow-xs sm:p-6"
+      className="flex min-w-0 flex-col rounded-xl border border-border bg-card p-5 sm:p-6"
       aria-labelledby="queue-title"
     >
       <div className="flex items-center justify-between gap-3">

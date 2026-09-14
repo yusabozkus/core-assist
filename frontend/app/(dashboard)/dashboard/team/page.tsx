@@ -7,8 +7,8 @@ import { getServerTeam } from "@/lib/api/team.server"
 import { getCurrentUser } from "@/lib/server-auth"
 
 export const metadata: Metadata = {
-  title: "Ekip ve Yetkiler | CoreAssist",
-  description: "CoreAssist ekip üyelerini ve mağaza erişimlerini yönetin.",
+  title: "Ekip ve Yetkiler | Core Asistan",
+  description: "Core Asistan ekip üyelerini ve mağaza erişimlerini yönetin.",
 }
 
 export const dynamic = "force-dynamic"

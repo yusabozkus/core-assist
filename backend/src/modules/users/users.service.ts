@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { WorkspaceRole } from '../../generated/prisma/enums';
+import { resolveTeamAccessLevel } from '../team/team-access';
 
 const publicProfileSelect = {
   id: true,
@@ -73,6 +75,13 @@ export class UsersService {
             _count: { select: { stores: true } },
           },
         },
+        workspaceMembers: {
+          take: 1,
+          select: { role: true },
+        },
+        storeMembers: {
+          select: { role: true },
+        },
       },
     });
 
@@ -83,6 +92,10 @@ export class UsersService {
     return {
       createdAt: user.createdAt,
       ownedStoreCount: user.ownedWorkspace?._count.stores ?? 0,
+      accessLevel: resolveTeamAccessLevel(
+        user.workspaceMembers[0]?.role ?? WorkspaceRole.MEMBER,
+        user.storeMembers,
+      ),
       accounts: user.accounts,
       sessions: user.sessions.map((session) => ({
         ...session,

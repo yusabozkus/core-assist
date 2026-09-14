@@ -299,7 +299,7 @@ function getProviderName(providerId?: string) {
 function getProviderError(code?: string) {
   switch (code?.toLowerCase()) {
     case "account_already_linked_to_different_user":
-      return "Bu sağlayıcı hesabı başka bir CoreAssist hesabına bağlı."
+      return "Bu sağlayıcı hesabı başka bir Core Asistan hesabına bağlı."
     case "unable_to_link_account":
       return "Sağlayıcı hesabı doğrulanamadığı için bağlantı tamamlanamadı."
     case "provider_not_found":

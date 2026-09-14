@@ -121,7 +121,7 @@ export function LoginForm({
     (reason === "session_expired"
       ? "Oturumunuzun süresi doldu. Devam etmek için yeniden giriş yapın."
       : reason === "account_deleted"
-        ? "CoreAssist hesabınız ve hesabınıza ait veriler kalıcı olarak silindi."
+        ? "Core Asistan hesabınız ve hesabınıza ait veriler kalıcı olarak silindi."
         : null)
   const isError = Boolean(errorMessage)
   const isSuccess = !isError && reason === "account_deleted"
@@ -185,7 +185,7 @@ export function LoginForm({
           className="mt-0.5 size-4 shrink-0 text-muted-foreground/70"
         />
         <p className="text-[11px] leading-5 text-muted-foreground">
-          Parolanız CoreAssist ile paylaşılmaz. Kimlik doğrulama seçtiğiniz
+          Parolanız Core Asistan ile paylaşılmaz. Kimlik doğrulama seçtiğiniz
           Google veya Microsoft hesabı üzerinden tamamlanır.
         </p>
       </div>

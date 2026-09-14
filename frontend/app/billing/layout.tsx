@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Plan ve faturalama | CoreAssist",
+  title: "Plan ve faturalama | Core Asistan",
   robots: { index: false, follow: false },
 }
 

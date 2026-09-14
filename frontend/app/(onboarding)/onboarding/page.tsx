@@ -6,9 +6,9 @@ import { getOnboardingStatus } from "@/lib/api/onboarding.server"
 import { getCurrentUser } from "@/lib/server-auth"
 
 export const metadata: Metadata = {
-  title: "İlk Kurulum | CoreAssist",
+  title: "İlk Kurulum | Core Asistan",
   description:
-    "CoreAssist mağazanızı oluşturun, ilk satış kanalınızı seçin ve AI yanıt tercihlerinizi belirleyin.",
+    "Core Asistan mağazanızı oluşturun, ilk satış kanalınızı seçin ve AI yanıt tercihlerinizi belirleyin.",
 }
 
 export default async function OnboardingPage() {

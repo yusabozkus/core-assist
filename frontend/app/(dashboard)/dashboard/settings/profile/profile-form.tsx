@@ -26,7 +26,7 @@ export function ProfileForm({
 }: ProfileFormProps) {
   return (
     <div className="space-y-6">
-      <AccountProfile user={user} />
+      <AccountProfile user={user} accessLevel={overview.accessLevel} />
       <ConnectedAccounts
         initialAccounts={overview.accounts}
         initialLinkedProvider={linkedProvider}

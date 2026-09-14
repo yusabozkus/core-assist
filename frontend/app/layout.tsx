@@ -16,7 +16,7 @@ const fontMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "CoreAssist - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+  title: "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
   description:
     "Trendyol, Hepsiburada, WhatsApp ve Instagram kanallarınızı gerçek stok ve yapay zekâ ile otonom yönetin.",
 }

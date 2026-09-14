@@ -33,7 +33,7 @@ export class WorkspacesService {
     // Provisioning an internal workspace never resets billing or onboarding.
     return transaction.workspace.create({
       data: {
-        name: (name?.trim() || owner.name.trim() || 'CoreAssist').slice(0, 80),
+        name: (name?.trim() || owner.name.trim() || 'Core Asistan').slice(0, 80),
         ownerId: userId,
         members: {
           create: {

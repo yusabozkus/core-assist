@@ -67,7 +67,7 @@ export function AutomationSection() {
           </h2>
           <p className="mt-6 max-w-[400px] text-sm leading-7 text-[#a9b3a4]">
             İsterseniz her cevabı onaylayın. İsterseniz güvenli yanıtları
-            CoreAssist’e bırakın. Bilgi eksikse veya doğrulanamıyorsa soru
+            Core Asistan’a bırakın. Bilgi eksikse veya doğrulanamıyorsa soru
             incelemeye alınır.
           </p>
           <div

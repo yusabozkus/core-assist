@@ -103,7 +103,7 @@ export function QuestionDetail({
               <div className="max-w-[88%] sm:max-w-[78%]">
                 <p className="mr-1 mb-1.5 text-right text-[11px] font-medium text-muted-foreground">
                   {question.answerDelivery?.origin === "AUTOMATION"
-                    ? "Core Assist"
+                    ? "Core Asistan"
                     : "Mağaza yanıtı"}
                 </p>
                 <p className="rounded-2xl rounded-br-sm bg-primary px-4 py-3 text-[15px] leading-7 text-primary-foreground shadow-sm sm:px-5 sm:py-3.5">

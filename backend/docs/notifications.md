@@ -1,6 +1,6 @@
 # Bildirim sistemi kurulumu
 
-CoreAssist bildirimleri varsayılan olarak uygulama içinde ve canlı SSE akışıyla
+Core Asistan bildirimleri varsayılan olarak uygulama içinde ve canlı SSE akışıyla
 çalışır. Tarayıcı ve e-posta teslimatı isteğe bağlıdır; gerekli ortam değişkenleri
 tanımlanmadığında ayar ekranındaki ilgili seçenekler pasif görünür.
 
@@ -44,7 +44,7 @@ alan adını doğruladıktan sonra aşağıdaki değerleri ekleyin:
 
 ```env
 RESEND_API_KEY=""
-NOTIFICATION_EMAIL_FROM="CoreAssist <notifications@example.com>"
+NOTIFICATION_EMAIL_FROM="Core Asistan <notifications@coreasistan.com>"
 ```
 
 ## Sessiz saatler

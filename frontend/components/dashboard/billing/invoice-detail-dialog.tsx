@@ -94,7 +94,7 @@ export function InvoiceDetailDialog({
         <div className="space-y-6 py-3 sm:px-1">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-lg font-semibold tracking-tight">CoreAssist</p>
+              <p className="text-lg font-semibold tracking-tight">Core Asistan</p>
             </div>
             <InvoiceStatusBadge status={invoice.status} />
           </div>

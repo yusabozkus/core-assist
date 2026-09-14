@@ -555,7 +555,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
             </span>
             <div>
               <p className="text-[15px] font-bold tracking-[-0.025em]">
-                CoreAssist
+                Core Asistan
               </p>
               <p className="mt-0.5 text-[10px] font-medium tracking-[0.13em] text-[#91aa9e] uppercase">
                 İlk kurulum

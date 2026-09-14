@@ -1,6 +1,20 @@
 # Production Notes
 
-Bu dosya, CoreAssist production ortamına alınmadan önce tamamlanması gereken işleri takip eder.
+Bu dosya, Core Asistan production ortamına alınmadan önce tamamlanması gereken işleri takip eder.
+
+## Production alan adları
+
+- Web uygulaması: `https://coreasistan.com`
+- Backend API: `https://api.coreasistan.com`
+- Google callback: `https://api.coreasistan.com/api/auth/callback/google`
+- Microsoft callback: `https://api.coreasistan.com/api/auth/callback/microsoft`
+
+## Harici servislerde marka adı
+
+- [ ] Paddle ürün ve fiyat adlarını `Core Asistan Starter`, `Core Asistan Growth` ve `Core Asistan Business` olarak güncelle.
+- [ ] Google OAuth izin ekranındaki uygulama adını `Core Asistan` yap ve production callback adresini ekle.
+- [ ] Microsoft Entra uygulama adını `Core Asistan` yap ve production callback adresini ekle.
+- [ ] Resend gönderici domainini `coreasistan.com` olarak doğrula; gönderici adını `Core Asistan` yap.
 
 ## Ekip davetleri
 

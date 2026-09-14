@@ -14,9 +14,9 @@ import { useBillingUsage } from "@/components/dashboard/billing/billing-usage-pr
 import {
   billingPlanLabels,
   formatUsagePeriod,
-  getUsageBarClass,
   getUsageTextClass,
 } from "@/components/dashboard/billing/billing-usage-utils"
+import { UsageRadialChart } from "@/components/dashboard/billing/usage-radial-chart"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { APP_ROUTES } from "@/constants/site"
@@ -38,113 +38,113 @@ export function DashboardPlanUsage() {
       aria-labelledby="dashboard-plan-usage-title"
       className="overflow-hidden rounded-xl border border-border bg-card"
     >
-      <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(22rem,1fr)] lg:p-6">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2
-              id="dashboard-plan-usage-title"
-              className="text-sm font-semibold tracking-tight"
-            >
-              Plan kullanımı
-            </h2>
-            <Badge variant="outline" className="px-2 py-0 text-[10px]">
-              {billingPlanLabels[usage.plan]}
-            </Badge>
-            <span className="text-[10px] text-muted-foreground">
-              Hesap geneli
-            </span>
+      <div className="grid xl:grid-cols-[minmax(0,1.5fr)_minmax(24rem,1fr)]">
+        <div className="flex min-w-0 flex-col p-5 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <HugeiconsIcon icon={AiSparklesIcon} className="size-4.5" />
+              </span>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2
+                    id="dashboard-plan-usage-title"
+                    className="text-sm font-semibold tracking-tight"
+                  >
+                    AI soru kotası
+                  </h2>
+                  <Badge variant="outline" className="px-2 py-0 text-[10px]">
+                    {billingPlanLabels[usage.plan]}
+                  </Badge>
+                </div>
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Tüm mağazaların ortak dönem kullanımı
+                </p>
+              </div>
+            </div>
+
+            {usage.canManageBilling ? (
+              <Button
+                asChild
+                size="sm"
+                variant={percentage >= 80 ? "default" : "outline"}
+                className={percentage < 80 ? "bg-card" : undefined}
+              >
+                <Link href={APP_ROUTES.dashboard.settings.billing}>
+                  {percentage >= 80 ? "Planı incele" : "Kullanımı yönet"}
+                  <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
+                </Link>
+              </Button>
+            ) : null}
           </div>
 
-          <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <HugeiconsIcon icon={AiSparklesIcon} className="size-4" />
-                <span className="text-xs font-medium">AI soru kotası</span>
-              </div>
-              <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">
+          <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-center">
+            <UsageRadialChart
+              value={percentage}
+              label="AI soru kotası"
+              size="lg"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                Bu dönem kullanılan
+              </p>
+              <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">
                 {numberFormatter.format(questions.used)}
-                <span className="ml-1.5 text-sm font-normal text-muted-foreground">
-                  / {numberFormatter.format(questions.limit)}
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  / {numberFormatter.format(questions.limit)} soru
                 </span>
               </p>
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <span
+                  className={cn(
+                    "font-semibold tabular-nums",
+                    getUsageTextClass(percentage)
+                  )}
+                >
+                  {isExhausted
+                    ? "Kota doldu"
+                    : `${numberFormatter.format(questions.remaining)} soru kaldı`}
+                </span>
+                <span className="text-muted-foreground">•</span>
+                <span className="text-muted-foreground">
+                  {formatUsagePeriod(usage)}
+                </span>
+              </div>
             </div>
-            <div className="text-right">
-              <p
-                className={cn(
-                  "text-xs font-semibold tabular-nums",
-                  getUsageTextClass(percentage)
-                )}
-              >
-                {isExhausted
-                  ? "Kota doldu"
-                  : `${numberFormatter.format(questions.remaining)} soru kaldı`}
-              </p>
-              <p className="mt-1 text-[10px] text-muted-foreground">
-                {formatUsagePeriod(usage)}
-              </p>
-            </div>
-          </div>
-
-          <div
-            role="progressbar"
-            aria-label="AI soru kotası"
-            aria-valuemin={0}
-            aria-valuemax={questions.limit}
-            aria-valuenow={Math.min(questions.used, questions.limit)}
-            className="mt-4 h-2 overflow-hidden rounded-full bg-muted"
-          >
-            <div
-              className={cn(
-                "h-full rounded-full transition-[width] duration-500",
-                getUsageBarClass(percentage)
-              )}
-              style={{ width: `${Math.min(100, questions.percentage)}%` }}
-            />
           </div>
         </div>
 
-        <div className="flex min-w-0 flex-col justify-between gap-4 border-t border-border pt-5 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
+        <div className="border-t border-border bg-muted/[0.16] p-5 sm:p-6 xl:border-t-0 xl:border-l">
+          <div>
+            <h3 className="text-sm font-semibold">Plan kapasitesi</h3>
+            <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
+              Çalışma alanındaki mevcut kullanım
+            </p>
+          </div>
+
           {usage.capacity ? (
-            <div className="grid grid-cols-3 gap-3">
+            <dl className="mt-4 divide-y divide-border/70">
               <CapacityItem
-                label="Mağaza"
+                label="Mağazalar"
                 icon={Store01Icon}
                 usage={usage.capacity.stores}
               />
               <CapacityItem
-                label="Kullanıcı"
+                label="Ekip üyeleri"
                 icon={UserCircleIcon}
                 usage={usage.capacity.members}
               />
               <CapacityItem
-                label="Ürün"
+                label="Aktif ürünler"
                 icon={Package01Icon}
                 usage={usage.capacity.activeProducts}
               />
-            </div>
+            </dl>
           ) : (
-            <div>
-              <p className="text-xs font-medium">Kullanım sınırı</p>
-              <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-                AI yanıt hakkı bu çalışma alanındaki tüm mağazalarla ortak
-                kullanılır.
-              </p>
-            </div>
+            <p className="mt-5 text-xs leading-5 text-muted-foreground">
+              Kapasite bilgileri şu anda görüntülenemiyor.
+            </p>
           )}
-
-          {usage.canManageBilling ? (
-            <Button
-              asChild
-              size="sm"
-              variant={percentage >= 80 ? "default" : "outline"}
-              className="self-start lg:self-end"
-            >
-              <Link href={APP_ROUTES.dashboard.settings.billing}>
-                {percentage >= 80 ? "Planı incele" : "Kullanımı yönet"}
-                <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
-              </Link>
-            </Button>
-          ) : null}
         </div>
       </div>
     </section>
@@ -160,27 +160,28 @@ function CapacityItem({
   icon: typeof Store01Icon
   usage: NonNullable<StoreBillingUsageOverview["capacity"]>["stores"]
 }) {
+  const percentage = Math.min(100, Math.floor(usage.percentage))
+
   return (
-    <div className="min-w-0">
-      <div className="flex items-center gap-1.5 text-muted-foreground">
-        <HugeiconsIcon icon={icon} className="size-3.5 shrink-0" />
-        <span className="truncate text-[10px]">{label}</span>
+    <div className="flex items-center gap-3 py-3.5 first:pt-0 last:pb-0">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground">
+        <HugeiconsIcon icon={icon} className="size-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <dt className="text-xs font-medium">{label}</dt>
+        <dd className="mt-1 text-[10px] text-muted-foreground">
+          {usage.remaining > 0
+            ? `${numberFormatter.format(usage.remaining)} kapasite kullanılabilir`
+            : "Plan sınırına ulaşıldı"}
+        </dd>
       </div>
-      <p className="mt-2 text-sm font-semibold tabular-nums">
+      <p className="shrink-0 text-sm font-semibold tabular-nums">
         {numberFormatter.format(usage.used)}
         <span className="ml-1 text-[10px] font-normal text-muted-foreground">
           / {numberFormatter.format(usage.limit)}
         </span>
+        <span className="sr-only"> (%{percentage})</span>
       </p>
-      <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
-        <div
-          className={cn(
-            "h-full rounded-full",
-            getUsageBarClass(usage.percentage)
-          )}
-          style={{ width: `${Math.min(100, usage.percentage)}%` }}
-        />
-      </div>
     </div>
   )
 }

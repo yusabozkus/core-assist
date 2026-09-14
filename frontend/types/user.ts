@@ -1,3 +1,5 @@
+import type { TeamAccessLevel } from "@/types/team"
+
 export type UserProfile = {
   id: string
   name: string
@@ -32,6 +34,7 @@ export type AccountSessionSummary = {
 export type AccountOverview = {
   createdAt: string
   ownedStoreCount: number
+  accessLevel: "OWNER" | TeamAccessLevel
   accounts: AuthAccountSummary[]
   sessions: AccountSessionSummary[]
 }

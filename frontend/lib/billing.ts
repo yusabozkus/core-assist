@@ -24,7 +24,7 @@ export function formatBillingPeriod(
 }
 
 export function getBillingPlanName(plan: InvoiceRecord["plan"]) {
-  if (!plan) return "CoreAssist aboneliği"
+  if (!plan) return "Core Asistan aboneliği"
   return plan.charAt(0) + plan.slice(1).toLocaleLowerCase("tr-TR")
 }
 

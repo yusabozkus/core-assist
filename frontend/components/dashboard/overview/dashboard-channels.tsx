@@ -15,7 +15,7 @@ import { timeAgo } from "./dashboard-format"
 export function DashboardChannels({ data }: { data: DashboardOverview }) {
   return (
     <section
-      className="overflow-hidden rounded-xl border border-border bg-card shadow-xs"
+      className="overflow-hidden rounded-xl border border-border bg-card"
       aria-labelledby="channels-title"
     >
       <header className="flex items-center justify-between gap-3 px-5 py-5 sm:px-6">

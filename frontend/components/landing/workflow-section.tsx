@@ -93,7 +93,7 @@ export function WorkflowSection() {
               </span>
             </h2>
             <p className="mt-5 max-w-md text-sm leading-6 text-[#6b776f]">
-              Bağlantıdan gönderime, bir ürün sorusunun CoreAssist içindeki
+              Bağlantıdan gönderime, bir ürün sorusunun Core Asistan içindeki
               yolculuğu.
             </p>
           </div>
@@ -357,7 +357,7 @@ function ConnectionScene() {
             <HugeiconsIcon icon={Link01Icon} className="size-8 sm:size-10" />
           </div>
           <p className="mt-3 text-xs font-semibold tracking-[-0.03em] text-[#182820]">
-            CoreAssist
+            Core Asistan
           </p>
         </div>
       </div>
@@ -483,7 +483,7 @@ function AnswerScene() {
         className="mr-4 rounded-[18px] rounded-bl-sm bg-[#245d46] p-5 text-white sm:mr-8 sm:p-6"
       >
         <div className="flex items-center justify-between text-[9px] text-[#bdd4c6]">
-          <span className="font-semibold tracking-[0.03em]">CoreAssist</span>
+          <span className="font-semibold tracking-[0.03em]">Core Asistan</span>
           <span>Yanıt taslağı</span>
         </div>
         <p className="mt-3 text-[13px] leading-6 text-[#eef5ef] sm:text-sm">

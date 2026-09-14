@@ -234,7 +234,7 @@ export function PlansClient({
         </div>
         <PlanQuestions />
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 text-xs text-muted-foreground">
-          <span>CoreAssist · Planlar ve fiyatlandırma</span>
+          <span>Core Asistan · Planlar ve fiyatlandırma</span>
           <span>Ödemeler Paddle güvencesiyle işlenir.</span>
         </footer>
       </div>

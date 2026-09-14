@@ -35,6 +35,23 @@ import { getDashboardOverview } from "@/lib/api/dashboard"
 import { cn } from "@/lib/utils"
 import type { DashboardOverview, DashboardRange } from "@/types/dashboard"
 
+function SectionHeading({
+  title,
+  description,
+}: {
+  title: string
+  description: string
+}) {
+  return (
+    <div className="border-l-2 border-primary/50 pl-3">
+      <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+      <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
+        {description}
+      </p>
+    </div>
+  )
+}
+
 export function DashboardClient({
   storeId,
   storeName,
@@ -127,29 +144,6 @@ export function DashboardClient({
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <div
-            className="inline-flex h-9 items-center rounded-lg border border-border bg-card p-1"
-            role="group"
-            aria-label="İstatistik dönemi"
-          >
-            {(["7D", "30D"] as const).map((value) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={range === value}
-                disabled={isChangingRange}
-                onClick={() => changeRange(value)}
-                className={cn(
-                  "h-7 rounded-md px-3 text-xs font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60",
-                  range === value
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {value === "7D" ? "Son 7 gün" : "Son 30 gün"}
-              </button>
-            ))}
-          </div>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -182,6 +176,48 @@ export function DashboardClient({
         </div>
       </header>
 
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-5">
+        <div
+          className="inline-flex h-9 items-center rounded-lg border border-border bg-card p-1"
+          role="group"
+          aria-label="İstatistik dönemi"
+        >
+          {(["7D", "30D"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={range === value}
+              disabled={isChangingRange}
+              onClick={() => changeRange(value)}
+              className={cn(
+                "h-7 rounded-md px-3 text-[11px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60",
+                range === value
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              {value === "7D" ? "Son 7 gün" : "Son 30 gün"}
+            </button>
+          ))}
+        </div>
+        {data ? (
+          <p className="text-[10px] text-muted-foreground">
+            {new Intl.DateTimeFormat("tr-TR", {
+              day: "numeric",
+              month: "short",
+              timeZone: data.period.timezone,
+            }).format(new Date(data.period.from))}{" "}
+            –{" "}
+            {new Intl.DateTimeFormat("tr-TR", {
+              day: "numeric",
+              month: "short",
+              timeZone: data.period.timezone,
+            }).format(new Date(data.period.to))}{" "}
+            · Yerel saat
+          </p>
+        ) : null}
+      </div>
+
       {error && (
         <div
           role="alert"
@@ -210,29 +246,59 @@ export function DashboardClient({
       {data ? (
         <div
           className={cn(
-            "space-y-6 transition-opacity",
+            "space-y-8 transition-opacity",
             isChangingRange && "opacity-50"
           )}
           aria-busy={isChangingRange || refreshing}
         >
-          <DashboardMetrics data={data} />
           <DashboardPlanUsage />
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,1fr)]">
-            <QuestionVolumeChart data={data} />
-            <DashboardQueue data={data} />
-          </div>
-          <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,1fr)]">
-            <PriorityQuestions data={data} />
-            <div className="grid min-w-0 gap-5">
-              <DashboardChannels data={data} />
-              <CatalogHealth data={data} />
+          <section className="space-y-4">
+            <SectionHeading
+              title="Operasyon özeti"
+              description="Gelen soru hacmini, yanıtlananları ve şu anda müdahale gerektiren işleri birlikte görün."
+            />
+            <DashboardMetrics data={data} />
+          </section>
+          <section className="space-y-4 border-t border-border pt-7">
+            <SectionHeading
+              title="Soru operasyonu"
+              description="Gelen ve yanıtlanan soruların zaman içindeki akışını, mevcut iş kuyruğuyla birlikte değerlendirin."
+            />
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,1fr)]">
+              <QuestionVolumeChart data={data} />
+              <DashboardQueue data={data} />
             </div>
-          </div>
-          <DashboardCatalog
-            data={data}
-            onSelectProduct={setSelectedProductId}
-          />
-          <DashboardShortcuts />
+          </section>
+          <section className="space-y-4 border-t border-border pt-7">
+            <SectionHeading
+              title="Öncelikli işler"
+              description="İnsan kontrolü bekleyen soruları, satış kanallarının durumunu ve katalog uyarılarını tek alanda takip edin."
+            />
+            <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,1fr)]">
+              <PriorityQuestions data={data} />
+              <div className="grid min-w-0 gap-5">
+                <DashboardChannels data={data} />
+                <CatalogHealth data={data} />
+              </div>
+            </div>
+          </section>
+          <section className="space-y-4 border-t border-border pt-7">
+            <SectionHeading
+              title="Katalog görünümü"
+              description={`Son ${data.period.days} günde en çok müşteri ilgisi alan ürünleri inceleyin.`}
+            />
+            <DashboardCatalog
+              data={data}
+              onSelectProduct={setSelectedProductId}
+            />
+          </section>
+          <section className="space-y-4 border-t border-border pt-7">
+            <SectionHeading
+              title="Hızlı erişim"
+              description="Sık kullandığınız yönetim ve analiz ekranlarına doğrudan geçin."
+            />
+            <DashboardShortcuts />
+          </section>
           <footer className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted-foreground">
             <span>
               Son güncelleme:{" "}

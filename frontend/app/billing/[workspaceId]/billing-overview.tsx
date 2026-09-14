@@ -138,7 +138,7 @@ export function BillingOverview({
                 id="current-plan-title"
                 className="text-3xl font-semibold tracking-tight"
               >
-                {isTrial ? "CoreAssist Deneme" : plan.name}
+                {isTrial ? "Core Asistan Deneme" : plan.name}
               </h2>
               <p className="text-2xl font-medium tracking-tight tabular-nums">
                 {isTrial ? (
@@ -160,7 +160,7 @@ export function BillingOverview({
 
             <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
               {isTrial
-                ? "Deneme süreniz boyunca CoreAssist'in temel ürün soru operasyonunu gerçek verilerinizle deneyebilirsiniz."
+                ? "Deneme süreniz boyunca Core Asistan'ın temel ürün soru operasyonunu gerçek verilerinizle deneyebilirsiniz."
                 : plan.description}
             </p>
 

@@ -222,7 +222,7 @@ export class PaddleCheckoutBindingService {
     ) {
       throw bindingConflict('PADDLE_CUSTOMER_MISMATCH');
     }
-    // Never bind a new paid CoreAssist subscription to a Paddle trial. Keep
+    // Never bind a new paid Core Asistan subscription to a Paddle trial. Keep
     // already-bound legacy subscriptions reconcilable so activation/cancel
     // events can still repair their lifecycle instead of becoming stuck.
     if (

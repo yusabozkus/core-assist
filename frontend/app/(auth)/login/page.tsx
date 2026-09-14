@@ -3,8 +3,8 @@ import { cookies } from "next/headers"
 import { LoginForm } from "@/components/auth/login-form"
 
 export const metadata: Metadata = {
-  title: "Giriş Yap | CoreAssist",
-  description: "CoreAssist yönetim panelinize güvenli şekilde giriş yapın.",
+  title: "Giriş Yap | Core Asistan",
+  description: "Core Asistan yönetim panelinize güvenli şekilde giriş yapın.",
 }
 
 type LoginPageProps = {

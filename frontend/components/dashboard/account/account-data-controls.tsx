@@ -54,7 +54,7 @@ export function AccountDataControls({
       const downloadURL = URL.createObjectURL(blob)
       const anchor = document.createElement("a")
       anchor.href = downloadURL
-      anchor.download = `coreassist-data-${new Date().toISOString().slice(0, 10)}.json`
+      anchor.download = `coreasistan-data-${new Date().toISOString().slice(0, 10)}.json`
       document.body.appendChild(anchor)
       anchor.click()
       anchor.remove()
@@ -184,7 +184,7 @@ export function AccountDataControls({
         open={deleteOpen}
         onOpenChange={handleDeleteOpenChange}
         preventClose={isDeleting || isBillingBusy}
-        title="CoreAssist hesabınızı silin"
+        title="Core Asistan hesabınızı silin"
         description="Bu işlem hesabınızı ve sahibi olduğunuz işletme verilerini kalıcı olarak siler."
         footer={({ close }) => (
           <>

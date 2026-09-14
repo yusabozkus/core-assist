@@ -70,7 +70,7 @@ export function DashboardMetrics({ data }: { data: DashboardOverview }) {
         <Link
           key={item.label}
           href={item.href}
-          className="group min-w-0 rounded-xl border border-border bg-card p-5 shadow-xs transition-colors outline-none hover:border-primary/35 focus-visible:ring-2 focus-visible:ring-ring"
+          className="group min-w-0 rounded-xl border border-border bg-card p-5 transition-colors outline-none hover:border-primary/35 focus-visible:ring-2 focus-visible:ring-ring"
         >
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm font-medium text-muted-foreground">

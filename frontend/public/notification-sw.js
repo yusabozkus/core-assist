@@ -5,11 +5,11 @@ self.addEventListener("push", (event) => {
   try {
     payload = event.data.json()
   } catch {
-    payload = { title: "CoreAssist", body: event.data.text() }
+    payload = { title: "Core Asistan", body: event.data.text() }
   }
 
   event.waitUntil(
-    self.registration.showNotification(payload.title || "CoreAssist", {
+    self.registration.showNotification(payload.title || "Core Asistan", {
       body: payload.body || "Yeni bir bildiriminiz var.",
       tag: payload.tag,
       data: { url: payload.url || "/dashboard/settings/notifications" },

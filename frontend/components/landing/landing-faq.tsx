@@ -13,7 +13,7 @@ const questions = [
     id: "channels",
     question: "Hangi pazaryerleriyle çalışıyor?",
     answer:
-      "CoreAssist şu anda Trendyol ve Hepsiburada ürün katalogları ve ürün sorularını destekliyor. Satıcı hesabınızın bağlantı bilgileriyle mağazanızı ekleyebilirsiniz.",
+      "Core Asistan şu anda Trendyol ve Hepsiburada ürün katalogları ve ürün sorularını destekliyor. Satıcı hesabınızın bağlantı bilgileriyle mağazanızı ekleyebilirsiniz.",
   },
   {
     id: "catalog",

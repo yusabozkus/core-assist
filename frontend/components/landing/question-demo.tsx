@@ -324,7 +324,7 @@ export function QuestionDemo() {
                   <div className="flex items-center gap-2 text-[#245d46]">
                     <HugeiconsIcon icon={AiSparklesIcon} className="size-4" />
                     <span className="text-[12px] font-semibold">
-                      CoreAssist yanıtı
+                      Core Asistan yanıtı
                     </span>
                   </div>
                   <p className="mt-2 text-[13px] leading-[1.85] text-[#4c5d50] sm:text-[14px]">

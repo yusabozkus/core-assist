@@ -15,7 +15,7 @@ export function AppLogo({
   return (
     <Link
       href={href}
-      aria-label="CoreAssist ana sayfa"
+      aria-label="Core Asistan ana sayfa"
       className={cn(
         "group inline-flex items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4",
         className
@@ -26,7 +26,7 @@ export function AppLogo({
       </span>
       <span>
         <span className="block text-[15px] leading-none font-bold tracking-[-0.025em] text-foreground">
-          CoreAssist
+          Core Asistan
         </span>
         <span className="mt-1 block text-[9px] leading-none font-semibold tracking-[0.15em] text-muted-foreground uppercase">
           Commerce operations

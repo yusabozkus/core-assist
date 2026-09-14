@@ -32,6 +32,7 @@ import {
 import { selectActiveStore } from "@/app/(dashboard)/dashboard/actions"
 import { APP_ROUTES } from "@/constants/site"
 import { createStore } from "@/lib/api/stores"
+import { getTeamAccessLabel } from "@/lib/team"
 import type { StoreSummary } from "@/types/store"
 
 export type SidebarShop = StoreSummary
@@ -155,9 +156,9 @@ export function ShopSwitcher({
                   <span className="truncate text-xs text-sidebar-foreground/60">
                     {isPending
                       ? "Değiştiriliyor..."
-                      : activeShop.status === "INACTIVE"
-                        ? "Arşivlenmiş mağaza"
-                        : "Aktif mağaza"}
+                      : activeShop.accessLevel
+                        ? getTeamAccessLabel(activeShop.accessLevel)
+                        : "Ekip üyesi"}
                   </span>
                 </div>
                 <HugeiconsIcon

@@ -32,7 +32,7 @@ export function AppScreenshot({
           </div>
           <span className="h-3 w-px bg-[#d7dfd1]" aria-hidden="true" />
           <p className="flex min-w-0 items-center gap-2 truncate text-[10px] text-[#77846e] sm:text-[11px]">
-            <span className="font-semibold text-[#47563e]">CoreAssist</span>
+            <span className="font-semibold text-[#47563e]">Core Asistan</span>
             <span aria-hidden="true">/</span>
             <span className="truncate">{screenshot.label}</span>
           </p>

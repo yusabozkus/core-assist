@@ -394,7 +394,7 @@ export function BillingCheckout({
               className="mt-0.5 size-4 shrink-0 text-primary"
             />
             <p className="max-w-md text-[11px] leading-5 text-muted-foreground">
-              Ödeme bilgileriniz CoreAssist sunucularında tutulmaz. Vergiler,
+              Ödeme bilgileriniz Core Asistan sunucularında tutulmaz. Vergiler,
               ödeme adresinize göre Paddle tarafından ödeme adımında hesaplanır.
             </p>
           </div>

@@ -15,7 +15,7 @@ export function DashboardCatalog({
 }) {
   return (
     <section
-      className="min-w-0 overflow-hidden rounded-xl border border-border bg-card shadow-xs"
+      className="min-w-0 overflow-hidden rounded-xl border border-border bg-card"
       aria-labelledby="popular-title"
     >
       <header className="flex items-start justify-between gap-3 px-5 py-5 sm:px-6">
@@ -99,7 +99,7 @@ export function CatalogHealth({ data }: { data: DashboardOverview }) {
   ]
   return (
     <section
-      className="rounded-xl border border-border bg-card p-5 shadow-xs sm:p-6"
+      className="rounded-xl border border-border bg-card p-5 sm:p-6"
       aria-labelledby="catalog-health-title"
     >
       <div className="flex items-center justify-between gap-3">

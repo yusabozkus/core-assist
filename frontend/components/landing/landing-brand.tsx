@@ -17,7 +17,7 @@ export function LandingBrand({
   return (
     <Link
       href="/"
-      aria-label="CoreAssist ana sayfa"
+      aria-label="Core Asistan ana sayfa"
       onClick={onClick}
       className={cn(
         "inline-flex items-center gap-2.5 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[#245d46]/30",
@@ -33,7 +33,7 @@ export function LandingBrand({
           compact && "hidden sm:inline"
         )}
       >
-        CoreAssist
+        Core Asistan
       </span>
     </Link>
   )

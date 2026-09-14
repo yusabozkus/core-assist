@@ -11,8 +11,8 @@ import { getCurrentUser } from "@/lib/server-auth"
 import type { BillingCycle } from "@/types/billing"
 
 export const metadata: Metadata = {
-  title: "Güvenli Ödeme | CoreAssist",
-  description: "CoreAssist aboneliğinizi güvenli biçimde tamamlayın.",
+  title: "Güvenli Ödeme | Core Asistan",
+  description: "Core Asistan aboneliğinizi güvenli biçimde tamamlayın.",
   robots: { index: false, follow: false },
 }
 

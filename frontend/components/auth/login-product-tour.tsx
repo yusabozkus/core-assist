@@ -58,7 +58,7 @@ export function LoginProductTour({
 
   return (
     <aside
-      aria-label="CoreAssist çalışma alanını keşfedin"
+      aria-label="Core Asistan çalışma alanını keşfedin"
       className="relative hidden min-w-0 overflow-hidden rounded-[28px] bg-[#172b22] text-[#f2f5ed] lg:flex lg:flex-col"
     >
       <div
@@ -117,7 +117,7 @@ export function LoginProductTour({
                   <i className="size-1.5 rounded-full bg-[#ccd6c3]" />
                   <i className="size-1.5 rounded-full bg-[#dce3d5]" />
                 </span>
-                CoreAssist
+                Core Asistan
               </span>
               <span className="text-[9px] text-[#819173]">
                 Uygulamadan bir görünüm

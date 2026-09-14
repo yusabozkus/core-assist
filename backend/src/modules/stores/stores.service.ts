@@ -20,6 +20,7 @@ import { UpdateStoreDto } from './dto/update-store.dto';
 import { PrismaService } from '../../database/prisma.service';
 import { createDefaultStoreAiInstructions } from '../knowledge/default-ai-instructions';
 import { BillingEntitlementService } from '../billing/billing-entitlement.service';
+import { resolveTeamAccessLevel } from '../team/team-access';
 
 @Injectable()
 export class StoresService {
@@ -87,7 +88,7 @@ export class StoresService {
   }
 
   async findAllForUser(userId: string) {
-    return this.prisma.store.findMany({
+    const stores = await this.prisma.store.findMany({
       where: {
         members: {
           some: { userId },
@@ -99,8 +100,30 @@ export class StoresService {
         name: true,
         status: true,
         createdAt: true,
+        members: {
+          where: { userId },
+          take: 1,
+          select: { role: true },
+        },
+        workspace: {
+          select: {
+            members: {
+              where: { userId },
+              take: 1,
+              select: { role: true },
+            },
+          },
+        },
       },
     });
+
+    return stores.map(({ members, workspace, ...store }) => ({
+      ...store,
+      accessLevel: resolveTeamAccessLevel(
+        workspace.members[0]?.role ?? WorkspaceRole.MEMBER,
+        members,
+      ),
+    }));
   }
 
   async findOne(id: string, userId: string) {

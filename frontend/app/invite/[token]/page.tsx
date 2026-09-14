@@ -15,8 +15,8 @@ import { getCurrentUser } from "@/lib/server-auth"
 import { getTeamAccessLabel } from "@/lib/team"
 
 export const metadata: Metadata = {
-  title: "Ekip Daveti | CoreAssist",
-  description: "CoreAssist ekibinize katılın.",
+  title: "Ekip Daveti | Core Asistan",
+  description: "Core Asistan ekibinize katılın.",
 }
 
 export const dynamic = "force-dynamic"
@@ -50,7 +50,7 @@ export default async function InvitationPage({
           <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <HugeiconsIcon icon={Layers01Icon} className="size-4.5" />
           </span>
-          <span className="font-semibold tracking-[-0.03em]">CoreAssist</span>
+          <span className="font-semibold tracking-[-0.03em]">Core Asistan</span>
         </Link>
         <ThemeToggle className="border border-border bg-card" />
       </header>
@@ -64,8 +64,8 @@ export default async function InvitationPage({
             </h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               {invitation.invitedByName
-                ? `${invitation.invitedByName} sizi CoreAssist üzerinde birlikte çalışmaya davet etti.`
-                : "CoreAssist üzerinde birlikte çalışmanız için bir davet aldınız."}
+                ? `${invitation.invitedByName} sizi Core Asistan üzerinde birlikte çalışmaya davet etti.`
+                : "Core Asistan üzerinde birlikte çalışmanız için bir davet aldınız."}
             </p>
           </div>
 

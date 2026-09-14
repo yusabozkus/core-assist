@@ -33,13 +33,13 @@ export function DashboardShortcuts() {
   return (
     <nav
       aria-label="Hızlı erişim"
-      className="grid gap-4 border-t border-border pt-6 md:grid-cols-3"
+      className="grid gap-3 md:grid-cols-3"
     >
       {shortcuts.map((link) => (
         <Link
           key={link.href}
           href={link.href}
-          className="group flex min-w-0 items-center gap-3 rounded-lg p-2 transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring"
+          className="group flex min-w-0 items-center gap-3 rounded-xl border border-border bg-card p-4 transition-colors outline-none hover:border-primary/25 hover:bg-muted/35 focus-visible:ring-2 focus-visible:ring-ring"
         >
           <HugeiconsIcon
             icon={link.icon}

@@ -48,12 +48,12 @@ export function FooterWordmark({ className }: { className?: string }) {
       onPointerMove={updateCursor}
       onPointerLeave={leaveWordmark}
     >
-      CoreAssist
+      Core Asistan
       <motion.span
         className={styles.spotlight}
         style={{ backgroundImage: spotlight }}
       >
-        CoreAssist
+        Core Asistan
       </motion.span>
     </p>
   )

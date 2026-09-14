@@ -230,7 +230,7 @@ function VoicePreview() {
         aria-live="polite"
       >
         <p className="mb-3 text-[10px] font-medium text-[#779666]">
-          CoreAssist · Örnek yanıt
+          Core Asistan · Örnek yanıt
         </p>
         <p className="text-sm leading-6 text-[#405336]">{tone.answer}</p>
       </div>

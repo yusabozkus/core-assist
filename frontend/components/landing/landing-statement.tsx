@@ -27,7 +27,7 @@ export function LandingStatement() {
     <section
       ref={ref}
       className={styles.statement}
-      aria-label="CoreAssist yanıt akışı"
+      aria-label="Core Asistan yanıt akışı"
     >
       <div
         className={`${styles.container} grid gap-8 lg:grid-cols-[1fr_3fr] lg:gap-14`}

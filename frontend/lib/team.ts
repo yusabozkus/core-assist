@@ -36,3 +36,16 @@ export function getTeamAccessLabel(accessLevel: "OWNER" | TeamAccessLevel) {
     accessLevel
   )
 }
+
+export function getTeamAccessDescription(
+  accessLevel: "OWNER" | TeamAccessLevel
+) {
+  if (accessLevel === "OWNER") {
+    return "Tüm mağazaları, ekibi ve faturalandırmayı yönetebilir."
+  }
+
+  return (
+    TEAM_ACCESS_OPTIONS.find((option) => option.value === accessLevel)
+      ?.description ?? "Bu rolün erişim kapsamı henüz tanımlanmadı."
+  )
+}

@@ -30,7 +30,7 @@ const questions = [
   {
     question: "Pazaryeri bağlantısı sınırı var mı?",
     answer:
-      "Hayır. Planınızdaki mağaza sınırı içinde CoreAssist'in desteklediği Trendyol ve Hepsiburada bağlantılarının tamamını kullanabilirsiniz.",
+      "Hayır. Planınızdaki mağaza sınırı içinde Core Asistan'ın desteklediği Trendyol ve Hepsiburada bağlantılarının tamamını kullanabilirsiniz.",
   },
 ]
 

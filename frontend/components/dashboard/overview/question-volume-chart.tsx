@@ -36,7 +36,7 @@ export function QuestionVolumeChart({ data }: { data: DashboardOverview }) {
 
   return (
     <section
-      className="min-w-0 rounded-xl border border-border bg-card p-5 shadow-xs sm:p-6"
+      className="min-w-0 rounded-xl border border-border bg-card p-5 sm:p-6"
       aria-labelledby="activity-title"
     >
       <header className="flex flex-wrap items-start justify-between gap-4">
