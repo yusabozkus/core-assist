@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import {
   ArrowRight01Icon,
   CheckmarkCircle01Icon,
@@ -12,6 +13,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { NotificationListItem } from "@/components/dashboard/notifications/notification-list-item"
+import { NotificationToast } from "@/components/dashboard/notifications/notification-toast"
 import { NotificationListSkeleton } from "@/components/skeletons/notification-list-skeleton"
 import { Button } from "@/components/ui/button"
 import {
@@ -43,6 +45,10 @@ export function NotificationCenter({ storeId }: { storeId: string }) {
   const [markingAll, setMarkingAll] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const listRequestRef = useRef<AbortController | null>(null)
+  const toastRequestsRef = useRef(new Set<AbortController>())
+  const shownToastKeysRef = useRef(new Set<string>())
+  const activeToastIdsRef = useRef(new Set<string | number>())
+  const streamConnectedAtRef = useRef<number | null>(null)
   const openRef = useRef(false)
 
   const refreshCount = useCallback(
@@ -84,8 +90,114 @@ export function NotificationCenter({ storeId }: { storeId: string }) {
     }
   }, [storeId])
 
+  const handleSelect = useCallback(
+    (notification: AppNotification) => {
+      if (!notification.readAt) {
+        const readAt = new Date().toISOString()
+        setItems((current) =>
+          current.map((item) =>
+            item.id === notification.id ? { ...item, readAt } : item
+          )
+        )
+        setUnreadCount((count) => Math.max(0, count - 1))
+        void markNotificationAsRead(notification.id)
+          .then(() => announceNotificationsChanged(storeId))
+          .catch(() => void refreshCount())
+      }
+
+      setOpen(false)
+      router.push(getSafeActionUrl(notification.actionUrl))
+    },
+    [refreshCount, router, storeId]
+  )
+
+  const showCreatedNotifications = useCallback(
+    async (occurredAt: string) => {
+      const eventTimestamp = Date.parse(occurredAt)
+      if (!Number.isFinite(eventTimestamp)) return
+
+      const controller = new AbortController()
+      toastRequestsRef.current.add(controller)
+
+      try {
+        const result = await getNotifications({
+          storeId,
+          status: "UNREAD",
+          limit: 10,
+          signal: controller.signal,
+        })
+        if (controller.signal.aborted) return
+
+        const earliestOccurrence = streamConnectedAtRef.current
+          ? Math.max(eventTimestamp - 5_000, streamConnectedAtRef.current)
+          : eventTimestamp - 5_000
+        const matchingNotifications = result.items
+          .filter((notification) => {
+            const lastOccurredAt = Date.parse(notification.lastOccurredAt)
+            return (
+              notification.readAt === null &&
+              Number.isFinite(lastOccurredAt) &&
+              lastOccurredAt >= earliestOccurrence &&
+              lastOccurredAt <= eventTimestamp + 5_000
+            )
+          })
+          .sort(
+            (left, right) =>
+              Date.parse(left.lastOccurredAt) - Date.parse(right.lastOccurredAt)
+          )
+
+        for (const notification of matchingNotifications) {
+          const toastKey = `${notification.id}:${notification.lastOccurredAt}:${notification.occurrenceCount}`
+          if (shownToastKeysRef.current.has(toastKey)) continue
+          shownToastKeysRef.current.add(toastKey)
+
+          const toastId = toast.custom(
+            (id) => (
+              <NotificationToast
+                notification={notification}
+                onOpen={() => {
+                  activeToastIdsRef.current.delete(id)
+                  toast.dismiss(id)
+                  handleSelect(notification)
+                }}
+                onDismiss={() => {
+                  activeToastIdsRef.current.delete(id)
+                  toast.dismiss(id)
+                }}
+              />
+            ),
+            {
+              duration: 3_000,
+              position: "top-center",
+              onAutoClose: (closedToast) => {
+                activeToastIdsRef.current.delete(closedToast.id)
+              },
+              onDismiss: (closedToast) => {
+                activeToastIdsRef.current.delete(closedToast.id)
+              },
+            }
+          )
+          activeToastIdsRef.current.add(toastId)
+        }
+
+        if (shownToastKeysRef.current.size > 200) {
+          shownToastKeysRef.current = new Set(
+            [...shownToastKeysRef.current].slice(-100)
+          )
+        }
+      } catch {
+        // Toast alÄ±namasa bile sayaÃ§ ve bildirim merkezi Ã§alÄ±ÅŸmaya devam eder.
+      } finally {
+        toastRequestsRef.current.delete(controller)
+      }
+    },
+    [handleSelect, storeId]
+  )
+
   useEffect(() => {
     const controller = new AbortController()
+    const toastRequests = toastRequestsRef.current
+    const activeToastIds = activeToastIdsRef.current
     const initialRefreshId = window.setTimeout(
       () => void refreshCount(controller.signal),
       0
@@ -111,11 +223,25 @@ export function NotificationCenter({ storeId }: { storeId: string }) {
     const eventSource = new EventSource(getNotificationStreamUrl(storeId), {
       withCredentials: true,
     })
+    streamConnectedAtRef.current = null
     eventSource.onmessage = (event) => {
       try {
-        const message = JSON.parse(event.data) as { kind?: string }
+        const message = JSON.parse(event.data) as {
+          kind?: string
+          reason?: "CREATED" | "READ" | "READ_ALL" | "DELETED"
+          occurredAt?: string
+        }
+        if (message.kind === "CONNECTED" && message.occurredAt) {
+          const connectedAt = Date.parse(message.occurredAt)
+          if (Number.isFinite(connectedAt)) {
+            streamConnectedAtRef.current = connectedAt
+          }
+        }
         if (message.kind === "CHANGED") {
           announceNotificationsChanged(storeId)
+          if (message.reason === "CREATED" && message.occurredAt) {
+            void showCreatedNotifications(message.occurredAt)
+          }
         }
       } catch {
         // Geçersiz bir akış mesajı mevcut listeyi etkilemez.
@@ -139,31 +265,18 @@ export function NotificationCenter({ storeId }: { storeId: string }) {
       )
       eventSource.close()
       listRequestRef.current?.abort()
+      for (const request of toastRequests) request.abort()
+      toastRequests.clear()
+      for (const toastId of activeToastIds) toast.dismiss(toastId)
+      activeToastIds.clear()
+      streamConnectedAtRef.current = null
     }
-  }, [refreshCount, refreshList, storeId])
+  }, [refreshCount, refreshList, showCreatedNotifications, storeId])
 
   function handleOpenChange(nextOpen: boolean) {
     openRef.current = nextOpen
     setOpen(nextOpen)
     if (nextOpen) void refreshList()
-  }
-
-  function handleSelect(notification: AppNotification) {
-    if (!notification.readAt) {
-      const readAt = new Date().toISOString()
-      setItems((current) =>
-        current.map((item) =>
-          item.id === notification.id ? { ...item, readAt } : item
-        )
-      )
-      setUnreadCount((count) => Math.max(0, count - 1))
-      void markNotificationAsRead(notification.id)
-        .then(() => announceNotificationsChanged(storeId))
-        .catch(() => void refreshCount())
-    }
-
-    setOpen(false)
-    router.push(getSafeActionUrl(notification.actionUrl))
   }
 
   async function handleMarkAllAsRead() {

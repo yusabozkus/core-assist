@@ -15,6 +15,7 @@ import { getOnboardingStatus } from "@/lib/api/onboarding.server"
 import { getDashboardSyncState } from "@/lib/channels/sync-state"
 import { getCurrentUser } from "@/lib/server-auth"
 import { getActiveStoreContext } from "@/lib/stores/active-store"
+import { Toaster } from "@/components/ui/sonner"
 
 export const dynamic = "force-dynamic"
 
@@ -77,6 +78,13 @@ export default async function DashboardLayout({
             <div className="min-h-0 flex-1 overflow-y-auto bg-background">
               {children}
             </div>
+            <Toaster
+              position="top-center"
+              duration={3000}
+              visibleToasts={3}
+              gap={10}
+              offset={16}
+            />
           </SidebarInset>
         </SidebarProvider>
       </BillingPaymentIssueShell>

@@ -1,77 +1,15 @@
 "use client"
 
-import {
-  AiBrain01Icon,
-  AlertCircleIcon,
-  Delete02Icon,
-  InboxIcon,
-  Package01Icon,
-  PlugSocketIcon,
-  RefreshIcon,
-  Shield01Icon,
-  UserGroupIcon,
-} from "@hugeicons/core-free-icons"
+import { Delete02Icon, RefreshIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Button } from "@/components/ui/button"
+import {
+  NOTIFICATION_SEVERITY_STYLES,
+  NOTIFICATION_TYPE_DETAILS,
+} from "@/components/dashboard/notifications/notification-presentation"
 import { cn } from "@/lib/utils"
-import type {
-  AppNotification,
-  NotificationSeverity,
-  NotificationType,
-} from "@/types/notification"
-
-const NOTIFICATION_TYPE_DETAILS: Record<
-  NotificationType,
-  {
-    label: string
-    icon: typeof AlertCircleIcon
-  }
-> = {
-  BILLING_SUBSCRIPTION_CHANGED: {
-    label: "Abonelik",
-    icon: Package01Icon,
-  },
-  BILLING_CANCELLATION: { label: "Abonelik", icon: Package01Icon },
-  BILLING_REFUND: { label: "Ödeme iadesi", icon: Package01Icon },
-  AI_REVIEW_REQUIRED: { label: "İnceleme", icon: AiBrain01Icon },
-  AI_DRAFT_FAILED: { label: "AI taslağı", icon: AiBrain01Icon },
-  AI_AUTOMATION_PAUSED: { label: "AI otomasyonu", icon: AiBrain01Icon },
-  AI_USAGE_LIMIT: { label: "Plan kullanımı", icon: AiBrain01Icon },
-  ANSWER_DELIVERY_FAILED: { label: "Yanıt", icon: InboxIcon },
-  PRODUCT_SYNC_FAILED: { label: "Ürün senkronizasyonu", icon: RefreshIcon },
-  QUESTION_SYNC_FAILED: { label: "Soru senkronizasyonu", icon: RefreshIcon },
-  LOW_STOCK: { label: "Stok", icon: Package01Icon },
-  OUT_OF_STOCK: { label: "Stok", icon: Package01Icon },
-  CHANNEL_CONNECTION_ERROR: { label: "Kanal", icon: PlugSocketIcon },
-  BILLING_PLAN_LIMIT: { label: "Plan limiti", icon: Package01Icon },
-  BILLING_PAYMENT_ISSUE: { label: "Abonelik ödemesi", icon: Package01Icon },
-  TEAM_INVITATION_ACCEPTED: { label: "Ekip", icon: UserGroupIcon },
-  TEAM_ACCESS_CHANGED: { label: "Ekip erişimi", icon: UserGroupIcon },
-  SECURITY_ACCOUNT_CHANGED: { label: "Hesap güvenliği", icon: Shield01Icon },
-  SECURITY_SESSIONS_REVOKED: {
-    label: "Hesap güvenliği",
-    icon: Shield01Icon,
-  },
-}
-
-const SEVERITY_STYLES: Record<
-  NotificationSeverity,
-  { icon: string; dot: string }
-> = {
-  INFO: {
-    icon: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
-    dot: "bg-sky-500",
-  },
-  WARNING: {
-    icon: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-    dot: "bg-amber-500",
-  },
-  ERROR: {
-    icon: "bg-destructive/10 text-destructive",
-    dot: "bg-destructive",
-  },
-}
+import type { AppNotification } from "@/types/notification"
 
 export function NotificationListItem({
   notification,
@@ -87,7 +25,7 @@ export function NotificationListItem({
   onDelete?: (notification: AppNotification) => void
 }) {
   const details = NOTIFICATION_TYPE_DETAILS[notification.type]
-  const severity = SEVERITY_STYLES[notification.severity]
+  const severity = NOTIFICATION_SEVERITY_STYLES[notification.severity]
   const unread = notification.readAt === null
 
   return (
