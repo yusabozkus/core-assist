@@ -16,6 +16,7 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { QuestionsService } from './questions.service';
 import { AnswerProductQuestionDto } from './dto/answer-product-question.dto';
 import { QuestionListQueryDto } from './dto/question-list-query.dto';
+import { ResolveProductKnowledgeDto } from './dto/resolve-product-knowledge.dto';
 
 @Controller('stores/:storeId/questions')
 @UseGuards(AuthGuard)
@@ -73,5 +74,21 @@ export class QuestionsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.questionsService.draft(storeId, questionId, user.id);
+  }
+
+  @Post(':questionId/knowledge')
+  @HttpCode(HttpStatus.ACCEPTED)
+  resolveKnowledge(
+    @Param('storeId', new ParseUUIDPipe()) storeId: string,
+    @Param('questionId', new ParseUUIDPipe()) questionId: string,
+    @Body() body: ResolveProductKnowledgeDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.questionsService.resolveKnowledge(
+      storeId,
+      questionId,
+      user.id,
+      body,
+    );
   }
 }

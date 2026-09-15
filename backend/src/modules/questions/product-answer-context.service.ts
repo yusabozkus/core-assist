@@ -17,6 +17,10 @@ import {
   getInventoryFreshnessMaxAgeMs,
   resolveInventoryFreshness,
 } from '../catalog/inventory-freshness';
+import {
+  applyHeightWeightSizeRecommendation,
+  parseProductAnswerSizeGuideData,
+} from './height-weight-size-recommendation';
 import type {
   ProductAnswerContext,
   ProductAnswerEvidence,
@@ -205,6 +209,7 @@ export class ProductAnswerContextService {
                 emojiEnabled: true,
                 automationMode: true,
                 minimumAutoSendConfidence: true,
+                heightWeightSizeRecommendationEnabled: true,
               },
             },
             knowledgeFaqs: {
@@ -266,6 +271,20 @@ export class ProductAnswerContextService {
               orderBy: { name: 'asc' },
               select: { name: true, value: true },
             },
+            knowledgeFacts: {
+              where: { status: 'VERIFIED' },
+              orderBy: { verifiedAt: 'desc' },
+              take: 50,
+              select: {
+                id: true,
+                factType: true,
+                label: true,
+                value: true,
+                variant: {
+                  select: { sku: true, size: true, color: true },
+                },
+              },
+            },
             variants: {
               orderBy: { createdAt: 'asc' },
               select: {
@@ -293,6 +312,7 @@ export class ProductAnswerContextService {
                 id: true,
                 sourceUrl: true,
                 normalizedText: true,
+                structuredData: true,
                 confidence: true,
                 externalProductId: true,
               },
@@ -378,37 +398,43 @@ export class ProductAnswerContextService {
         status: variant.status,
         lastSyncedAt: variant.lastSyncedAt?.toISOString() ?? null,
       }));
-    const context = analyzeProductQuestion({
-      questionId: question.id,
-      question: question.question,
-      providerKey: question.connection.providerKey,
-      product: {
-        id: question.product.id,
-        title: question.product.title,
-        description: question.product.description,
-        brand: question.product.brand,
-        category: question.product.category,
-        attributes: question.product.attributes,
-        variants,
-        sizeGuides: question.product.sizeGuides.flatMap((guide) => {
-          const belongsToQuestionSource =
-            !question.externalProductRecordId ||
-            !guide.externalProductId ||
-            guide.externalProductId === question.externalProductRecordId;
+    const context = applyVerifiedProductKnowledge(
+      analyzeProductQuestion({
+        questionId: question.id,
+        question: question.question,
+        providerKey: question.connection.providerKey,
+        product: {
+          id: question.product.id,
+          title: question.product.title,
+          description: question.product.description,
+          brand: question.product.brand,
+          category: question.product.category,
+          attributes: question.product.attributes,
+          variants,
+          sizeGuides: question.product.sizeGuides.flatMap((guide) => {
+            const belongsToQuestionSource =
+              !question.externalProductRecordId ||
+              !guide.externalProductId ||
+              guide.externalProductId === question.externalProductRecordId;
 
-          if (!belongsToQuestionSource || !guide.normalizedText) return [];
+            if (!belongsToQuestionSource || !guide.normalizedText) return [];
 
-          return [
-            {
-              id: guide.id,
-              sourceUrl: guide.sourceUrl,
-              normalizedText: guide.normalizedText,
-              confidence: guide.confidence,
-            },
-          ];
-        }),
-      },
-    });
+            return [
+              {
+                id: guide.id,
+                sourceUrl: guide.sourceUrl,
+                normalizedText: guide.normalizedText,
+                confidence: guide.confidence,
+                structuredData: parseProductAnswerSizeGuideData(
+                  guide.structuredData,
+                ),
+              },
+            ];
+          }),
+        },
+      }),
+      question.product.knowledgeFacts,
+    );
 
     const approvedAnswerExamples = buildApprovedAnswerExamples({
       providerKey: question.connection.providerKey,
@@ -416,13 +442,86 @@ export class ProductAnswerContextService {
       storeExamples: question.store.productQuestions,
     });
 
-    return applyStoreKnowledge(
-      context,
-      question.store,
-      question.connection.providerKey,
-      approvedAnswerExamples,
+    return applyHeightWeightSizeRecommendation(
+      applyStoreKnowledge(
+        context,
+        question.store,
+        question.connection.providerKey,
+        approvedAnswerExamples,
+      ),
     );
   }
+}
+
+function applyVerifiedProductKnowledge(
+  context: ProductAnswerContext,
+  facts: Array<{
+    id: string;
+    factType:
+      | 'MATERIAL'
+      | 'DURABILITY'
+      | 'SIZE'
+      | 'COLOR'
+      | 'FIT'
+      | 'CARE'
+      | 'PRODUCT_INFO';
+    label: string;
+    value: string;
+    variant: {
+      sku: string;
+      size: string | null;
+      color: string | null;
+    } | null;
+  }>,
+): ProductAnswerContext {
+  const evidence = [...context.evidence];
+
+  for (const fact of facts) {
+    if (fact.variant && !verifiedFactMatchesVariant(context, fact.variant)) {
+      continue;
+    }
+
+    evidence.push({
+      id: `merchant-verified-${fact.id}`,
+      fact: fact.factType,
+      label: fact.variant ? `${fact.label} (seçili varyant)` : fact.label,
+      value: fact.value,
+      source: 'MERCHANT_VERIFIED',
+      confidence: 1,
+    });
+  }
+
+  return { ...context, evidence };
+}
+
+function verifiedFactMatchesVariant(
+  context: ProductAnswerContext,
+  variant: { sku: string; size: string | null; color: string | null },
+) {
+  const hasDescriptiveScope = Boolean(variant.size || variant.color);
+  if (!hasDescriptiveScope) {
+    const normalizedQuestion = ` ${normalizeSearchValue(context.question)} `;
+    const normalizedSku = normalizeSearchValue(variant.sku);
+    return Boolean(
+      normalizedSku && normalizedQuestion.includes(` ${normalizedSku} `),
+    );
+  }
+
+  if (variant.size) {
+    if (!context.matchedSize || !sameValue(variant.size, context.matchedSize)) {
+      return false;
+    }
+  }
+  if (variant.color) {
+    if (
+      !context.matchedColor ||
+      !sameValue(variant.color, context.matchedColor)
+    ) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 type StoreKnowledgeInput = {
@@ -442,6 +541,7 @@ type StoreKnowledgeInput = {
     emojiEnabled: boolean;
     automationMode: 'OFF' | 'SHADOW' | 'SAFE_AUTO';
     minimumAutoSendConfidence: number;
+    heightWeightSizeRecommendationEnabled: boolean;
   } | null;
   knowledgeFaqs: Array<{ question: string; answer: string }>;
   aiInstructions: Array<{ content: string }>;
@@ -618,6 +718,8 @@ function applyStoreKnowledge(
           ? 'ALWAYS'
           : (profile?.emojiPolicy ?? 'NEVER'),
       preferredEmoji: profile?.preferredEmoji ?? null,
+      heightWeightSizeRecommendationEnabled:
+        profile?.heightWeightSizeRecommendationEnabled ?? false,
       instructions: store.aiInstructions.map((item) => item.content),
       approvedAnswerExamples,
     },
@@ -784,7 +886,13 @@ function detectRequestedFacts(normalizedQuestion: string): ProductAnswerFact[] {
   if (includesAny(normalizedQuestion, WARRANTY_PATTERNS)) {
     facts.push('WARRANTY');
   }
-  if (includesAny(normalizedQuestion, SIZE_PATTERNS)) facts.push('SIZE');
+  if (
+    includesAny(normalizedQuestion, SIZE_PATTERNS) ||
+    /(?:^| )kg(?: |$)/.test(normalizedQuestion) ||
+    Boolean(findGenericSizeMention(normalizedQuestion))
+  ) {
+    facts.push('SIZE');
+  }
   if (isColorQuestion(normalizedQuestion)) facts.push('COLOR');
   if (includesAny(normalizedQuestion, FIT_PATTERNS)) facts.push('FIT');
   if (includesAny(normalizedQuestion, CARE_PATTERNS)) facts.push('CARE');
@@ -1440,10 +1548,15 @@ function variantLabel(
 
 function findGenericSizeMention(normalizedQuestion: string) {
   const letterSize = normalizedQuestion.match(
-    /(?:^| )(xxs|xs|s|m|l|xl|xxl|xxxl|standart)(?: |$)/,
+    /(?:^| )(xxs|xs|s|m|l|xl|xxl|xxxl|[2-6]xl|standart)(?: |$)/,
   )?.[1];
 
-  if (letterSize) return letterSize.toLocaleUpperCase('tr-TR');
+  if (letterSize) {
+    const numberedExtraLarge = letterSize.match(/^([2-6])xl$/);
+    return numberedExtraLarge
+      ? `${'X'.repeat(Number(numberedExtraLarge[1]))}L`
+      : letterSize.toLocaleUpperCase('tr-TR');
+  }
 
   const numericSizeMatch = normalizedQuestion.match(
     /(?:^| )(?:beden|numara) (\d{2,3})(?: |$)|(?:^| )(\d{2,3}) (?:beden|numara)(?: |$)/,

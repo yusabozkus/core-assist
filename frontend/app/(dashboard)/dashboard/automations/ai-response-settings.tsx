@@ -88,6 +88,8 @@ export function AiResponseSettings({
         responseLength: profile.responseLength,
         greetingEnabled: profile.greetingEnabled,
         closingEnabled: profile.closingEnabled,
+        heightWeightSizeRecommendationEnabled:
+          profile.heightWeightSizeRecommendationEnabled,
         emojiPolicy: profile.emojiPolicy,
         preferredEmoji: profile.preferredEmoji,
       })
@@ -586,6 +588,8 @@ function hasBehaviorChanges(
     saved.responseLength !== draft.responseLength ||
     saved.greetingEnabled !== draft.greetingEnabled ||
     saved.closingEnabled !== draft.closingEnabled ||
+    saved.heightWeightSizeRecommendationEnabled !==
+      draft.heightWeightSizeRecommendationEnabled ||
     saved.emojiPolicy !== draft.emojiPolicy ||
     saved.preferredEmoji !== draft.preferredEmoji
   )

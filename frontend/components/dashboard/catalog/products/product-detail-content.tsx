@@ -17,6 +17,7 @@ import {
   getProviderName,
 } from "@/components/dashboard/catalog/products/product-catalog-utils"
 import { VariantTable } from "@/components/dashboard/catalog/products/variant-table"
+import { ProductKnowledgeSection } from "@/components/dashboard/catalog/products/product-knowledge-section"
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -27,7 +28,15 @@ import {
 } from "@/components/ui/collapsible"
 import type { CatalogProduct, CatalogSizeGuide } from "@/types/product"
 
-export function ProductDetailContent({ product }: { product: CatalogProduct }) {
+export function ProductDetailContent({
+  product,
+  storeId,
+  onProductUpdated,
+}: {
+  product: CatalogProduct
+  storeId: string
+  onProductUpdated?: () => void | Promise<void>
+}) {
   const totalStock = product.variants.reduce(
     (total, variant) => total + variant.stock,
     0
@@ -86,6 +95,12 @@ export function ProductDetailContent({ product }: { product: CatalogProduct }) {
           ) : null}
         </div>
       </section>
+
+      <ProductKnowledgeSection
+        storeId={storeId}
+        facts={product.knowledgeFacts ?? []}
+        onUpdated={onProductUpdated}
+      />
 
       <section className="px-5 py-6 md:px-6">
         <div className="flex items-center justify-between gap-4">

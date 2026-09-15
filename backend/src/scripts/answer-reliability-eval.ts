@@ -22,6 +22,7 @@ import type {
   ProductAnswerFact,
 } from '../modules/questions/product-answer-context.types';
 import { evaluateQuestionResponsePolicy } from '../modules/questions/question-response-policy.service';
+import { applyHeightWeightSizeRecommendation } from '../modules/questions/height-weight-size-recommendation';
 import { formatNormalizedSizeGuide } from '../modules/size-guides/size-guide-queue.service';
 
 const PROVIDERS = ['trendyol', 'hepsiburada'] as const;
@@ -188,6 +189,7 @@ function evaluateRegressions() {
           'Beden 32 · Bel: 84-86 cm · Basen: 102-104 cm · Boy: 105 cm',
         ].join('\n'),
         confidence: 0.96,
+        structuredData: null,
       },
     ],
   };
@@ -489,6 +491,92 @@ function evaluateRegressions() {
     throw new Error('Ribana sorusu düz dokuma kanıtıyla eşleştirilemedi.');
   }
 
+  const heightWeightProduct: ProductAnswerContext['product'] = {
+    ...product,
+    variants: [
+      {
+        ...product.variants[0],
+        title: 'Haki / XXL',
+        sku: 'F9571AX26SP-XXL',
+        size: 'XXL',
+      },
+    ],
+    sizeGuides: [
+      {
+        id: 'height-weight-guide',
+        sourceUrl: 'https://cdn.dsmcdn.com/height-weight-size-guide.jpg',
+        normalizedText: 'Beden 2XL · Boy (cm): 190-200 · Kilo (kg): 96-110',
+        confidence: 1,
+        structuredData: {
+          unit: 'CM',
+          headers: ['Boy (cm)', 'Kilo (kg)'],
+          rows: [
+            {
+              label: '2XL',
+              measurements: [
+                { name: 'Boy (cm)', value: '190-200' },
+                { name: 'Kilo (kg)', value: '96-110' },
+              ],
+            },
+          ],
+          notes: [],
+          confidence: 1,
+        },
+      },
+    ],
+  };
+  const sizeRecommendationPreferences = {
+    automationMode: 'SAFE_AUTO',
+    minimumAutoSendConfidence: 0.85,
+    tone: 'PROFESSIONAL',
+    responseLength: 'BALANCED',
+    greetingEnabled: true,
+    closingEnabled: true,
+    emojiPolicy: 'NEVER',
+    preferredEmoji: null,
+    heightWeightSizeRecommendationEnabled: true,
+    instructions: [],
+    approvedAnswerExamples: [],
+  } satisfies NonNullable<ProductAnswerContext['responsePreferences']>;
+  const heightWeightRecommendation = applyHeightWeightSizeRecommendation({
+    ...analyzeProductQuestion({
+      questionId: 'regression-height-weight-size',
+      question: '193 102 kg 2xl olur mu?',
+      product: heightWeightProduct,
+    }),
+    responsePreferences: sizeRecommendationPreferences,
+  });
+  if (
+    heightWeightRecommendation.heightWeightSizeRecommendation?.status !==
+      'MATCHED' ||
+    heightWeightRecommendation.heightWeightSizeRecommendation
+      .recommendedSizes[0] !== '2XL' ||
+    !heightWeightRecommendation.evidence.some(
+      (evidence) => evidence.id === 'height-weight-size-height-weight-guide',
+    )
+  ) {
+    throw new Error('Boy-kilo bilgisi beden tablosuyla eşleştirilemedi.');
+  }
+
+  const disabledHeightWeightRecommendation =
+    applyHeightWeightSizeRecommendation({
+      ...analyzeProductQuestion({
+        questionId: 'regression-disabled-height-weight-size',
+        question: '193 102 kg hangi beden olur?',
+        product: heightWeightProduct,
+      }),
+      responsePreferences: {
+        ...sizeRecommendationPreferences,
+        heightWeightSizeRecommendationEnabled: false,
+      },
+    });
+  if (
+    disabledHeightWeightRecommendation.heightWeightSizeRecommendation
+      ?.status !== 'DISABLED'
+  ) {
+    throw new Error('Kapalı beden önerisi ayarı uygulanamadı.');
+  }
+
   return {
     abusiveContentDeterministicallyIgnored: true,
     complaintsAndNonAbusiveQuestionsAllowed: true,
@@ -506,6 +594,8 @@ function evaluateRegressions() {
     sizeGuideLocationGuidanceCreated: true,
     garmentWidthSeparatedFromBodyMeasurements: true,
     ribbedFabricEvidenceCreated: true,
+    heightWeightSizeRecommendationMatched: true,
+    disabledHeightWeightSizeRecommendationBlocked: true,
   };
 }
 
@@ -605,6 +695,7 @@ async function createEvaluationContexts() {
                     ),
                     confidence:
                       product.sizeGuide.structuredData.confidence ?? null,
+                    structuredData: product.sizeGuide.structuredData,
                   },
                 ]
               : [],

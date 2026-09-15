@@ -39,6 +39,24 @@ export function getCatalogProduct(
   )
 }
 
+export function updateProductKnowledgeFact(
+  storeId: string,
+  factId: string,
+  value: string,
+  confirmUnusualValue = false
+) {
+  return apiFetch(`/stores/${storeId}/product-knowledge/${factId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ value, confirmUnusualValue }),
+  })
+}
+
+export function archiveProductKnowledgeFact(storeId: string, factId: string) {
+  return apiFetch(`/stores/${storeId}/product-knowledge/${factId}`, {
+    method: "DELETE",
+  })
+}
+
 type InventoryOptions = {
   cursor?: string | null
   query?: string

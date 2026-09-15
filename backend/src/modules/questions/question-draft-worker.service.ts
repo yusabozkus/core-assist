@@ -55,7 +55,9 @@ export class QuestionDraftWorkerService {
     }
 
     const automationMode = question.store.knowledgeProfile?.automationMode;
+    const knowledgeResolved = data.reason === 'KNOWLEDGE_RESOLVED';
     if (
+      !knowledgeResolved &&
       automationMode !== AiAutomationMode.SHADOW &&
       automationMode !== AiAutomationMode.SAFE_AUTO
     ) {
@@ -115,7 +117,8 @@ export class QuestionDraftWorkerService {
     });
 
     const result = await this.drafts.generate(data.storeId, data.questionId, {
-      trigger: 'AUTOMATION',
+      trigger: knowledgeResolved ? 'MANUAL' : 'AUTOMATION',
+      requestedByUserId: data.requestedByUserId,
     });
 
     if (

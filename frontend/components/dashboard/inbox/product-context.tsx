@@ -1,26 +1,31 @@
-import Image from "next/image"
 import { ArrowRight01Icon, Package01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import Image from "next/image"
 
-import { formatPriceRange } from "@/components/dashboard/catalog/products/product-catalog-utils"
 import { ProductDetailContent } from "@/components/dashboard/catalog/products/product-detail-content"
+import { formatPriceRange } from "@/components/dashboard/catalog/products/product-catalog-utils"
 import { ProductMarketplaceAction } from "@/components/dashboard/catalog/products/product-marketplace-action"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
 import type { ProductQuestion } from "@/types/question"
 
-export function ProductContext({ question }: { question: ProductQuestion }) {
+export function ProductContext({
+  storeId,
+  question,
+  onProductUpdated,
+}: {
+  storeId: string
+  question: ProductQuestion
+  onProductUpdated?: () => void | Promise<void>
+}) {
   const product = question.product
 
   if (!product) {
     const snapshot = question.productSnapshot
 
     return (
-      <div className="rounded-xl border border-dashed border-border bg-card p-4">
-        <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          İlgili ürün
-        </p>
-        <div className="mt-3 flex items-center gap-3">
-          <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-card text-muted-foreground">
+      <div className="rounded-2xl border border-dashed border-border bg-card p-3.5 shadow-xs">
+        <div className="flex items-start gap-3">
+          <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted text-muted-foreground">
             {snapshot?.imageUrl ? (
               <Image
                 src={snapshot.imageUrl}
@@ -34,12 +39,12 @@ export function ProductContext({ question }: { question: ProductQuestion }) {
             )}
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">
+            <p className="line-clamp-2 text-sm leading-5 font-semibold text-foreground">
               {snapshot?.title ?? "Ürün eşleştirilemedi"}
             </p>
-            <p className="mt-1 truncate text-xs text-muted-foreground">
+            <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
               {snapshot
-                ? "Kanal kaldırıldığı için güncel ürün detayları artık mevcut değil."
+                ? "Kanal bağlantısı kaldırıldığı için güncel ürün detayları kullanılamıyor."
                 : `Platform ürün kodu: ${question.externalProductId}`}
             </p>
           </div>
@@ -66,18 +71,18 @@ export function ProductContext({ question }: { question: ProductQuestion }) {
       trigger={
         <button
           type="button"
-          className="group w-full overflow-hidden rounded-xl border border-border bg-card text-left transition-colors hover:border-foreground/20 hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="group w-full overflow-hidden rounded-2xl border border-border bg-card text-left shadow-xs transition-all hover:-translate-y-px hover:border-foreground/20 hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           aria-label={`${product.title} ürün detaylarını görüntüle`}
         >
-          <span className="flex items-center gap-3 p-3.5 sm:gap-4 sm:p-4">
-            <span className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted text-muted-foreground">
+          <span className="flex items-start gap-3 p-3.5">
+            <span className="relative flex size-13 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted text-muted-foreground">
               {imageUrl ? (
                 <Image
                   src={imageUrl}
                   alt={product.title}
                   fill
-                  sizes="64px"
-                  className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                  sizes="52px"
+                  className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
                 />
               ) : (
                 <HugeiconsIcon icon={Package01Icon} className="size-5" />
@@ -85,37 +90,31 @@ export function ProductContext({ question }: { question: ProductQuestion }) {
             </span>
 
             <span className="min-w-0 flex-1">
-              <span className="block text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
-                İlgili ürün
-              </span>
-              <span className="mt-1 block truncate text-sm font-semibold text-foreground">
+              <span className="line-clamp-2 text-sm leading-5 font-semibold text-foreground">
                 {product.title}
               </span>
-              <span className="mt-1 block truncate text-xs text-muted-foreground">
-                {productMeta || "Kategori bilgisi bulunmuyor"}
-              </span>
-              <span className="mt-2 block text-sm font-semibold text-foreground tabular-nums sm:hidden">
-                {formatPriceRange(product.variants)}
-              </span>
-            </span>
-
-            <span className="hidden min-w-28 shrink-0 border-l border-border pl-4 sm:block">
-              <span className="block text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-                Fiyat
-              </span>
-              <span className="mt-1 block truncate text-sm font-semibold text-foreground tabular-nums">
-                {formatPriceRange(product.variants)}
+              <span className="mt-2 flex min-w-0 items-center justify-between gap-2">
+                <span className="truncate text-[11px] text-muted-foreground">
+                  {productMeta || "Kategori bilgisi bulunmuyor"}
+                </span>
+                <span className="shrink-0 text-xs font-semibold text-foreground tabular-nums">
+                  {formatPriceRange(product.variants)}
+                </span>
               </span>
             </span>
 
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors group-hover:bg-muted group-hover:text-foreground">
-              <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" />
+            <span className="mt-4 flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors group-hover:bg-muted group-hover:text-foreground">
+              <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
             </span>
           </span>
         </button>
       }
     >
-      <ProductDetailContent product={product} />
+      <ProductDetailContent
+        product={product}
+        storeId={storeId}
+        onProductUpdated={onProductUpdated}
+      />
     </ResponsiveDialog>
   )
 }

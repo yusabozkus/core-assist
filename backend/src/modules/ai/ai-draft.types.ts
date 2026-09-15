@@ -6,11 +6,16 @@ import type {
 
 export type AiDraftDecision = 'DRAFT' | 'NEEDS_REVIEW';
 export type AiDraftSource = 'GEMINI';
-export type AiDraftAnswerability = 'FULL' | 'PARTIAL' | 'INSUFFICIENT';
+export type AiDraftScope = 'IN_SCOPE' | 'OUT_OF_SCOPE';
+export type AiDraftAnswerability =
+  'FULL' | 'PARTIAL' | 'INSUFFICIENT' | 'OUT_OF_SCOPE';
+
+export const OUT_OF_SCOPE_CLASSIFICATION_THRESHOLD = 0.9;
 
 export type AiDraftResult = {
   answer: string;
   interpretation: string;
+  scope: AiDraftScope;
   detectedFacts: ProductAnswerFact[];
   answerability: AiDraftAnswerability;
   decision: AiDraftDecision;
@@ -27,6 +32,7 @@ export type GeminiDraftPayload = Pick<
   AiDraftResult,
   | 'answer'
   | 'interpretation'
+  | 'scope'
   | 'detectedFacts'
   | 'answerability'
   | 'decision'

@@ -28,6 +28,7 @@ const profileSelect = {
   responseLength: true,
   greetingEnabled: true,
   closingEnabled: true,
+  heightWeightSizeRecommendationEnabled: true,
   emojiPolicy: true,
   preferredEmoji: true,
   emojiEnabled: true,
@@ -93,6 +94,8 @@ export class KnowledgeService {
           responseLength: dto.responseLength ?? AiResponseLength.BALANCED,
           greetingEnabled: dto.greetingEnabled ?? true,
           closingEnabled: dto.closingEnabled ?? true,
+          heightWeightSizeRecommendationEnabled:
+            dto.heightWeightSizeRecommendationEnabled ?? false,
           emojiPolicy: dto.emojiPolicy ?? AiEmojiPolicy.NEVER,
           preferredEmoji: clean(dto.preferredEmoji),
           emojiEnabled:
@@ -127,6 +130,8 @@ export class KnowledgeService {
           responseLength: dto.responseLength,
           greetingEnabled: dto.greetingEnabled,
           closingEnabled: dto.closingEnabled,
+          heightWeightSizeRecommendationEnabled:
+            dto.heightWeightSizeRecommendationEnabled,
           emojiPolicy: dto.emojiPolicy,
           ...(dto.preferredEmoji !== undefined
             ? { preferredEmoji: clean(dto.preferredEmoji) }
@@ -244,6 +249,7 @@ export class KnowledgeService {
           responseLength: AiResponseLength.BALANCED,
           greetingEnabled: true,
           closingEnabled: true,
+          heightWeightSizeRecommendationEnabled: false,
           emojiPolicy: AiEmojiPolicy.NEVER,
           preferredEmoji: null,
           emojiEnabled: false,

@@ -93,7 +93,13 @@ export function ProductDetailDialog({
           </Button>
         </div>
       ) : product ? (
-        <ProductDetailContent product={product} />
+        <ProductDetailContent
+          product={product}
+          storeId={storeId}
+          onProductUpdated={() =>
+            setRequestVersion((currentVersion) => currentVersion + 1)
+          }
+        />
       ) : (
         <ProductDetailSkeleton />
       )}

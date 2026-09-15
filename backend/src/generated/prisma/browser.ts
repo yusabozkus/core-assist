@@ -143,6 +143,11 @@ export type ProductVariant = Prisma.ProductVariantModel
  */
 export type ProductAttribute = Prisma.ProductAttributeModel
 /**
+ * Model ProductKnowledgeFact
+ * 
+ */
+export type ProductKnowledgeFact = Prisma.ProductKnowledgeFactModel
+/**
  * Model ProductImage
  * 
  */

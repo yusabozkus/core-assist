@@ -78,9 +78,11 @@ export function AiActivityList({
                     <time dateTime={item.createdAt}>
                       {dateFormatter.format(new Date(item.createdAt))}
                     </time>
-                    <span className="tabular-nums">
-                      {formatPercent(item.confidence * 100)} güven
-                    </span>
+                    {item.answerability !== "OUT_OF_SCOPE" ? (
+                      <span className="tabular-nums">
+                        {formatPercent(item.confidence * 100)} güven
+                      </span>
+                    ) : null}
                   </div>
                 </div>
                 <HugeiconsIcon

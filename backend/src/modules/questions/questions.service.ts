@@ -9,6 +9,9 @@ import {
   ChannelConnectionStatus,
   ChannelType,
   ProductQuestionStatus,
+  QuestionAnswerStatus,
+  QuestionDraftProcessingStatus,
+  QuestionReplyDecision,
   StoreRole,
   StoreStatus,
 } from '../../generated/prisma/enums';
@@ -20,9 +23,13 @@ import { QUESTION_ANSWER_DISPATCHER } from '../question-answer/question-answer.c
 import type { QuestionAnswerDispatcher } from '../question-answer/question-answer.types';
 import { QuestionDraftService } from './question-draft.service';
 import {
+  ALL_PENDING_QUESTION_STATES,
+  PendingQuestionStateFilter,
   QuestionListQueryDto,
   QuestionListStatusFilter,
 } from './dto/question-list-query.dto';
+import type { ResolveProductKnowledgeDto } from './dto/resolve-product-knowledge.dto';
+import { ProductKnowledgeService } from './product-knowledge.service';
 
 const QUESTION_LIST_SELECT = {
   id: true,
@@ -33,6 +40,7 @@ const QUESTION_LIST_SELECT = {
   question: true,
   status: true,
   draftDecision: true,
+  draftAnswerability: true,
   draftProcessingStatus: true,
   externalCreatedAt: true,
   connection: {
@@ -132,6 +140,21 @@ const QUESTION_DETAIL_SELECT = {
         orderBy: { name: 'asc' },
         select: { id: true, name: true, value: true },
       },
+      knowledgeFacts: {
+        where: { status: 'VERIFIED' as const },
+        orderBy: { verifiedAt: 'desc' as const },
+        select: {
+          id: true,
+          factType: true,
+          normalizedKey: true,
+          label: true,
+          value: true,
+          verifiedAt: true,
+          variant: {
+            select: { id: true, sku: true, size: true, color: true },
+          },
+        },
+      },
       images: {
         orderBy: { position: 'asc' },
         select: { id: true, url: true, position: true },
@@ -216,6 +239,7 @@ export class QuestionsService {
     @Inject(QUESTION_ANSWER_DISPATCHER)
     private readonly questionAnswers: QuestionAnswerDispatcher,
     private readonly questionDrafts: QuestionDraftService,
+    private readonly productKnowledge: ProductKnowledgeService,
   ) {}
 
   async findAll(storeId: string, userId: string, query: QuestionListQueryDto) {
@@ -253,7 +277,7 @@ export class QuestionsService {
     };
     const where: Prisma.ProductQuestionWhereInput = {
       ...baseWhere,
-      ...questionStatusWhere(query.status),
+      ...questionStatusWhere(query.status, query.pendingStates),
     };
 
     const [questions, summaryRows] = await Promise.all([
@@ -332,8 +356,14 @@ export class QuestionsService {
       throw new NotFoundException('Soru bulunamadı veya erişiminiz yok.');
     }
 
+    const knowledgeGaps = await this.productKnowledge.getQuestionKnowledgeGaps(
+      storeId,
+      questionId,
+    );
+
     return {
       ...question,
+      knowledgeGaps,
       productSnapshot: question.productTitleSnapshot
         ? {
             title: question.productTitleSnapshot,
@@ -470,6 +500,15 @@ export class QuestionsService {
     });
   }
 
+  async resolveKnowledge(
+    storeId: string,
+    questionId: string,
+    userId: string,
+    input: ResolveProductKnowledgeDto,
+  ) {
+    return this.productKnowledge.resolve(storeId, questionId, userId, input);
+  }
+
   private async requireStoreMembership(storeId: string, userId: string) {
     const membership = await this.prisma.storeMember.findFirst({
       where: {
@@ -492,6 +531,7 @@ export class QuestionsService {
 
 function questionStatusWhere(
   status: QuestionListStatusFilter,
+  pendingStates: PendingQuestionStateFilter[],
 ): Prisma.ProductQuestionWhereInput {
   switch (status) {
     case QuestionListStatusFilter.PENDING:
@@ -499,6 +539,9 @@ function questionStatusWhere(
         status: {
           in: [ProductQuestionStatus.PENDING, ProductQuestionStatus.DRAFTED],
         },
+        ...(pendingStates.length === ALL_PENDING_QUESTION_STATES.length
+          ? {}
+          : { OR: pendingStates.map(pendingQuestionStateWhere) }),
       };
     case QuestionListStatusFilter.ANSWERED:
       return { status: ProductQuestionStatus.ANSWERED };
@@ -506,6 +549,97 @@ function questionStatusWhere(
       return { status: ProductQuestionStatus.IGNORED };
     default:
       return {};
+  }
+}
+
+function pendingQuestionStateWhere(
+  state: PendingQuestionStateFilter,
+): Prisma.ProductQuestionWhereInput {
+  const noAnswerDelivery = { answerDelivery: { is: null } } as const;
+
+  switch (state) {
+    case PendingQuestionStateFilter.WAITING:
+      return {
+        status: ProductQuestionStatus.PENDING,
+        draftProcessingStatus: null,
+        ...noAnswerDelivery,
+      };
+    case PendingQuestionStateFilter.DRAFT_QUEUED:
+      return {
+        draftProcessingStatus: QuestionDraftProcessingStatus.QUEUED,
+        ...noAnswerDelivery,
+      };
+    case PendingQuestionStateFilter.DRAFT_PROCESSING:
+      return {
+        draftProcessingStatus: QuestionDraftProcessingStatus.PROCESSING,
+        ...noAnswerDelivery,
+      };
+    case PendingQuestionStateFilter.REVIEW_REQUIRED:
+      return {
+        status: ProductQuestionStatus.DRAFTED,
+        draftDecision: QuestionReplyDecision.NEEDS_REVIEW,
+        draftProcessingStatus: null,
+        OR: [
+          noAnswerDelivery,
+          {
+            answerDelivery: {
+              is: { status: QuestionAnswerStatus.FAILED },
+            },
+          },
+        ],
+      };
+    case PendingQuestionStateFilter.READY_TO_SEND:
+      return {
+        status: ProductQuestionStatus.DRAFTED,
+        draftProcessingStatus: null,
+        AND: [
+          {
+            OR: [
+              { draftDecision: QuestionReplyDecision.READY_FOR_SEND },
+              { draftDecision: null },
+            ],
+          },
+          noAnswerDelivery,
+        ],
+      };
+    case PendingQuestionStateFilter.SEND_QUEUED:
+      return {
+        answerDelivery: {
+          is: { status: QuestionAnswerStatus.QUEUED },
+        },
+      };
+    case PendingQuestionStateFilter.SENDING:
+      return {
+        answerDelivery: {
+          is: { status: QuestionAnswerStatus.PROCESSING },
+        },
+      };
+    case PendingQuestionStateFilter.BLOCKED_QUOTA:
+      return {
+        draftProcessingStatus: QuestionDraftProcessingStatus.BLOCKED_QUOTA,
+        ...noAnswerDelivery,
+      };
+    case PendingQuestionStateFilter.BLOCKED_SUBSCRIPTION:
+      return {
+        draftProcessingStatus:
+          QuestionDraftProcessingStatus.BLOCKED_SUBSCRIPTION,
+        ...noAnswerDelivery,
+      };
+    case PendingQuestionStateFilter.DRAFT_FAILED:
+      return {
+        draftProcessingStatus: QuestionDraftProcessingStatus.FAILED,
+        ...noAnswerDelivery,
+      };
+    case PendingQuestionStateFilter.SEND_FAILED:
+      return {
+        answerDelivery: {
+          is: { status: QuestionAnswerStatus.FAILED },
+        },
+        NOT: {
+          status: ProductQuestionStatus.DRAFTED,
+          draftDecision: QuestionReplyDecision.NEEDS_REVIEW,
+        },
+      };
   }
 }
 

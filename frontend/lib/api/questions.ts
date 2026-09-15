@@ -5,8 +5,10 @@ import type {
   ProductQuestionFilter,
   ProductQuestionListSlice,
   ProductQuestionPage,
+  PendingQuestionState,
   QuestionSyncResult,
   QueueQuestionAnswerResult,
+  ResolveProductKnowledgeResult,
 } from "@/types/question"
 
 type GetProductQuestionsOptions = {
@@ -15,6 +17,7 @@ type GetProductQuestionsOptions = {
   status?: ProductQuestionFilter
   query?: string
   signal?: AbortSignal
+  pendingStates?: PendingQuestionState[]
 }
 
 export function getProductQuestions(
@@ -25,6 +28,7 @@ export function getProductQuestions(
     status = "PENDING",
     query,
     signal,
+    pendingStates,
   }: GetProductQuestionsOptions = {}
 ) {
   const searchParams = new URLSearchParams({
@@ -34,6 +38,9 @@ export function getProductQuestions(
 
   if (cursor) searchParams.set("cursor", cursor)
   if (query?.trim()) searchParams.set("query", query.trim())
+  if (pendingStates?.length) {
+    searchParams.set("pendingStates", pendingStates.join(","))
+  }
 
   return apiFetch<ProductQuestionPage>(
     `/stores/${storeId}/questions?${searchParams.toString()}`,
@@ -49,6 +56,7 @@ export function getProductQuestionUpdates(
     status = "PENDING",
     query,
     signal,
+    pendingStates,
   }: GetProductQuestionsOptions = {}
 ) {
   const searchParams = new URLSearchParams({
@@ -59,6 +67,9 @@ export function getProductQuestionUpdates(
 
   if (cursor) searchParams.set("cursor", cursor)
   if (query?.trim()) searchParams.set("query", query.trim())
+  if (pendingStates?.length) {
+    searchParams.set("pendingStates", pendingStates.join(","))
+  }
 
   return apiFetch<ProductQuestionListSlice>(
     `/stores/${storeId}/questions?${searchParams.toString()}`,
@@ -103,6 +114,25 @@ export function answerProductQuestion(
     {
       method: "POST",
       body: JSON.stringify({ answer }),
+    }
+  )
+}
+
+export function resolveProductQuestionKnowledge(
+  storeId: string,
+  questionId: string,
+  input: {
+    gapKey: string
+    value: string
+    variantId?: string
+    confirmUnusualValue?: boolean
+  }
+) {
+  return apiFetch<ResolveProductKnowledgeResult>(
+    `/stores/${storeId}/questions/${questionId}/knowledge`,
+    {
+      method: "POST",
+      body: JSON.stringify(input),
     }
   )
 }

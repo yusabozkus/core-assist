@@ -91,6 +91,7 @@ export function QuestionListItem({
           deliveryStatus={question.answerDelivery?.status}
           draftProcessingStatus={question.draftProcessingStatus}
           draftDecision={question.draftDecision}
+          draftAnswerability={question.draftAnswerability}
           shadowEligible={
             latestDraft?.automationMode === "SHADOW" &&
             latestDraft.autoSendEligible

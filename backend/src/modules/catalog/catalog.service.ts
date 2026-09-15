@@ -66,6 +66,21 @@ const PRODUCT_DETAIL_SELECT = {
     orderBy: { name: 'asc' },
     select: { id: true, name: true, value: true },
   },
+  knowledgeFacts: {
+    where: { status: 'VERIFIED' },
+    orderBy: { verifiedAt: 'desc' },
+    select: {
+      id: true,
+      factType: true,
+      normalizedKey: true,
+      label: true,
+      value: true,
+      verifiedAt: true,
+      variant: {
+        select: { id: true, sku: true, size: true, color: true },
+      },
+    },
+  },
   images: {
     orderBy: { position: 'asc' },
     select: { id: true, url: true, position: true },

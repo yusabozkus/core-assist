@@ -97,8 +97,16 @@ export function QuestionDraftHistory({
 
                 <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
                   <span>{attempt.model}</span>
-                  <span>%{Math.round(attempt.confidence * 100)} güven</span>
-                  <span>{attempt.evidenceIds.length} kanıt</span>
+                  {attempt.answerability === "OUT_OF_SCOPE" ? (
+                    <span className="font-medium text-slate-600 dark:text-slate-300">
+                      Kapsam dışı
+                    </span>
+                  ) : (
+                    <>
+                      <span>%{Math.round(attempt.confidence * 100)} güven</span>
+                      <span>{attempt.evidenceIds.length} kanıt</span>
+                    </>
+                  )}
                   {attempt.decision === "NEEDS_REVIEW" ? (
                     <span className="text-amber-600 dark:text-amber-400">
                       İnceleme gerekli

@@ -96,6 +96,7 @@ export type AiPerformance = {
     outcome: AiDraftOutcome
     decision: QuestionReplyDecision
     confidence: number
+    answerability: "FULL" | "PARTIAL" | "INSUFFICIENT" | "OUT_OF_SCOPE"
     requestedFacts: ProductAnswerFact[]
     automationMode: AiAutomationMode
     autoSendEligible: boolean

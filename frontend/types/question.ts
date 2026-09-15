@@ -5,6 +5,22 @@ export type ProductQuestionStatus =
 
 export type ProductQuestionFilter = "ALL" | "PENDING" | "ANSWERED" | "IGNORED"
 
+export const PENDING_QUESTION_STATES = [
+  "WAITING",
+  "DRAFT_QUEUED",
+  "DRAFT_PROCESSING",
+  "REVIEW_REQUIRED",
+  "READY_TO_SEND",
+  "SEND_QUEUED",
+  "SENDING",
+  "BLOCKED_QUOTA",
+  "BLOCKED_SUBSCRIPTION",
+  "DRAFT_FAILED",
+  "SEND_FAILED",
+] as const
+
+export type PendingQuestionState = (typeof PENDING_QUESTION_STATES)[number]
+
 export type QuestionAnswerStatus = "QUEUED" | "PROCESSING" | "SENT" | "FAILED"
 export type QuestionAnswerOrigin = "MANUAL" | "AUTOMATION"
 export type QuestionAnswerComposition = "MANUAL" | "AI_UNCHANGED" | "AI_EDITED"
@@ -44,6 +60,16 @@ export type ProductAnswerFact =
   | "PRODUCT_CODE"
   | "PRODUCT_INFO"
 
+export type ProductKnowledgeFactType =
+  "MATERIAL" | "DURABILITY" | "SIZE" | "COLOR" | "FIT" | "CARE" | "PRODUCT_INFO"
+
+export type ProductKnowledgeGap = {
+  key: string
+  label: string
+  factType: ProductKnowledgeFactType
+  affectedQuestionCount: number
+}
+
 export type QuestionAnswerDelivery = {
   id: string
   draftAttemptId: string | null
@@ -64,7 +90,7 @@ export type AiDraftAttempt = {
   answer: string
   decision: Exclude<QuestionReplyDecision, "DO_NOT_REPLY">
   confidence: number
-  answerability: "FULL" | "PARTIAL" | "INSUFFICIENT"
+  answerability: "FULL" | "PARTIAL" | "INSUFFICIENT" | "OUT_OF_SCOPE"
   risks: ProductAnswerRisk[]
   missingInformation: string[]
   evidenceIds: string[]
@@ -92,7 +118,8 @@ export type ProductQuestion = {
   answer: string | null
   draftDecision: QuestionReplyDecision | null
   draftConfidence: number | null
-  draftAnswerability: "FULL" | "PARTIAL" | "INSUFFICIENT" | null
+  draftAnswerability:
+    "FULL" | "PARTIAL" | "INSUFFICIENT" | "OUT_OF_SCOPE" | null
   draftRisks: ProductAnswerRisk[] | null
   draftMissingInformation: string[] | null
   draftEvidenceIds: string[] | null
@@ -113,6 +140,7 @@ export type ProductQuestion = {
     title: string
     imageUrl: string | null
   } | null
+  knowledgeGaps: ProductKnowledgeGap[]
   draftAttempts: AiDraftAttempt[]
   answerDelivery: QuestionAnswerDelivery | null
 }
@@ -124,6 +152,8 @@ export type ProductQuestionListItem = {
   question: string
   status: ProductQuestionStatus
   draftDecision: QuestionReplyDecision | null
+  draftAnswerability:
+    "FULL" | "PARTIAL" | "INSUFFICIENT" | "OUT_OF_SCOPE" | null
   draftProcessingStatus: QuestionDraftProcessingStatus | null
   externalCreatedAt: string
   connection: {
@@ -177,6 +207,21 @@ export type QueueQuestionAnswerResult = {
   queuedAt: string
 }
 
+export type ResolveProductKnowledgeResult = {
+  fact: {
+    id: string
+    productId: string
+    variantId: string | null
+    factType: ProductKnowledgeFactType
+    normalizedKey: string
+    label: string
+    value: string
+    verifiedAt: string
+  }
+  affectedQuestionCount: number
+  queuedQuestionCount: number
+}
+
 export type DraftQuestionAnswerResult =
   DraftedQuestionAnswerResult | IgnoredQuestionAnswerResult
 
@@ -193,7 +238,7 @@ export type DraftedQuestionAnswerResult = {
     model: string
     interpretation: string
     detectedFacts: ProductAnswerFact[]
-    answerability: "FULL" | "PARTIAL" | "INSUFFICIENT"
+    answerability: "FULL" | "PARTIAL" | "INSUFFICIENT" | "OUT_OF_SCOPE"
     decision: "READY_FOR_SEND" | "NEEDS_REVIEW"
     confidence: number
     missingInformation: string[]

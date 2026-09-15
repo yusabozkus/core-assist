@@ -422,6 +422,7 @@ export const ModelName = {
   ProductIdentity: 'ProductIdentity',
   ProductVariant: 'ProductVariant',
   ProductAttribute: 'ProductAttribute',
+  ProductKnowledgeFact: 'ProductKnowledgeFact',
   ProductImage: 'ProductImage',
   ProductSizeGuide: 'ProductSizeGuide',
   ExternalProduct: 'ExternalProduct',
@@ -451,7 +452,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "workspaceInvitation" | "workspaceInvitationStoreAccess" | "billingSubscription" | "billingWebhookEvent" | "billingClosureRecord" | "billingCheckout" | "billingPlanChange" | "billingUsagePeriod" | "billingUsageEvent" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "webPushSubscription"
+    modelProps: "user" | "session" | "account" | "verification" | "workspace" | "workspaceMember" | "workspaceInvitation" | "workspaceInvitationStoreAccess" | "billingSubscription" | "billingWebhookEvent" | "billingClosureRecord" | "billingCheckout" | "billingPlanChange" | "billingUsagePeriod" | "billingUsageEvent" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productKnowledgeFact" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "webPushSubscription"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2305,6 +2306,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ProductKnowledgeFact: {
+      payload: Prisma.$ProductKnowledgeFactPayload<ExtArgs>
+      fields: Prisma.ProductKnowledgeFactFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ProductKnowledgeFactFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductKnowledgeFactPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ProductKnowledgeFactFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductKnowledgeFactPayload>
+        }
+        findFirst: {
+          args: Prisma.ProductKnowledgeFactFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductKnowledgeFactPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ProductKnowledgeFactFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductKnowledgeFactPayload>
+        }
+        findMany: {
+          args: Prisma.ProductKnowledgeFactFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductKnowledgeFactPayload>[]
+        }
+        create: {
+          args: Prisma.ProductKnowledgeFactCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductKnowledgeFactPayload>
+        }
+        createMany: {
+          args: Prisma.ProductKnowledgeFactCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ProductKnowledgeFactCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductKnowledgeFactPayload>[]
+        }
+        delete: {
+          args: Prisma.ProductKnowledgeFactDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductKnowledgeFactPayload>
+        }
+        update: {
+          args: Prisma.ProductKnowledgeFactUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductKnowledgeFactPayload>
+        }
+        deleteMany: {
+          args: Prisma.ProductKnowledgeFactDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ProductKnowledgeFactUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ProductKnowledgeFactUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductKnowledgeFactPayload>[]
+        }
+        upsert: {
+          args: Prisma.ProductKnowledgeFactUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProductKnowledgeFactPayload>
+        }
+        aggregate: {
+          args: Prisma.ProductKnowledgeFactAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateProductKnowledgeFact>
+        }
+        groupBy: {
+          args: Prisma.ProductKnowledgeFactGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProductKnowledgeFactGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ProductKnowledgeFactCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProductKnowledgeFactCountAggregateOutputType> | number
+        }
+      }
+    }
     ProductImage: {
       payload: Prisma.$ProductImagePayload<ExtArgs>
       fields: Prisma.ProductImageFieldRefs
@@ -3649,6 +3724,7 @@ export const StoreKnowledgeProfileScalarFieldEnum = {
   responseLength: 'responseLength',
   greetingEnabled: 'greetingEnabled',
   closingEnabled: 'closingEnabled',
+  heightWeightSizeRecommendationEnabled: 'heightWeightSizeRecommendationEnabled',
   emojiPolicy: 'emojiPolicy',
   preferredEmoji: 'preferredEmoji',
   automationMode: 'automationMode',
@@ -3786,6 +3862,28 @@ export const ProductAttributeScalarFieldEnum = {
 } as const
 
 export type ProductAttributeScalarFieldEnum = (typeof ProductAttributeScalarFieldEnum)[keyof typeof ProductAttributeScalarFieldEnum]
+
+
+export const ProductKnowledgeFactScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  productId: 'productId',
+  variantId: 'variantId',
+  scopeKey: 'scopeKey',
+  factType: 'factType',
+  normalizedKey: 'normalizedKey',
+  label: 'label',
+  value: 'value',
+  status: 'status',
+  verifiedByUserId: 'verifiedByUserId',
+  originatingQuestionId: 'originatingQuestionId',
+  verifiedAt: 'verifiedAt',
+  archivedAt: 'archivedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ProductKnowledgeFactScalarFieldEnum = (typeof ProductKnowledgeFactScalarFieldEnum)[keyof typeof ProductKnowledgeFactScalarFieldEnum]
 
 
 export const ProductImageScalarFieldEnum = {
@@ -4519,6 +4617,34 @@ export type ListEnumProductVariantStatusFieldRefInput<$PrismaModel> = FieldRefIn
 
 
 /**
+ * Reference to a field of type 'ProductKnowledgeFactType'
+ */
+export type EnumProductKnowledgeFactTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ProductKnowledgeFactType'>
+    
+
+
+/**
+ * Reference to a field of type 'ProductKnowledgeFactType[]'
+ */
+export type ListEnumProductKnowledgeFactTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ProductKnowledgeFactType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ProductKnowledgeFactStatus'
+ */
+export type EnumProductKnowledgeFactStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ProductKnowledgeFactStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'ProductKnowledgeFactStatus[]'
+ */
+export type ListEnumProductKnowledgeFactStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ProductKnowledgeFactStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'SizeGuideStatus'
  */
 export type EnumSizeGuideStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SizeGuideStatus'>
@@ -4945,6 +5071,7 @@ export type GlobalOmitConfig = {
   productIdentity?: Prisma.ProductIdentityOmit
   productVariant?: Prisma.ProductVariantOmit
   productAttribute?: Prisma.ProductAttributeOmit
+  productKnowledgeFact?: Prisma.ProductKnowledgeFactOmit
   productImage?: Prisma.ProductImageOmit
   productSizeGuide?: Prisma.ProductSizeGuideOmit
   externalProduct?: Prisma.ExternalProductOmit

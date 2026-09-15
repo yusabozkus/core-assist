@@ -1,11 +1,19 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState, useTransition } from "react"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react"
 import {
   AlertCircleIcon,
   Cancel01Icon,
   CheckmarkCircle01Icon,
   InboxIcon,
+  MoreHorizontalIcon,
   RefreshIcon,
   Search01Icon,
 } from "@hugeicons/core-free-icons"
@@ -27,6 +35,14 @@ import {
   QuestionListItemsSkeleton,
 } from "@/components/skeletons/question-list-skeleton"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import {
   ResizableHandle,
@@ -46,18 +62,21 @@ import {
   getProductQuestions,
   syncStoreQuestions,
 } from "@/lib/api/questions"
-import type {
-  ProductQuestion,
-  ProductQuestionFilter,
-  ProductQuestionListItem,
-  ProductQuestionListSlice,
-  ProductQuestionPage,
+import {
+  PENDING_QUESTION_STATES,
+  type PendingQuestionState,
+  type ProductQuestion,
+  type ProductQuestionFilter,
+  type ProductQuestionListItem,
+  type ProductQuestionListSlice,
+  type ProductQuestionPage,
 } from "@/types/question"
 
 export type QuestionInboxProps = {
   storeId: string
   initialPage: ProductQuestionPage
   initialFilter: ProductQuestionFilter
+  initialPendingStates: PendingQuestionState[]
 }
 
 const PAGE_SIZE = 30
@@ -77,21 +96,78 @@ const inboxFilters: Array<{
   value: ProductQuestionFilter
   label: string
 }> = [
-    { value: "PENDING", label: "Bekleyen" },
-    { value: "ANSWERED", label: "Yanıtlanan" },
-    { value: "IGNORED", label: "Engellenen" },
-  ]
+  { value: "PENDING", label: "Bekleyen" },
+  { value: "ANSWERED", label: "Yanıtlanan" },
+  { value: "IGNORED", label: "Engellenen" },
+]
+
+const pendingStateOptions: Array<{
+  value: PendingQuestionState
+  label: string
+  dotClassName: string
+}> = [
+  { value: "WAITING", label: "Yanıt bekliyor", dotClassName: "bg-blue-500" },
+  {
+    value: "DRAFT_QUEUED",
+    label: "Taslak kuyruğunda",
+    dotClassName: "bg-violet-500",
+  },
+  {
+    value: "DRAFT_PROCESSING",
+    label: "Taslak hazırlanıyor",
+    dotClassName: "bg-violet-500",
+  },
+  {
+    value: "REVIEW_REQUIRED",
+    label: "İnceleme bekliyor",
+    dotClassName: "bg-orange-500",
+  },
+  {
+    value: "READY_TO_SEND",
+    label: "Gönderime hazır",
+    dotClassName: "bg-teal-500",
+  },
+  {
+    value: "SEND_QUEUED",
+    label: "Gönderim kuyruğunda",
+    dotClassName: "bg-sky-500",
+  },
+  { value: "SENDING", label: "Gönderiliyor", dotClassName: "bg-sky-500" },
+  {
+    value: "BLOCKED_QUOTA",
+    label: "Kota bekliyor",
+    dotClassName: "bg-amber-500",
+  },
+  {
+    value: "BLOCKED_SUBSCRIPTION",
+    label: "Abonelik bekliyor",
+    dotClassName: "bg-amber-500",
+  },
+  {
+    value: "DRAFT_FAILED",
+    label: "Taslak hatası",
+    dotClassName: "bg-red-500",
+  },
+  { value: "SEND_FAILED", label: "Gönderilemedi", dotClassName: "bg-red-500" },
+]
 
 export function QuestionInbox({
   storeId,
   initialPage,
   initialFilter,
+  initialPendingStates,
 }: QuestionInboxProps) {
   const isDesktop = useIsDesktop()
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
   const filter = parseQuestionFilter(searchParams.get("status"))
+  const pendingStateParam = searchParams.get("pending")
+  const pendingStates = useMemo(
+    () => parsePendingStates(pendingStateParam),
+    [pendingStateParam]
+  )
+  const pendingStateKey = pendingStates.join(",")
   const [questions, setQuestions] = useState(initialPage.items)
   const [nextCursor, setNextCursor] = useState(initialPage.nextCursor)
   const [summary, setSummary] = useState(initialPage.summary)
@@ -119,7 +195,9 @@ export function QuestionInbox({
   const listRef = useRef<HTMLDivElement>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const listRequestIdRef = useRef(0)
-  const lastListRequestKeyRef = useRef(`${storeId}|${initialFilter}|`)
+  const lastListRequestKeyRef = useRef(
+    `${storeId}|${initialFilter}|${initialPendingStates.join(",")}|`
+  )
   const detailRequestIdRef = useRef(0)
   const detailAbortControllerRef = useRef<AbortController | null>(null)
   const detailCacheRef = useRef(new Map<string, DetailCacheEntry>())
@@ -267,7 +345,7 @@ export function QuestionInbox({
 
   useEffect(() => {
     const normalizedQuery = query.trim()
-    const requestKey = `${storeId}|${filter}|${normalizedQuery}`
+    const requestKey = `${storeId}|${filter}|${pendingStateKey}|${normalizedQuery}`
 
     if (requestKey === lastListRequestKeyRef.current) return
 
@@ -283,6 +361,7 @@ export function QuestionInbox({
           limit: PAGE_SIZE,
           status: filter,
           query: normalizedQuery,
+          pendingStates,
           signal: controller.signal,
         })
 
@@ -312,7 +391,7 @@ export function QuestionInbox({
       window.clearTimeout(timeoutId)
       controller.abort()
     }
-  }, [applyFirstPage, filter, query, storeId])
+  }, [applyFirstPage, filter, pendingStateKey, pendingStates, query, storeId])
 
   const loadMore = useCallback(async () => {
     if (!nextCursor || isListLoading || isLoadingMore) return
@@ -326,6 +405,7 @@ export function QuestionInbox({
         limit: PAGE_SIZE,
         status: filter,
         query,
+        pendingStates,
       })
 
       setQuestions((currentQuestions) =>
@@ -341,7 +421,15 @@ export function QuestionInbox({
     } finally {
       setIsLoadingMore(false)
     }
-  }, [filter, isListLoading, isLoadingMore, nextCursor, query, storeId])
+  }, [
+    filter,
+    isListLoading,
+    isLoadingMore,
+    nextCursor,
+    pendingStates,
+    query,
+    storeId,
+  ])
 
   useEffect(() => {
     const root = listRef.current
@@ -384,6 +472,27 @@ export function QuestionInbox({
     })
   }
 
+  function changePendingState(state: PendingQuestionState, checked: boolean) {
+    const selectedStates = new Set(pendingStates)
+
+    if (checked) {
+      selectedStates.add(state)
+    } else if (selectedStates.size > 1) {
+      selectedStates.delete(state)
+    }
+
+    const orderedStates = PENDING_QUESTION_STATES.filter((item) =>
+      selectedStates.has(item)
+    )
+    const params = new URLSearchParams(searchParams.toString())
+    params.set(
+      "pending",
+      orderedStates.map((item) => item.toLowerCase()).join(",")
+    )
+
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+  }
+
   const refreshCurrentList = useCallback(
     async ({ includeSummary = false }: { includeSummary?: boolean } = {}) => {
       if (liveRefreshInFlightRef.current) return
@@ -399,6 +508,7 @@ export function QuestionInbox({
           limit: refreshLimit,
           status: filter,
           query: query.trim(),
+          pendingStates,
         } as const
         let page: ProductQuestionListSlice
         if (includeSummary) {
@@ -447,7 +557,7 @@ export function QuestionInbox({
         liveRefreshInFlightRef.current = false
       }
     },
-    [filter, query, storeId]
+    [filter, pendingStates, query, storeId]
   )
 
   useEffect(() => {
@@ -456,7 +566,7 @@ export function QuestionInbox({
     let cycleInFlight = false
 
     async function refreshLiveState() {
-      const activeRequestKey = `${storeId}|${filter}|${query.trim()}`
+      const activeRequestKey = `${storeId}|${filter}|${pendingStateKey}|${query.trim()}`
       if (
         document.visibilityState !== "visible" ||
         isListLoading ||
@@ -520,6 +630,7 @@ export function QuestionInbox({
     filter,
     isListLoading,
     isLoadingMore,
+    pendingStateKey,
     query,
     refreshCurrentList,
     refreshSelectedQuestion,
@@ -568,7 +679,7 @@ export function QuestionInbox({
   const questionListPanel = (
     <aside className="relative flex h-full min-h-0 flex-col border-b border-border bg-background lg:border-b-0">
       <div className="shrink-0 bg-background px-3.5 pt-3.5">
-        <div>
+        <div className="flex items-center gap-2">
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -587,43 +698,113 @@ export function QuestionInbox({
                 </button>
               ) : undefined
             }
-            className="h-9! bg-card"
+            className="h-9! min-w-0 flex-1 bg-card"
           />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                onClick={syncQuestions}
+                disabled={isSyncing}
+                aria-label="Soruları güncelle"
+                className="size-9 shrink-0 bg-card shadow-xs"
+              >
+                <HugeiconsIcon
+                  icon={RefreshIcon}
+                  className={`size-3.5 ${isSyncing ? "animate-spin" : ""}`}
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" sideOffset={6}>
+              Soruları güncelle
+            </TooltipContent>
+          </Tooltip>
         </div>
 
-        <div className="mt-2.5 grid grid-cols-3 border-b border-border/70">
-          {inboxFilters.map((item) => {
-            const count = filterCount(item.value, summary)
-            const isActive = filter === item.value
-
-            return (
-              <button
-                key={item.value}
+        <div className="mt-2.5 flex items-stretch border-b border-border/70">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
                 type="button"
-                onClick={() => changeFilter(item.value)}
-                aria-pressed={isActive}
-                className={`relative flex items-center justify-center gap-1.5 px-2 py-2.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset ${isActive
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-                  }`}
+                size="icon-sm"
+                variant="ghost"
+                aria-label={`Bekleyen durumlarını filtrele. ${pendingStates.length} durum seçili.`}
+                className="relative my-1 mr-1 shrink-0 text-muted-foreground hover:text-foreground"
               >
-                <span>{item.label}</span>
-                <span
-                  className={`text-[10px] tabular-nums ${isActive ? "text-primary" : "text-muted-foreground/75"
-                    }`}
-                >
-                  {count}
+                <HugeiconsIcon icon={MoreHorizontalIcon} className="size-4" />
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] leading-none font-semibold text-primary-foreground ring-2 ring-background">
+                  {pendingStates.length}
                 </span>
-                {isActive ? (
-                  <motion.span
-                    layoutId="inbox-filter-indicator"
-                    className="absolute right-2 bottom-[-1px] left-2 h-0.5 rounded-full bg-primary"
-                    transition={{ type: "spring", stiffness: 440, damping: 36 }}
-                  />
-                ) : null}
-              </button>
-            )
-          })}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" sideOffset={6} className="w-64">
+              <DropdownMenuLabel>Bekleyen durumları</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {pendingStateOptions.map((item) => {
+                const checked = pendingStates.includes(item.value)
+
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={item.value}
+                    checked={checked}
+                    disabled={checked && pendingStates.length === 1}
+                    onCheckedChange={(nextChecked) =>
+                      changePendingState(item.value, nextChecked === true)
+                    }
+                    onSelect={(event) => event.preventDefault()}
+                  >
+                    <span
+                      className={`size-1.5 shrink-0 rounded-full ${item.dotClassName}`}
+                    />
+                    <span>{item.label}</span>
+                  </DropdownMenuCheckboxItem>
+                )
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <div className="grid min-w-0 flex-1 grid-cols-3">
+            {inboxFilters.map((item) => {
+              const count = filterCount(item.value, summary)
+              const isActive = filter === item.value
+
+              return (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => changeFilter(item.value)}
+                  aria-pressed={isActive}
+                  className={`relative flex items-center justify-center gap-1.5 px-2 py-2.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset ${
+                    isActive
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <span>{item.label}</span>
+                  <span
+                    className={`text-[10px] tabular-nums ${
+                      isActive ? "text-primary" : "text-muted-foreground/75"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                  {isActive ? (
+                    <motion.span
+                      layoutId="inbox-filter-indicator"
+                      className="absolute right-2 bottom-[-1px] left-2 h-0.5 rounded-full bg-primary"
+                      transition={{
+                        type: "spring",
+                        stiffness: 440,
+                        damping: 36,
+                      }}
+                    />
+                  ) : null}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {error || message || listError ? (
@@ -646,7 +827,7 @@ export function QuestionInbox({
 
       <div
         ref={listRef}
-        className="subtle-scrollbar min-h-0 flex-1 overflow-y-auto p-2 pb-14"
+        className="subtle-scrollbar min-h-0 flex-1 overflow-y-auto p-2"
       >
         {isListLoading ? (
           <QuestionListItemsSkeleton />
@@ -678,33 +859,11 @@ export function QuestionInbox({
           </div>
         )}
       </div>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            type="button"
-            size="icon-sm"
-            variant="outline"
-            onClick={syncQuestions}
-            disabled={isSyncing}
-            aria-label="Soruları güncelle"
-            className="absolute bottom-3 left-3 z-10 bg-card! shadow-md"
-          >
-            <HugeiconsIcon
-              icon={RefreshIcon}
-              className={`size-3.5 ${isSyncing ? "animate-spin" : ""}`}
-            />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="top" sideOffset={6}>
-          Soruları güncelle
-        </TooltipContent>
-      </Tooltip>
     </aside>
   )
-  function renderQuestionDetail(showHeader: boolean) {
+  function renderQuestionDetail() {
     if (isDetailLoading) {
-      return <QuestionDetailSkeleton showHeader={showHeader} />
+      return <QuestionDetailSkeleton showHeader={false} />
     }
 
     if (selectedQuestion) {
@@ -712,7 +871,6 @@ export function QuestionInbox({
         <QuestionDetail
           storeId={storeId}
           question={selectedQuestion}
-          showHeader={showHeader}
           onQuestionUpdated={async () => {
             await Promise.all([
               refreshSelectedQuestion(),
@@ -754,7 +912,7 @@ export function QuestionInbox({
   }
 
   const questionDetailPanel = selectedQuestionId ? (
-    renderQuestionDetail(true)
+    renderQuestionDetail()
   ) : (
     <div className="hidden h-full min-h-96 items-center justify-center bg-background px-8 text-center lg:flex">
       <div className="max-w-sm">
@@ -820,6 +978,9 @@ export function QuestionInbox({
                         selectedQuestionSummary.draftProcessingStatus
                       }
                       draftDecision={selectedQuestionSummary.draftDecision}
+                      draftAnswerability={
+                        selectedQuestionSummary.draftAnswerability
+                      }
                     />
                   )}
                 </span>
@@ -827,15 +988,15 @@ export function QuestionInbox({
               description={
                 selectedQuestionSummary
                   ? `${providerName(
-                    selectedQuestionSummary.connection.providerKey
-                  )} · ${inboxDateFormatter.format(
-                    new Date(selectedQuestionSummary.externalCreatedAt)
-                  )}`
+                      selectedQuestionSummary.connection.providerKey
+                    )} · ${inboxDateFormatter.format(
+                      new Date(selectedQuestionSummary.externalCreatedAt)
+                    )}`
                   : "Soru detayları"
               }
               bodyClassName="px-0 py-0"
             >
-              {renderQuestionDetail(false)}
+              {renderQuestionDetail()}
             </ResponsiveDialog>
           ) : null}
         </div>
@@ -871,10 +1032,10 @@ function listItemFromDetail(
     connection: question.connection,
     product: question.product
       ? {
-        id: question.product.id,
-        title: question.product.title,
-        imageUrl: question.product.images[0]?.url ?? null,
-      }
+          id: question.product.id,
+          title: question.product.title,
+          imageUrl: question.product.images[0]?.url ?? null,
+        }
       : null,
     answerDelivery: question.answerDelivery
       ? { status: question.answerDelivery.status }
@@ -919,4 +1080,22 @@ function parseQuestionFilter(value: string | null): ProductQuestionFilter {
     normalized === "IGNORED"
     ? normalized
     : "PENDING"
+}
+
+function parsePendingStates(value: string | null): PendingQuestionState[] {
+  if (!value) return [...PENDING_QUESTION_STATES]
+
+  const requestedStates = new Set(
+    value
+      .split(",")
+      .map((item) => item.trim().toUpperCase())
+      .filter((item): item is PendingQuestionState =>
+        PENDING_QUESTION_STATES.includes(item as PendingQuestionState)
+      )
+  )
+  const states = PENDING_QUESTION_STATES.filter((state) =>
+    requestedStates.has(state)
+  )
+
+  return states.length > 0 ? states : [...PENDING_QUESTION_STATES]
 }

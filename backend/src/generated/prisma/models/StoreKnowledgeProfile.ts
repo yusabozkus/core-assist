@@ -46,6 +46,7 @@ export type StoreKnowledgeProfileMinAggregateOutputType = {
   responseLength: $Enums.AiResponseLength | null
   greetingEnabled: boolean | null
   closingEnabled: boolean | null
+  heightWeightSizeRecommendationEnabled: boolean | null
   emojiPolicy: $Enums.AiEmojiPolicy | null
   preferredEmoji: string | null
   automationMode: $Enums.AiAutomationMode | null
@@ -67,6 +68,7 @@ export type StoreKnowledgeProfileMaxAggregateOutputType = {
   responseLength: $Enums.AiResponseLength | null
   greetingEnabled: boolean | null
   closingEnabled: boolean | null
+  heightWeightSizeRecommendationEnabled: boolean | null
   emojiPolicy: $Enums.AiEmojiPolicy | null
   preferredEmoji: string | null
   automationMode: $Enums.AiAutomationMode | null
@@ -88,6 +90,7 @@ export type StoreKnowledgeProfileCountAggregateOutputType = {
   responseLength: number
   greetingEnabled: number
   closingEnabled: number
+  heightWeightSizeRecommendationEnabled: number
   emojiPolicy: number
   preferredEmoji: number
   automationMode: number
@@ -119,6 +122,7 @@ export type StoreKnowledgeProfileMinAggregateInputType = {
   responseLength?: true
   greetingEnabled?: true
   closingEnabled?: true
+  heightWeightSizeRecommendationEnabled?: true
   emojiPolicy?: true
   preferredEmoji?: true
   automationMode?: true
@@ -140,6 +144,7 @@ export type StoreKnowledgeProfileMaxAggregateInputType = {
   responseLength?: true
   greetingEnabled?: true
   closingEnabled?: true
+  heightWeightSizeRecommendationEnabled?: true
   emojiPolicy?: true
   preferredEmoji?: true
   automationMode?: true
@@ -161,6 +166,7 @@ export type StoreKnowledgeProfileCountAggregateInputType = {
   responseLength?: true
   greetingEnabled?: true
   closingEnabled?: true
+  heightWeightSizeRecommendationEnabled?: true
   emojiPolicy?: true
   preferredEmoji?: true
   automationMode?: true
@@ -269,6 +275,7 @@ export type StoreKnowledgeProfileGroupByOutputType = {
   responseLength: $Enums.AiResponseLength
   greetingEnabled: boolean
   closingEnabled: boolean
+  heightWeightSizeRecommendationEnabled: boolean
   emojiPolicy: $Enums.AiEmojiPolicy
   preferredEmoji: string | null
   automationMode: $Enums.AiAutomationMode
@@ -313,6 +320,7 @@ export type StoreKnowledgeProfileWhereInput = {
   responseLength?: Prisma.EnumAiResponseLengthFilter<"StoreKnowledgeProfile"> | $Enums.AiResponseLength
   greetingEnabled?: Prisma.BoolFilter<"StoreKnowledgeProfile"> | boolean
   closingEnabled?: Prisma.BoolFilter<"StoreKnowledgeProfile"> | boolean
+  heightWeightSizeRecommendationEnabled?: Prisma.BoolFilter<"StoreKnowledgeProfile"> | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFilter<"StoreKnowledgeProfile"> | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.StringNullableFilter<"StoreKnowledgeProfile"> | string | null
   automationMode?: Prisma.EnumAiAutomationModeFilter<"StoreKnowledgeProfile"> | $Enums.AiAutomationMode
@@ -335,6 +343,7 @@ export type StoreKnowledgeProfileOrderByWithRelationInput = {
   responseLength?: Prisma.SortOrder
   greetingEnabled?: Prisma.SortOrder
   closingEnabled?: Prisma.SortOrder
+  heightWeightSizeRecommendationEnabled?: Prisma.SortOrder
   emojiPolicy?: Prisma.SortOrder
   preferredEmoji?: Prisma.SortOrderInput | Prisma.SortOrder
   automationMode?: Prisma.SortOrder
@@ -360,6 +369,7 @@ export type StoreKnowledgeProfileWhereUniqueInput = Prisma.AtLeast<{
   responseLength?: Prisma.EnumAiResponseLengthFilter<"StoreKnowledgeProfile"> | $Enums.AiResponseLength
   greetingEnabled?: Prisma.BoolFilter<"StoreKnowledgeProfile"> | boolean
   closingEnabled?: Prisma.BoolFilter<"StoreKnowledgeProfile"> | boolean
+  heightWeightSizeRecommendationEnabled?: Prisma.BoolFilter<"StoreKnowledgeProfile"> | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFilter<"StoreKnowledgeProfile"> | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.StringNullableFilter<"StoreKnowledgeProfile"> | string | null
   automationMode?: Prisma.EnumAiAutomationModeFilter<"StoreKnowledgeProfile"> | $Enums.AiAutomationMode
@@ -382,6 +392,7 @@ export type StoreKnowledgeProfileOrderByWithAggregationInput = {
   responseLength?: Prisma.SortOrder
   greetingEnabled?: Prisma.SortOrder
   closingEnabled?: Prisma.SortOrder
+  heightWeightSizeRecommendationEnabled?: Prisma.SortOrder
   emojiPolicy?: Prisma.SortOrder
   preferredEmoji?: Prisma.SortOrderInput | Prisma.SortOrder
   automationMode?: Prisma.SortOrder
@@ -411,6 +422,7 @@ export type StoreKnowledgeProfileScalarWhereWithAggregatesInput = {
   responseLength?: Prisma.EnumAiResponseLengthWithAggregatesFilter<"StoreKnowledgeProfile"> | $Enums.AiResponseLength
   greetingEnabled?: Prisma.BoolWithAggregatesFilter<"StoreKnowledgeProfile"> | boolean
   closingEnabled?: Prisma.BoolWithAggregatesFilter<"StoreKnowledgeProfile"> | boolean
+  heightWeightSizeRecommendationEnabled?: Prisma.BoolWithAggregatesFilter<"StoreKnowledgeProfile"> | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyWithAggregatesFilter<"StoreKnowledgeProfile"> | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.StringNullableWithAggregatesFilter<"StoreKnowledgeProfile"> | string | null
   automationMode?: Prisma.EnumAiAutomationModeWithAggregatesFilter<"StoreKnowledgeProfile"> | $Enums.AiAutomationMode
@@ -431,6 +443,7 @@ export type StoreKnowledgeProfileCreateInput = {
   responseLength?: $Enums.AiResponseLength
   greetingEnabled?: boolean
   closingEnabled?: boolean
+  heightWeightSizeRecommendationEnabled?: boolean
   emojiPolicy?: $Enums.AiEmojiPolicy
   preferredEmoji?: string | null
   automationMode?: $Enums.AiAutomationMode
@@ -453,6 +466,7 @@ export type StoreKnowledgeProfileUncheckedCreateInput = {
   responseLength?: $Enums.AiResponseLength
   greetingEnabled?: boolean
   closingEnabled?: boolean
+  heightWeightSizeRecommendationEnabled?: boolean
   emojiPolicy?: $Enums.AiEmojiPolicy
   preferredEmoji?: string | null
   automationMode?: $Enums.AiAutomationMode
@@ -473,6 +487,7 @@ export type StoreKnowledgeProfileUpdateInput = {
   responseLength?: Prisma.EnumAiResponseLengthFieldUpdateOperationsInput | $Enums.AiResponseLength
   greetingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   closingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heightWeightSizeRecommendationEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFieldUpdateOperationsInput | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
@@ -495,6 +510,7 @@ export type StoreKnowledgeProfileUncheckedUpdateInput = {
   responseLength?: Prisma.EnumAiResponseLengthFieldUpdateOperationsInput | $Enums.AiResponseLength
   greetingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   closingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heightWeightSizeRecommendationEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFieldUpdateOperationsInput | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
@@ -516,6 +532,7 @@ export type StoreKnowledgeProfileCreateManyInput = {
   responseLength?: $Enums.AiResponseLength
   greetingEnabled?: boolean
   closingEnabled?: boolean
+  heightWeightSizeRecommendationEnabled?: boolean
   emojiPolicy?: $Enums.AiEmojiPolicy
   preferredEmoji?: string | null
   automationMode?: $Enums.AiAutomationMode
@@ -536,6 +553,7 @@ export type StoreKnowledgeProfileUpdateManyMutationInput = {
   responseLength?: Prisma.EnumAiResponseLengthFieldUpdateOperationsInput | $Enums.AiResponseLength
   greetingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   closingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heightWeightSizeRecommendationEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFieldUpdateOperationsInput | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
@@ -557,6 +575,7 @@ export type StoreKnowledgeProfileUncheckedUpdateManyInput = {
   responseLength?: Prisma.EnumAiResponseLengthFieldUpdateOperationsInput | $Enums.AiResponseLength
   greetingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   closingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heightWeightSizeRecommendationEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFieldUpdateOperationsInput | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
@@ -583,6 +602,7 @@ export type StoreKnowledgeProfileCountOrderByAggregateInput = {
   responseLength?: Prisma.SortOrder
   greetingEnabled?: Prisma.SortOrder
   closingEnabled?: Prisma.SortOrder
+  heightWeightSizeRecommendationEnabled?: Prisma.SortOrder
   emojiPolicy?: Prisma.SortOrder
   preferredEmoji?: Prisma.SortOrder
   automationMode?: Prisma.SortOrder
@@ -608,6 +628,7 @@ export type StoreKnowledgeProfileMaxOrderByAggregateInput = {
   responseLength?: Prisma.SortOrder
   greetingEnabled?: Prisma.SortOrder
   closingEnabled?: Prisma.SortOrder
+  heightWeightSizeRecommendationEnabled?: Prisma.SortOrder
   emojiPolicy?: Prisma.SortOrder
   preferredEmoji?: Prisma.SortOrder
   automationMode?: Prisma.SortOrder
@@ -629,6 +650,7 @@ export type StoreKnowledgeProfileMinOrderByAggregateInput = {
   responseLength?: Prisma.SortOrder
   greetingEnabled?: Prisma.SortOrder
   closingEnabled?: Prisma.SortOrder
+  heightWeightSizeRecommendationEnabled?: Prisma.SortOrder
   emojiPolicy?: Prisma.SortOrder
   preferredEmoji?: Prisma.SortOrder
   automationMode?: Prisma.SortOrder
@@ -709,6 +731,7 @@ export type StoreKnowledgeProfileCreateWithoutStoreInput = {
   responseLength?: $Enums.AiResponseLength
   greetingEnabled?: boolean
   closingEnabled?: boolean
+  heightWeightSizeRecommendationEnabled?: boolean
   emojiPolicy?: $Enums.AiEmojiPolicy
   preferredEmoji?: string | null
   automationMode?: $Enums.AiAutomationMode
@@ -729,6 +752,7 @@ export type StoreKnowledgeProfileUncheckedCreateWithoutStoreInput = {
   responseLength?: $Enums.AiResponseLength
   greetingEnabled?: boolean
   closingEnabled?: boolean
+  heightWeightSizeRecommendationEnabled?: boolean
   emojiPolicy?: $Enums.AiEmojiPolicy
   preferredEmoji?: string | null
   automationMode?: $Enums.AiAutomationMode
@@ -765,6 +789,7 @@ export type StoreKnowledgeProfileUpdateWithoutStoreInput = {
   responseLength?: Prisma.EnumAiResponseLengthFieldUpdateOperationsInput | $Enums.AiResponseLength
   greetingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   closingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heightWeightSizeRecommendationEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFieldUpdateOperationsInput | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
@@ -785,6 +810,7 @@ export type StoreKnowledgeProfileUncheckedUpdateWithoutStoreInput = {
   responseLength?: Prisma.EnumAiResponseLengthFieldUpdateOperationsInput | $Enums.AiResponseLength
   greetingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   closingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  heightWeightSizeRecommendationEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emojiPolicy?: Prisma.EnumAiEmojiPolicyFieldUpdateOperationsInput | $Enums.AiEmojiPolicy
   preferredEmoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   automationMode?: Prisma.EnumAiAutomationModeFieldUpdateOperationsInput | $Enums.AiAutomationMode
@@ -808,6 +834,7 @@ export type StoreKnowledgeProfileSelect<ExtArgs extends runtime.Types.Extensions
   responseLength?: boolean
   greetingEnabled?: boolean
   closingEnabled?: boolean
+  heightWeightSizeRecommendationEnabled?: boolean
   emojiPolicy?: boolean
   preferredEmoji?: boolean
   automationMode?: boolean
@@ -830,6 +857,7 @@ export type StoreKnowledgeProfileSelectCreateManyAndReturn<ExtArgs extends runti
   responseLength?: boolean
   greetingEnabled?: boolean
   closingEnabled?: boolean
+  heightWeightSizeRecommendationEnabled?: boolean
   emojiPolicy?: boolean
   preferredEmoji?: boolean
   automationMode?: boolean
@@ -852,6 +880,7 @@ export type StoreKnowledgeProfileSelectUpdateManyAndReturn<ExtArgs extends runti
   responseLength?: boolean
   greetingEnabled?: boolean
   closingEnabled?: boolean
+  heightWeightSizeRecommendationEnabled?: boolean
   emojiPolicy?: boolean
   preferredEmoji?: boolean
   automationMode?: boolean
@@ -874,6 +903,7 @@ export type StoreKnowledgeProfileSelectScalar = {
   responseLength?: boolean
   greetingEnabled?: boolean
   closingEnabled?: boolean
+  heightWeightSizeRecommendationEnabled?: boolean
   emojiPolicy?: boolean
   preferredEmoji?: boolean
   automationMode?: boolean
@@ -883,7 +913,7 @@ export type StoreKnowledgeProfileSelectScalar = {
   updatedAt?: boolean
 }
 
-export type StoreKnowledgeProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"storeId" | "brandDescription" | "shippingPolicy" | "returnPolicy" | "exchangePolicy" | "warrantyPolicy" | "additionalInformation" | "tone" | "responseLength" | "greetingEnabled" | "closingEnabled" | "emojiPolicy" | "preferredEmoji" | "automationMode" | "minimumAutoSendConfidence" | "emojiEnabled" | "createdAt" | "updatedAt", ExtArgs["result"]["storeKnowledgeProfile"]>
+export type StoreKnowledgeProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"storeId" | "brandDescription" | "shippingPolicy" | "returnPolicy" | "exchangePolicy" | "warrantyPolicy" | "additionalInformation" | "tone" | "responseLength" | "greetingEnabled" | "closingEnabled" | "heightWeightSizeRecommendationEnabled" | "emojiPolicy" | "preferredEmoji" | "automationMode" | "minimumAutoSendConfidence" | "emojiEnabled" | "createdAt" | "updatedAt", ExtArgs["result"]["storeKnowledgeProfile"]>
 export type StoreKnowledgeProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   store?: boolean | Prisma.StoreDefaultArgs<ExtArgs>
 }
@@ -911,6 +941,7 @@ export type $StoreKnowledgeProfilePayload<ExtArgs extends runtime.Types.Extensio
     responseLength: $Enums.AiResponseLength
     greetingEnabled: boolean
     closingEnabled: boolean
+    heightWeightSizeRecommendationEnabled: boolean
     emojiPolicy: $Enums.AiEmojiPolicy
     preferredEmoji: string | null
     automationMode: $Enums.AiAutomationMode
@@ -1353,6 +1384,7 @@ export interface StoreKnowledgeProfileFieldRefs {
   readonly responseLength: Prisma.FieldRef<"StoreKnowledgeProfile", 'AiResponseLength'>
   readonly greetingEnabled: Prisma.FieldRef<"StoreKnowledgeProfile", 'Boolean'>
   readonly closingEnabled: Prisma.FieldRef<"StoreKnowledgeProfile", 'Boolean'>
+  readonly heightWeightSizeRecommendationEnabled: Prisma.FieldRef<"StoreKnowledgeProfile", 'Boolean'>
   readonly emojiPolicy: Prisma.FieldRef<"StoreKnowledgeProfile", 'AiEmojiPolicy'>
   readonly preferredEmoji: Prisma.FieldRef<"StoreKnowledgeProfile", 'String'>
   readonly automationMode: Prisma.FieldRef<"StoreKnowledgeProfile", 'AiAutomationMode'>

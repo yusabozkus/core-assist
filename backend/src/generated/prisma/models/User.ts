@@ -220,6 +220,7 @@ export type UserWhereInput = {
   billingCheckouts?: Prisma.BillingCheckoutListRelationFilter
   billingPlanChanges?: Prisma.BillingPlanChangeListRelationFilter
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationListRelationFilter
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -245,6 +246,7 @@ export type UserOrderByWithRelationInput = {
   billingCheckouts?: Prisma.BillingCheckoutOrderByRelationAggregateInput
   billingPlanChanges?: Prisma.BillingPlanChangeOrderByRelationAggregateInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationOrderByRelationAggregateInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -273,6 +275,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   billingCheckouts?: Prisma.BillingCheckoutListRelationFilter
   billingPlanChanges?: Prisma.BillingPlanChangeListRelationFilter
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationListRelationFilter
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -326,6 +329,7 @@ export type UserCreateInput = {
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -351,6 +355,7 @@ export type UserUncheckedCreateInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUpdateInput = {
@@ -376,6 +381,7 @@ export type UserUpdateInput = {
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -401,6 +407,7 @@ export type UserUncheckedUpdateInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -603,6 +610,22 @@ export type UserUpdateOneWithoutBillingPlanChangesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutBillingPlanChangesInput, Prisma.UserUpdateWithoutBillingPlanChangesInput>, Prisma.UserUncheckedUpdateWithoutBillingPlanChangesInput>
 }
 
+export type UserCreateNestedOneWithoutVerifiedProductKnowledgeFactsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutVerifiedProductKnowledgeFactsInput, Prisma.UserUncheckedCreateWithoutVerifiedProductKnowledgeFactsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutVerifiedProductKnowledgeFactsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutVerifiedProductKnowledgeFactsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutVerifiedProductKnowledgeFactsInput, Prisma.UserUncheckedCreateWithoutVerifiedProductKnowledgeFactsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutVerifiedProductKnowledgeFactsInput
+  upsert?: Prisma.UserUpsertWithoutVerifiedProductKnowledgeFactsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutVerifiedProductKnowledgeFactsInput, Prisma.UserUpdateWithoutVerifiedProductKnowledgeFactsInput>, Prisma.UserUncheckedUpdateWithoutVerifiedProductKnowledgeFactsInput>
+}
+
 export type UserCreateNestedOneWithoutRequestedAiDraftsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutRequestedAiDraftsInput, Prisma.UserUncheckedCreateWithoutRequestedAiDraftsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutRequestedAiDraftsInput
@@ -727,6 +750,7 @@ export type UserCreateWithoutSessionsInput = {
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -751,6 +775,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -791,6 +816,7 @@ export type UserUpdateWithoutSessionsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -815,6 +841,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -839,6 +866,7 @@ export type UserCreateWithoutAccountsInput = {
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -863,6 +891,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -903,6 +932,7 @@ export type UserUpdateWithoutAccountsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -927,6 +957,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserCreateWithoutOwnedWorkspaceInput = {
@@ -951,6 +982,7 @@ export type UserCreateWithoutOwnedWorkspaceInput = {
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUncheckedCreateWithoutOwnedWorkspaceInput = {
@@ -975,6 +1007,7 @@ export type UserUncheckedCreateWithoutOwnedWorkspaceInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserCreateOrConnectWithoutOwnedWorkspaceInput = {
@@ -1015,6 +1048,7 @@ export type UserUpdateWithoutOwnedWorkspaceInput = {
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOwnedWorkspaceInput = {
@@ -1039,6 +1073,7 @@ export type UserUncheckedUpdateWithoutOwnedWorkspaceInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserCreateWithoutWorkspaceMembersInput = {
@@ -1063,6 +1098,7 @@ export type UserCreateWithoutWorkspaceMembersInput = {
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUncheckedCreateWithoutWorkspaceMembersInput = {
@@ -1087,6 +1123,7 @@ export type UserUncheckedCreateWithoutWorkspaceMembersInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserCreateOrConnectWithoutWorkspaceMembersInput = {
@@ -1127,6 +1164,7 @@ export type UserUpdateWithoutWorkspaceMembersInput = {
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWorkspaceMembersInput = {
@@ -1151,6 +1189,7 @@ export type UserUncheckedUpdateWithoutWorkspaceMembersInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserCreateWithoutSentWorkspaceInvitationsInput = {
@@ -1175,6 +1214,7 @@ export type UserCreateWithoutSentWorkspaceInvitationsInput = {
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUncheckedCreateWithoutSentWorkspaceInvitationsInput = {
@@ -1199,6 +1239,7 @@ export type UserUncheckedCreateWithoutSentWorkspaceInvitationsInput = {
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserCreateOrConnectWithoutSentWorkspaceInvitationsInput = {
@@ -1239,6 +1280,7 @@ export type UserUpdateWithoutSentWorkspaceInvitationsInput = {
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSentWorkspaceInvitationsInput = {
@@ -1263,6 +1305,7 @@ export type UserUncheckedUpdateWithoutSentWorkspaceInvitationsInput = {
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserCreateWithoutBillingCheckoutsInput = {
@@ -1287,6 +1330,7 @@ export type UserCreateWithoutBillingCheckoutsInput = {
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUncheckedCreateWithoutBillingCheckoutsInput = {
@@ -1311,6 +1355,7 @@ export type UserUncheckedCreateWithoutBillingCheckoutsInput = {
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserCreateOrConnectWithoutBillingCheckoutsInput = {
@@ -1351,6 +1396,7 @@ export type UserUpdateWithoutBillingCheckoutsInput = {
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBillingCheckoutsInput = {
@@ -1375,6 +1421,7 @@ export type UserUncheckedUpdateWithoutBillingCheckoutsInput = {
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserCreateWithoutBillingPlanChangesInput = {
@@ -1399,6 +1446,7 @@ export type UserCreateWithoutBillingPlanChangesInput = {
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUncheckedCreateWithoutBillingPlanChangesInput = {
@@ -1423,6 +1471,7 @@ export type UserUncheckedCreateWithoutBillingPlanChangesInput = {
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserCreateOrConnectWithoutBillingPlanChangesInput = {
@@ -1463,6 +1512,7 @@ export type UserUpdateWithoutBillingPlanChangesInput = {
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBillingPlanChangesInput = {
@@ -1486,6 +1536,123 @@ export type UserUncheckedUpdateWithoutBillingPlanChangesInput = {
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
+  sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
+}
+
+export type UserCreateWithoutVerifiedProductKnowledgeFactsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  onboardingCompletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  ownedWorkspace?: Prisma.WorkspaceCreateNestedOneWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberCreateNestedManyWithoutUserInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptCreateNestedManyWithoutRequestedByInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
+  billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
+  billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
+  sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+}
+
+export type UserUncheckedCreateWithoutVerifiedProductKnowledgeFactsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  onboardingCompletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  ownedWorkspace?: Prisma.WorkspaceUncheckedCreateNestedOneWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutUserInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutRequestedByInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
+  billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
+  sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+}
+
+export type UserCreateOrConnectWithoutVerifiedProductKnowledgeFactsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutVerifiedProductKnowledgeFactsInput, Prisma.UserUncheckedCreateWithoutVerifiedProductKnowledgeFactsInput>
+}
+
+export type UserUpsertWithoutVerifiedProductKnowledgeFactsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutVerifiedProductKnowledgeFactsInput, Prisma.UserUncheckedUpdateWithoutVerifiedProductKnowledgeFactsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutVerifiedProductKnowledgeFactsInput, Prisma.UserUncheckedCreateWithoutVerifiedProductKnowledgeFactsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutVerifiedProductKnowledgeFactsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutVerifiedProductKnowledgeFactsInput, Prisma.UserUncheckedUpdateWithoutVerifiedProductKnowledgeFactsInput>
+}
+
+export type UserUpdateWithoutVerifiedProductKnowledgeFactsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  ownedWorkspace?: Prisma.WorkspaceUpdateOneWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUpdateManyWithoutUserNestedInput
+  storeMembers?: Prisma.StoreMemberUpdateManyWithoutUserNestedInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUpdateManyWithoutRequestedByNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
+  billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
+  billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
+  sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutVerifiedProductKnowledgeFactsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  ownedWorkspace?: Prisma.WorkspaceUncheckedUpdateOneWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutUserNestedInput
+  storeMembers?: Prisma.StoreMemberUncheckedUpdateManyWithoutUserNestedInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutRequestedByNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
+  billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
 }
 
@@ -1511,6 +1678,7 @@ export type UserCreateWithoutRequestedAiDraftsInput = {
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUncheckedCreateWithoutRequestedAiDraftsInput = {
@@ -1535,6 +1703,7 @@ export type UserUncheckedCreateWithoutRequestedAiDraftsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserCreateOrConnectWithoutRequestedAiDraftsInput = {
@@ -1575,6 +1744,7 @@ export type UserUpdateWithoutRequestedAiDraftsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRequestedAiDraftsInput = {
@@ -1599,6 +1769,7 @@ export type UserUncheckedUpdateWithoutRequestedAiDraftsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserCreateWithoutRequestedQuestionAnswersInput = {
@@ -1623,6 +1794,7 @@ export type UserCreateWithoutRequestedQuestionAnswersInput = {
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUncheckedCreateWithoutRequestedQuestionAnswersInput = {
@@ -1647,6 +1819,7 @@ export type UserUncheckedCreateWithoutRequestedQuestionAnswersInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserCreateOrConnectWithoutRequestedQuestionAnswersInput = {
@@ -1687,6 +1860,7 @@ export type UserUpdateWithoutRequestedQuestionAnswersInput = {
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRequestedQuestionAnswersInput = {
@@ -1711,6 +1885,7 @@ export type UserUncheckedUpdateWithoutRequestedQuestionAnswersInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserCreateWithoutStoreMembersInput = {
@@ -1735,6 +1910,7 @@ export type UserCreateWithoutStoreMembersInput = {
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUncheckedCreateWithoutStoreMembersInput = {
@@ -1759,6 +1935,7 @@ export type UserUncheckedCreateWithoutStoreMembersInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserCreateOrConnectWithoutStoreMembersInput = {
@@ -1799,6 +1976,7 @@ export type UserUpdateWithoutStoreMembersInput = {
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutStoreMembersInput = {
@@ -1823,6 +2001,7 @@ export type UserUncheckedUpdateWithoutStoreMembersInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -1847,6 +2026,7 @@ export type UserCreateWithoutNotificationsInput = {
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -1871,6 +2051,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -1911,6 +2092,7 @@ export type UserUpdateWithoutNotificationsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -1935,6 +2117,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserCreateWithoutNotificationPreferencesInput = {
@@ -1959,6 +2142,7 @@ export type UserCreateWithoutNotificationPreferencesInput = {
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUncheckedCreateWithoutNotificationPreferencesInput = {
@@ -1983,6 +2167,7 @@ export type UserUncheckedCreateWithoutNotificationPreferencesInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserCreateOrConnectWithoutNotificationPreferencesInput = {
@@ -2023,6 +2208,7 @@ export type UserUpdateWithoutNotificationPreferencesInput = {
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationPreferencesInput = {
@@ -2047,6 +2233,7 @@ export type UserUncheckedUpdateWithoutNotificationPreferencesInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserCreateWithoutNotificationDeliverySettingsInput = {
@@ -2071,6 +2258,7 @@ export type UserCreateWithoutNotificationDeliverySettingsInput = {
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUncheckedCreateWithoutNotificationDeliverySettingsInput = {
@@ -2095,6 +2283,7 @@ export type UserUncheckedCreateWithoutNotificationDeliverySettingsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserCreateOrConnectWithoutNotificationDeliverySettingsInput = {
@@ -2135,6 +2324,7 @@ export type UserUpdateWithoutNotificationDeliverySettingsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationDeliverySettingsInput = {
@@ -2159,6 +2349,7 @@ export type UserUncheckedUpdateWithoutNotificationDeliverySettingsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserCreateWithoutWebPushSubscriptionsInput = {
@@ -2183,6 +2374,7 @@ export type UserCreateWithoutWebPushSubscriptionsInput = {
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserUncheckedCreateWithoutWebPushSubscriptionsInput = {
@@ -2207,6 +2399,7 @@ export type UserUncheckedCreateWithoutWebPushSubscriptionsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
 }
 
 export type UserCreateOrConnectWithoutWebPushSubscriptionsInput = {
@@ -2247,6 +2440,7 @@ export type UserUpdateWithoutWebPushSubscriptionsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWebPushSubscriptionsInput = {
@@ -2271,6 +2465,7 @@ export type UserUncheckedUpdateWithoutWebPushSubscriptionsInput = {
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
 }
 
 
@@ -2292,6 +2487,7 @@ export type UserCountOutputType = {
   billingCheckouts: number
   billingPlanChanges: number
   sentWorkspaceInvitations: number
+  verifiedProductKnowledgeFacts: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2308,6 +2504,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   billingCheckouts?: boolean | UserCountOutputTypeCountBillingCheckoutsArgs
   billingPlanChanges?: boolean | UserCountOutputTypeCountBillingPlanChangesArgs
   sentWorkspaceInvitations?: boolean | UserCountOutputTypeCountSentWorkspaceInvitationsArgs
+  verifiedProductKnowledgeFacts?: boolean | UserCountOutputTypeCountVerifiedProductKnowledgeFactsArgs
 }
 
 /**
@@ -2411,6 +2608,13 @@ export type UserCountOutputTypeCountSentWorkspaceInvitationsArgs<ExtArgs extends
   where?: Prisma.WorkspaceInvitationWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountVerifiedProductKnowledgeFactsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ProductKnowledgeFactWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2435,6 +2639,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   billingCheckouts?: boolean | Prisma.User$billingCheckoutsArgs<ExtArgs>
   billingPlanChanges?: boolean | Prisma.User$billingPlanChangesArgs<ExtArgs>
   sentWorkspaceInvitations?: boolean | Prisma.User$sentWorkspaceInvitationsArgs<ExtArgs>
+  verifiedProductKnowledgeFacts?: boolean | Prisma.User$verifiedProductKnowledgeFactsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -2487,6 +2692,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   billingCheckouts?: boolean | Prisma.User$billingCheckoutsArgs<ExtArgs>
   billingPlanChanges?: boolean | Prisma.User$billingPlanChangesArgs<ExtArgs>
   sentWorkspaceInvitations?: boolean | Prisma.User$sentWorkspaceInvitationsArgs<ExtArgs>
+  verifiedProductKnowledgeFacts?: boolean | Prisma.User$verifiedProductKnowledgeFactsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -2509,6 +2715,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     billingCheckouts: Prisma.$BillingCheckoutPayload<ExtArgs>[]
     billingPlanChanges: Prisma.$BillingPlanChangePayload<ExtArgs>[]
     sentWorkspaceInvitations: Prisma.$WorkspaceInvitationPayload<ExtArgs>[]
+    verifiedProductKnowledgeFacts: Prisma.$ProductKnowledgeFactPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2927,6 +3134,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   billingCheckouts<T extends Prisma.User$billingCheckoutsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$billingCheckoutsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BillingCheckoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   billingPlanChanges<T extends Prisma.User$billingPlanChangesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$billingPlanChangesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BillingPlanChangePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   sentWorkspaceInvitations<T extends Prisma.User$sentWorkspaceInvitationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$sentWorkspaceInvitationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkspaceInvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  verifiedProductKnowledgeFacts<T extends Prisma.User$verifiedProductKnowledgeFactsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$verifiedProductKnowledgeFactsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductKnowledgeFactPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3685,6 +3893,30 @@ export type User$sentWorkspaceInvitationsArgs<ExtArgs extends runtime.Types.Exte
   take?: number
   skip?: number
   distinct?: Prisma.WorkspaceInvitationScalarFieldEnum | Prisma.WorkspaceInvitationScalarFieldEnum[]
+}
+
+/**
+ * User.verifiedProductKnowledgeFacts
+ */
+export type User$verifiedProductKnowledgeFactsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ProductKnowledgeFact
+   */
+  select?: Prisma.ProductKnowledgeFactSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ProductKnowledgeFact
+   */
+  omit?: Prisma.ProductKnowledgeFactOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProductKnowledgeFactInclude<ExtArgs> | null
+  where?: Prisma.ProductKnowledgeFactWhereInput
+  orderBy?: Prisma.ProductKnowledgeFactOrderByWithRelationInput | Prisma.ProductKnowledgeFactOrderByWithRelationInput[]
+  cursor?: Prisma.ProductKnowledgeFactWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ProductKnowledgeFactScalarFieldEnum | Prisma.ProductKnowledgeFactScalarFieldEnum[]
 }
 
 /**

@@ -302,6 +302,7 @@ export type ProductVariantWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"ProductVariant"> | Date | string
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
   externalVariants?: Prisma.ExternalProductVariantListRelationFilter
+  knowledgeFacts?: Prisma.ProductKnowledgeFactListRelationFilter
 }
 
 export type ProductVariantOrderByWithRelationInput = {
@@ -322,6 +323,7 @@ export type ProductVariantOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   product?: Prisma.ProductOrderByWithRelationInput
   externalVariants?: Prisma.ExternalProductVariantOrderByRelationAggregateInput
+  knowledgeFacts?: Prisma.ProductKnowledgeFactOrderByRelationAggregateInput
 }
 
 export type ProductVariantWhereUniqueInput = Prisma.AtLeast<{
@@ -345,6 +347,7 @@ export type ProductVariantWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"ProductVariant"> | Date | string
   product?: Prisma.XOR<Prisma.ProductScalarRelationFilter, Prisma.ProductWhereInput>
   externalVariants?: Prisma.ExternalProductVariantListRelationFilter
+  knowledgeFacts?: Prisma.ProductKnowledgeFactListRelationFilter
 }, "id">
 
 export type ProductVariantOrderByWithAggregationInput = {
@@ -408,6 +411,7 @@ export type ProductVariantCreateInput = {
   updatedAt?: Date | string
   product: Prisma.ProductCreateNestedOneWithoutVariantsInput
   externalVariants?: Prisma.ExternalProductVariantCreateNestedManyWithoutProductVariantInput
+  knowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVariantInput
 }
 
 export type ProductVariantUncheckedCreateInput = {
@@ -427,6 +431,7 @@ export type ProductVariantUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   externalVariants?: Prisma.ExternalProductVariantUncheckedCreateNestedManyWithoutProductVariantInput
+  knowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVariantInput
 }
 
 export type ProductVariantUpdateInput = {
@@ -446,6 +451,7 @@ export type ProductVariantUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   product?: Prisma.ProductUpdateOneRequiredWithoutVariantsNestedInput
   externalVariants?: Prisma.ExternalProductVariantUpdateManyWithoutProductVariantNestedInput
+  knowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVariantNestedInput
 }
 
 export type ProductVariantUncheckedUpdateInput = {
@@ -465,6 +471,7 @@ export type ProductVariantUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   externalVariants?: Prisma.ExternalProductVariantUncheckedUpdateManyWithoutProductVariantNestedInput
+  knowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVariantNestedInput
 }
 
 export type ProductVariantCreateManyInput = {
@@ -594,6 +601,11 @@ export type ProductVariantSumOrderByAggregateInput = {
   stock?: Prisma.SortOrder
 }
 
+export type ProductVariantNullableScalarRelationFilter = {
+  is?: Prisma.ProductVariantWhereInput | null
+  isNot?: Prisma.ProductVariantWhereInput | null
+}
+
 export type ProductVariantScalarRelationFilter = {
   is?: Prisma.ProductVariantWhereInput
   isNot?: Prisma.ProductVariantWhereInput
@@ -653,6 +665,22 @@ export type EnumProductVariantStatusFieldUpdateOperationsInput = {
   set?: $Enums.ProductVariantStatus
 }
 
+export type ProductVariantCreateNestedOneWithoutKnowledgeFactsInput = {
+  create?: Prisma.XOR<Prisma.ProductVariantCreateWithoutKnowledgeFactsInput, Prisma.ProductVariantUncheckedCreateWithoutKnowledgeFactsInput>
+  connectOrCreate?: Prisma.ProductVariantCreateOrConnectWithoutKnowledgeFactsInput
+  connect?: Prisma.ProductVariantWhereUniqueInput
+}
+
+export type ProductVariantUpdateOneWithoutKnowledgeFactsNestedInput = {
+  create?: Prisma.XOR<Prisma.ProductVariantCreateWithoutKnowledgeFactsInput, Prisma.ProductVariantUncheckedCreateWithoutKnowledgeFactsInput>
+  connectOrCreate?: Prisma.ProductVariantCreateOrConnectWithoutKnowledgeFactsInput
+  upsert?: Prisma.ProductVariantUpsertWithoutKnowledgeFactsInput
+  disconnect?: Prisma.ProductVariantWhereInput | boolean
+  delete?: Prisma.ProductVariantWhereInput | boolean
+  connect?: Prisma.ProductVariantWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ProductVariantUpdateToOneWithWhereWithoutKnowledgeFactsInput, Prisma.ProductVariantUpdateWithoutKnowledgeFactsInput>, Prisma.ProductVariantUncheckedUpdateWithoutKnowledgeFactsInput>
+}
+
 export type ProductVariantCreateNestedOneWithoutExternalVariantsInput = {
   create?: Prisma.XOR<Prisma.ProductVariantCreateWithoutExternalVariantsInput, Prisma.ProductVariantUncheckedCreateWithoutExternalVariantsInput>
   connectOrCreate?: Prisma.ProductVariantCreateOrConnectWithoutExternalVariantsInput
@@ -683,6 +711,7 @@ export type ProductVariantCreateWithoutProductInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   externalVariants?: Prisma.ExternalProductVariantCreateNestedManyWithoutProductVariantInput
+  knowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVariantInput
 }
 
 export type ProductVariantUncheckedCreateWithoutProductInput = {
@@ -701,6 +730,7 @@ export type ProductVariantUncheckedCreateWithoutProductInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   externalVariants?: Prisma.ExternalProductVariantUncheckedCreateNestedManyWithoutProductVariantInput
+  knowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVariantInput
 }
 
 export type ProductVariantCreateOrConnectWithoutProductInput = {
@@ -750,6 +780,98 @@ export type ProductVariantScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"ProductVariant"> | Date | string
 }
 
+export type ProductVariantCreateWithoutKnowledgeFactsInput = {
+  id?: string
+  title?: string | null
+  sku: string
+  barcode?: string | null
+  color?: string | null
+  size?: string | null
+  price: runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: string
+  stock?: number
+  status?: $Enums.ProductVariantStatus
+  sourceUpdatedAt?: Date | string | null
+  lastSyncedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  product: Prisma.ProductCreateNestedOneWithoutVariantsInput
+  externalVariants?: Prisma.ExternalProductVariantCreateNestedManyWithoutProductVariantInput
+}
+
+export type ProductVariantUncheckedCreateWithoutKnowledgeFactsInput = {
+  id?: string
+  productId: string
+  title?: string | null
+  sku: string
+  barcode?: string | null
+  color?: string | null
+  size?: string | null
+  price: runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: string
+  stock?: number
+  status?: $Enums.ProductVariantStatus
+  sourceUpdatedAt?: Date | string | null
+  lastSyncedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  externalVariants?: Prisma.ExternalProductVariantUncheckedCreateNestedManyWithoutProductVariantInput
+}
+
+export type ProductVariantCreateOrConnectWithoutKnowledgeFactsInput = {
+  where: Prisma.ProductVariantWhereUniqueInput
+  create: Prisma.XOR<Prisma.ProductVariantCreateWithoutKnowledgeFactsInput, Prisma.ProductVariantUncheckedCreateWithoutKnowledgeFactsInput>
+}
+
+export type ProductVariantUpsertWithoutKnowledgeFactsInput = {
+  update: Prisma.XOR<Prisma.ProductVariantUpdateWithoutKnowledgeFactsInput, Prisma.ProductVariantUncheckedUpdateWithoutKnowledgeFactsInput>
+  create: Prisma.XOR<Prisma.ProductVariantCreateWithoutKnowledgeFactsInput, Prisma.ProductVariantUncheckedCreateWithoutKnowledgeFactsInput>
+  where?: Prisma.ProductVariantWhereInput
+}
+
+export type ProductVariantUpdateToOneWithWhereWithoutKnowledgeFactsInput = {
+  where?: Prisma.ProductVariantWhereInput
+  data: Prisma.XOR<Prisma.ProductVariantUpdateWithoutKnowledgeFactsInput, Prisma.ProductVariantUncheckedUpdateWithoutKnowledgeFactsInput>
+}
+
+export type ProductVariantUpdateWithoutKnowledgeFactsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sku?: Prisma.StringFieldUpdateOperationsInput | string
+  barcode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  size?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  stock?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductVariantStatusFieldUpdateOperationsInput | $Enums.ProductVariantStatus
+  sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSyncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  product?: Prisma.ProductUpdateOneRequiredWithoutVariantsNestedInput
+  externalVariants?: Prisma.ExternalProductVariantUpdateManyWithoutProductVariantNestedInput
+}
+
+export type ProductVariantUncheckedUpdateWithoutKnowledgeFactsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  productId?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sku?: Prisma.StringFieldUpdateOperationsInput | string
+  barcode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  size?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  stock?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.EnumProductVariantStatusFieldUpdateOperationsInput | $Enums.ProductVariantStatus
+  sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastSyncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  externalVariants?: Prisma.ExternalProductVariantUncheckedUpdateManyWithoutProductVariantNestedInput
+}
+
 export type ProductVariantCreateWithoutExternalVariantsInput = {
   id?: string
   title?: string | null
@@ -766,6 +888,7 @@ export type ProductVariantCreateWithoutExternalVariantsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   product: Prisma.ProductCreateNestedOneWithoutVariantsInput
+  knowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVariantInput
 }
 
 export type ProductVariantUncheckedCreateWithoutExternalVariantsInput = {
@@ -784,6 +907,7 @@ export type ProductVariantUncheckedCreateWithoutExternalVariantsInput = {
   lastSyncedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  knowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVariantInput
 }
 
 export type ProductVariantCreateOrConnectWithoutExternalVariantsInput = {
@@ -818,6 +942,7 @@ export type ProductVariantUpdateWithoutExternalVariantsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   product?: Prisma.ProductUpdateOneRequiredWithoutVariantsNestedInput
+  knowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVariantNestedInput
 }
 
 export type ProductVariantUncheckedUpdateWithoutExternalVariantsInput = {
@@ -836,6 +961,7 @@ export type ProductVariantUncheckedUpdateWithoutExternalVariantsInput = {
   lastSyncedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  knowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVariantNestedInput
 }
 
 export type ProductVariantCreateManyProductInput = {
@@ -871,6 +997,7 @@ export type ProductVariantUpdateWithoutProductInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   externalVariants?: Prisma.ExternalProductVariantUpdateManyWithoutProductVariantNestedInput
+  knowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVariantNestedInput
 }
 
 export type ProductVariantUncheckedUpdateWithoutProductInput = {
@@ -889,6 +1016,7 @@ export type ProductVariantUncheckedUpdateWithoutProductInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   externalVariants?: Prisma.ExternalProductVariantUncheckedUpdateManyWithoutProductVariantNestedInput
+  knowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVariantNestedInput
 }
 
 export type ProductVariantUncheckedUpdateManyWithoutProductInput = {
@@ -915,10 +1043,12 @@ export type ProductVariantUncheckedUpdateManyWithoutProductInput = {
 
 export type ProductVariantCountOutputType = {
   externalVariants: number
+  knowledgeFacts: number
 }
 
 export type ProductVariantCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   externalVariants?: boolean | ProductVariantCountOutputTypeCountExternalVariantsArgs
+  knowledgeFacts?: boolean | ProductVariantCountOutputTypeCountKnowledgeFactsArgs
 }
 
 /**
@@ -936,6 +1066,13 @@ export type ProductVariantCountOutputTypeDefaultArgs<ExtArgs extends runtime.Typ
  */
 export type ProductVariantCountOutputTypeCountExternalVariantsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.ExternalProductVariantWhereInput
+}
+
+/**
+ * ProductVariantCountOutputType without action
+ */
+export type ProductVariantCountOutputTypeCountKnowledgeFactsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ProductKnowledgeFactWhereInput
 }
 
 
@@ -957,6 +1094,7 @@ export type ProductVariantSelect<ExtArgs extends runtime.Types.Extensions.Intern
   updatedAt?: boolean
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   externalVariants?: boolean | Prisma.ProductVariant$externalVariantsArgs<ExtArgs>
+  knowledgeFacts?: boolean | Prisma.ProductVariant$knowledgeFactsArgs<ExtArgs>
   _count?: boolean | Prisma.ProductVariantCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["productVariant"]>
 
@@ -1020,6 +1158,7 @@ export type ProductVariantOmit<ExtArgs extends runtime.Types.Extensions.Internal
 export type ProductVariantInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   product?: boolean | Prisma.ProductDefaultArgs<ExtArgs>
   externalVariants?: boolean | Prisma.ProductVariant$externalVariantsArgs<ExtArgs>
+  knowledgeFacts?: boolean | Prisma.ProductVariant$knowledgeFactsArgs<ExtArgs>
   _count?: boolean | Prisma.ProductVariantCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ProductVariantIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1034,6 +1173,7 @@ export type $ProductVariantPayload<ExtArgs extends runtime.Types.Extensions.Inte
   objects: {
     product: Prisma.$ProductPayload<ExtArgs>
     externalVariants: Prisma.$ExternalProductVariantPayload<ExtArgs>[]
+    knowledgeFacts: Prisma.$ProductKnowledgeFactPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1447,6 +1587,7 @@ export interface Prisma__ProductVariantClient<T, Null = never, ExtArgs extends r
   readonly [Symbol.toStringTag]: "PrismaPromise"
   product<T extends Prisma.ProductDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductDefaultArgs<ExtArgs>>): Prisma.Prisma__ProductClient<runtime.Types.Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   externalVariants<T extends Prisma.ProductVariant$externalVariantsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductVariant$externalVariantsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ExternalProductVariantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  knowledgeFacts<T extends Prisma.ProductVariant$knowledgeFactsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductVariant$knowledgeFactsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductKnowledgeFactPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1913,6 +2054,30 @@ export type ProductVariant$externalVariantsArgs<ExtArgs extends runtime.Types.Ex
   take?: number
   skip?: number
   distinct?: Prisma.ExternalProductVariantScalarFieldEnum | Prisma.ExternalProductVariantScalarFieldEnum[]
+}
+
+/**
+ * ProductVariant.knowledgeFacts
+ */
+export type ProductVariant$knowledgeFactsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ProductKnowledgeFact
+   */
+  select?: Prisma.ProductKnowledgeFactSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ProductKnowledgeFact
+   */
+  omit?: Prisma.ProductKnowledgeFactOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProductKnowledgeFactInclude<ExtArgs> | null
+  where?: Prisma.ProductKnowledgeFactWhereInput
+  orderBy?: Prisma.ProductKnowledgeFactOrderByWithRelationInput | Prisma.ProductKnowledgeFactOrderByWithRelationInput[]
+  cursor?: Prisma.ProductKnowledgeFactWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ProductKnowledgeFactScalarFieldEnum | Prisma.ProductKnowledgeFactScalarFieldEnum[]
 }
 
 /**

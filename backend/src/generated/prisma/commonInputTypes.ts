@@ -715,6 +715,40 @@ export type EnumProductVariantStatusWithAggregatesFilter<$PrismaModel = never> =
   _max?: Prisma.NestedEnumProductVariantStatusFilter<$PrismaModel>
 }
 
+export type EnumProductKnowledgeFactTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.ProductKnowledgeFactType | Prisma.EnumProductKnowledgeFactTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.ProductKnowledgeFactType[] | Prisma.ListEnumProductKnowledgeFactTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ProductKnowledgeFactType[] | Prisma.ListEnumProductKnowledgeFactTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumProductKnowledgeFactTypeFilter<$PrismaModel> | $Enums.ProductKnowledgeFactType
+}
+
+export type EnumProductKnowledgeFactStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.ProductKnowledgeFactStatus | Prisma.EnumProductKnowledgeFactStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ProductKnowledgeFactStatus[] | Prisma.ListEnumProductKnowledgeFactStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ProductKnowledgeFactStatus[] | Prisma.ListEnumProductKnowledgeFactStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumProductKnowledgeFactStatusFilter<$PrismaModel> | $Enums.ProductKnowledgeFactStatus
+}
+
+export type EnumProductKnowledgeFactTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ProductKnowledgeFactType | Prisma.EnumProductKnowledgeFactTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.ProductKnowledgeFactType[] | Prisma.ListEnumProductKnowledgeFactTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ProductKnowledgeFactType[] | Prisma.ListEnumProductKnowledgeFactTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumProductKnowledgeFactTypeWithAggregatesFilter<$PrismaModel> | $Enums.ProductKnowledgeFactType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumProductKnowledgeFactTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumProductKnowledgeFactTypeFilter<$PrismaModel>
+}
+
+export type EnumProductKnowledgeFactStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ProductKnowledgeFactStatus | Prisma.EnumProductKnowledgeFactStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ProductKnowledgeFactStatus[] | Prisma.ListEnumProductKnowledgeFactStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ProductKnowledgeFactStatus[] | Prisma.ListEnumProductKnowledgeFactStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumProductKnowledgeFactStatusWithAggregatesFilter<$PrismaModel> | $Enums.ProductKnowledgeFactStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumProductKnowledgeFactStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumProductKnowledgeFactStatusFilter<$PrismaModel>
+}
+
 export type EnumSizeGuideStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.SizeGuideStatus | Prisma.EnumSizeGuideStatusFieldRefInput<$PrismaModel>
   in?: $Enums.SizeGuideStatus[] | Prisma.ListEnumSizeGuideStatusFieldRefInput<$PrismaModel>
@@ -1712,6 +1746,40 @@ export type NestedEnumProductVariantStatusWithAggregatesFilter<$PrismaModel = ne
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumProductVariantStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumProductVariantStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumProductKnowledgeFactTypeFilter<$PrismaModel = never> = {
+  equals?: $Enums.ProductKnowledgeFactType | Prisma.EnumProductKnowledgeFactTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.ProductKnowledgeFactType[] | Prisma.ListEnumProductKnowledgeFactTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ProductKnowledgeFactType[] | Prisma.ListEnumProductKnowledgeFactTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumProductKnowledgeFactTypeFilter<$PrismaModel> | $Enums.ProductKnowledgeFactType
+}
+
+export type NestedEnumProductKnowledgeFactStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.ProductKnowledgeFactStatus | Prisma.EnumProductKnowledgeFactStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ProductKnowledgeFactStatus[] | Prisma.ListEnumProductKnowledgeFactStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ProductKnowledgeFactStatus[] | Prisma.ListEnumProductKnowledgeFactStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumProductKnowledgeFactStatusFilter<$PrismaModel> | $Enums.ProductKnowledgeFactStatus
+}
+
+export type NestedEnumProductKnowledgeFactTypeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ProductKnowledgeFactType | Prisma.EnumProductKnowledgeFactTypeFieldRefInput<$PrismaModel>
+  in?: $Enums.ProductKnowledgeFactType[] | Prisma.ListEnumProductKnowledgeFactTypeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ProductKnowledgeFactType[] | Prisma.ListEnumProductKnowledgeFactTypeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumProductKnowledgeFactTypeWithAggregatesFilter<$PrismaModel> | $Enums.ProductKnowledgeFactType
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumProductKnowledgeFactTypeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumProductKnowledgeFactTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumProductKnowledgeFactStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ProductKnowledgeFactStatus | Prisma.EnumProductKnowledgeFactStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.ProductKnowledgeFactStatus[] | Prisma.ListEnumProductKnowledgeFactStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ProductKnowledgeFactStatus[] | Prisma.ListEnumProductKnowledgeFactStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumProductKnowledgeFactStatusWithAggregatesFilter<$PrismaModel> | $Enums.ProductKnowledgeFactStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumProductKnowledgeFactStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumProductKnowledgeFactStatusFilter<$PrismaModel>
 }
 
 export type NestedEnumSizeGuideStatusFilter<$PrismaModel = never> = {

@@ -14,6 +14,7 @@ export function QuestionStatus({
   deliveryStatus,
   draftProcessingStatus,
   draftDecision,
+  draftAnswerability,
   shadowEligible = false,
   compact = false,
 }: {
@@ -21,6 +22,8 @@ export function QuestionStatus({
   deliveryStatus?: QuestionAnswerStatus
   draftProcessingStatus?: QuestionDraftProcessingStatus | null
   draftDecision?: QuestionReplyDecision | null
+  draftAnswerability?:
+    "FULL" | "PARTIAL" | "INSUFFICIENT" | "OUT_OF_SCOPE" | null
   shadowEligible?: boolean
   compact?: boolean
 }) {
@@ -114,6 +117,20 @@ export function QuestionStatus({
         )}
       >
         Taslak hatası
+      </Badge>
+    )
+  }
+
+  if (status === "DRAFTED" && draftAnswerability === "OUT_OF_SCOPE") {
+    return (
+      <Badge
+        variant="outline"
+        className={cn(
+          "shrink-0 border-slate-500/25 bg-slate-500/10 text-slate-700 dark:text-slate-300",
+          compactClassName
+        )}
+      >
+        {needsReview ? "Kapsam dışı · İncele" : "Kapsam dışı"}
       </Badge>
     )
   }

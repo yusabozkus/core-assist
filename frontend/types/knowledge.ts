@@ -38,6 +38,7 @@ export type StoreKnowledge = {
     responseLength: AiResponseLength
     greetingEnabled: boolean
     closingEnabled: boolean
+    heightWeightSizeRecommendationEnabled: boolean
     emojiPolicy: AiEmojiPolicy
     preferredEmoji: string | null
   }

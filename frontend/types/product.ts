@@ -38,6 +38,28 @@ export type CatalogSizeGuide = {
   analyzedAt: string | null
 }
 
+export type CatalogProductKnowledgeFact = {
+  id: string
+  factType:
+    | "MATERIAL"
+    | "DURABILITY"
+    | "SIZE"
+    | "COLOR"
+    | "FIT"
+    | "CARE"
+    | "PRODUCT_INFO"
+  normalizedKey: string
+  label: string
+  value: string
+  verifiedAt: string
+  variant: {
+    id: string
+    sku: string
+    size: string | null
+    color: string | null
+  } | null
+}
+
 export type CatalogProduct = {
   id: string
   title: string
@@ -48,6 +70,7 @@ export type CatalogProduct = {
   updatedAt: string
   variants: CatalogProductVariant[]
   attributes: Array<{ id: string; name: string; value: string }>
+  knowledgeFacts: CatalogProductKnowledgeFact[]
   images: Array<{ id: string; url: string; position: number }>
   sizeGuides: CatalogSizeGuide[]
   externalProducts: Array<{

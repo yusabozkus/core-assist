@@ -76,6 +76,7 @@ export const ModelName = {
   ProductIdentity: 'ProductIdentity',
   ProductVariant: 'ProductVariant',
   ProductAttribute: 'ProductAttribute',
+  ProductKnowledgeFact: 'ProductKnowledgeFact',
   ProductImage: 'ProductImage',
   ProductSizeGuide: 'ProductSizeGuide',
   ExternalProduct: 'ExternalProduct',
@@ -377,6 +378,7 @@ export const StoreKnowledgeProfileScalarFieldEnum = {
   responseLength: 'responseLength',
   greetingEnabled: 'greetingEnabled',
   closingEnabled: 'closingEnabled',
+  heightWeightSizeRecommendationEnabled: 'heightWeightSizeRecommendationEnabled',
   emojiPolicy: 'emojiPolicy',
   preferredEmoji: 'preferredEmoji',
   automationMode: 'automationMode',
@@ -514,6 +516,28 @@ export const ProductAttributeScalarFieldEnum = {
 } as const
 
 export type ProductAttributeScalarFieldEnum = (typeof ProductAttributeScalarFieldEnum)[keyof typeof ProductAttributeScalarFieldEnum]
+
+
+export const ProductKnowledgeFactScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  productId: 'productId',
+  variantId: 'variantId',
+  scopeKey: 'scopeKey',
+  factType: 'factType',
+  normalizedKey: 'normalizedKey',
+  label: 'label',
+  value: 'value',
+  status: 'status',
+  verifiedByUserId: 'verifiedByUserId',
+  originatingQuestionId: 'originatingQuestionId',
+  verifiedAt: 'verifiedAt',
+  archivedAt: 'archivedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ProductKnowledgeFactScalarFieldEnum = (typeof ProductKnowledgeFactScalarFieldEnum)[keyof typeof ProductKnowledgeFactScalarFieldEnum]
 
 
 export const ProductImageScalarFieldEnum = {

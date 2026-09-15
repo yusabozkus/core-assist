@@ -135,7 +135,7 @@ export class AnalyticsService {
         // the complete history into application memory.
         const source = Prisma.sql`
         WITH attempts AS (
-          SELECT a.id, a."questionId", a.decision, a.confidence,
+          SELECT a.id, a."questionId", a.decision, a.confidence, a.answerability,
             a."requestedFacts", a."automationMode", a."autoSendEligible",
             a."eligibilityReasons", a.risks, a."missingInformation", a."createdAt",
             c.provider AS "providerKey"
@@ -161,7 +161,7 @@ export class AnalyticsService {
           DraftMetrics[]
         >(Prisma.sql`${source}
           SELECT COUNT(*)::int AS total, COUNT(DISTINCT "questionId")::int AS questions,
-            COALESCE(AVG(confidence), 0)::float8 AS confidence,
+            COALESCE(AVG(confidence) FILTER (WHERE answerability <> 'OUT_OF_SCOPE'), 0)::float8 AS confidence,
             COUNT(*) FILTER (WHERE decision = 'READY_FOR_SEND')::int AS ready,
             COUNT(*) FILTER (WHERE decision = 'NEEDS_REVIEW')::int AS review,
             COUNT(*) FILTER (WHERE decision = 'DO_NOT_REPLY')::int AS blocked,
@@ -190,7 +190,7 @@ export class AnalyticsService {
         >(Prisma.sql`${source},
           drafts AS (
             SELECT "providerKey", COUNT(*)::int AS total,
-              AVG(confidence)::float8 AS confidence,
+              COALESCE(AVG(confidence) FILTER (WHERE answerability <> 'OUT_OF_SCOPE'), 0)::float8 AS confidence,
               COUNT(*) FILTER (WHERE decision = 'READY_FOR_SEND')::int AS ready,
               COUNT(*) FILTER (WHERE decision = 'NEEDS_REVIEW')::int AS review
             FROM attempts GROUP BY "providerKey"
@@ -223,7 +223,7 @@ export class AnalyticsService {
                   CASE WHEN jsonb_typeof(a."requestedFacts") = 'array' THEN a."requestedFacts" ELSE '[]'::jsonb END
                 ) WHERE value = ANY(${facts})
               )
-            ) f
+            ) f WHERE a.answerability <> 'OUT_OF_SCOPE'
           ), sent_facts AS (
             SELECT d.*, f.intent FROM deliveries d
             JOIN ai_draft_attempt a ON a.id = d."draftAttemptId" AND a."storeId" = ${storeId}
@@ -236,7 +236,7 @@ export class AnalyticsService {
                   CASE WHEN jsonb_typeof(a."requestedFacts") = 'array' THEN a."requestedFacts" ELSE '[]'::jsonb END
                 ) WHERE value = ANY(${facts})
               )
-            ) f WHERE d.status = 'SENT'
+            ) f WHERE d.status = 'SENT' AND a.answerability <> 'OUT_OF_SCOPE'
           ), drafts AS (
             SELECT intent, COUNT(*)::int AS total, AVG(confidence)::float8 AS confidence,
               COUNT(*) FILTER (WHERE decision = 'READY_FOR_SEND')::int AS ready,
@@ -323,6 +323,7 @@ export class AnalyticsService {
             outcome: true,
             decision: true,
             confidence: true,
+            answerability: true,
             requestedFacts: true,
             automationMode: true,
             autoSendEligible: true,
@@ -463,6 +464,7 @@ export class AnalyticsService {
             outcome: attempt.outcome,
             decision: attempt.decision,
             confidence: confidence(attempt.confidence),
+            answerability: attempt.answerability,
             requestedFacts: toRequestedFacts(attempt.requestedFacts),
             automationMode: attempt.automationMode,
             autoSendEligible: attempt.autoSendEligible,

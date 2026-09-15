@@ -74,6 +74,7 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
           select: {
             id: true,
             answer: true,
+            answerability: true,
             autoSendEligible: true,
             inventorySnapshotHash: true,
             requestedFacts: true,
@@ -129,12 +130,14 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
         question.draftDecision !== QuestionReplyDecision.READY_FOR_SEND ||
         !isEmptyList(question.draftRisks) ||
         !isEmptyList(question.draftMissingInformation) ||
-        !isNonEmptyList(question.draftEvidenceIds) ||
-        (requiresInventoryVerification({
-          evidenceIds: question.draftEvidenceIds,
-          requestedFacts: latestDraftAttempt.requestedFacts,
-          detectedFacts: latestDraftAttempt.detectedFacts,
-        }) &&
+        (latestDraftAttempt.answerability !== 'OUT_OF_SCOPE' &&
+          !isNonEmptyList(question.draftEvidenceIds)) ||
+        (latestDraftAttempt.answerability !== 'OUT_OF_SCOPE' &&
+          requiresInventoryVerification({
+            evidenceIds: question.draftEvidenceIds,
+            requestedFacts: latestDraftAttempt.requestedFacts,
+            detectedFacts: latestDraftAttempt.detectedFacts,
+          }) &&
           !latestDraftAttempt.inventorySnapshotHash) ||
         question.store.knowledgeProfile?.automationMode !==
           AiAutomationMode.SAFE_AUTO)

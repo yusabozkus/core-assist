@@ -5,6 +5,8 @@ import { QuestionAnswerModule } from '../question-answer/question-answer.module'
 import { QuestionsController } from './questions.controller';
 import { QuestionsService } from './questions.service';
 import { QuestionDraftModule } from './question-draft.module';
+import { ProductKnowledgeService } from './product-knowledge.service';
+import { ProductKnowledgeController } from './product-knowledge.controller';
 
 @Module({
   imports: [
@@ -13,7 +15,7 @@ import { QuestionDraftModule } from './question-draft.module';
     QuestionAnswerModule,
     QuestionDraftModule,
   ],
-  controllers: [QuestionsController],
-  providers: [QuestionsService],
+  controllers: [QuestionsController, ProductKnowledgeController],
+  providers: [QuestionsService, ProductKnowledgeService],
 })
 export class QuestionsModule {}

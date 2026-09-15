@@ -419,6 +419,7 @@ export type ProductQuestionWhereInput = {
   externalProduct?: Prisma.XOR<Prisma.ExternalProductNullableScalarRelationFilter, Prisma.ExternalProductWhereInput> | null
   answerDelivery?: Prisma.XOR<Prisma.QuestionAnswerNullableScalarRelationFilter, Prisma.QuestionAnswerWhereInput> | null
   draftAttempts?: Prisma.AiDraftAttemptListRelationFilter
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactListRelationFilter
 }
 
 export type ProductQuestionOrderByWithRelationInput = {
@@ -460,6 +461,7 @@ export type ProductQuestionOrderByWithRelationInput = {
   externalProduct?: Prisma.ExternalProductOrderByWithRelationInput
   answerDelivery?: Prisma.QuestionAnswerOrderByWithRelationInput
   draftAttempts?: Prisma.AiDraftAttemptOrderByRelationAggregateInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactOrderByRelationAggregateInput
 }
 
 export type ProductQuestionWhereUniqueInput = Prisma.AtLeast<{
@@ -505,6 +507,7 @@ export type ProductQuestionWhereUniqueInput = Prisma.AtLeast<{
   externalProduct?: Prisma.XOR<Prisma.ExternalProductNullableScalarRelationFilter, Prisma.ExternalProductWhereInput> | null
   answerDelivery?: Prisma.XOR<Prisma.QuestionAnswerNullableScalarRelationFilter, Prisma.QuestionAnswerWhereInput> | null
   draftAttempts?: Prisma.AiDraftAttemptListRelationFilter
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactListRelationFilter
 }, "id" | "incomingEventId" | "connectionId_externalQuestionId">
 
 export type ProductQuestionOrderByWithAggregationInput = {
@@ -617,6 +620,7 @@ export type ProductQuestionCreateInput = {
   externalProduct?: Prisma.ExternalProductCreateNestedOneWithoutQuestionsInput
   answerDelivery?: Prisma.QuestionAnswerCreateNestedOneWithoutQuestionInput
   draftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionUncheckedCreateInput = {
@@ -653,6 +657,7 @@ export type ProductQuestionUncheckedCreateInput = {
   updatedAt?: Date | string
   answerDelivery?: Prisma.QuestionAnswerUncheckedCreateNestedOneWithoutQuestionInput
   draftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionUpdateInput = {
@@ -689,6 +694,7 @@ export type ProductQuestionUpdateInput = {
   externalProduct?: Prisma.ExternalProductUpdateOneWithoutQuestionsNestedInput
   answerDelivery?: Prisma.QuestionAnswerUpdateOneWithoutQuestionNestedInput
   draftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionUncheckedUpdateInput = {
@@ -725,6 +731,7 @@ export type ProductQuestionUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answerDelivery?: Prisma.QuestionAnswerUncheckedUpdateOneWithoutQuestionNestedInput
   draftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionCreateManyInput = {
@@ -1079,6 +1086,22 @@ export type ProductQuestionUncheckedUpdateManyWithoutProductNestedInput = {
   deleteMany?: Prisma.ProductQuestionScalarWhereInput | Prisma.ProductQuestionScalarWhereInput[]
 }
 
+export type ProductQuestionCreateNestedOneWithoutOriginatedKnowledgeFactsInput = {
+  create?: Prisma.XOR<Prisma.ProductQuestionCreateWithoutOriginatedKnowledgeFactsInput, Prisma.ProductQuestionUncheckedCreateWithoutOriginatedKnowledgeFactsInput>
+  connectOrCreate?: Prisma.ProductQuestionCreateOrConnectWithoutOriginatedKnowledgeFactsInput
+  connect?: Prisma.ProductQuestionWhereUniqueInput
+}
+
+export type ProductQuestionUpdateOneWithoutOriginatedKnowledgeFactsNestedInput = {
+  create?: Prisma.XOR<Prisma.ProductQuestionCreateWithoutOriginatedKnowledgeFactsInput, Prisma.ProductQuestionUncheckedCreateWithoutOriginatedKnowledgeFactsInput>
+  connectOrCreate?: Prisma.ProductQuestionCreateOrConnectWithoutOriginatedKnowledgeFactsInput
+  upsert?: Prisma.ProductQuestionUpsertWithoutOriginatedKnowledgeFactsInput
+  disconnect?: Prisma.ProductQuestionWhereInput | boolean
+  delete?: Prisma.ProductQuestionWhereInput | boolean
+  connect?: Prisma.ProductQuestionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ProductQuestionUpdateToOneWithWhereWithoutOriginatedKnowledgeFactsInput, Prisma.ProductQuestionUpdateWithoutOriginatedKnowledgeFactsInput>, Prisma.ProductQuestionUncheckedUpdateWithoutOriginatedKnowledgeFactsInput>
+}
+
 export type ProductQuestionCreateNestedManyWithoutExternalProductInput = {
   create?: Prisma.XOR<Prisma.ProductQuestionCreateWithoutExternalProductInput, Prisma.ProductQuestionUncheckedCreateWithoutExternalProductInput> | Prisma.ProductQuestionCreateWithoutExternalProductInput[] | Prisma.ProductQuestionUncheckedCreateWithoutExternalProductInput[]
   connectOrCreate?: Prisma.ProductQuestionCreateOrConnectWithoutExternalProductInput | Prisma.ProductQuestionCreateOrConnectWithoutExternalProductInput[]
@@ -1226,6 +1249,7 @@ export type ProductQuestionCreateWithoutStoreInput = {
   externalProduct?: Prisma.ExternalProductCreateNestedOneWithoutQuestionsInput
   answerDelivery?: Prisma.QuestionAnswerCreateNestedOneWithoutQuestionInput
   draftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionUncheckedCreateWithoutStoreInput = {
@@ -1261,6 +1285,7 @@ export type ProductQuestionUncheckedCreateWithoutStoreInput = {
   updatedAt?: Date | string
   answerDelivery?: Prisma.QuestionAnswerUncheckedCreateNestedOneWithoutQuestionInput
   draftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionCreateOrConnectWithoutStoreInput = {
@@ -1359,6 +1384,7 @@ export type ProductQuestionCreateWithoutConnectionInput = {
   externalProduct?: Prisma.ExternalProductCreateNestedOneWithoutQuestionsInput
   answerDelivery?: Prisma.QuestionAnswerCreateNestedOneWithoutQuestionInput
   draftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionUncheckedCreateWithoutConnectionInput = {
@@ -1394,6 +1420,7 @@ export type ProductQuestionUncheckedCreateWithoutConnectionInput = {
   updatedAt?: Date | string
   answerDelivery?: Prisma.QuestionAnswerUncheckedCreateNestedOneWithoutQuestionInput
   draftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionCreateOrConnectWithoutConnectionInput = {
@@ -1455,6 +1482,7 @@ export type ProductQuestionCreateWithoutProductInput = {
   externalProduct?: Prisma.ExternalProductCreateNestedOneWithoutQuestionsInput
   answerDelivery?: Prisma.QuestionAnswerCreateNestedOneWithoutQuestionInput
   draftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionUncheckedCreateWithoutProductInput = {
@@ -1490,6 +1518,7 @@ export type ProductQuestionUncheckedCreateWithoutProductInput = {
   updatedAt?: Date | string
   answerDelivery?: Prisma.QuestionAnswerUncheckedCreateNestedOneWithoutQuestionInput
   draftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionCreateOrConnectWithoutProductInput = {
@@ -1516,6 +1545,166 @@ export type ProductQuestionUpdateWithWhereUniqueWithoutProductInput = {
 export type ProductQuestionUpdateManyWithWhereWithoutProductInput = {
   where: Prisma.ProductQuestionScalarWhereInput
   data: Prisma.XOR<Prisma.ProductQuestionUpdateManyMutationInput, Prisma.ProductQuestionUncheckedUpdateManyWithoutProductInput>
+}
+
+export type ProductQuestionCreateWithoutOriginatedKnowledgeFactsInput = {
+  id?: string
+  externalQuestionId: string
+  externalProductId: string
+  externalCustomerId?: string | null
+  customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
+  question: string
+  status?: $Enums.ProductQuestionStatus
+  answer?: string | null
+  draftDecision?: $Enums.QuestionReplyDecision | null
+  draftConfidence?: number | null
+  draftAnswerability?: string | null
+  draftRisks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  draftMissingInformation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  draftModel?: string | null
+  draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
+  externalCreatedAt: Date | string
+  answeredAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  store: Prisma.StoreCreateNestedOneWithoutProductQuestionsInput
+  connection: Prisma.ChannelConnectionCreateNestedOneWithoutProductQuestionsInput
+  incomingEvent: Prisma.IncomingEventCreateNestedOneWithoutQuestionInput
+  product?: Prisma.ProductCreateNestedOneWithoutQuestionsInput
+  externalProduct?: Prisma.ExternalProductCreateNestedOneWithoutQuestionsInput
+  answerDelivery?: Prisma.QuestionAnswerCreateNestedOneWithoutQuestionInput
+  draftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutQuestionInput
+}
+
+export type ProductQuestionUncheckedCreateWithoutOriginatedKnowledgeFactsInput = {
+  id?: string
+  storeId: string
+  connectionId: string
+  incomingEventId: string
+  productId?: string | null
+  externalProductRecordId?: string | null
+  externalQuestionId: string
+  externalProductId: string
+  externalCustomerId?: string | null
+  customerName?: string | null
+  productTitleSnapshot?: string | null
+  productImageUrlSnapshot?: string | null
+  question: string
+  status?: $Enums.ProductQuestionStatus
+  answer?: string | null
+  draftDecision?: $Enums.QuestionReplyDecision | null
+  draftConfidence?: number | null
+  draftAnswerability?: string | null
+  draftRisks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  draftMissingInformation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  draftModel?: string | null
+  draftedAt?: Date | string | null
+  draftProcessingStatus?: $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: string | null
+  draftQueuedAt?: Date | string | null
+  draftProcessingStartedAt?: Date | string | null
+  externalCreatedAt: Date | string
+  answeredAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  answerDelivery?: Prisma.QuestionAnswerUncheckedCreateNestedOneWithoutQuestionInput
+  draftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutQuestionInput
+}
+
+export type ProductQuestionCreateOrConnectWithoutOriginatedKnowledgeFactsInput = {
+  where: Prisma.ProductQuestionWhereUniqueInput
+  create: Prisma.XOR<Prisma.ProductQuestionCreateWithoutOriginatedKnowledgeFactsInput, Prisma.ProductQuestionUncheckedCreateWithoutOriginatedKnowledgeFactsInput>
+}
+
+export type ProductQuestionUpsertWithoutOriginatedKnowledgeFactsInput = {
+  update: Prisma.XOR<Prisma.ProductQuestionUpdateWithoutOriginatedKnowledgeFactsInput, Prisma.ProductQuestionUncheckedUpdateWithoutOriginatedKnowledgeFactsInput>
+  create: Prisma.XOR<Prisma.ProductQuestionCreateWithoutOriginatedKnowledgeFactsInput, Prisma.ProductQuestionUncheckedCreateWithoutOriginatedKnowledgeFactsInput>
+  where?: Prisma.ProductQuestionWhereInput
+}
+
+export type ProductQuestionUpdateToOneWithWhereWithoutOriginatedKnowledgeFactsInput = {
+  where?: Prisma.ProductQuestionWhereInput
+  data: Prisma.XOR<Prisma.ProductQuestionUpdateWithoutOriginatedKnowledgeFactsInput, Prisma.ProductQuestionUncheckedUpdateWithoutOriginatedKnowledgeFactsInput>
+}
+
+export type ProductQuestionUpdateWithoutOriginatedKnowledgeFactsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  externalQuestionId?: Prisma.StringFieldUpdateOperationsInput | string
+  externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
+  externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  question?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
+  answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftDecision?: Prisma.NullableEnumQuestionReplyDecisionFieldUpdateOperationsInput | $Enums.QuestionReplyDecision | null
+  draftConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  draftAnswerability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftRisks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  draftMissingInformation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  store?: Prisma.StoreUpdateOneRequiredWithoutProductQuestionsNestedInput
+  connection?: Prisma.ChannelConnectionUpdateOneRequiredWithoutProductQuestionsNestedInput
+  incomingEvent?: Prisma.IncomingEventUpdateOneRequiredWithoutQuestionNestedInput
+  product?: Prisma.ProductUpdateOneWithoutQuestionsNestedInput
+  externalProduct?: Prisma.ExternalProductUpdateOneWithoutQuestionsNestedInput
+  answerDelivery?: Prisma.QuestionAnswerUpdateOneWithoutQuestionNestedInput
+  draftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutQuestionNestedInput
+}
+
+export type ProductQuestionUncheckedUpdateWithoutOriginatedKnowledgeFactsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storeId?: Prisma.StringFieldUpdateOperationsInput | string
+  connectionId?: Prisma.StringFieldUpdateOperationsInput | string
+  incomingEventId?: Prisma.StringFieldUpdateOperationsInput | string
+  productId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  externalProductRecordId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  externalQuestionId?: Prisma.StringFieldUpdateOperationsInput | string
+  externalProductId?: Prisma.StringFieldUpdateOperationsInput | string
+  externalCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  customerName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productTitleSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  productImageUrlSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  question?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumProductQuestionStatusFieldUpdateOperationsInput | $Enums.ProductQuestionStatus
+  answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftDecision?: Prisma.NullableEnumQuestionReplyDecisionFieldUpdateOperationsInput | $Enums.QuestionReplyDecision | null
+  draftConfidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  draftAnswerability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftRisks?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  draftMissingInformation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  draftEvidenceIds?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  draftModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStatus?: Prisma.NullableEnumQuestionDraftProcessingStatusFieldUpdateOperationsInput | $Enums.QuestionDraftProcessingStatus | null
+  draftProcessingError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  draftQueuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  draftProcessingStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  externalCreatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  answeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  answerDelivery?: Prisma.QuestionAnswerUncheckedUpdateOneWithoutQuestionNestedInput
+  draftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutQuestionNestedInput
 }
 
 export type ProductQuestionCreateWithoutExternalProductInput = {
@@ -1551,6 +1740,7 @@ export type ProductQuestionCreateWithoutExternalProductInput = {
   product?: Prisma.ProductCreateNestedOneWithoutQuestionsInput
   answerDelivery?: Prisma.QuestionAnswerCreateNestedOneWithoutQuestionInput
   draftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionUncheckedCreateWithoutExternalProductInput = {
@@ -1586,6 +1776,7 @@ export type ProductQuestionUncheckedCreateWithoutExternalProductInput = {
   updatedAt?: Date | string
   answerDelivery?: Prisma.QuestionAnswerUncheckedCreateNestedOneWithoutQuestionInput
   draftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionCreateOrConnectWithoutExternalProductInput = {
@@ -1647,6 +1838,7 @@ export type ProductQuestionCreateWithoutIncomingEventInput = {
   externalProduct?: Prisma.ExternalProductCreateNestedOneWithoutQuestionsInput
   answerDelivery?: Prisma.QuestionAnswerCreateNestedOneWithoutQuestionInput
   draftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionUncheckedCreateWithoutIncomingEventInput = {
@@ -1682,6 +1874,7 @@ export type ProductQuestionUncheckedCreateWithoutIncomingEventInput = {
   updatedAt?: Date | string
   answerDelivery?: Prisma.QuestionAnswerUncheckedCreateNestedOneWithoutQuestionInput
   draftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionCreateOrConnectWithoutIncomingEventInput = {
@@ -1733,6 +1926,7 @@ export type ProductQuestionUpdateWithoutIncomingEventInput = {
   externalProduct?: Prisma.ExternalProductUpdateOneWithoutQuestionsNestedInput
   answerDelivery?: Prisma.QuestionAnswerUpdateOneWithoutQuestionNestedInput
   draftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionUncheckedUpdateWithoutIncomingEventInput = {
@@ -1768,6 +1962,7 @@ export type ProductQuestionUncheckedUpdateWithoutIncomingEventInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answerDelivery?: Prisma.QuestionAnswerUncheckedUpdateOneWithoutQuestionNestedInput
   draftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionCreateWithoutDraftAttemptsInput = {
@@ -1803,6 +1998,7 @@ export type ProductQuestionCreateWithoutDraftAttemptsInput = {
   product?: Prisma.ProductCreateNestedOneWithoutQuestionsInput
   externalProduct?: Prisma.ExternalProductCreateNestedOneWithoutQuestionsInput
   answerDelivery?: Prisma.QuestionAnswerCreateNestedOneWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionUncheckedCreateWithoutDraftAttemptsInput = {
@@ -1838,6 +2034,7 @@ export type ProductQuestionUncheckedCreateWithoutDraftAttemptsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   answerDelivery?: Prisma.QuestionAnswerUncheckedCreateNestedOneWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionCreateOrConnectWithoutDraftAttemptsInput = {
@@ -1889,6 +2086,7 @@ export type ProductQuestionUpdateWithoutDraftAttemptsInput = {
   product?: Prisma.ProductUpdateOneWithoutQuestionsNestedInput
   externalProduct?: Prisma.ExternalProductUpdateOneWithoutQuestionsNestedInput
   answerDelivery?: Prisma.QuestionAnswerUpdateOneWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionUncheckedUpdateWithoutDraftAttemptsInput = {
@@ -1924,6 +2122,7 @@ export type ProductQuestionUncheckedUpdateWithoutDraftAttemptsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answerDelivery?: Prisma.QuestionAnswerUncheckedUpdateOneWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionCreateWithoutAnswerDeliveryInput = {
@@ -1959,6 +2158,7 @@ export type ProductQuestionCreateWithoutAnswerDeliveryInput = {
   product?: Prisma.ProductCreateNestedOneWithoutQuestionsInput
   externalProduct?: Prisma.ExternalProductCreateNestedOneWithoutQuestionsInput
   draftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionUncheckedCreateWithoutAnswerDeliveryInput = {
@@ -1994,6 +2194,7 @@ export type ProductQuestionUncheckedCreateWithoutAnswerDeliveryInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   draftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutQuestionInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutOriginatingQuestionInput
 }
 
 export type ProductQuestionCreateOrConnectWithoutAnswerDeliveryInput = {
@@ -2045,6 +2246,7 @@ export type ProductQuestionUpdateWithoutAnswerDeliveryInput = {
   product?: Prisma.ProductUpdateOneWithoutQuestionsNestedInput
   externalProduct?: Prisma.ExternalProductUpdateOneWithoutQuestionsNestedInput
   draftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionUncheckedUpdateWithoutAnswerDeliveryInput = {
@@ -2080,6 +2282,7 @@ export type ProductQuestionUncheckedUpdateWithoutAnswerDeliveryInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   draftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionCreateManyStoreInput = {
@@ -2148,6 +2351,7 @@ export type ProductQuestionUpdateWithoutStoreInput = {
   externalProduct?: Prisma.ExternalProductUpdateOneWithoutQuestionsNestedInput
   answerDelivery?: Prisma.QuestionAnswerUpdateOneWithoutQuestionNestedInput
   draftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionUncheckedUpdateWithoutStoreInput = {
@@ -2183,6 +2387,7 @@ export type ProductQuestionUncheckedUpdateWithoutStoreInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answerDelivery?: Prisma.QuestionAnswerUncheckedUpdateOneWithoutQuestionNestedInput
   draftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionUncheckedUpdateManyWithoutStoreInput = {
@@ -2284,6 +2489,7 @@ export type ProductQuestionUpdateWithoutConnectionInput = {
   externalProduct?: Prisma.ExternalProductUpdateOneWithoutQuestionsNestedInput
   answerDelivery?: Prisma.QuestionAnswerUpdateOneWithoutQuestionNestedInput
   draftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionUncheckedUpdateWithoutConnectionInput = {
@@ -2319,6 +2525,7 @@ export type ProductQuestionUncheckedUpdateWithoutConnectionInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answerDelivery?: Prisma.QuestionAnswerUncheckedUpdateOneWithoutQuestionNestedInput
   draftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionUncheckedUpdateManyWithoutConnectionInput = {
@@ -2420,6 +2627,7 @@ export type ProductQuestionUpdateWithoutProductInput = {
   externalProduct?: Prisma.ExternalProductUpdateOneWithoutQuestionsNestedInput
   answerDelivery?: Prisma.QuestionAnswerUpdateOneWithoutQuestionNestedInput
   draftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionUncheckedUpdateWithoutProductInput = {
@@ -2455,6 +2663,7 @@ export type ProductQuestionUncheckedUpdateWithoutProductInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answerDelivery?: Prisma.QuestionAnswerUncheckedUpdateOneWithoutQuestionNestedInput
   draftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionUncheckedUpdateManyWithoutProductInput = {
@@ -2556,6 +2765,7 @@ export type ProductQuestionUpdateWithoutExternalProductInput = {
   product?: Prisma.ProductUpdateOneWithoutQuestionsNestedInput
   answerDelivery?: Prisma.QuestionAnswerUpdateOneWithoutQuestionNestedInput
   draftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionUncheckedUpdateWithoutExternalProductInput = {
@@ -2591,6 +2801,7 @@ export type ProductQuestionUncheckedUpdateWithoutExternalProductInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   answerDelivery?: Prisma.QuestionAnswerUncheckedUpdateOneWithoutQuestionNestedInput
   draftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutQuestionNestedInput
+  originatedKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutOriginatingQuestionNestedInput
 }
 
 export type ProductQuestionUncheckedUpdateManyWithoutExternalProductInput = {
@@ -2633,10 +2844,12 @@ export type ProductQuestionUncheckedUpdateManyWithoutExternalProductInput = {
 
 export type ProductQuestionCountOutputType = {
   draftAttempts: number
+  originatedKnowledgeFacts: number
 }
 
 export type ProductQuestionCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   draftAttempts?: boolean | ProductQuestionCountOutputTypeCountDraftAttemptsArgs
+  originatedKnowledgeFacts?: boolean | ProductQuestionCountOutputTypeCountOriginatedKnowledgeFactsArgs
 }
 
 /**
@@ -2654,6 +2867,13 @@ export type ProductQuestionCountOutputTypeDefaultArgs<ExtArgs extends runtime.Ty
  */
 export type ProductQuestionCountOutputTypeCountDraftAttemptsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.AiDraftAttemptWhereInput
+}
+
+/**
+ * ProductQuestionCountOutputType without action
+ */
+export type ProductQuestionCountOutputTypeCountOriginatedKnowledgeFactsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ProductKnowledgeFactWhereInput
 }
 
 
@@ -2696,6 +2916,7 @@ export type ProductQuestionSelect<ExtArgs extends runtime.Types.Extensions.Inter
   externalProduct?: boolean | Prisma.ProductQuestion$externalProductArgs<ExtArgs>
   answerDelivery?: boolean | Prisma.ProductQuestion$answerDeliveryArgs<ExtArgs>
   draftAttempts?: boolean | Prisma.ProductQuestion$draftAttemptsArgs<ExtArgs>
+  originatedKnowledgeFacts?: boolean | Prisma.ProductQuestion$originatedKnowledgeFactsArgs<ExtArgs>
   _count?: boolean | Prisma.ProductQuestionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["productQuestion"]>
 
@@ -2820,6 +3041,7 @@ export type ProductQuestionInclude<ExtArgs extends runtime.Types.Extensions.Inte
   externalProduct?: boolean | Prisma.ProductQuestion$externalProductArgs<ExtArgs>
   answerDelivery?: boolean | Prisma.ProductQuestion$answerDeliveryArgs<ExtArgs>
   draftAttempts?: boolean | Prisma.ProductQuestion$draftAttemptsArgs<ExtArgs>
+  originatedKnowledgeFacts?: boolean | Prisma.ProductQuestion$originatedKnowledgeFactsArgs<ExtArgs>
   _count?: boolean | Prisma.ProductQuestionCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ProductQuestionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2847,6 +3069,7 @@ export type $ProductQuestionPayload<ExtArgs extends runtime.Types.Extensions.Int
     externalProduct: Prisma.$ExternalProductPayload<ExtArgs> | null
     answerDelivery: Prisma.$QuestionAnswerPayload<ExtArgs> | null
     draftAttempts: Prisma.$AiDraftAttemptPayload<ExtArgs>[]
+    originatedKnowledgeFacts: Prisma.$ProductKnowledgeFactPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -3281,6 +3504,7 @@ export interface Prisma__ProductQuestionClient<T, Null = never, ExtArgs extends 
   externalProduct<T extends Prisma.ProductQuestion$externalProductArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductQuestion$externalProductArgs<ExtArgs>>): Prisma.Prisma__ExternalProductClient<runtime.Types.Result.GetResult<Prisma.$ExternalProductPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   answerDelivery<T extends Prisma.ProductQuestion$answerDeliveryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductQuestion$answerDeliveryArgs<ExtArgs>>): Prisma.Prisma__QuestionAnswerClient<runtime.Types.Result.GetResult<Prisma.$QuestionAnswerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   draftAttempts<T extends Prisma.ProductQuestion$draftAttemptsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductQuestion$draftAttemptsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AiDraftAttemptPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  originatedKnowledgeFacts<T extends Prisma.ProductQuestion$originatedKnowledgeFactsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductQuestion$originatedKnowledgeFactsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductKnowledgeFactPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3820,6 +4044,30 @@ export type ProductQuestion$draftAttemptsArgs<ExtArgs extends runtime.Types.Exte
   take?: number
   skip?: number
   distinct?: Prisma.AiDraftAttemptScalarFieldEnum | Prisma.AiDraftAttemptScalarFieldEnum[]
+}
+
+/**
+ * ProductQuestion.originatedKnowledgeFacts
+ */
+export type ProductQuestion$originatedKnowledgeFactsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ProductKnowledgeFact
+   */
+  select?: Prisma.ProductKnowledgeFactSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ProductKnowledgeFact
+   */
+  omit?: Prisma.ProductKnowledgeFactOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProductKnowledgeFactInclude<ExtArgs> | null
+  where?: Prisma.ProductKnowledgeFactWhereInput
+  orderBy?: Prisma.ProductKnowledgeFactOrderByWithRelationInput | Prisma.ProductKnowledgeFactOrderByWithRelationInput[]
+  cursor?: Prisma.ProductKnowledgeFactWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ProductKnowledgeFactScalarFieldEnum | Prisma.ProductKnowledgeFactScalarFieldEnum[]
 }
 
 /**

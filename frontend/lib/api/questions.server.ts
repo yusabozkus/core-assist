@@ -6,6 +6,7 @@ import { cache } from "react"
 import type {
   ProductQuestionFilter,
   ProductQuestionPage,
+  PendingQuestionState,
 } from "@/types/question"
 
 const QUESTIONS_REQUEST_TIMEOUT_MS = 8_000
@@ -23,10 +24,12 @@ export const getServerProductQuestions = cache(
       limit = 30,
       status = "PENDING",
       query,
+      pendingStates,
     }: {
       limit?: number
       status?: ProductQuestionFilter
       query?: string
+      pendingStates?: PendingQuestionState[]
     } = {}
   ): Promise<ProductQuestionPage> => {
     const cookie = (await headers()).get("cookie")
@@ -39,6 +42,9 @@ export const getServerProductQuestions = cache(
     })
 
     if (query?.trim()) searchParams.set("query", query.trim())
+    if (pendingStates?.length) {
+      searchParams.set("pendingStates", pendingStates.join(","))
+    }
 
     const response = await fetch(
       `${apiUrl}/stores/${storeId}/questions?${searchParams.toString()}`,

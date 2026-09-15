@@ -12,6 +12,7 @@ const DRAFT_RESPONSE_SCHEMA = {
   required: [
     'answer',
     'interpretation',
+    'scope',
     'detectedFacts',
     'answerability',
     'decision',
@@ -22,9 +23,10 @@ const DRAFT_RESPONSE_SCHEMA = {
   properties: {
     answer: { type: 'string', minLength: 2, maxLength: 2000 },
     interpretation: { type: 'string', minLength: 2, maxLength: 300 },
+    scope: { type: 'string', enum: ['IN_SCOPE', 'OUT_OF_SCOPE'] },
     detectedFacts: {
       type: 'array',
-      minItems: 1,
+      minItems: 0,
       uniqueItems: true,
       items: {
         type: 'string',
@@ -48,7 +50,7 @@ const DRAFT_RESPONSE_SCHEMA = {
     },
     answerability: {
       type: 'string',
-      enum: ['FULL', 'PARTIAL', 'INSUFFICIENT'],
+      enum: ['FULL', 'PARTIAL', 'INSUFFICIENT', 'OUT_OF_SCOPE'],
     },
     decision: { type: 'string', enum: ['DRAFT', 'NEEDS_REVIEW'] },
     confidence: { type: 'number', minimum: 0, maximum: 1 },

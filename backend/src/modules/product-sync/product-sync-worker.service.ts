@@ -37,6 +37,7 @@ import {
   PRODUCT_SYNC_BATCHES_PER_JOB,
   PRODUCT_SYNC_EXPECTED_MAX_BATCHES,
   PRODUCT_SYNC_MAX_BATCHES,
+  PRODUCT_SYNC_RECONCILIATION_TIMEOUT_MS,
 } from './product-sync.constants';
 import type {
   ProductSyncJobData,
@@ -1180,49 +1181,72 @@ export class ProductSyncWorkerService {
     connectionId: string,
     syncRunId: string,
   ) {
-    const staleProducts = await this.prisma.externalProduct.findMany({
-      where: {
-        connectionId,
-        status: ExternalEntityStatus.ACTIVE,
-        OR: [{ lastSeenSyncId: null }, { lastSeenSyncId: { not: syncRunId } }],
-      },
-      select: { id: true, productId: true },
+    const staleExternalProductWhere = {
+      connectionId,
+      status: ExternalEntityStatus.ACTIVE,
+      OR: [{ lastSeenSyncId: null }, { lastSeenSyncId: { not: syncRunId } }],
+    } satisfies Prisma.ExternalProductWhereInput;
+    const staleProductCount = await this.prisma.externalProduct.count({
+      where: staleExternalProductWhere,
     });
 
-    if (staleProducts.length === 0) return 0;
+    if (staleProductCount === 0) return 0;
 
-    await this.prisma.$transaction(async (transaction) => {
-      const externalProductIds = staleProducts.map((product) => product.id);
-      await transaction.externalProduct.updateMany({
-        where: { id: { in: externalProductIds } },
-        data: { status: ExternalEntityStatus.ARCHIVED },
-      });
-      await transaction.externalProductVariant.updateMany({
-        where: { externalProductId: { in: externalProductIds } },
-        data: { status: ExternalEntityStatus.UNAVAILABLE },
-      });
-
-      for (const productId of new Set(
-        staleProducts.map((product) => product.productId),
-      )) {
-        const activeReferences = await transaction.externalProduct.count({
-          where: { productId, status: ExternalEntityStatus.ACTIVE },
+    return this.prisma.$transaction(
+      async (transaction) => {
+        await transaction.externalProductVariant.updateMany({
+          where: { externalProduct: staleExternalProductWhere },
+          data: { status: ExternalEntityStatus.UNAVAILABLE },
+        });
+        await transaction.externalProduct.updateMany({
+          where: staleExternalProductWhere,
+          data: { status: ExternalEntityStatus.ARCHIVED },
         });
 
-        if (activeReferences === 0) {
-          await transaction.product.update({
-            where: { id: productId },
-            data: { status: ProductStatus.ARCHIVED },
-          });
-          await transaction.productVariant.updateMany({
-            where: { productId },
-            data: { stock: 0, status: ProductVariantStatus.ARCHIVED },
-          });
-        }
-      }
-    });
+        const productsWithoutActiveReferences = {
+          status: { not: ProductStatus.ARCHIVED },
+          externalProducts: {
+            some: {
+              connectionId,
+              status: ExternalEntityStatus.ARCHIVED,
+              OR: [
+                { lastSeenSyncId: null },
+                { lastSeenSyncId: { not: syncRunId } },
+              ],
+            },
+            none: { status: ExternalEntityStatus.ACTIVE },
+          },
+        } satisfies Prisma.ProductWhereInput;
+        const archivedProducts = await transaction.product.updateMany({
+          where: productsWithoutActiveReferences,
+          data: { status: ProductStatus.ARCHIVED },
+        });
 
-    return new Set(staleProducts.map((product) => product.productId)).size;
+        await transaction.productVariant.updateMany({
+          where: {
+            status: { not: ProductVariantStatus.ARCHIVED },
+            product: {
+              status: ProductStatus.ARCHIVED,
+              externalProducts: {
+                some: {
+                  connectionId,
+                  status: ExternalEntityStatus.ARCHIVED,
+                  OR: [
+                    { lastSeenSyncId: null },
+                    { lastSeenSyncId: { not: syncRunId } },
+                  ],
+                },
+                none: { status: ExternalEntityStatus.ACTIVE },
+              },
+            },
+          },
+          data: { stock: 0, status: ProductVariantStatus.ARCHIVED },
+        });
+
+        return archivedProducts.count;
+      },
+      { timeout: PRODUCT_SYNC_RECONCILIATION_TIMEOUT_MS },
+    );
   }
 
   private async loadCheckpoint(data: ProductSyncJobData) {

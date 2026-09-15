@@ -177,6 +177,7 @@ const INITIAL_AI_PROFILE: StoreKnowledge["profile"] = {
   responseLength: "BALANCED",
   greetingEnabled: true,
   closingEnabled: true,
+  heightWeightSizeRecommendationEnabled: false,
   emojiPolicy: "NEVER",
   preferredEmoji: null,
 }

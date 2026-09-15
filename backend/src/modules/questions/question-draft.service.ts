@@ -413,6 +413,7 @@ function applyInventoryFreshnessGuard(
   context: ProductAnswerContext,
 ): AiDraftResult {
   if (
+    draft.answerability === 'OUT_OF_SCOPE' ||
     !context.requestedFacts.includes('STOCK') ||
     (context.inventoryVerification?.status === 'VERIFIED' &&
       context.inventoryFreshness.status === 'FRESH')

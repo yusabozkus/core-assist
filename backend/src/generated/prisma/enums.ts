@@ -205,6 +205,28 @@ export const ProductIdentityType = {
 export type ProductIdentityType = (typeof ProductIdentityType)[keyof typeof ProductIdentityType]
 
 
+export const ProductKnowledgeFactType = {
+  MATERIAL: 'MATERIAL',
+  DURABILITY: 'DURABILITY',
+  SIZE: 'SIZE',
+  COLOR: 'COLOR',
+  FIT: 'FIT',
+  CARE: 'CARE',
+  PRODUCT_INFO: 'PRODUCT_INFO'
+} as const
+
+export type ProductKnowledgeFactType = (typeof ProductKnowledgeFactType)[keyof typeof ProductKnowledgeFactType]
+
+
+export const ProductKnowledgeFactStatus = {
+  VERIFIED: 'VERIFIED',
+  CONFLICT: 'CONFLICT',
+  ARCHIVED: 'ARCHIVED'
+} as const
+
+export type ProductKnowledgeFactStatus = (typeof ProductKnowledgeFactStatus)[keyof typeof ProductKnowledgeFactStatus]
+
+
 export const ExternalEntityStatus = {
   ACTIVE: 'ACTIVE',
   ARCHIVED: 'ARCHIVED',

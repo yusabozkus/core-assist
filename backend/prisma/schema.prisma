@@ -9,28 +9,29 @@ generator client {
 }
 
 model User {
-  id                           String                        @id @default(uuid())
-  name                         String
-  email                        String                        @unique
-  emailVerified                Boolean                       @default(false)
-  image                        String?
-  onboardingCompletedAt        DateTime?
-  createdAt                    DateTime                      @default(now())
-  updatedAt                    DateTime                      @updatedAt
-  sessions                     Session[]
-  accounts                     Account[]
-  ownedWorkspace               Workspace?                    @relation("WorkspaceOwner")
-  workspaceMembers             WorkspaceMember[]
-  storeMembers                 StoreMember[]
-  requestedQuestionAnswers     QuestionAnswer[]              @relation("QuestionAnswerRequester")
-  requestedAiDrafts            AiDraftAttempt[]              @relation("AiDraftRequester")
-  notifications                Notification[]
-  notificationPreferences      NotificationPreference[]
-  notificationDeliverySettings NotificationDeliverySetting[]
-  webPushSubscriptions         WebPushSubscription[]
+  id                            String                        @id @default(uuid())
+  name                          String
+  email                         String                        @unique
+  emailVerified                 Boolean                       @default(false)
+  image                         String?
+  onboardingCompletedAt         DateTime?
+  createdAt                     DateTime                      @default(now())
+  updatedAt                     DateTime                      @updatedAt
+  sessions                      Session[]
+  accounts                      Account[]
+  ownedWorkspace                Workspace?                    @relation("WorkspaceOwner")
+  workspaceMembers              WorkspaceMember[]
+  storeMembers                  StoreMember[]
+  requestedQuestionAnswers      QuestionAnswer[]              @relation("QuestionAnswerRequester")
+  requestedAiDrafts             AiDraftAttempt[]              @relation("AiDraftRequester")
+  notifications                 Notification[]
+  notificationPreferences       NotificationPreference[]
+  notificationDeliverySettings  NotificationDeliverySetting[]
+  webPushSubscriptions          WebPushSubscription[]
   billingCheckouts              BillingCheckout[]
   billingPlanChanges            BillingPlanChange[]
   sentWorkspaceInvitations      WorkspaceInvitation[]         @relation("WorkspaceInvitationSender")
+  verifiedProductKnowledgeFacts ProductKnowledgeFact[]        @relation("ProductKnowledgeVerifier")
 
   @@map("user")
 }
@@ -87,7 +88,7 @@ model Workspace {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  owner               User                 @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  owner               User                  @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   members             WorkspaceMember[]
   stores              Store[]
   billingSubscription BillingSubscription?
@@ -144,8 +145,8 @@ model WorkspaceInvitation {
   createdAt       DateTime                  @default(now())
   updatedAt       DateTime                  @updatedAt
 
-  workspace    Workspace                        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  invitedBy    User?                            @relation("WorkspaceInvitationSender", fields: [invitedByUserId], references: [id], onDelete: SetNull)
+  workspace     Workspace                        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy     User?                            @relation("WorkspaceInvitationSender", fields: [invitedByUserId], references: [id], onDelete: SetNull)
   storeAccesses WorkspaceInvitationStoreAccess[]
 
   @@index([workspaceId, status, expiresAt])
@@ -192,29 +193,29 @@ enum BillingUsageMetric {
 }
 
 model BillingSubscription {
-  id                   String                    @id @default(uuid())
-  workspaceId          String                    @unique
-  plan                 BillingPlan               @default(STARTER)
-  cycle                BillingCycle              @default(MONTHLY)
-  status               BillingSubscriptionStatus @default(TRIALING)
-  paddleCustomerId     String?                   @unique
-  paddleSubscriptionId String?                   @unique
-  paddlePriceId        String?
-  currentPeriodStart   DateTime
-  currentPeriodEnd     DateTime
-  trialEndsAt          DateTime?
-  cancelAtPeriodEnd    Boolean                   @default(false)
-  canceledAt           DateTime?
-  paddleUpdatedAt      DateTime?
-  paddleSnapshotAt     DateTime?
+  id                    String                    @id @default(uuid())
+  workspaceId           String                    @unique
+  plan                  BillingPlan               @default(STARTER)
+  cycle                 BillingCycle              @default(MONTHLY)
+  status                BillingSubscriptionStatus @default(TRIALING)
+  paddleCustomerId      String?                   @unique
+  paddleSubscriptionId  String?                   @unique
+  paddlePriceId         String?
+  currentPeriodStart    DateTime
+  currentPeriodEnd      DateTime
+  trialEndsAt           DateTime?
+  cancelAtPeriodEnd     Boolean                   @default(false)
+  canceledAt            DateTime?
+  paddleUpdatedAt       DateTime?
+  paddleSnapshotAt      DateTime?
   scheduledAccessEndsAt DateTime?
-  lastReconciledAt     DateTime?
-  reconcileAfter       DateTime                  @default(now())
-  reconcileFailures    Int                       @default(0)
-  reconcileErrorCode   String?
-  usagePeriodAnchor    DateTime?
-  createdAt            DateTime                  @default(now())
-  updatedAt            DateTime                  @updatedAt
+  lastReconciledAt      DateTime?
+  reconcileAfter        DateTime                  @default(now())
+  reconcileFailures     Int                       @default(0)
+  reconcileErrorCode    String?
+  usagePeriodAnchor     DateTime?
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
 
   workspace    Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   usagePeriods BillingUsagePeriod[]
@@ -265,21 +266,21 @@ enum BillingCheckoutStatus {
 }
 
 model BillingCheckout {
-  id                          String            @id @default(uuid())
-  workspaceId                 String
-  requestedByUserId           String?
-  environment                 PaddleEnvironment
-  status                      BillingCheckoutStatus @default(CREATING)
-  plan                        BillingPlan
-  cycle                       BillingCycle
-  paddlePriceId               String
-  paddleTransactionId         String?           @unique
+  id                           String                @id @default(uuid())
+  workspaceId                  String
+  requestedByUserId            String?
+  environment                  PaddleEnvironment
+  status                       BillingCheckoutStatus @default(CREATING)
+  plan                         BillingPlan
+  cycle                        BillingCycle
+  paddlePriceId                String
+  paddleTransactionId          String?               @unique
   expectedPaddleCustomerId     String?
   previousPaddleSubscriptionId String?
-  paddleSubscriptionId        String?           @unique
-  boundAt                     DateTime?
-  createdAt                   DateTime          @default(now())
-  updatedAt                   DateTime          @updatedAt
+  paddleSubscriptionId         String?               @unique
+  boundAt                      DateTime?
+  createdAt                    DateTime              @default(now())
+  updatedAt                    DateTime              @updatedAt
 
   workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   requestedByUser User?     @relation(fields: [requestedByUserId], references: [id], onDelete: SetNull)
@@ -388,7 +389,7 @@ model Store {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  workspace                    Workspace                     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace                    Workspace                        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   members                      StoreMember[]
   invitationAccesses           WorkspaceInvitationStoreAccess[]
   channelConnections           ChannelConnection[]
@@ -405,6 +406,7 @@ model Store {
   notifications                Notification[]
   notificationPreferences      NotificationPreference[]
   notificationDeliverySettings NotificationDeliverySetting[]
+  productKnowledgeFacts        ProductKnowledgeFact[]
 
   @@map("store")
 }
@@ -435,25 +437,26 @@ enum AiAutomationMode {
 }
 
 model StoreKnowledgeProfile {
-  storeId                   String           @id
-  brandDescription          String?
-  shippingPolicy            String?
-  returnPolicy              String?
-  exchangePolicy            String?
-  warrantyPolicy            String?
-  additionalInformation     String?
-  tone                      AiTone           @default(PROFESSIONAL)
-  responseLength            AiResponseLength @default(BALANCED)
-  greetingEnabled           Boolean          @default(true)
-  closingEnabled            Boolean          @default(true)
-  emojiPolicy               AiEmojiPolicy    @default(NEVER)
-  preferredEmoji            String?
-  automationMode            AiAutomationMode @default(OFF)
-  minimumAutoSendConfidence Float            @default(0.85)
+  storeId                               String           @id
+  brandDescription                      String?
+  shippingPolicy                        String?
+  returnPolicy                          String?
+  exchangePolicy                        String?
+  warrantyPolicy                        String?
+  additionalInformation                 String?
+  tone                                  AiTone           @default(PROFESSIONAL)
+  responseLength                        AiResponseLength @default(BALANCED)
+  greetingEnabled                       Boolean          @default(true)
+  closingEnabled                        Boolean          @default(true)
+  heightWeightSizeRecommendationEnabled Boolean          @default(false)
+  emojiPolicy                           AiEmojiPolicy    @default(NEVER)
+  preferredEmoji                        String?
+  automationMode                        AiAutomationMode @default(OFF)
+  minimumAutoSendConfidence             Float            @default(0.85)
   // Kept temporarily so existing checkbox preferences can be migrated safely.
-  emojiEnabled              Boolean          @default(false)
-  createdAt                 DateTime         @default(now())
-  updatedAt                 DateTime         @updatedAt
+  emojiEnabled                          Boolean          @default(false)
+  createdAt                             DateTime         @default(now())
+  updatedAt                             DateTime         @updatedAt
 
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
@@ -601,7 +604,7 @@ model Product {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  store            Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  store            Store                  @relation(fields: [storeId], references: [id], onDelete: Cascade)
   variants         ProductVariant[]
   attributes       ProductAttribute[]
   images           ProductImage[]
@@ -609,6 +612,7 @@ model Product {
   externalProducts ExternalProduct[]
   identities       ProductIdentity[]
   questions        ProductQuestion[]
+  knowledgeFacts   ProductKnowledgeFact[]
 
   @@index([storeId, status])
   @@map("product")
@@ -649,6 +653,7 @@ model ProductVariant {
 
   product          Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
   externalVariants ExternalProductVariant[]
+  knowledgeFacts   ProductKnowledgeFact[]
 
   @@index([productId, sku])
   @@index([barcode])
@@ -666,6 +671,53 @@ model ProductAttribute {
 
   @@unique([productId, name, value])
   @@map("product_attribute")
+}
+
+enum ProductKnowledgeFactType {
+  MATERIAL
+  DURABILITY
+  SIZE
+  COLOR
+  FIT
+  CARE
+  PRODUCT_INFO
+}
+
+enum ProductKnowledgeFactStatus {
+  VERIFIED
+  CONFLICT
+  ARCHIVED
+}
+
+model ProductKnowledgeFact {
+  id                    String                     @id @default(uuid())
+  storeId               String
+  productId             String
+  variantId             String?
+  scopeKey              String
+  factType              ProductKnowledgeFactType
+  normalizedKey         String
+  label                 String
+  value                 String
+  status                ProductKnowledgeFactStatus @default(VERIFIED)
+  verifiedByUserId      String?
+  originatingQuestionId String?
+  verifiedAt            DateTime                   @default(now())
+  archivedAt            DateTime?
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+
+  store               Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product             Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant             ProductVariant?  @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  verifiedBy          User?            @relation("ProductKnowledgeVerifier", fields: [verifiedByUserId], references: [id], onDelete: SetNull)
+  originatingQuestion ProductQuestion? @relation("ProductKnowledgeOriginQuestion", fields: [originatingQuestionId], references: [id], onDelete: SetNull)
+
+  @@unique([productId, scopeKey, normalizedKey])
+  @@index([storeId, status, updatedAt])
+  @@index([productId, status])
+  @@index([variantId, status])
+  @@map("product_knowledge_fact")
 }
 
 model ProductImage {
@@ -947,13 +999,14 @@ model ProductQuestion {
   createdAt                DateTime                       @default(now())
   updatedAt                DateTime                       @updatedAt
 
-  store           Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  connection      ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
-  incomingEvent   IncomingEvent     @relation(fields: [incomingEventId], references: [id], onDelete: Cascade)
-  product         Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
-  externalProduct ExternalProduct?  @relation(fields: [externalProductRecordId], references: [id], onDelete: SetNull)
-  answerDelivery  QuestionAnswer?
-  draftAttempts   AiDraftAttempt[]
+  store                    Store                  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  connection               ChannelConnection      @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  incomingEvent            IncomingEvent          @relation(fields: [incomingEventId], references: [id], onDelete: Cascade)
+  product                  Product?               @relation(fields: [productId], references: [id], onDelete: SetNull)
+  externalProduct          ExternalProduct?       @relation(fields: [externalProductRecordId], references: [id], onDelete: SetNull)
+  answerDelivery           QuestionAnswer?
+  draftAttempts            AiDraftAttempt[]
+  originatedKnowledgeFacts ProductKnowledgeFact[] @relation("ProductKnowledgeOriginQuestion")
 
   @@unique([connectionId, externalQuestionId])
   @@index([storeId, status, externalCreatedAt])

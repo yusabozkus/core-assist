@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import type { AiDraftResult } from '../ai/ai-draft.types';
+import {
+  OUT_OF_SCOPE_CLASSIFICATION_THRESHOLD,
+  type AiDraftResult,
+} from '../ai/ai-draft.types';
 import type { QuestionReplyDecision } from './product-answer-context.types';
 
 export const MINIMUM_READY_CONFIDENCE = 0.85;
@@ -9,6 +12,13 @@ export class QuestionReplyDecisionService {
   evaluate(
     draft: AiDraftResult,
   ): Exclude<QuestionReplyDecision, 'DO_NOT_REPLY'> {
+    if (draft.answerability === 'OUT_OF_SCOPE') {
+      return draft.decision === 'DRAFT' &&
+        draft.confidence >= OUT_OF_SCOPE_CLASSIFICATION_THRESHOLD
+        ? 'READY_FOR_SEND'
+        : 'NEEDS_REVIEW';
+    }
+
     if (
       draft.decision === 'NEEDS_REVIEW' ||
       draft.answerability !== 'FULL' ||

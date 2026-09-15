@@ -62,6 +62,7 @@ export class QuestionAnswerWorkerService {
               select: {
                 id: true,
                 autoSendEligible: true,
+                answerability: true,
                 inventorySnapshotHash: true,
                 requestedFacts: true,
                 detectedFacts: true,
@@ -169,7 +170,8 @@ export class QuestionAnswerWorkerService {
         delivery.question.answer !== delivery.answer ||
         !isEmptyList(delivery.question.draftRisks) ||
         !isEmptyList(delivery.question.draftMissingInformation) ||
-        !isNonEmptyList(delivery.question.draftEvidenceIds) ||
+        (delivery.question.draftAttempts[0]?.answerability !== 'OUT_OF_SCOPE' &&
+          !isNonEmptyList(delivery.question.draftEvidenceIds)) ||
         delivery.question.store.knowledgeProfile?.automationMode !==
           AiAutomationMode.SAFE_AUTO)
     ) {
@@ -185,6 +187,7 @@ export class QuestionAnswerWorkerService {
     if (delivery.origin === QuestionAnswerOrigin.AUTOMATION) {
       const draft = delivery.question.draftAttempts[0];
       if (
+        draft?.answerability !== 'OUT_OF_SCOPE' &&
         requiresInventoryVerification({
           evidenceIds: delivery.question.draftEvidenceIds,
           requestedFacts: draft?.requestedFacts,

@@ -215,6 +215,7 @@ export type StoreWhereInput = {
   notifications?: Prisma.NotificationListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingListRelationFilter
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactListRelationFilter
 }
 
 export type StoreOrderByWithRelationInput = {
@@ -242,6 +243,7 @@ export type StoreOrderByWithRelationInput = {
   notifications?: Prisma.NotificationOrderByRelationAggregateInput
   notificationPreferences?: Prisma.NotificationPreferenceOrderByRelationAggregateInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingOrderByRelationAggregateInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactOrderByRelationAggregateInput
 }
 
 export type StoreWhereUniqueInput = Prisma.AtLeast<{
@@ -272,6 +274,7 @@ export type StoreWhereUniqueInput = Prisma.AtLeast<{
   notifications?: Prisma.NotificationListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingListRelationFilter
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactListRelationFilter
 }, "id">
 
 export type StoreOrderByWithAggregationInput = {
@@ -324,6 +327,7 @@ export type StoreCreateInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateInput = {
@@ -350,6 +354,7 @@ export type StoreUncheckedCreateInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUpdateInput = {
@@ -376,6 +381,7 @@ export type StoreUpdateInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateInput = {
@@ -402,6 +408,7 @@ export type StoreUncheckedUpdateInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateManyInput = {
@@ -641,6 +648,20 @@ export type StoreUpdateOneRequiredWithoutProductIdentitiesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutProductIdentitiesInput, Prisma.StoreUpdateWithoutProductIdentitiesInput>, Prisma.StoreUncheckedUpdateWithoutProductIdentitiesInput>
 }
 
+export type StoreCreateNestedOneWithoutProductKnowledgeFactsInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutProductKnowledgeFactsInput, Prisma.StoreUncheckedCreateWithoutProductKnowledgeFactsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutProductKnowledgeFactsInput
+  connect?: Prisma.StoreWhereUniqueInput
+}
+
+export type StoreUpdateOneRequiredWithoutProductKnowledgeFactsNestedInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutProductKnowledgeFactsInput, Prisma.StoreUncheckedCreateWithoutProductKnowledgeFactsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutProductKnowledgeFactsInput
+  upsert?: Prisma.StoreUpsertWithoutProductKnowledgeFactsInput
+  connect?: Prisma.StoreWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutProductKnowledgeFactsInput, Prisma.StoreUpdateWithoutProductKnowledgeFactsInput>, Prisma.StoreUncheckedUpdateWithoutProductKnowledgeFactsInput>
+}
+
 export type StoreCreateNestedOneWithoutIncomingEventsInput = {
   create?: Prisma.XOR<Prisma.StoreCreateWithoutIncomingEventsInput, Prisma.StoreUncheckedCreateWithoutIncomingEventsInput>
   connectOrCreate?: Prisma.StoreCreateOrConnectWithoutIncomingEventsInput
@@ -778,6 +799,7 @@ export type StoreCreateWithoutWorkspaceInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutWorkspaceInput = {
@@ -803,6 +825,7 @@ export type StoreUncheckedCreateWithoutWorkspaceInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutWorkspaceInput = {
@@ -867,6 +890,7 @@ export type StoreCreateWithoutInvitationAccessesInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutInvitationAccessesInput = {
@@ -892,6 +916,7 @@ export type StoreUncheckedCreateWithoutInvitationAccessesInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutInvitationAccessesInput = {
@@ -933,6 +958,7 @@ export type StoreUpdateWithoutInvitationAccessesInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutInvitationAccessesInput = {
@@ -958,6 +984,7 @@ export type StoreUncheckedUpdateWithoutInvitationAccessesInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutKnowledgeProfileInput = {
@@ -983,6 +1010,7 @@ export type StoreCreateWithoutKnowledgeProfileInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutKnowledgeProfileInput = {
@@ -1008,6 +1036,7 @@ export type StoreUncheckedCreateWithoutKnowledgeProfileInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutKnowledgeProfileInput = {
@@ -1049,6 +1078,7 @@ export type StoreUpdateWithoutKnowledgeProfileInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutKnowledgeProfileInput = {
@@ -1074,6 +1104,7 @@ export type StoreUncheckedUpdateWithoutKnowledgeProfileInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutKnowledgeFaqsInput = {
@@ -1099,6 +1130,7 @@ export type StoreCreateWithoutKnowledgeFaqsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutKnowledgeFaqsInput = {
@@ -1124,6 +1156,7 @@ export type StoreUncheckedCreateWithoutKnowledgeFaqsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutKnowledgeFaqsInput = {
@@ -1165,6 +1198,7 @@ export type StoreUpdateWithoutKnowledgeFaqsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutKnowledgeFaqsInput = {
@@ -1190,6 +1224,7 @@ export type StoreUncheckedUpdateWithoutKnowledgeFaqsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutAiInstructionsInput = {
@@ -1215,6 +1250,7 @@ export type StoreCreateWithoutAiInstructionsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutAiInstructionsInput = {
@@ -1240,6 +1276,7 @@ export type StoreUncheckedCreateWithoutAiInstructionsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutAiInstructionsInput = {
@@ -1281,6 +1318,7 @@ export type StoreUpdateWithoutAiInstructionsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutAiInstructionsInput = {
@@ -1306,6 +1344,7 @@ export type StoreUncheckedUpdateWithoutAiInstructionsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutChannelKnowledgeInput = {
@@ -1331,6 +1370,7 @@ export type StoreCreateWithoutChannelKnowledgeInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutChannelKnowledgeInput = {
@@ -1356,6 +1396,7 @@ export type StoreUncheckedCreateWithoutChannelKnowledgeInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutChannelKnowledgeInput = {
@@ -1397,6 +1438,7 @@ export type StoreUpdateWithoutChannelKnowledgeInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutChannelKnowledgeInput = {
@@ -1422,6 +1464,7 @@ export type StoreUncheckedUpdateWithoutChannelKnowledgeInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutChannelConnectionsInput = {
@@ -1447,6 +1490,7 @@ export type StoreCreateWithoutChannelConnectionsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutChannelConnectionsInput = {
@@ -1472,6 +1516,7 @@ export type StoreUncheckedCreateWithoutChannelConnectionsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutChannelConnectionsInput = {
@@ -1513,6 +1558,7 @@ export type StoreUpdateWithoutChannelConnectionsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutChannelConnectionsInput = {
@@ -1538,6 +1584,7 @@ export type StoreUncheckedUpdateWithoutChannelConnectionsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutProductsInput = {
@@ -1563,6 +1610,7 @@ export type StoreCreateWithoutProductsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutProductsInput = {
@@ -1588,6 +1636,7 @@ export type StoreUncheckedCreateWithoutProductsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutProductsInput = {
@@ -1629,6 +1678,7 @@ export type StoreUpdateWithoutProductsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutProductsInput = {
@@ -1654,6 +1704,7 @@ export type StoreUncheckedUpdateWithoutProductsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutProductIdentitiesInput = {
@@ -1679,6 +1730,7 @@ export type StoreCreateWithoutProductIdentitiesInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutProductIdentitiesInput = {
@@ -1704,6 +1756,7 @@ export type StoreUncheckedCreateWithoutProductIdentitiesInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutProductIdentitiesInput = {
@@ -1745,6 +1798,7 @@ export type StoreUpdateWithoutProductIdentitiesInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutProductIdentitiesInput = {
@@ -1759,6 +1813,127 @@ export type StoreUncheckedUpdateWithoutProductIdentitiesInput = {
   invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
   channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
   products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreCreateWithoutProductKnowledgeFactsInput = {
+  id?: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
+  members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+}
+
+export type StoreUncheckedCreateWithoutProductKnowledgeFactsInput = {
+  id?: string
+  workspaceId: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+}
+
+export type StoreCreateOrConnectWithoutProductKnowledgeFactsInput = {
+  where: Prisma.StoreWhereUniqueInput
+  create: Prisma.XOR<Prisma.StoreCreateWithoutProductKnowledgeFactsInput, Prisma.StoreUncheckedCreateWithoutProductKnowledgeFactsInput>
+}
+
+export type StoreUpsertWithoutProductKnowledgeFactsInput = {
+  update: Prisma.XOR<Prisma.StoreUpdateWithoutProductKnowledgeFactsInput, Prisma.StoreUncheckedUpdateWithoutProductKnowledgeFactsInput>
+  create: Prisma.XOR<Prisma.StoreCreateWithoutProductKnowledgeFactsInput, Prisma.StoreUncheckedCreateWithoutProductKnowledgeFactsInput>
+  where?: Prisma.StoreWhereInput
+}
+
+export type StoreUpdateToOneWithWhereWithoutProductKnowledgeFactsInput = {
+  where?: Prisma.StoreWhereInput
+  data: Prisma.XOR<Prisma.StoreUpdateWithoutProductKnowledgeFactsInput, Prisma.StoreUncheckedUpdateWithoutProductKnowledgeFactsInput>
+}
+
+export type StoreUpdateWithoutProductKnowledgeFactsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
+  members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreUncheckedUpdateWithoutProductKnowledgeFactsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
   incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
   productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
   questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
@@ -1795,6 +1970,7 @@ export type StoreCreateWithoutIncomingEventsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutIncomingEventsInput = {
@@ -1820,6 +1996,7 @@ export type StoreUncheckedCreateWithoutIncomingEventsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutIncomingEventsInput = {
@@ -1861,6 +2038,7 @@ export type StoreUpdateWithoutIncomingEventsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutIncomingEventsInput = {
@@ -1886,6 +2064,7 @@ export type StoreUncheckedUpdateWithoutIncomingEventsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutProductQuestionsInput = {
@@ -1911,6 +2090,7 @@ export type StoreCreateWithoutProductQuestionsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutProductQuestionsInput = {
@@ -1936,6 +2116,7 @@ export type StoreUncheckedCreateWithoutProductQuestionsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutProductQuestionsInput = {
@@ -1977,6 +2158,7 @@ export type StoreUpdateWithoutProductQuestionsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutProductQuestionsInput = {
@@ -2002,6 +2184,7 @@ export type StoreUncheckedUpdateWithoutProductQuestionsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutAiDraftAttemptsInput = {
@@ -2027,6 +2210,7 @@ export type StoreCreateWithoutAiDraftAttemptsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutAiDraftAttemptsInput = {
@@ -2052,6 +2236,7 @@ export type StoreUncheckedCreateWithoutAiDraftAttemptsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutAiDraftAttemptsInput = {
@@ -2093,6 +2278,7 @@ export type StoreUpdateWithoutAiDraftAttemptsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutAiDraftAttemptsInput = {
@@ -2118,6 +2304,7 @@ export type StoreUncheckedUpdateWithoutAiDraftAttemptsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutQuestionAnswersInput = {
@@ -2143,6 +2330,7 @@ export type StoreCreateWithoutQuestionAnswersInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutQuestionAnswersInput = {
@@ -2168,6 +2356,7 @@ export type StoreUncheckedCreateWithoutQuestionAnswersInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutQuestionAnswersInput = {
@@ -2209,6 +2398,7 @@ export type StoreUpdateWithoutQuestionAnswersInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutQuestionAnswersInput = {
@@ -2234,6 +2424,7 @@ export type StoreUncheckedUpdateWithoutQuestionAnswersInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutMembersInput = {
@@ -2259,6 +2450,7 @@ export type StoreCreateWithoutMembersInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutMembersInput = {
@@ -2284,6 +2476,7 @@ export type StoreUncheckedCreateWithoutMembersInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutMembersInput = {
@@ -2325,6 +2518,7 @@ export type StoreUpdateWithoutMembersInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutMembersInput = {
@@ -2350,6 +2544,7 @@ export type StoreUncheckedUpdateWithoutMembersInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutNotificationsInput = {
@@ -2375,6 +2570,7 @@ export type StoreCreateWithoutNotificationsInput = {
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutNotificationsInput = {
@@ -2400,6 +2596,7 @@ export type StoreUncheckedCreateWithoutNotificationsInput = {
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutNotificationsInput = {
@@ -2441,6 +2638,7 @@ export type StoreUpdateWithoutNotificationsInput = {
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutNotificationsInput = {
@@ -2466,6 +2664,7 @@ export type StoreUncheckedUpdateWithoutNotificationsInput = {
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutNotificationPreferencesInput = {
@@ -2491,6 +2690,7 @@ export type StoreCreateWithoutNotificationPreferencesInput = {
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutNotificationPreferencesInput = {
@@ -2516,6 +2716,7 @@ export type StoreUncheckedCreateWithoutNotificationPreferencesInput = {
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutNotificationPreferencesInput = {
@@ -2557,6 +2758,7 @@ export type StoreUpdateWithoutNotificationPreferencesInput = {
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutNotificationPreferencesInput = {
@@ -2582,6 +2784,7 @@ export type StoreUncheckedUpdateWithoutNotificationPreferencesInput = {
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateWithoutNotificationDeliverySettingsInput = {
@@ -2607,6 +2810,7 @@ export type StoreCreateWithoutNotificationDeliverySettingsInput = {
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
 export type StoreUncheckedCreateWithoutNotificationDeliverySettingsInput = {
@@ -2632,6 +2836,7 @@ export type StoreUncheckedCreateWithoutNotificationDeliverySettingsInput = {
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
 export type StoreCreateOrConnectWithoutNotificationDeliverySettingsInput = {
@@ -2673,6 +2878,7 @@ export type StoreUpdateWithoutNotificationDeliverySettingsInput = {
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutNotificationDeliverySettingsInput = {
@@ -2698,6 +2904,7 @@ export type StoreUncheckedUpdateWithoutNotificationDeliverySettingsInput = {
   channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreCreateManyWorkspaceInput = {
@@ -2732,6 +2939,7 @@ export type StoreUpdateWithoutWorkspaceInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateWithoutWorkspaceInput = {
@@ -2757,6 +2965,7 @@ export type StoreUncheckedUpdateWithoutWorkspaceInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
 export type StoreUncheckedUpdateManyWithoutWorkspaceInput = {
@@ -2789,6 +2998,7 @@ export type StoreCountOutputType = {
   notifications: number
   notificationPreferences: number
   notificationDeliverySettings: number
+  productKnowledgeFacts: number
 }
 
 export type StoreCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2807,6 +3017,7 @@ export type StoreCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.
   notifications?: boolean | StoreCountOutputTypeCountNotificationsArgs
   notificationPreferences?: boolean | StoreCountOutputTypeCountNotificationPreferencesArgs
   notificationDeliverySettings?: boolean | StoreCountOutputTypeCountNotificationDeliverySettingsArgs
+  productKnowledgeFacts?: boolean | StoreCountOutputTypeCountProductKnowledgeFactsArgs
 }
 
 /**
@@ -2924,6 +3135,13 @@ export type StoreCountOutputTypeCountNotificationDeliverySettingsArgs<ExtArgs ex
   where?: Prisma.NotificationDeliverySettingWhereInput
 }
 
+/**
+ * StoreCountOutputType without action
+ */
+export type StoreCountOutputTypeCountProductKnowledgeFactsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ProductKnowledgeFactWhereInput
+}
+
 
 export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2950,6 +3168,7 @@ export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   notifications?: boolean | Prisma.Store$notificationsArgs<ExtArgs>
   notificationPreferences?: boolean | Prisma.Store$notificationPreferencesArgs<ExtArgs>
   notificationDeliverySettings?: boolean | Prisma.Store$notificationDeliverySettingsArgs<ExtArgs>
+  productKnowledgeFacts?: boolean | Prisma.Store$productKnowledgeFactsArgs<ExtArgs>
   _count?: boolean | Prisma.StoreCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["store"]>
 
@@ -3004,6 +3223,7 @@ export type StoreInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   notifications?: boolean | Prisma.Store$notificationsArgs<ExtArgs>
   notificationPreferences?: boolean | Prisma.Store$notificationPreferencesArgs<ExtArgs>
   notificationDeliverySettings?: boolean | Prisma.Store$notificationDeliverySettingsArgs<ExtArgs>
+  productKnowledgeFacts?: boolean | Prisma.Store$productKnowledgeFactsArgs<ExtArgs>
   _count?: boolean | Prisma.StoreCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type StoreIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -3033,6 +3253,7 @@ export type $StorePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     notifications: Prisma.$NotificationPayload<ExtArgs>[]
     notificationPreferences: Prisma.$NotificationPreferencePayload<ExtArgs>[]
     notificationDeliverySettings: Prisma.$NotificationDeliverySettingPayload<ExtArgs>[]
+    productKnowledgeFacts: Prisma.$ProductKnowledgeFactPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -3453,6 +3674,7 @@ export interface Prisma__StoreClient<T, Null = never, ExtArgs extends runtime.Ty
   notifications<T extends Prisma.Store$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notificationPreferences<T extends Prisma.Store$notificationPreferencesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$notificationPreferencesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notificationDeliverySettings<T extends Prisma.Store$notificationDeliverySettingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$notificationDeliverySettingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationDeliverySettingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  productKnowledgeFacts<T extends Prisma.Store$productKnowledgeFactsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$productKnowledgeFactsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductKnowledgeFactPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4266,6 +4488,30 @@ export type Store$notificationDeliverySettingsArgs<ExtArgs extends runtime.Types
   take?: number
   skip?: number
   distinct?: Prisma.NotificationDeliverySettingScalarFieldEnum | Prisma.NotificationDeliverySettingScalarFieldEnum[]
+}
+
+/**
+ * Store.productKnowledgeFacts
+ */
+export type Store$productKnowledgeFactsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ProductKnowledgeFact
+   */
+  select?: Prisma.ProductKnowledgeFactSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ProductKnowledgeFact
+   */
+  omit?: Prisma.ProductKnowledgeFactOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProductKnowledgeFactInclude<ExtArgs> | null
+  where?: Prisma.ProductKnowledgeFactWhereInput
+  orderBy?: Prisma.ProductKnowledgeFactOrderByWithRelationInput | Prisma.ProductKnowledgeFactOrderByWithRelationInput[]
+  cursor?: Prisma.ProductKnowledgeFactWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ProductKnowledgeFactScalarFieldEnum | Prisma.ProductKnowledgeFactScalarFieldEnum[]
 }
 
 /**

@@ -92,7 +92,11 @@ export class QuestionDraftQueueService
     }
   }
 
-  async enqueue(storeId: string, questionId: string) {
+  async enqueue(
+    storeId: string,
+    questionId: string,
+    options: Pick<QuestionDraftJobData, 'reason' | 'requestedByUserId'> = {},
+  ) {
     // A stopped subscription or quota is not a transient queue/AI failure.
     // Keep questions syncable without repeatedly scheduling impossible drafts.
     try {
@@ -168,7 +172,7 @@ export class QuestionDraftQueueService
     try {
       await this.queue.add(
         GENERATE_QUESTION_DRAFT_JOB,
-        { storeId, questionId },
+        { storeId, questionId, ...options },
         {
           jobId: `question-draft-${questionId}`,
           attempts: 3,

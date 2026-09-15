@@ -23,7 +23,8 @@ export type ProductAnswerEvidenceSource =
   | 'PLATFORM_GUIDANCE'
   | 'STORE_KNOWLEDGE'
   | 'CHANNEL_OVERRIDE'
-  | 'FAQ';
+  | 'FAQ'
+  | 'MERCHANT_VERIFIED';
 
 export type ProductAnswerEvidence = {
   id: string;
@@ -63,6 +64,34 @@ export type ProductAnswerSizeGuideContext = {
   sourceUrl: string;
   normalizedText: string;
   confidence: number | null;
+  structuredData: ProductAnswerSizeGuideData | null;
+};
+
+export type ProductAnswerSizeGuideData = {
+  title?: string;
+  unit: 'CM' | 'INCH' | 'MIXED' | 'UNKNOWN';
+  headers: string[];
+  rows: Array<{
+    label: string;
+    measurements: Array<{ name: string; value: string }>;
+  }>;
+  notes: string[];
+  confidence: number;
+};
+
+export type HeightWeightSizeRecommendation = {
+  status:
+    | 'DISABLED'
+    | 'MISSING_INPUT'
+    | 'GUIDE_UNAVAILABLE'
+    | 'NO_MATCH'
+    | 'AMBIGUOUS'
+    | 'MATCHED';
+  customerHeightCm: number | null;
+  customerWeightKg: number | null;
+  recommendedSizes: string[];
+  requiredMeasurements: string[];
+  sourceEvidenceId: string | null;
 };
 
 export type ProductAnswerContext = {
@@ -98,6 +127,7 @@ export type ProductAnswerContext = {
   relevantAttributes: Array<{ name: string; value: string }>;
   relevantDescription: string | null;
   evidence: ProductAnswerEvidence[];
+  heightWeightSizeRecommendation?: HeightWeightSizeRecommendation;
   responsePreferences?: {
     automationMode: 'OFF' | 'SHADOW' | 'SAFE_AUTO';
     minimumAutoSendConfidence: number;
@@ -107,6 +137,7 @@ export type ProductAnswerContext = {
     closingEnabled: boolean;
     emojiPolicy: 'NEVER' | 'WHEN_APPROPRIATE' | 'ALWAYS';
     preferredEmoji: string | null;
+    heightWeightSizeRecommendationEnabled: boolean;
     instructions: string[];
     approvedAnswerExamples: Array<{
       question: string;
@@ -136,7 +167,7 @@ export type DraftedQuestionAnswer = {
     model: string;
     interpretation: string;
     detectedFacts: ProductAnswerFact[];
-    answerability: 'FULL' | 'PARTIAL' | 'INSUFFICIENT';
+    answerability: 'FULL' | 'PARTIAL' | 'INSUFFICIENT' | 'OUT_OF_SCOPE';
     decision: Exclude<QuestionReplyDecision, 'DO_NOT_REPLY'>;
     confidence: number;
     missingInformation: string[];

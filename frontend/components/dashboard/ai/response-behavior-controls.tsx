@@ -38,10 +38,10 @@ const responseLengths: Array<{
   label: string
   detail: string
 }> = [
-    { value: "SHORT", label: "Kısa", detail: "1–2 cümle" },
-    { value: "BALANCED", label: "Dengeli", detail: "2–4 cümle" },
-    { value: "DETAILED", label: "Detaylı", detail: "Gerektiğinde 3–5 cümle" },
-  ]
+  { value: "SHORT", label: "Kısa", detail: "1–2 cümle" },
+  { value: "BALANCED", label: "Dengeli", detail: "2–4 cümle" },
+  { value: "DETAILED", label: "Detaylı", detail: "Gerektiğinde 3–5 cümle" },
+]
 
 export function ResponseBehaviorControls({
   profile,
@@ -112,7 +112,7 @@ export function ResponseBehaviorControls({
                   index === 1 && "text-center",
                   index === 2 && "text-right",
                   profile.responseLength === option.value &&
-                  "font-semibold text-primary"
+                    "font-semibold text-primary"
                 )}
               >
                 {option.label}
@@ -134,6 +134,14 @@ export function ResponseBehaviorControls({
           description="Yanıtı nazik bir kapanış cümlesiyle tamamlar."
           checked={profile.closingEnabled}
           onCheckedChange={(checked) => onChange("closingEnabled", checked)}
+        />
+        <SettingsSwitchRow
+          title="Boy ve kiloya göre beden önerisi"
+          description="Yalnızca beden tablosunda açık bir boy-kilo eşleşmesi bulunduğunda öneri verir."
+          checked={profile.heightWeightSizeRecommendationEnabled}
+          onCheckedChange={(checked) =>
+            onChange("heightWeightSizeRecommendationEnabled", checked)
+          }
         />
       </div>
 

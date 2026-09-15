@@ -143,6 +143,10 @@ export class UpdateStoreKnowledgeDto {
   closingEnabled?: boolean;
 
   @IsOptional()
+  @IsBoolean()
+  heightWeightSizeRecommendationEnabled?: boolean;
+
+  @IsOptional()
   @IsEnum(AiEmojiPolicy)
   emojiPolicy?: AiEmojiPolicy;
 

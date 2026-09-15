@@ -1,4 +1,7 @@
-import type { AiDraftResult } from '../ai/ai-draft.types';
+import {
+  OUT_OF_SCOPE_CLASSIFICATION_THRESHOLD,
+  type AiDraftResult,
+} from '../ai/ai-draft.types';
 import type {
   ProductAnswerFact,
   QuestionReplyDecision,
@@ -42,6 +45,20 @@ export function evaluateAutoSendEligibility({
   requestedFacts: ProductAnswerFact[];
   storeMinimumConfidence: number;
 }) {
+  if (draft.answerability === 'OUT_OF_SCOPE') {
+    const eligible =
+      decision === 'READY_FOR_SEND' &&
+      draft.confidence >= OUT_OF_SCOPE_CLASSIFICATION_THRESHOLD;
+
+    return {
+      eligible,
+      appliedConfidenceThreshold: OUT_OF_SCOPE_CLASSIFICATION_THRESHOLD,
+      reasons: eligible
+        ? []
+        : (['REVIEW_REQUIRED'] satisfies AutoSendEligibilityReason[]),
+    };
+  }
+
   const normalizedStoreMinimum = Math.min(
     Math.max(storeMinimumConfidence, DEFAULT_AUTO_SEND_CONFIDENCE),
     0.99,

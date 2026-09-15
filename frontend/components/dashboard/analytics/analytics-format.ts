@@ -73,6 +73,11 @@ export function activityStatus(item: AiPerformance["recentActivity"][number]) {
       label: "Yeni taslakla değiştirildi",
       tone: "border-border bg-muted text-muted-foreground",
     }
+  if (item.answerability === "OUT_OF_SCOPE")
+    return {
+      label: "Kapsam dışı",
+      tone: "border-slate-500/20 bg-slate-500/10 text-slate-700 dark:text-slate-300",
+    }
   if (item.decision === "DO_NOT_REPLY")
     return {
       label: "Yanıtlanmayacak",
