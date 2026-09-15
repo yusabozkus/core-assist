@@ -957,6 +957,8 @@ model ProductQuestion {
 
   @@unique([connectionId, externalQuestionId])
   @@index([storeId, status, externalCreatedAt])
+  @@index([storeId, externalCreatedAt])
+  @@index([storeId, answeredAt])
   @@index([storeId, draftDecision])
   @@index([storeId, draftProcessingStatus])
   @@index([productId])
@@ -998,6 +1000,7 @@ model AiDraftAttempt {
 
   @@index([questionId, createdAt])
   @@index([storeId, outcome, createdAt])
+  @@index([storeId, createdAt])
   @@map("ai_draft_attempt")
 }
 
@@ -1028,6 +1031,7 @@ model QuestionAnswer {
   draftAttempt AiDraftAttempt?   @relation(fields: [draftAttemptId], references: [id], onDelete: SetNull)
 
   @@index([storeId, status, queuedAt])
+  @@index([storeId, status, sentAt])
   @@index([connectionId, status])
   @@map("question_answer")
 }

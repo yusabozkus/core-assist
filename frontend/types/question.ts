@@ -159,6 +159,11 @@ export type ProductQuestionPage = {
   }
 }
 
+export type ProductQuestionListSlice = Pick<
+  ProductQuestionPage,
+  "items" | "nextCursor"
+>
+
 export type QuestionSyncResult = {
   status: "RUNNING"
   queued: number

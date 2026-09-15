@@ -13,6 +13,9 @@ import { createHepsiburadaMenSizeGuide } from './hepsiburada-men-size-guide';
 
 const TEST_PRODUCT_IMAGE_URL =
   'https://cdn.dsmcdn.com/mnresize/420/620/ty1000441/product/media/images/prod/PIM/20260820/13/c81dfbf2-a9fa-48b2-8445-c0d16249ea71/1_org_zoom.jpg';
+const DEFAULT_MOCK_PAGE_SIZE = 100;
+const MAX_MOCK_PRODUCTS_PER_PROVIDER = 100_000;
+const MAX_MOCK_PAGE_SIZE = 500;
 
 // 30 Trendyol DeFacto + 30 Hepsiburada DeFacto men's catalogue snapshots.
 export const MOCK_PRODUCTS_PER_PROVIDER = 30;
@@ -58,6 +61,8 @@ export type MockProductSeed = {
 
 @Injectable()
 export class MockCatalogConnector {
+  private readonly inventoryRevisions = new Map<string, number>();
+
   verifyCredentials(
     providerKey: string,
     credentials: ProviderCredentials,
@@ -70,29 +75,30 @@ export class MockCatalogConnector {
   fetchProducts(
     providerKey: string,
     context: ConnectorContext,
+    cursor?: string,
   ): Promise<ProductBatch> {
     void context;
-
-    return Promise.resolve({
-      products:
-        providerKey === 'hepsiburada'
-          ? createHepsiburadaProducts()
-          : createTrendyolProducts(),
-    });
+    return Promise.resolve(createProductBatch(providerKey, cursor));
   }
 
   fetchInventory(
     providerKey: string,
     context: ConnectorContext,
+    cursor?: string,
   ): Promise<InventoryBatch> {
     void context;
-    const products =
-      providerKey === 'hepsiburada'
-        ? createHepsiburadaProducts()
-        : createTrendyolProducts();
+    const offset = parseMockCursor(cursor);
+    if (offset === 0) {
+      this.inventoryRevisions.set(
+        providerKey,
+        (this.inventoryRevisions.get(providerKey) ?? 0) + 1,
+      );
+    }
+    const revision = this.inventoryRevisions.get(providerKey) ?? 1;
+    const batch = createProductBatch(providerKey, cursor, revision);
 
     return Promise.resolve({
-      variants: products.flatMap((product) =>
+      variants: batch.products.flatMap((product) =>
         product.variants.map((variant) => ({
           externalProductId: product.externalId,
           externalVariantId: variant.externalId,
@@ -104,15 +110,23 @@ export class MockCatalogConnector {
           sourceUpdatedAt: variant.sourceUpdatedAt,
         })),
       ),
+      nextCursor: batch.nextCursor,
+      progress: batch.progress,
     });
   }
 
-  async fetchInventoryByReferences(
+  fetchInventoryByReferences(
     providerKey: string,
     context: ConnectorContext,
     lookup: InventoryLookup,
   ): Promise<InventoryBatch> {
-    const inventory = await this.fetchInventory(providerKey, context);
+    void context;
+    const revision = this.inventoryRevisions.get(providerKey) ?? 0;
+    const products = productsForInventoryLookup(
+      providerKey,
+      lookup.externalProductId,
+      revision,
+    );
     const externalVariantIds = new Set(
       lookup.variants.map((variant) => variant.externalVariantId),
     );
@@ -123,16 +137,255 @@ export class MockCatalogConnector {
       ),
     );
 
-    return {
-      variants: inventory.variants.filter(
-        (variant) =>
-          variant.externalProductId === lookup.externalProductId ||
-          externalVariantIds.has(variant.externalVariantId) ||
-          skus.has(variant.sku) ||
-          Boolean(variant.barcode && barcodes.has(variant.barcode)),
+    return Promise.resolve({
+      variants: products.flatMap((product) =>
+        product.variants
+          .filter(
+            (variant) =>
+              product.externalId === lookup.externalProductId ||
+              externalVariantIds.has(variant.externalId) ||
+              skus.has(variant.sku) ||
+              Boolean(variant.barcode && barcodes.has(variant.barcode)),
+          )
+          .map((variant) => ({
+            externalProductId: product.externalId,
+            externalVariantId: variant.externalId,
+            sku: variant.sku,
+            barcode: variant.barcode,
+            price: variant.price,
+            currency: variant.currency,
+            stock: variant.stock,
+            sourceUpdatedAt: variant.sourceUpdatedAt,
+          })),
       ),
-    };
+    });
   }
+}
+
+function createProductBatch(
+  providerKey: string,
+  cursor?: string,
+  inventoryRevision = 0,
+): ProductBatch {
+  const provider = normalizeProvider(providerKey);
+  const fixtures =
+    provider === 'hepsiburada'
+      ? createHepsiburadaProducts()
+      : createTrendyolProducts();
+  const total = Math.max(fixtures.length, configuredProductCount());
+  const pageSize = configuredPageSize();
+  const offset = parseMockCursor(cursor);
+
+  if (offset > total) {
+    throw new Error('Mock katalog cursor değeri toplam ürün sayısını aşıyor.');
+  }
+
+  const end = Math.min(offset + pageSize, total);
+  const products = Array.from({ length: end - offset }, (_, pageIndex) => {
+    const index = offset + pageIndex;
+    const fixture = fixtures[index];
+    return fixture
+      ? withInventoryRevision(fixture, index + 1, inventoryRevision)
+      : createSyntheticProduct(provider, index + 1, inventoryRevision);
+  });
+
+  return {
+    products,
+    nextCursor: end < total ? String(end) : undefined,
+    progress: total === 0 ? 1 : end / total,
+  };
+}
+
+function productsForInventoryLookup(
+  providerKey: string,
+  externalProductId: string,
+  inventoryRevision: number,
+) {
+  const provider = normalizeProvider(providerKey);
+  const fixtures =
+    provider === 'hepsiburada'
+      ? createHepsiburadaProducts()
+      : createTrendyolProducts();
+  const fixture = fixtures.find(
+    (product) => product.externalId === externalProductId,
+  );
+  if (fixture) {
+    const sequence = fixtures.indexOf(fixture) + 1;
+    return [withInventoryRevision(fixture, sequence, inventoryRevision)];
+  }
+
+  const sequence = syntheticProductSequence(provider, externalProductId);
+  return sequence
+    ? [createSyntheticProduct(provider, sequence, inventoryRevision)]
+    : [];
+}
+
+function withInventoryRevision(
+  product: NormalizedProduct,
+  sequence: number,
+  inventoryRevision: number,
+): NormalizedProduct {
+  if (inventoryRevision === 0) return product;
+
+  const sourceUpdatedAt = mockSourceUpdatedAt(inventoryRevision);
+  return {
+    ...product,
+    sourceUpdatedAt,
+    variants: product.variants.map((variant, variantIndex) => ({
+      ...variant,
+      stock: revisedStock(
+        variant.stock,
+        sequence,
+        variantIndex,
+        inventoryRevision,
+      ),
+      sourceUpdatedAt,
+    })),
+  };
+}
+
+function createSyntheticProduct(
+  provider: 'trendyol' | 'hepsiburada',
+  sequence: number,
+  inventoryRevision: number,
+): NormalizedProduct {
+  const providerCode = provider === 'trendyol' ? 'TY' : 'HB';
+  const externalPrefix = provider === 'trendyol' ? 'ty-content' : 'hb-listing';
+  const paddedSequence = String(sequence).padStart(6, '0');
+  const category = ['Tişört', 'Gömlek', 'Pantolon', 'Elbise', 'Ayakkabı'][
+    (sequence - 1) % 5
+  ];
+  const sourceUpdatedAt = mockSourceUpdatedAt(inventoryRevision);
+
+  return {
+    externalId: `${externalPrefix}-benchmark-${paddedSequence}`,
+    externalUrl: `https://example.com/${provider}/benchmark/${paddedSequence}`,
+    title: `Benchmark ${category} ${paddedSequence}`,
+    description:
+      'Yüksek hacimli katalog ve stok senkronizasyonu testi için oluşturulmuş mock ürün.',
+    brand: 'Core Asistan Benchmark',
+    category,
+    attributes: [
+      { name: 'Koleksiyon', value: 'Benchmark' },
+      { name: 'Materyal', value: 'Pamuklu' },
+    ],
+    images: [TEST_PRODUCT_IMAGE_URL],
+    variants: ['S', 'M', 'L', 'XL'].map((size, variantIndex) => {
+      const baseStock = syntheticStock(sequence, variantIndex, 0);
+      return {
+        externalId: `${providerCode.toLowerCase()}-benchmark-variant-${paddedSequence}-${variantIndex + 1}`,
+        title: `Siyah / ${size}`,
+        sku: `BENCH-${providerCode}-${paddedSequence}-${size}`,
+        barcode: `${provider === 'trendyol' ? '97' : '98'}${paddedSequence}${String(variantIndex + 1).padStart(5, '0')}`,
+        color: 'Siyah',
+        size,
+        price: 299 + ((sequence + variantIndex) % 2_700),
+        currency: 'TRY',
+        stock:
+          inventoryRevision === 0
+            ? baseStock
+            : revisedStock(
+                baseStock,
+                sequence,
+                variantIndex,
+                inventoryRevision,
+              ),
+        sourceUpdatedAt,
+      };
+    }),
+    sourceUpdatedAt,
+    rawPayload: {
+      fixture: true,
+      benchmark: true,
+      provider,
+      sequence,
+      inventoryRevision,
+    },
+  };
+}
+
+function mockSourceUpdatedAt(inventoryRevision: number) {
+  return new Date(Date.UTC(2026, 8, 14, 0, inventoryRevision));
+}
+
+function syntheticStock(
+  sequence: number,
+  variantIndex: number,
+  revision: number,
+) {
+  const bucket = (sequence * 17 + variantIndex * 23 + revision * 11) % 100;
+  if (bucket < 8) return 0;
+  if (bucket < 20) return 1 + (bucket % 5);
+  return 6 + (bucket % 95);
+}
+
+function revisedStock(
+  baseStock: number,
+  sequence: number,
+  variantIndex: number,
+  revision: number,
+) {
+  if ((sequence + variantIndex + revision) % 17 === 0) return 0;
+  if (baseStock === 0) return 5 + (revision % 8);
+  return Math.max(0, baseStock - 1 - (revision % 4));
+}
+
+function syntheticProductSequence(
+  provider: 'trendyol' | 'hepsiburada',
+  externalProductId: string,
+) {
+  const prefix =
+    provider === 'trendyol' ? 'ty-content-benchmark-' : 'hb-listing-benchmark-';
+  if (!externalProductId.startsWith(prefix)) return null;
+
+  const sequence = Number(externalProductId.slice(prefix.length));
+  return Number.isInteger(sequence) && sequence > 0 ? sequence : null;
+}
+
+function normalizeProvider(providerKey: string) {
+  return providerKey === 'hepsiburada'
+    ? ('hepsiburada' as const)
+    : ('trendyol' as const);
+}
+
+function parseMockCursor(cursor?: string) {
+  if (!cursor) return 0;
+  const offset = Number(cursor);
+  if (!Number.isInteger(offset) || offset < 0) {
+    throw new Error('Mock katalog cursor değeri geçersiz.');
+  }
+  return offset;
+}
+
+function configuredProductCount() {
+  return positiveIntegerEnvironmentValue(
+    'MOCK_CATALOG_PRODUCTS_PER_PROVIDER',
+    MOCK_PRODUCTS_PER_PROVIDER,
+    MAX_MOCK_PRODUCTS_PER_PROVIDER,
+  );
+}
+
+function configuredPageSize() {
+  return positiveIntegerEnvironmentValue(
+    'MOCK_CATALOG_PAGE_SIZE',
+    DEFAULT_MOCK_PAGE_SIZE,
+    MAX_MOCK_PAGE_SIZE,
+  );
+}
+
+function positiveIntegerEnvironmentValue(
+  name: string,
+  fallback: number,
+  maximum: number,
+) {
+  const rawValue = process.env[name]?.trim();
+  if (!rawValue) return fallback;
+
+  const value = Number(rawValue);
+  if (!Number.isSafeInteger(value) || value < 1 || value > maximum) {
+    throw new Error(`${name} 1 ile ${maximum} arasında olmalıdır.`);
+  }
+  return value;
 }
 
 function createTrendyolProducts(): ProductBatch['products'] {
@@ -361,7 +614,7 @@ function createCareInstructions(seed: MockProductSeed) {
   return 'Ürün etiketindeki bakım talimatlarına uyunuz.';
 }
 
-const TRENDYOL_PRODUCT_SEEDS: MockProductSeed[] = [
+export const TRENDYOL_PRODUCT_SEEDS: MockProductSeed[] = [
   {
     id: 1001,
     code: 'H3067AX26AU',
@@ -1361,7 +1614,7 @@ const TRENDYOL_PRODUCT_SEEDS: MockProductSeed[] = [
   },
 ];
 
-const HEPSIBURADA_PRODUCT_SEEDS: MockProductSeed[] = [
+export const HEPSIBURADA_PRODUCT_SEEDS: MockProductSeed[] = [
   {
     id: 2001,
     code: 'HBCV000029M1V7',

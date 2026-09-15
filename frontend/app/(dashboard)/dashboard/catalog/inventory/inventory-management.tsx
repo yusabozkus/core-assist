@@ -119,7 +119,22 @@ export function InventoryManagement({
   const loadMoreMarkerRef = useRef<HTMLDivElement | null>(null)
   const requestSequence = useRef(0)
   const syncPollInFlight = useRef(false)
-  const isInitialRender = useRef(true)
+  const inventoryFilterKey = createInventoryFilterKey(
+    storeId,
+    query,
+    status,
+    provider,
+    lowStockThreshold
+  )
+  const loadedFilterKey = useRef(
+    createInventoryFilterKey(
+      storeId,
+      initialFilters.query,
+      initialFilters.status,
+      initialFilters.provider,
+      initialFilters.lowStockThreshold
+    )
+  )
   const connectedChannels = connections.filter(
     (connection) =>
       connection.type === "COMMERCE" && connection.status === "CONNECTED"
@@ -150,6 +165,7 @@ export function InventoryManagement({
         })
 
         if (requestId !== requestSequence.current) return
+        loadedFilterKey.current = inventoryFilterKey
         setPage(result)
       } catch (caughtError) {
         if (signal?.aborted) return
@@ -164,20 +180,17 @@ export function InventoryManagement({
         }
       }
     },
-    [lowStockThreshold, provider, query, status, storeId]
+    [inventoryFilterKey, lowStockThreshold, provider, query, status, storeId]
   )
 
   useEffect(() => {
-    if (isInitialRender.current) {
-      isInitialRender.current = false
-      return
-    }
-
     const controller = new AbortController()
     const timeoutId = window.setTimeout(() => {
       updateUrl({ query, status, provider, lowStockThreshold, sort }, pathname)
       setExpandAll(false)
-      void loadFirstPage(controller.signal)
+      if (inventoryFilterKey !== loadedFilterKey.current) {
+        void loadFirstPage(controller.signal)
+      }
     }, SEARCH_DEBOUNCE_MS)
 
     return () => {
@@ -185,6 +198,7 @@ export function InventoryManagement({
       controller.abort()
     }
   }, [
+    inventoryFilterKey,
     loadFirstPage,
     lowStockThreshold,
     pathname,
@@ -802,6 +816,22 @@ function dateValue(value: string | null) {
   if (!value) return 0
   const date = new Date(value).getTime()
   return Number.isFinite(date) ? date : 0
+}
+
+function createInventoryFilterKey(
+  storeId: string,
+  query: string,
+  status: InventoryStockFilter,
+  provider: string,
+  lowStockThreshold: number
+) {
+  return [
+    storeId,
+    query.trim(),
+    status,
+    provider,
+    lowStockThreshold,
+  ].join("|")
 }
 
 function updateUrl(filters: InventoryFilters, pathname: string) {

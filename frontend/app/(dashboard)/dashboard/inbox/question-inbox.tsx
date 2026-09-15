@@ -42,6 +42,7 @@ import {
 import { useIsDesktop } from "@/hooks/use-desktop"
 import {
   getProductQuestion,
+  getProductQuestionUpdates,
   getProductQuestions,
   syncStoreQuestions,
 } from "@/lib/api/questions"
@@ -49,6 +50,7 @@ import type {
   ProductQuestion,
   ProductQuestionFilter,
   ProductQuestionListItem,
+  ProductQuestionListSlice,
   ProductQuestionPage,
 } from "@/types/question"
 
@@ -61,7 +63,9 @@ export type QuestionInboxProps = {
 const PAGE_SIZE = 30
 const SEARCH_DEBOUNCE_MS = 300
 const DETAIL_CACHE_TTL_MS = 60_000
-const LIVE_REFRESH_INTERVAL_MS = 2_000
+const ACTIVE_REFRESH_INTERVAL_MS = 2_000
+const IDLE_REFRESH_INTERVAL_MS = 10_000
+const SUMMARY_REFRESH_INTERVAL_MS = 30_000
 const MAX_LIVE_REFRESH_ITEMS = 50
 
 type DetailCacheEntry = {
@@ -121,13 +125,19 @@ export function QuestionInbox({
   const detailCacheRef = useRef(new Map<string, DetailCacheEntry>())
   const detailRefreshInFlightRef = useRef(false)
   const liveRefreshInFlightRef = useRef(false)
+  const lastSummaryRefreshAtRef = useRef(0)
   const questionsRef = useRef(initialPage.items)
   const selectedQuestionSummaryRef = useRef<ProductQuestionListItem | null>(
     null
   )
 
+  useEffect(() => {
+    lastSummaryRefreshAtRef.current = Date.now()
+  }, [])
+
   const applyFirstPage = useCallback((page: ProductQuestionPage) => {
     questionsRef.current = page.items
+    lastSummaryRefreshAtRef.current = Date.now()
     setQuestions(page.items)
     setNextCursor(page.nextCursor)
     setSummary(page.summary)
@@ -311,7 +321,7 @@ export function QuestionInbox({
     setListError(null)
 
     try {
-      const page = await getProductQuestions(storeId, {
+      const page = await getProductQuestionUpdates(storeId, {
         cursor: nextCursor,
         limit: PAGE_SIZE,
         status: filter,
@@ -322,7 +332,6 @@ export function QuestionInbox({
         appendUniqueQuestions(currentQuestions, page.items)
       )
       setNextCursor(page.nextCursor)
-      setSummary(page.summary)
     } catch (caughtError) {
       setListError(
         caughtError instanceof Error
@@ -375,59 +384,77 @@ export function QuestionInbox({
     })
   }
 
-  const refreshCurrentList = useCallback(async () => {
-    if (liveRefreshInFlightRef.current) return
+  const refreshCurrentList = useCallback(
+    async ({ includeSummary = false }: { includeSummary?: boolean } = {}) => {
+      if (liveRefreshInFlightRef.current) return
 
-    liveRefreshInFlightRef.current = true
-    try {
-      const loadedQuestionCount = questionsRef.current.length
-      const refreshLimit = Math.min(
-        Math.max(loadedQuestionCount, PAGE_SIZE),
-        MAX_LIVE_REFRESH_ITEMS
-      )
-      const page = await getProductQuestions(storeId, {
-        limit: refreshLimit,
-        status: filter,
-        query: query.trim(),
-      })
-
-      setQuestions((currentQuestions) => {
-        if (currentQuestions.length <= refreshLimit) {
-          questionsRef.current = page.items
-          return page.items
+      liveRefreshInFlightRef.current = true
+      try {
+        const loadedQuestionCount = questionsRef.current.length
+        const refreshLimit = Math.min(
+          Math.max(loadedQuestionCount, PAGE_SIZE),
+          MAX_LIVE_REFRESH_ITEMS
+        )
+        const requestOptions = {
+          limit: refreshLimit,
+          status: filter,
+          query: query.trim(),
+        } as const
+        let page: ProductQuestionListSlice
+        if (includeSummary) {
+          const pageWithSummary = await getProductQuestions(
+            storeId,
+            requestOptions
+          )
+          lastSummaryRefreshAtRef.current = Date.now()
+          setSummary(pageWithSummary.summary)
+          page = pageWithSummary
+        } else {
+          page = await getProductQuestionUpdates(storeId, requestOptions)
         }
 
-        const refreshedQuestionIds = new Set(
-          page.items.map((question) => question.id)
-        )
-        const preservedTail = currentQuestions
-          .slice(refreshLimit)
-          .filter((question) => !refreshedQuestionIds.has(question.id))
-        const nextQuestions = [...page.items, ...preservedTail]
-        questionsRef.current = nextQuestions
-        return nextQuestions
-      })
-      if (loadedQuestionCount <= refreshLimit) {
-        setNextCursor(page.nextCursor)
-      }
-      setSummary(page.summary)
-      setSelectedQuestionSummary((currentQuestion) => {
-        if (!currentQuestion) return null
+        setQuestions((currentQuestions) => {
+          if (currentQuestions.length <= refreshLimit) {
+            questionsRef.current = page.items
+            return page.items
+          }
 
-        const nextQuestion =
-          page.items.find((question) => question.id === currentQuestion.id) ??
-          currentQuestion
-        selectedQuestionSummaryRef.current = nextQuestion
-        return nextQuestion
-      })
-    } catch {
-      // Senkronizasyon arka planda sürerken mevcut liste korunur.
-    } finally {
-      liveRefreshInFlightRef.current = false
-    }
-  }, [filter, query, storeId])
+          const refreshedQuestionIds = new Set(
+            page.items.map((question) => question.id)
+          )
+          const preservedTail = currentQuestions
+            .slice(refreshLimit)
+            .filter((question) => !refreshedQuestionIds.has(question.id))
+          const nextQuestions = [...page.items, ...preservedTail]
+          questionsRef.current = nextQuestions
+          return nextQuestions
+        })
+        if (loadedQuestionCount <= refreshLimit) {
+          setNextCursor(page.nextCursor)
+        }
+        setSelectedQuestionSummary((currentQuestion) => {
+          if (!currentQuestion) return null
+
+          const nextQuestion =
+            page.items.find((question) => question.id === currentQuestion.id) ??
+            currentQuestion
+          selectedQuestionSummaryRef.current = nextQuestion
+          return nextQuestion
+        })
+      } catch {
+        // Senkronizasyon arka planda sürerken mevcut liste korunur.
+      } finally {
+        liveRefreshInFlightRef.current = false
+      }
+    },
+    [filter, query, storeId]
+  )
 
   useEffect(() => {
+    let disposed = false
+    let timeoutId: number | undefined
+    let cycleInFlight = false
+
     async function refreshLiveState() {
       const activeRequestKey = `${storeId}|${filter}|${query.trim()}`
       if (
@@ -439,26 +466,54 @@ export function QuestionInbox({
         return
       }
 
-      await refreshCurrentList()
+      const includeSummary =
+        Date.now() - lastSummaryRefreshAtRef.current >=
+        SUMMARY_REFRESH_INTERVAL_MS
+
+      await refreshCurrentList({ includeSummary })
 
       if (isQuestionProcessing(selectedQuestionSummaryRef.current)) {
         await refreshSelectedQuestion()
       }
     }
 
-    const intervalId = window.setInterval(
-      () => void refreshLiveState(),
-      LIVE_REFRESH_INTERVAL_MS
-    )
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        void refreshLiveState()
+    function scheduleNextRefresh() {
+      if (disposed || document.visibilityState !== "visible") return
+
+      const hasActiveWork = questionsRef.current.some(isQuestionProcessing)
+      timeoutId = window.setTimeout(
+        () => void runRefreshCycle(),
+        hasActiveWork ? ACTIVE_REFRESH_INTERVAL_MS : IDLE_REFRESH_INTERVAL_MS
+      )
+    }
+
+    async function runRefreshCycle() {
+      if (disposed || cycleInFlight) return
+
+      cycleInFlight = true
+      try {
+        await refreshLiveState()
+      } finally {
+        cycleInFlight = false
+        scheduleNextRefresh()
       }
     }
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        if (timeoutId !== undefined) window.clearTimeout(timeoutId)
+        void runRefreshCycle()
+      } else if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId)
+        timeoutId = undefined
+      }
+    }
+
+    scheduleNextRefresh()
     document.addEventListener("visibilitychange", handleVisibilityChange)
     return () => {
-      window.clearInterval(intervalId)
+      disposed = true
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId)
       document.removeEventListener("visibilitychange", handleVisibilityChange)
     }
   }, [
@@ -484,7 +539,10 @@ export function QuestionInbox({
             : "Soru kontrolü zaten çalışıyor veya bağlı kanal bulunmuyor."
         )
         window.setTimeout(() => void refreshCurrentList(), 1_500)
-        window.setTimeout(() => void refreshCurrentList(), 3_500)
+        window.setTimeout(
+          () => void refreshCurrentList({ includeSummary: true }),
+          3_500
+        )
       } catch (caughtError) {
         setError(
           caughtError instanceof Error
@@ -655,7 +713,12 @@ export function QuestionInbox({
           storeId={storeId}
           question={selectedQuestion}
           showHeader={showHeader}
-          onQuestionUpdated={refreshSelectedQuestion}
+          onQuestionUpdated={async () => {
+            await Promise.all([
+              refreshSelectedQuestion(),
+              refreshCurrentList({ includeSummary: true }),
+            ])
+          }}
         />
       )
     }

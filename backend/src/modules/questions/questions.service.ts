@@ -256,15 +256,7 @@ export class QuestionsService {
       ...questionStatusWhere(query.status),
     };
 
-    const [
-      questions,
-      filteredTotal,
-      summaryTotal,
-      pendingCount,
-      draftedCount,
-      answeredCount,
-      ignoredCount,
-    ] = await Promise.all([
+    const [questions, summaryRows] = await Promise.all([
       this.prisma.productQuestion.findMany({
         where,
         orderBy: [{ externalCreatedAt: 'desc' }, { id: 'desc' }],
@@ -272,26 +264,19 @@ export class QuestionsService {
         ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
         select: QUESTION_LIST_SELECT,
       }),
-      this.prisma.productQuestion.count({ where }),
-      this.prisma.productQuestion.count({ where: baseWhere }),
-      this.prisma.productQuestion.count({
-        where: { ...baseWhere, status: ProductQuestionStatus.PENDING },
-      }),
-      this.prisma.productQuestion.count({
-        where: { ...baseWhere, status: ProductQuestionStatus.DRAFTED },
-      }),
-      this.prisma.productQuestion.count({
-        where: { ...baseWhere, status: ProductQuestionStatus.ANSWERED },
-      }),
-      this.prisma.productQuestion.count({
-        where: { ...baseWhere, status: ProductQuestionStatus.IGNORED },
-      }),
+      query.includeSummary
+        ? this.prisma.productQuestion.groupBy({
+            by: ['status'],
+            where: baseWhere,
+            _count: { id: true },
+          })
+        : Promise.resolve(null),
     ]);
 
     const hasNextPage = questions.length > query.limit;
     const pageItems = hasNextPage ? questions.slice(0, query.limit) : questions;
 
-    return {
+    const page = {
       items: pageItems.map((question) => ({
         ...question,
         product: question.product
@@ -309,13 +294,29 @@ export class QuestionsService {
           : null,
       })),
       nextCursor: hasNextPage ? (pageItems.at(-1)?.id ?? null) : null,
-      total: filteredTotal,
-      summary: {
-        total: summaryTotal,
-        pending: pendingCount + draftedCount,
-        answered: answeredCount,
-        ignored: ignoredCount,
-      },
+    };
+
+    if (!summaryRows) return page;
+
+    const counts = new Map(
+      summaryRows.map((row) => [row.status, row._count.id]),
+    );
+    const pending =
+      (counts.get(ProductQuestionStatus.PENDING) ?? 0) +
+      (counts.get(ProductQuestionStatus.DRAFTED) ?? 0);
+    const answered = counts.get(ProductQuestionStatus.ANSWERED) ?? 0;
+    const ignored = counts.get(ProductQuestionStatus.IGNORED) ?? 0;
+    const total = pending + answered + ignored;
+
+    return {
+      ...page,
+      total: filteredQuestionTotal(query.status, {
+        pending,
+        answered,
+        ignored,
+        total,
+      }),
+      summary: { total, pending, answered, ignored },
     };
   }
 
@@ -505,5 +506,26 @@ function questionStatusWhere(
       return { status: ProductQuestionStatus.IGNORED };
     default:
       return {};
+  }
+}
+
+function filteredQuestionTotal(
+  status: QuestionListStatusFilter,
+  counts: {
+    pending: number;
+    answered: number;
+    ignored: number;
+    total: number;
+  },
+) {
+  switch (status) {
+    case QuestionListStatusFilter.PENDING:
+      return counts.pending;
+    case QuestionListStatusFilter.ANSWERED:
+      return counts.answered;
+    case QuestionListStatusFilter.IGNORED:
+      return counts.ignored;
+    default:
+      return counts.total;
   }
 }

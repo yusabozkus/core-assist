@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { Prisma } from '../../generated/prisma/client';
+import { Prisma } from '../../generated/prisma/client';
 import {
   ChannelConnectionStatus,
   ProductVariantStatus,
@@ -16,6 +16,17 @@ import {
   getInventoryFreshnessMaxAgeMs,
   resolveInventoryFreshness,
 } from './inventory-freshness';
+
+type InventorySummaryRow = {
+  variants: number;
+  healthy: number;
+  lowStock: number;
+  outOfStock: number;
+  unavailable: number;
+  stale: number;
+  totalStock: number;
+  lastSyncedAt: Date | null;
+};
 
 const PRODUCT_DETAIL_SELECT = {
   id: true,
@@ -334,31 +345,6 @@ export class CatalogService {
     if (stockFilter) filters.push(stockFilter);
 
     const where: Prisma.ProductVariantWhereInput = { AND: filters };
-    const healthyWhere: Prisma.ProductVariantWhereInput = {
-      ...baseWhere,
-      status: ProductVariantStatus.ACTIVE,
-      stock: { gt: options.lowStockThreshold },
-    };
-    const lowStockWhere: Prisma.ProductVariantWhereInput = {
-      ...baseWhere,
-      status: ProductVariantStatus.ACTIVE,
-      stock: { gt: 0, lte: options.lowStockThreshold },
-    };
-    const outOfStockWhere: Prisma.ProductVariantWhereInput = {
-      AND: [
-        baseWhere,
-        {
-          OR: [
-            {
-              stock: { lte: 0 },
-              status: ProductVariantStatus.ACTIVE,
-            },
-            { status: ProductVariantStatus.OUT_OF_STOCK },
-          ],
-        },
-      ],
-    };
-
     const productWhere = {
       storeId,
       status: 'ACTIVE',
@@ -369,14 +355,7 @@ export class CatalogService {
       products,
       filteredProductTotal,
       filteredVariantTotal,
-      variantCount,
-      healthyVariants,
-      lowStockVariants,
-      outOfStockVariants,
-      unavailableVariants,
-      staleVariants,
-      stock,
-      freshness,
+      summaryRows,
       providerConnections,
     ] = await Promise.all([
       this.prisma.product.findMany({
@@ -425,34 +404,37 @@ export class CatalogService {
       }),
       this.prisma.product.count({ where: productWhere }),
       this.prisma.productVariant.count({ where }),
-      this.prisma.productVariant.count({ where: baseWhere }),
-      this.prisma.productVariant.count({ where: healthyWhere }),
-      this.prisma.productVariant.count({ where: lowStockWhere }),
-      this.prisma.productVariant.count({ where: outOfStockWhere }),
-      this.prisma.productVariant.count({
-        where: { ...baseWhere, status: ProductVariantStatus.UNAVAILABLE },
-      }),
-      this.prisma.productVariant.count({
-        where: {
-          AND: [
-            baseWhere,
-            {
-              OR: [
-                { lastSyncedAt: null },
-                { lastSyncedAt: { lt: freshnessCutoff } },
-              ],
-            },
-          ],
-        },
-      }),
-      this.prisma.productVariant.aggregate({
-        where: { ...baseWhere, status: ProductVariantStatus.ACTIVE },
-        _sum: { stock: true },
-      }),
-      this.prisma.productVariant.aggregate({
-        where: baseWhere,
-        _max: { lastSyncedAt: true },
-      }),
+      this.prisma.$queryRaw<InventorySummaryRow[]>(Prisma.sql`
+        SELECT
+          COUNT(*)::int AS variants,
+          COUNT(*) FILTER (
+            WHERE v.status = 'ACTIVE' AND v.stock > ${options.lowStockThreshold}
+          )::int AS healthy,
+          COUNT(*) FILTER (
+            WHERE v.status = 'ACTIVE'
+              AND v.stock > 0
+              AND v.stock <= ${options.lowStockThreshold}
+          )::int AS "lowStock",
+          COUNT(*) FILTER (
+            WHERE v.status = 'OUT_OF_STOCK'
+              OR (v.status = 'ACTIVE' AND v.stock <= 0)
+          )::int AS "outOfStock",
+          COUNT(*) FILTER (WHERE v.status = 'UNAVAILABLE')::int AS unavailable,
+          COUNT(*) FILTER (
+            WHERE v."lastSyncedAt" IS NULL
+              OR v."lastSyncedAt" < ${freshnessCutoff}
+          )::int AS stale,
+          COALESCE(
+            SUM(v.stock) FILTER (WHERE v.status = 'ACTIVE'),
+            0
+          )::float8 AS "totalStock",
+          MAX(v."lastSyncedAt") AS "lastSyncedAt"
+        FROM product_variant v
+        JOIN product p ON p.id = v."productId"
+        WHERE p."storeId" = ${storeId}
+          AND p.status = 'ACTIVE'
+          AND v.status <> 'ARCHIVED'
+      `),
       this.prisma.channelConnection.findMany({
         where: {
           storeId,
@@ -464,6 +446,17 @@ export class CatalogService {
         select: { providerKey: true },
       }),
     ]);
+
+    const summary = summaryRows[0] ?? {
+      variants: 0,
+      healthy: 0,
+      lowStock: 0,
+      outOfStock: 0,
+      unavailable: 0,
+      stale: 0,
+      totalStock: 0,
+      lastSyncedAt: null,
+    };
 
     const hasNextPage = products.length > options.limit;
     const visibleProducts = hasNextPage
@@ -512,16 +505,7 @@ export class CatalogService {
       providers: providerConnections.map(
         (connection) => connection.providerKey,
       ),
-      summary: {
-        variants: variantCount,
-        healthy: healthyVariants,
-        lowStock: lowStockVariants,
-        outOfStock: outOfStockVariants,
-        unavailable: unavailableVariants,
-        stale: staleVariants,
-        totalStock: stock._sum.stock ?? 0,
-        lastSyncedAt: freshness._max.lastSyncedAt,
-      },
+      summary,
     };
   }
 

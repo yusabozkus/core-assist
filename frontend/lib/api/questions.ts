@@ -3,6 +3,7 @@ import type {
   DraftQuestionAnswerResult,
   ProductQuestion,
   ProductQuestionFilter,
+  ProductQuestionListSlice,
   ProductQuestionPage,
   QuestionSyncResult,
   QueueQuestionAnswerResult,
@@ -35,6 +36,31 @@ export function getProductQuestions(
   if (query?.trim()) searchParams.set("query", query.trim())
 
   return apiFetch<ProductQuestionPage>(
+    `/stores/${storeId}/questions?${searchParams.toString()}`,
+    { cache: "no-store", signal }
+  )
+}
+
+export function getProductQuestionUpdates(
+  storeId: string,
+  {
+    cursor,
+    limit = 30,
+    status = "PENDING",
+    query,
+    signal,
+  }: GetProductQuestionsOptions = {}
+) {
+  const searchParams = new URLSearchParams({
+    includeSummary: "false",
+    limit: limit.toString(),
+    status,
+  })
+
+  if (cursor) searchParams.set("cursor", cursor)
+  if (query?.trim()) searchParams.set("query", query.trim())
+
+  return apiFetch<ProductQuestionListSlice>(
     `/stores/${storeId}/questions?${searchParams.toString()}`,
     { cache: "no-store", signal }
   )

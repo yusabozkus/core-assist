@@ -7,7 +7,7 @@ export function BillingShellHeader() {
   return (
     <header className="border-b border-border/70">
       <div className="mx-auto flex min-h-18 w-full max-w-[1120px] flex-wrap items-center justify-between gap-3 px-5 py-3 sm:px-8 lg:px-10">
-        <AppLogo href={APP_ROUTES.dashboard.settings.billing} />
+        <AppLogo href={APP_ROUTES.dashboard.root} />
         <Button asChild variant="ghost" size="sm">
           <Link href={APP_ROUTES.dashboard.root}>Panele dön</Link>
         </Button>

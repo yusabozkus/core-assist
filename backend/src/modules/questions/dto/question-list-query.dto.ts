@@ -1,5 +1,6 @@
 import { Transform, Type, type TransformFnParams } from 'class-transformer';
 import {
+  IsBoolean,
   IsEnum,
   IsInt,
   IsOptional,
@@ -19,6 +20,12 @@ export enum QuestionListStatusFilter {
 
 function trimString({ value }: TransformFnParams): unknown {
   return typeof value === 'string' ? value.trim() : (value as unknown);
+}
+
+function parseBoolean({ value }: TransformFnParams): unknown {
+  if (value === true || value === 'true') return true;
+  if (value === false || value === 'false') return false;
+  return value as unknown;
 }
 
 export class QuestionListQueryDto {
@@ -42,4 +49,9 @@ export class QuestionListQueryDto {
   @IsString()
   @MaxLength(160)
   query?: string;
+
+  @IsOptional()
+  @Transform(parseBoolean)
+  @IsBoolean()
+  includeSummary = true;
 }

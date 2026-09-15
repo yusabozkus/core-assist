@@ -106,12 +106,17 @@ export class OnboardingService {
     ]);
 
     const store = workspace?.stores[0] ?? null;
-    const hasCompletedCatalogSync = Boolean(
-      store?.channelConnections.some(
-        (connection) =>
+    const hasReadyCatalogSync = Boolean(
+      store?.channelConnections.some((connection) => {
+        const syncRun = connection.syncRuns[0];
+        return (
           connection.status === ChannelConnectionStatus.CONNECTED &&
-          connection.syncRuns[0]?.status === CatalogSyncStatus.COMPLETED,
-      ),
+          syncRun !== undefined &&
+          (syncRun.status === CatalogSyncStatus.COMPLETED ||
+            (syncRun.status === CatalogSyncStatus.RUNNING &&
+              syncRun.productsProcessed > 0))
+        );
+      }),
     );
     const latestCatalogSync = store?.channelConnections
       .flatMap((connection) =>
@@ -129,7 +134,7 @@ export class OnboardingService {
       ? 'COMPLETED'
       : !store
         ? 'STORE'
-        : hasCompletedCatalogSync
+        : hasReadyCatalogSync
           ? 'PREFERENCES'
           : latestCatalogSync?.status === CatalogSyncStatus.RUNNING
             ? 'SYNCING'
@@ -336,7 +341,13 @@ export class OnboardingService {
               syncRuns: {
                 some: {
                   kind: CatalogSyncKind.FULL,
-                  status: CatalogSyncStatus.COMPLETED,
+                  OR: [
+                    { status: CatalogSyncStatus.COMPLETED },
+                    {
+                      status: CatalogSyncStatus.RUNNING,
+                      productsProcessed: { gt: 0 },
+                    },
+                  ],
                 },
               },
             },

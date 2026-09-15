@@ -218,7 +218,12 @@ async function waitForCatalogSync(
     const syncRun = await getChannelSyncRun(storeId, syncRunId, signal)
     onProgress(syncRun.progress)
 
-    if (syncRun.status === "COMPLETED") return syncRun
+    if (
+      syncRun.status === "COMPLETED" ||
+      (syncRun.status === "RUNNING" && syncRun.productsProcessed > 0)
+    ) {
+      return syncRun
+    }
 
     if (syncRun.status === "FAILED") {
       throw new Error(
@@ -288,6 +293,11 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
         }
       : null
   })
+  const [isCatalogSyncContinuing, setIsCatalogSyncContinuing] = React.useState(
+    initialStatus.stage === "PREFERENCES" &&
+      initialStatus.catalogSync?.status === "RUNNING" &&
+      initialStatus.catalogSync.productsProcessed > 0
+  )
   const [submitError, setSubmitError] = React.useState<string | null>(() =>
     initialStatus.catalogSync?.status === "FAILED"
       ? (initialStatus.catalogSync.errorMessage ??
@@ -364,6 +374,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
         if (controller.signal.aborted) return
 
         setSyncProgress(100)
+        setIsCatalogSyncContinuing(syncRun.status === "RUNNING")
         setCatalogImportSummary(
           syncRun.productsSkipped > 0
             ? {
@@ -498,6 +509,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
       )
 
       setSyncProgress(100)
+      setIsCatalogSyncContinuing(syncRun.status === "RUNNING")
       setCatalogImportSummary(
         syncRun.productsSkipped > 0
           ? {
@@ -803,6 +815,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                           tone={profileDraft.tone}
                           responseLength={profileDraft.responseLength}
                           catalogImportSummary={catalogImportSummary}
+                          isCatalogSyncContinuing={isCatalogSyncContinuing}
                           onToneChange={(value) => updateProfile("tone", value)}
                           onResponseLengthChange={(value) =>
                             updateProfile("responseLength", value)
@@ -1208,12 +1221,14 @@ function AiPreferencesStep({
   tone,
   responseLength,
   catalogImportSummary,
+  isCatalogSyncContinuing,
   onToneChange,
   onResponseLengthChange,
 }: {
   tone: AiTone
   responseLength: AiResponseLength
   catalogImportSummary: { processed: number; skipped: number } | null
+  isCatalogSyncContinuing: boolean
   onToneChange: (value: AiTone) => void
   onResponseLengthChange: (value: AiResponseLength) => void
 }) {
@@ -1230,6 +1245,22 @@ function AiPreferencesStep({
         title="AI müşterilerinizle nasıl konuşsun?"
         description="Başlangıç için yalnızca iletişim tonunu ve hedef yanıt uzunluğunu seçin. Daha ayrıntılı kuralları panelden ekleyebilirsiniz."
       />
+
+      {isCatalogSyncContinuing ? (
+        <div className="mb-7 flex max-w-3xl items-start gap-3 rounded-xl border border-primary/20 bg-primary/6 px-4 py-3 text-xs leading-5">
+          <HugeiconsIcon
+            icon={RefreshIcon}
+            className="mt-0.5 size-4 shrink-0 animate-spin text-primary"
+          />
+          <p className="text-muted-foreground">
+            <span className="font-medium text-foreground">
+              İlk ürünleriniz hazır.
+            </span>{" "}
+            Kataloğunuzun kalanı arka planda aktarılıyor. Kurulumu tamamlayıp
+            paneli kullanmaya başlayabilirsiniz.
+          </p>
+        </div>
+      ) : null}
 
       {catalogImportSummary ? (
         <div className="mb-7 flex max-w-3xl items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/8 px-4 py-3 text-xs leading-5">

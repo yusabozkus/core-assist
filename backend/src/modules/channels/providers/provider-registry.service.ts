@@ -130,7 +130,7 @@ export class ProviderRegistryService {
     cursor?: string,
   ): Promise<ProductBatch> {
     if (this.catalogMode === 'mock') {
-      return this.mockConnector.fetchProducts(providerKey, context);
+      return this.mockConnector.fetchProducts(providerKey, context, cursor);
     }
 
     return this.getLiveCatalogConnector(providerKey).fetchProducts(
@@ -145,7 +145,7 @@ export class ProviderRegistryService {
     cursor?: string,
   ): Promise<InventoryBatch> {
     if (this.catalogMode === 'mock') {
-      return this.mockConnector.fetchInventory(providerKey, context);
+      return this.mockConnector.fetchInventory(providerKey, context, cursor);
     }
 
     return this.getLiveCatalogConnector(providerKey).fetchInventory(
