@@ -54,7 +54,6 @@ export function TeamAccessFields({
             <SelectValue>{selectedOption?.label}</SelectValue>
           </SelectTrigger>
           <SelectContent
-            position="popper"
             align="start"
             className="w-[var(--radix-select-trigger-width)] min-w-80"
           >

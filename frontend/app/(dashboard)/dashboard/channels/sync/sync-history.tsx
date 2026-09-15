@@ -300,7 +300,7 @@ export function SyncHistory({
               <SelectTrigger className="border-border bg-card">
                 <SelectValue placeholder="Tüm kanallar" />
               </SelectTrigger>
-              <SelectContent position="popper">
+              <SelectContent>
                 <SelectItem value="ALL">Tüm kanallar</SelectItem>
                 {initialPage.providers.map((providerKey) => (
                   <SelectItem key={providerKey} value={providerKey}>
@@ -323,7 +323,7 @@ export function SyncHistory({
               <SelectTrigger className="border-border bg-card">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent position="popper">
+              <SelectContent>
                 <SelectItem value="NEWEST">En yeni önce</SelectItem>
                 <SelectItem value="OLDEST">En eski önce</SelectItem>
               </SelectContent>
@@ -422,7 +422,7 @@ function FilterSelect({
       <SelectTrigger className="border-border bg-card">
         <SelectValue />
       </SelectTrigger>
-      <SelectContent position="popper">
+      <SelectContent>
         {items.map((item) => (
           <SelectItem key={item.value} value={item.value}>
             {item.label}

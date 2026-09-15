@@ -470,7 +470,7 @@ export function InventoryManagement({
                   >
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent position="popper">
+                  <SelectContent>
                     {STOCK_FILTERS.map((filter) => (
                       <SelectItem key={filter.value} value={filter.value}>
                         {filter.label}
@@ -486,7 +486,7 @@ export function InventoryManagement({
                   >
                     <SelectValue placeholder="Tüm kanallar" />
                   </SelectTrigger>
-                  <SelectContent position="popper">
+                  <SelectContent>
                     <SelectItem value="ALL">Tüm kanallar</SelectItem>
                     {initialPage.providers.map((providerKey) => (
                       <SelectItem key={providerKey} value={providerKey}>
@@ -506,7 +506,7 @@ export function InventoryManagement({
                   >
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent position="popper">
+                  <SelectContent>
                     {[3, 5, 10, 20].map((value) => (
                       <SelectItem key={value} value={String(value)}>
                         Az stok ≤ {value}
@@ -530,7 +530,7 @@ export function InventoryManagement({
                     />
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent position="popper" align="end">
+                  <SelectContent align="end">
                     {SORT_OPTIONS.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
