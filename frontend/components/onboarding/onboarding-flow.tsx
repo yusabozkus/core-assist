@@ -13,6 +13,7 @@ import {
   LinkSquare02Icon,
   Logout01Icon,
   Message01Icon,
+  Package01Icon,
   RefreshIcon,
   Rocket01Icon,
   ShieldCheckIcon,
@@ -47,6 +48,7 @@ import type {
 } from "@/types/knowledge"
 import type {
   OnboardingChannel,
+  InventoryPolicy,
   OnboardingResource,
   OnboardingStatus,
 } from "@/types/onboarding"
@@ -66,6 +68,12 @@ const STEPS = [
   },
   {
     id: 3,
+    label: "Stok yapısı",
+    description: "Kanallardaki stokların ilişkisini belirleyin",
+    icon: Package01Icon,
+  },
+  {
+    id: 4,
     label: "AI yanıtları",
     description: "Yanıt tonunu ve uzunluğunu belirleyin",
     icon: Message01Icon,
@@ -247,8 +255,11 @@ type OnboardingFlowProps = {
 }
 
 function getInitialStep(status: OnboardingStatus) {
-  if (status.stage === "PREFERENCES") return 3
-  if (status.stage === "CHANNEL" || status.stage === "SYNCING") return 2
+  if (status.stage === "PREFERENCES") {
+    return status.store?.inventoryPolicy ? 4 : 3
+  }
+  if (status.stage === "SYNCING") return 3
+  if (status.stage === "CHANNEL") return 2
   return 1
 }
 
@@ -331,6 +342,9 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
   const [credentials, setCredentials] = React.useState<Record<string, string>>(
     {}
   )
+  const [inventoryPolicy, setInventoryPolicy] = React.useState<InventoryPolicy>(
+    initialStatus.store?.inventoryPolicy ?? "SHARED"
+  )
 
   const currentStepData = STEPS[currentStep - 1]
   const progress = (currentStep / STEPS.length) * 100
@@ -347,7 +361,9 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
       ? storeName.trim().length >= 2
       : currentStep === 2
         ? Boolean(selectedChannel && channelCredentialsComplete)
-        : Boolean(provisionedStore)
+        : currentStep === 3
+          ? Boolean(inventoryPolicy)
+          : Boolean(provisionedStore)
 
   React.useEffect(() => {
     const catalogSync = initialStatus.catalogSync
@@ -386,8 +402,8 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
         )
         setProvisionedStore(store)
         setDirection(1)
-        setCurrentStep(3)
-        setFurthestStep(3)
+        setCurrentStep(4)
+        setFurthestStep(4)
         setSubmitError(null)
       })
       .catch((error: unknown) => {
@@ -429,7 +445,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
       step < 1 ||
       step > STEPS.length ||
       step > furthestStep ||
-      (provisionedStore && step < 3)
+      (provisionedStore && step < 4)
     ) {
       return
     }
@@ -451,6 +467,16 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
 
     if (currentStep === 1) {
       advanceToStep(2)
+      return
+    }
+
+    if (currentStep === 2) {
+      advanceToStep(3)
+      return
+    }
+
+    if (currentStep === 3 && provisionedStore) {
+      advanceToStep(4)
       return
     }
 
@@ -492,6 +518,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
       const result = await provisionOnboarding({
         storeName: storeName.trim(),
         selectedChannel: selectedChannel.toUpperCase() as OnboardingChannel,
+        inventoryPolicy,
         environment: "PRODUCTION",
         credentials,
         brandDescription: profileDraft.brandDescription?.trim() || undefined,
@@ -521,7 +548,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
       )
       setProvisionedStore(result.store)
       await new Promise((resolve) => window.setTimeout(resolve, 300))
-      advanceToStep(3)
+      advanceToStep(4)
     } catch (error: unknown) {
       setSubmitError(
         error instanceof Error
@@ -543,6 +570,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
     try {
       const result = await completeOnboarding({
         storeId: provisionedStore.id,
+        inventoryPolicy,
         tone: profileDraft.tone,
         responseLength: profileDraft.responseLength,
       })
@@ -811,6 +839,11 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                             }))
                           }
                         />
+                      ) : currentStep === 3 ? (
+                        <InventoryPolicyStep
+                          value={inventoryPolicy}
+                          onChange={setInventoryPolicy}
+                        />
                       ) : (
                         <AiPreferencesStep
                           tone={profileDraft.tone}
@@ -881,7 +914,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                         <HugeiconsIcon icon={Rocket01Icon} className="size-4" />
                         Kurulumu tamamla
                       </>
-                    ) : currentStep === 2 ? (
+                    ) : currentStep === 3 ? (
                       <>
                         Bağla ve ürünleri getir
                         <HugeiconsIcon
@@ -1155,6 +1188,130 @@ function ChannelStep({
           </motion.p>
         )}
       </AnimatePresence>
+    </div>
+  )
+}
+
+function InventoryPolicyStep({
+  value,
+  onChange,
+}: {
+  value: InventoryPolicy
+  onChange: (value: InventoryPolicy) => void
+}) {
+  const options: Array<{
+    value: InventoryPolicy
+    title: string
+    description: string
+    example: string
+    recommended?: boolean
+    icon: typeof Layers01Icon
+  }> = [
+    {
+      value: "SHARED",
+      title: "Ortak stok havuzu",
+      description:
+        "Aynı fiziksel stok tüm pazaryerlerinde kullanılır. Kanal miktarları birbiriyle toplanmaz.",
+      example: "Trendyol 10 + Hepsiburada 10 → Toplam 10",
+      recommended: true,
+      icon: Layers01Icon,
+    },
+    {
+      value: "CHANNEL_SPECIFIC",
+      title: "Kanallara özel stok",
+      description:
+        "Her pazaryerine ayrı ürün stoğu ayırırsınız. Kanal miktarları toplam stoğu oluşturur.",
+      example: "Trendyol 10 + Hepsiburada 10 → Toplam 20",
+      icon: Package01Icon,
+    },
+  ]
+
+  return (
+    <div>
+      <StepHeading
+        eyebrow="Stok yönetimi"
+        title="Pazaryerleriniz aynı stoğu mu kullanıyor?"
+        description="Bu tercih, aynı ürün birden fazla kanalda bulunduğunda stok miktarının nasıl hesaplanacağını belirler. Daha sonra mağaza ayarlarından değiştirebilirsiniz."
+      />
+
+      <div
+        role="radiogroup"
+        aria-label="Stok yapısı"
+        className="grid gap-3 sm:grid-cols-2"
+      >
+        {options.map((option) => {
+          const selected = value === option.value
+
+          return (
+            <motion.button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              whileTap={{ scale: 0.99 }}
+              onClick={() => onChange(option.value)}
+              className={cn(
+                "relative flex min-h-56 flex-col rounded-2xl border p-5 text-left transition-[background-color,border-color,box-shadow] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                selected
+                  ? "border-primary/45 bg-primary/[0.08] shadow-sm"
+                  : "border-border bg-card hover:border-foreground/20 hover:bg-muted/30"
+              )}
+            >
+              <span className="flex items-start justify-between gap-3">
+                <span
+                  className={cn(
+                    "flex size-10 items-center justify-center rounded-xl",
+                    selected
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  <HugeiconsIcon icon={option.icon} className="size-5" />
+                </span>
+                <span className="flex items-center gap-2">
+                  {option.recommended ? (
+                    <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
+                      Önerilen
+                    </span>
+                  ) : null}
+                  <span
+                    className={cn(
+                      "flex size-5 items-center justify-center rounded-full border",
+                      selected
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border text-transparent"
+                    )}
+                  >
+                    <HugeiconsIcon
+                      icon={CheckmarkCircle01Icon}
+                      className="size-3.5"
+                    />
+                  </span>
+                </span>
+              </span>
+
+              <span className="mt-5 text-base font-semibold text-foreground">
+                {option.title}
+              </span>
+              <span className="mt-2 text-xs leading-5 text-muted-foreground">
+                {option.description}
+              </span>
+              <span className="mt-auto border-t border-border/70 pt-4 font-mono text-[11px] text-foreground/75">
+                {option.example}
+              </span>
+            </motion.button>
+          )
+        })}
+      </div>
+
+      <p className="mt-5 flex items-start gap-2 text-xs leading-5 text-muted-foreground">
+        <HugeiconsIcon
+          icon={InformationCircleIcon}
+          className="mt-0.5 size-4 shrink-0 text-primary"
+        />
+        Emin değilseniz ortak stok havuzunu seçin. Core Asistan kanal stoklarını
+        yanlışlıkla toplamaz ve farklılıkları ayrı gösterir.
+      </p>
     </div>
   )
 }

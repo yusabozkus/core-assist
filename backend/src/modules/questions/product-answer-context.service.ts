@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  ExternalEntityStatus,
   ProductQuestionStatus,
   ProductVariantStatus,
   QuestionAnswerComposition,
@@ -298,7 +299,14 @@ export class ProductAnswerContextService {
                 status: true,
                 lastSyncedAt: true,
                 externalVariants: {
-                  select: { externalProductId: true },
+                  select: {
+                    externalProductId: true,
+                    price: true,
+                    currency: true,
+                    stock: true,
+                    status: true,
+                    lastSyncedAt: true,
+                  },
                 },
               },
             },
@@ -387,17 +395,37 @@ export class ProductAnswerContextService {
               question.externalProductRecordId,
           ),
       )
-      .map((variant) => ({
-        title: variant.title,
-        sku: variant.sku,
-        color: variant.color,
-        size: variant.size,
-        price: Number(variant.price),
-        currency: variant.currency,
-        stock: variant.stock,
-        status: variant.status,
-        lastSyncedAt: variant.lastSyncedAt?.toISOString() ?? null,
-      }));
+      .map((variant) => {
+        const channelVariant = question.externalProductRecordId
+          ? variant.externalVariants.find(
+              (externalVariant) =>
+                externalVariant.externalProductId ===
+                question.externalProductRecordId,
+            )
+          : null;
+        const stock = channelVariant?.stock ?? variant.stock;
+
+        return {
+          title: variant.title,
+          sku: variant.sku,
+          color: variant.color,
+          size: variant.size,
+          price: Number(channelVariant?.price ?? variant.price),
+          currency: channelVariant?.currency ?? variant.currency,
+          stock,
+          status:
+            channelVariant &&
+            channelVariant.status !== ExternalEntityStatus.ACTIVE
+              ? ProductVariantStatus.UNAVAILABLE
+              : stock > 0
+                ? ProductVariantStatus.ACTIVE
+                : ProductVariantStatus.OUT_OF_STOCK,
+          lastSyncedAt:
+            (
+              channelVariant?.lastSyncedAt ?? variant.lastSyncedAt
+            )?.toISOString() ?? null,
+        };
+      });
     const context = applyVerifiedProductKnowledge(
       analyzeProductQuestion({
         questionId: question.id,

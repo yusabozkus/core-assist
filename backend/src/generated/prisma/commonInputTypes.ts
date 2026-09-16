@@ -481,6 +481,13 @@ export type EnumStoreStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumStoreStatusFilter<$PrismaModel> | $Enums.StoreStatus
 }
 
+export type EnumInventoryPolicyNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.InventoryPolicy | Prisma.EnumInventoryPolicyFieldRefInput<$PrismaModel> | null
+  in?: $Enums.InventoryPolicy[] | Prisma.ListEnumInventoryPolicyFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.InventoryPolicy[] | Prisma.ListEnumInventoryPolicyFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumInventoryPolicyNullableFilter<$PrismaModel> | $Enums.InventoryPolicy | null
+}
+
 export type EnumStoreStatusWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.StoreStatus | Prisma.EnumStoreStatusFieldRefInput<$PrismaModel>
   in?: $Enums.StoreStatus[] | Prisma.ListEnumStoreStatusFieldRefInput<$PrismaModel>
@@ -489,6 +496,16 @@ export type EnumStoreStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumStoreStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumStoreStatusFilter<$PrismaModel>
+}
+
+export type EnumInventoryPolicyNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InventoryPolicy | Prisma.EnumInventoryPolicyFieldRefInput<$PrismaModel> | null
+  in?: $Enums.InventoryPolicy[] | Prisma.ListEnumInventoryPolicyFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.InventoryPolicy[] | Prisma.ListEnumInventoryPolicyFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumInventoryPolicyNullableWithAggregatesFilter<$PrismaModel> | $Enums.InventoryPolicy | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInventoryPolicyNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInventoryPolicyNullableFilter<$PrismaModel>
 }
 
 export type EnumAiToneFilter<$PrismaModel = never> = {
@@ -1525,6 +1542,13 @@ export type NestedEnumStoreStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumStoreStatusFilter<$PrismaModel> | $Enums.StoreStatus
 }
 
+export type NestedEnumInventoryPolicyNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.InventoryPolicy | Prisma.EnumInventoryPolicyFieldRefInput<$PrismaModel> | null
+  in?: $Enums.InventoryPolicy[] | Prisma.ListEnumInventoryPolicyFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.InventoryPolicy[] | Prisma.ListEnumInventoryPolicyFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumInventoryPolicyNullableFilter<$PrismaModel> | $Enums.InventoryPolicy | null
+}
+
 export type NestedEnumStoreStatusWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.StoreStatus | Prisma.EnumStoreStatusFieldRefInput<$PrismaModel>
   in?: $Enums.StoreStatus[] | Prisma.ListEnumStoreStatusFieldRefInput<$PrismaModel>
@@ -1533,6 +1557,16 @@ export type NestedEnumStoreStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumStoreStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumStoreStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumInventoryPolicyNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InventoryPolicy | Prisma.EnumInventoryPolicyFieldRefInput<$PrismaModel> | null
+  in?: $Enums.InventoryPolicy[] | Prisma.ListEnumInventoryPolicyFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.InventoryPolicy[] | Prisma.ListEnumInventoryPolicyFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumInventoryPolicyNullableWithAggregatesFilter<$PrismaModel> | $Enums.InventoryPolicy | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInventoryPolicyNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInventoryPolicyNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumAiToneFilter<$PrismaModel = never> = {

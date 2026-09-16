@@ -30,6 +30,7 @@ export type StoreMinAggregateOutputType = {
   name: string | null
   timezone: string | null
   status: $Enums.StoreStatus | null
+  inventoryPolicy: $Enums.InventoryPolicy | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -40,6 +41,7 @@ export type StoreMaxAggregateOutputType = {
   name: string | null
   timezone: string | null
   status: $Enums.StoreStatus | null
+  inventoryPolicy: $Enums.InventoryPolicy | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -50,6 +52,7 @@ export type StoreCountAggregateOutputType = {
   name: number
   timezone: number
   status: number
+  inventoryPolicy: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -62,6 +65,7 @@ export type StoreMinAggregateInputType = {
   name?: true
   timezone?: true
   status?: true
+  inventoryPolicy?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -72,6 +76,7 @@ export type StoreMaxAggregateInputType = {
   name?: true
   timezone?: true
   status?: true
+  inventoryPolicy?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -82,6 +87,7 @@ export type StoreCountAggregateInputType = {
   name?: true
   timezone?: true
   status?: true
+  inventoryPolicy?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -165,6 +171,7 @@ export type StoreGroupByOutputType = {
   name: string
   timezone: string
   status: $Enums.StoreStatus
+  inventoryPolicy: $Enums.InventoryPolicy | null
   createdAt: Date
   updatedAt: Date
   _count: StoreCountAggregateOutputType | null
@@ -196,6 +203,7 @@ export type StoreWhereInput = {
   name?: Prisma.StringFilter<"Store"> | string
   timezone?: Prisma.StringFilter<"Store"> | string
   status?: Prisma.EnumStoreStatusFilter<"Store"> | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.EnumInventoryPolicyNullableFilter<"Store"> | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFilter<"Store"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Store"> | Date | string
   workspace?: Prisma.XOR<Prisma.WorkspaceScalarRelationFilter, Prisma.WorkspaceWhereInput>
@@ -224,6 +232,7 @@ export type StoreOrderByWithRelationInput = {
   name?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  inventoryPolicy?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   workspace?: Prisma.WorkspaceOrderByWithRelationInput
@@ -255,6 +264,7 @@ export type StoreWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringFilter<"Store"> | string
   timezone?: Prisma.StringFilter<"Store"> | string
   status?: Prisma.EnumStoreStatusFilter<"Store"> | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.EnumInventoryPolicyNullableFilter<"Store"> | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFilter<"Store"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Store"> | Date | string
   workspace?: Prisma.XOR<Prisma.WorkspaceScalarRelationFilter, Prisma.WorkspaceWhereInput>
@@ -283,6 +293,7 @@ export type StoreOrderByWithAggregationInput = {
   name?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  inventoryPolicy?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.StoreCountOrderByAggregateInput
@@ -299,6 +310,7 @@ export type StoreScalarWhereWithAggregatesInput = {
   name?: Prisma.StringWithAggregatesFilter<"Store"> | string
   timezone?: Prisma.StringWithAggregatesFilter<"Store"> | string
   status?: Prisma.EnumStoreStatusWithAggregatesFilter<"Store"> | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.EnumInventoryPolicyNullableWithAggregatesFilter<"Store"> | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Store"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Store"> | Date | string
 }
@@ -308,6 +320,7 @@ export type StoreCreateInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -336,6 +349,7 @@ export type StoreUncheckedCreateInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -362,6 +376,7 @@ export type StoreUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -390,6 +405,7 @@ export type StoreUncheckedUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -417,6 +433,7 @@ export type StoreCreateManyInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -426,6 +443,7 @@ export type StoreUpdateManyMutationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -436,6 +454,7 @@ export type StoreUncheckedUpdateManyInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -461,6 +480,7 @@ export type StoreCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  inventoryPolicy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -471,6 +491,7 @@ export type StoreMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  inventoryPolicy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -481,6 +502,7 @@ export type StoreMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  inventoryPolicy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -548,6 +570,10 @@ export type StoreUpdateOneRequiredWithoutInvitationAccessesNestedInput = {
 
 export type EnumStoreStatusFieldUpdateOperationsInput = {
   set?: $Enums.StoreStatus
+}
+
+export type NullableEnumInventoryPolicyFieldUpdateOperationsInput = {
+  set?: $Enums.InventoryPolicy | null
 }
 
 export type StoreCreateNestedOneWithoutKnowledgeProfileInput = {
@@ -781,6 +807,7 @@ export type StoreCreateWithoutWorkspaceInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
@@ -807,6 +834,7 @@ export type StoreUncheckedCreateWithoutWorkspaceInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -863,6 +891,7 @@ export type StoreScalarWhereInput = {
   name?: Prisma.StringFilter<"Store"> | string
   timezone?: Prisma.StringFilter<"Store"> | string
   status?: Prisma.EnumStoreStatusFilter<"Store"> | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.EnumInventoryPolicyNullableFilter<"Store"> | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFilter<"Store"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Store"> | Date | string
 }
@@ -872,6 +901,7 @@ export type StoreCreateWithoutInvitationAccessesInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -899,6 +929,7 @@ export type StoreUncheckedCreateWithoutInvitationAccessesInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -940,6 +971,7 @@ export type StoreUpdateWithoutInvitationAccessesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -967,6 +999,7 @@ export type StoreUncheckedUpdateWithoutInvitationAccessesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -992,6 +1025,7 @@ export type StoreCreateWithoutKnowledgeProfileInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -1019,6 +1053,7 @@ export type StoreUncheckedCreateWithoutKnowledgeProfileInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -1060,6 +1095,7 @@ export type StoreUpdateWithoutKnowledgeProfileInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -1087,6 +1123,7 @@ export type StoreUncheckedUpdateWithoutKnowledgeProfileInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -1112,6 +1149,7 @@ export type StoreCreateWithoutKnowledgeFaqsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -1139,6 +1177,7 @@ export type StoreUncheckedCreateWithoutKnowledgeFaqsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -1180,6 +1219,7 @@ export type StoreUpdateWithoutKnowledgeFaqsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -1207,6 +1247,7 @@ export type StoreUncheckedUpdateWithoutKnowledgeFaqsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -1232,6 +1273,7 @@ export type StoreCreateWithoutAiInstructionsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -1259,6 +1301,7 @@ export type StoreUncheckedCreateWithoutAiInstructionsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -1300,6 +1343,7 @@ export type StoreUpdateWithoutAiInstructionsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -1327,6 +1371,7 @@ export type StoreUncheckedUpdateWithoutAiInstructionsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -1352,6 +1397,7 @@ export type StoreCreateWithoutChannelKnowledgeInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -1379,6 +1425,7 @@ export type StoreUncheckedCreateWithoutChannelKnowledgeInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -1420,6 +1467,7 @@ export type StoreUpdateWithoutChannelKnowledgeInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -1447,6 +1495,7 @@ export type StoreUncheckedUpdateWithoutChannelKnowledgeInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -1472,6 +1521,7 @@ export type StoreCreateWithoutChannelConnectionsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -1499,6 +1549,7 @@ export type StoreUncheckedCreateWithoutChannelConnectionsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -1540,6 +1591,7 @@ export type StoreUpdateWithoutChannelConnectionsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -1567,6 +1619,7 @@ export type StoreUncheckedUpdateWithoutChannelConnectionsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -1592,6 +1645,7 @@ export type StoreCreateWithoutProductsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -1619,6 +1673,7 @@ export type StoreUncheckedCreateWithoutProductsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -1660,6 +1715,7 @@ export type StoreUpdateWithoutProductsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -1687,6 +1743,7 @@ export type StoreUncheckedUpdateWithoutProductsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -1712,6 +1769,7 @@ export type StoreCreateWithoutProductIdentitiesInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -1739,6 +1797,7 @@ export type StoreUncheckedCreateWithoutProductIdentitiesInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -1780,6 +1839,7 @@ export type StoreUpdateWithoutProductIdentitiesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -1807,6 +1867,7 @@ export type StoreUncheckedUpdateWithoutProductIdentitiesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -1832,6 +1893,7 @@ export type StoreCreateWithoutProductKnowledgeFactsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -1859,6 +1921,7 @@ export type StoreUncheckedCreateWithoutProductKnowledgeFactsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -1900,6 +1963,7 @@ export type StoreUpdateWithoutProductKnowledgeFactsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -1927,6 +1991,7 @@ export type StoreUncheckedUpdateWithoutProductKnowledgeFactsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -1952,6 +2017,7 @@ export type StoreCreateWithoutIncomingEventsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -1979,6 +2045,7 @@ export type StoreUncheckedCreateWithoutIncomingEventsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -2020,6 +2087,7 @@ export type StoreUpdateWithoutIncomingEventsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -2047,6 +2115,7 @@ export type StoreUncheckedUpdateWithoutIncomingEventsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -2072,6 +2141,7 @@ export type StoreCreateWithoutProductQuestionsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -2099,6 +2169,7 @@ export type StoreUncheckedCreateWithoutProductQuestionsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -2140,6 +2211,7 @@ export type StoreUpdateWithoutProductQuestionsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -2167,6 +2239,7 @@ export type StoreUncheckedUpdateWithoutProductQuestionsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -2192,6 +2265,7 @@ export type StoreCreateWithoutAiDraftAttemptsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -2219,6 +2293,7 @@ export type StoreUncheckedCreateWithoutAiDraftAttemptsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -2260,6 +2335,7 @@ export type StoreUpdateWithoutAiDraftAttemptsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -2287,6 +2363,7 @@ export type StoreUncheckedUpdateWithoutAiDraftAttemptsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -2312,6 +2389,7 @@ export type StoreCreateWithoutQuestionAnswersInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -2339,6 +2417,7 @@ export type StoreUncheckedCreateWithoutQuestionAnswersInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -2380,6 +2459,7 @@ export type StoreUpdateWithoutQuestionAnswersInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -2407,6 +2487,7 @@ export type StoreUncheckedUpdateWithoutQuestionAnswersInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -2432,6 +2513,7 @@ export type StoreCreateWithoutMembersInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -2459,6 +2541,7 @@ export type StoreUncheckedCreateWithoutMembersInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
@@ -2500,6 +2583,7 @@ export type StoreUpdateWithoutMembersInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -2527,6 +2611,7 @@ export type StoreUncheckedUpdateWithoutMembersInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
@@ -2552,6 +2637,7 @@ export type StoreCreateWithoutNotificationsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -2579,6 +2665,7 @@ export type StoreUncheckedCreateWithoutNotificationsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -2620,6 +2707,7 @@ export type StoreUpdateWithoutNotificationsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -2647,6 +2735,7 @@ export type StoreUncheckedUpdateWithoutNotificationsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -2672,6 +2761,7 @@ export type StoreCreateWithoutNotificationPreferencesInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -2699,6 +2789,7 @@ export type StoreUncheckedCreateWithoutNotificationPreferencesInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -2740,6 +2831,7 @@ export type StoreUpdateWithoutNotificationPreferencesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -2767,6 +2859,7 @@ export type StoreUncheckedUpdateWithoutNotificationPreferencesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -2792,6 +2885,7 @@ export type StoreCreateWithoutNotificationDeliverySettingsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
@@ -2819,6 +2913,7 @@ export type StoreUncheckedCreateWithoutNotificationDeliverySettingsInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
   members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
@@ -2860,6 +2955,7 @@ export type StoreUpdateWithoutNotificationDeliverySettingsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
@@ -2887,6 +2983,7 @@ export type StoreUncheckedUpdateWithoutNotificationDeliverySettingsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -2912,6 +3009,7 @@ export type StoreCreateManyWorkspaceInput = {
   name: string
   timezone?: string
   status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -2921,6 +3019,7 @@ export type StoreUpdateWithoutWorkspaceInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
@@ -2947,6 +3046,7 @@ export type StoreUncheckedUpdateWithoutWorkspaceInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
@@ -2973,6 +3073,7 @@ export type StoreUncheckedUpdateManyWithoutWorkspaceInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -3149,6 +3250,7 @@ export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   name?: boolean
   timezone?: boolean
   status?: boolean
+  inventoryPolicy?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
@@ -3178,6 +3280,7 @@ export type StoreSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   name?: boolean
   timezone?: boolean
   status?: boolean
+  inventoryPolicy?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
@@ -3189,6 +3292,7 @@ export type StoreSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   name?: boolean
   timezone?: boolean
   status?: boolean
+  inventoryPolicy?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
@@ -3200,11 +3304,12 @@ export type StoreSelectScalar = {
   name?: boolean
   timezone?: boolean
   status?: boolean
+  inventoryPolicy?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type StoreOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "workspaceId" | "name" | "timezone" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["store"]>
+export type StoreOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "workspaceId" | "name" | "timezone" | "status" | "inventoryPolicy" | "createdAt" | "updatedAt", ExtArgs["result"]["store"]>
 export type StoreInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   workspace?: boolean | Prisma.WorkspaceDefaultArgs<ExtArgs>
   members?: boolean | Prisma.Store$membersArgs<ExtArgs>
@@ -3261,6 +3366,7 @@ export type $StorePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     name: string
     timezone: string
     status: $Enums.StoreStatus
+    inventoryPolicy: $Enums.InventoryPolicy | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["store"]>
@@ -3709,6 +3815,7 @@ export interface StoreFieldRefs {
   readonly name: Prisma.FieldRef<"Store", 'String'>
   readonly timezone: Prisma.FieldRef<"Store", 'String'>
   readonly status: Prisma.FieldRef<"Store", 'StoreStatus'>
+  readonly inventoryPolicy: Prisma.FieldRef<"Store", 'InventoryPolicy'>
   readonly createdAt: Prisma.FieldRef<"Store", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Store", 'DateTime'>
 }

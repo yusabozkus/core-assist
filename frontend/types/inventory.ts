@@ -26,6 +26,12 @@ export type InventoryItem = {
   lastSyncedAt: string | null
   freshness: InventoryFreshness
   providers: string[]
+  channelStocks: Array<{
+    providerKey: string
+    stock: number
+    lastSyncedAt: string
+  }>
+  hasStockConflict: boolean
 }
 
 export type InventorySummary = {
@@ -47,5 +53,6 @@ export type InventoryPage = {
   lowStockThreshold: number
   freshnessMaxAgeMs: number
   providers: string[]
+  inventoryPolicy: "SHARED" | "CHANNEL_SPECIFIC"
   summary: InventorySummary
 }

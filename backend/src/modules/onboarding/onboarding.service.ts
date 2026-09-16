@@ -69,6 +69,7 @@ export class OnboardingService {
             select: {
               id: true,
               name: true,
+              inventoryPolicy: true,
               knowledgeProfile: {
                 select: {
                   brandDescription: true,
@@ -148,6 +149,7 @@ export class OnboardingService {
         ? {
             id: store.id,
             name: store.name,
+            inventoryPolicy: store.inventoryPolicy,
           }
         : null,
       profile: store?.knowledgeProfile ?? null,
@@ -216,6 +218,7 @@ export class OnboardingService {
           data: {
             name: dto.storeName,
             workspaceId: workspace.id,
+            inventoryPolicy: dto.inventoryPolicy,
             members: {
               create: {
                 userId,
@@ -234,6 +237,17 @@ export class OnboardingService {
           },
         });
         storeCreated = true;
+      } else if (store.inventoryPolicy !== dto.inventoryPolicy) {
+        store = await transaction.store.update({
+          where: { id: store.id },
+          data: { inventoryPolicy: dto.inventoryPolicy },
+          include: {
+            channelConnections: {
+              where: { removedAt: null },
+              select: channelConnectionSelect,
+            },
+          },
+        });
       }
 
       await transaction.storeKnowledgeProfile.upsert({
@@ -373,6 +387,11 @@ export class OnboardingService {
           tone: dto.tone,
           responseLength: dto.responseLength,
         },
+      });
+
+      await transaction.store.update({
+        where: { id: store.id },
+        data: { inventoryPolicy: dto.inventoryPolicy },
       });
 
       const completedAt = new Date();

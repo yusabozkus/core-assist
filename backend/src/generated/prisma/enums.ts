@@ -142,6 +142,14 @@ export const StoreStatus = {
 export type StoreStatus = (typeof StoreStatus)[keyof typeof StoreStatus]
 
 
+export const InventoryPolicy = {
+  SHARED: 'SHARED',
+  CHANNEL_SPECIFIC: 'CHANNEL_SPECIFIC'
+} as const
+
+export type InventoryPolicy = (typeof InventoryPolicy)[keyof typeof InventoryPolicy]
+
+
 export const ChannelType = {
   COMMERCE: 'COMMERCE',
   MESSAGING: 'MESSAGING',

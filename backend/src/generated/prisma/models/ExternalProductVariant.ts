@@ -20,8 +20,20 @@ export type ExternalProductVariantModel = runtime.Types.Result.DefaultSelection<
 
 export type AggregateExternalProductVariant = {
   _count: ExternalProductVariantCountAggregateOutputType | null
+  _avg: ExternalProductVariantAvgAggregateOutputType | null
+  _sum: ExternalProductVariantSumAggregateOutputType | null
   _min: ExternalProductVariantMinAggregateOutputType | null
   _max: ExternalProductVariantMaxAggregateOutputType | null
+}
+
+export type ExternalProductVariantAvgAggregateOutputType = {
+  price: runtime.Decimal | null
+  stock: number | null
+}
+
+export type ExternalProductVariantSumAggregateOutputType = {
+  price: runtime.Decimal | null
+  stock: number | null
 }
 
 export type ExternalProductVariantMinAggregateOutputType = {
@@ -31,6 +43,9 @@ export type ExternalProductVariantMinAggregateOutputType = {
   externalId: string | null
   sku: string | null
   barcode: string | null
+  price: runtime.Decimal | null
+  currency: string | null
+  stock: number | null
   status: $Enums.ExternalEntityStatus | null
   lastSeenSyncId: string | null
   sourceUpdatedAt: Date | null
@@ -46,6 +61,9 @@ export type ExternalProductVariantMaxAggregateOutputType = {
   externalId: string | null
   sku: string | null
   barcode: string | null
+  price: runtime.Decimal | null
+  currency: string | null
+  stock: number | null
   status: $Enums.ExternalEntityStatus | null
   lastSeenSyncId: string | null
   sourceUpdatedAt: Date | null
@@ -61,6 +79,9 @@ export type ExternalProductVariantCountAggregateOutputType = {
   externalId: number
   sku: number
   barcode: number
+  price: number
+  currency: number
+  stock: number
   status: number
   lastSeenSyncId: number
   sourceUpdatedAt: number
@@ -71,6 +92,16 @@ export type ExternalProductVariantCountAggregateOutputType = {
 }
 
 
+export type ExternalProductVariantAvgAggregateInputType = {
+  price?: true
+  stock?: true
+}
+
+export type ExternalProductVariantSumAggregateInputType = {
+  price?: true
+  stock?: true
+}
+
 export type ExternalProductVariantMinAggregateInputType = {
   id?: true
   externalProductId?: true
@@ -78,6 +109,9 @@ export type ExternalProductVariantMinAggregateInputType = {
   externalId?: true
   sku?: true
   barcode?: true
+  price?: true
+  currency?: true
+  stock?: true
   status?: true
   lastSeenSyncId?: true
   sourceUpdatedAt?: true
@@ -93,6 +127,9 @@ export type ExternalProductVariantMaxAggregateInputType = {
   externalId?: true
   sku?: true
   barcode?: true
+  price?: true
+  currency?: true
+  stock?: true
   status?: true
   lastSeenSyncId?: true
   sourceUpdatedAt?: true
@@ -108,6 +145,9 @@ export type ExternalProductVariantCountAggregateInputType = {
   externalId?: true
   sku?: true
   barcode?: true
+  price?: true
+  currency?: true
+  stock?: true
   status?: true
   lastSeenSyncId?: true
   sourceUpdatedAt?: true
@@ -124,13 +164,13 @@ export type ExternalProductVariantAggregateArgs<ExtArgs extends runtime.Types.Ex
   where?: Prisma.ExternalProductVariantWhereInput
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-   * 
+   *
    * Determine the order of ExternalProductVariants to fetch.
    */
   orderBy?: Prisma.ExternalProductVariantOrderByWithRelationInput | Prisma.ExternalProductVariantOrderByWithRelationInput[]
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-   * 
+   *
    * Sets the start position
    */
   cursor?: Prisma.ExternalProductVariantWhereUniqueInput
@@ -155,6 +195,18 @@ export type ExternalProductVariantAggregateArgs<ExtArgs extends runtime.Types.Ex
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: ExternalProductVariantAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   *
+   * Select which fields to sum
+  **/
+  _sum?: ExternalProductVariantSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   *
    * Select which fields to find the minimum value
   **/
   _min?: ExternalProductVariantMinAggregateInputType
@@ -185,6 +237,8 @@ export type ExternalProductVariantGroupByArgs<ExtArgs extends runtime.Types.Exte
   take?: number
   skip?: number
   _count?: ExternalProductVariantCountAggregateInputType | true
+  _avg?: ExternalProductVariantAvgAggregateInputType
+  _sum?: ExternalProductVariantSumAggregateInputType
   _min?: ExternalProductVariantMinAggregateInputType
   _max?: ExternalProductVariantMaxAggregateInputType
 }
@@ -196,6 +250,9 @@ export type ExternalProductVariantGroupByOutputType = {
   externalId: string
   sku: string
   barcode: string | null
+  price: runtime.Decimal
+  currency: string
+  stock: number
   status: $Enums.ExternalEntityStatus
   lastSeenSyncId: string | null
   sourceUpdatedAt: Date | null
@@ -203,6 +260,8 @@ export type ExternalProductVariantGroupByOutputType = {
   createdAt: Date
   updatedAt: Date
   _count: ExternalProductVariantCountAggregateOutputType | null
+  _avg: ExternalProductVariantAvgAggregateOutputType | null
+  _sum: ExternalProductVariantSumAggregateOutputType | null
   _min: ExternalProductVariantMinAggregateOutputType | null
   _max: ExternalProductVariantMaxAggregateOutputType | null
 }
@@ -232,6 +291,9 @@ export type ExternalProductVariantWhereInput = {
   externalId?: Prisma.StringFilter<"ExternalProductVariant"> | string
   sku?: Prisma.StringFilter<"ExternalProductVariant"> | string
   barcode?: Prisma.StringNullableFilter<"ExternalProductVariant"> | string | null
+  price?: Prisma.DecimalFilter<"ExternalProductVariant"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFilter<"ExternalProductVariant"> | string
+  stock?: Prisma.IntFilter<"ExternalProductVariant"> | number
   status?: Prisma.EnumExternalEntityStatusFilter<"ExternalProductVariant"> | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.StringNullableFilter<"ExternalProductVariant"> | string | null
   sourceUpdatedAt?: Prisma.DateTimeNullableFilter<"ExternalProductVariant"> | Date | string | null
@@ -249,6 +311,9 @@ export type ExternalProductVariantOrderByWithRelationInput = {
   externalId?: Prisma.SortOrder
   sku?: Prisma.SortOrder
   barcode?: Prisma.SortOrderInput | Prisma.SortOrder
+  price?: Prisma.SortOrder
+  currency?: Prisma.SortOrder
+  stock?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastSeenSyncId?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceUpdatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -270,6 +335,9 @@ export type ExternalProductVariantWhereUniqueInput = Prisma.AtLeast<{
   externalId?: Prisma.StringFilter<"ExternalProductVariant"> | string
   sku?: Prisma.StringFilter<"ExternalProductVariant"> | string
   barcode?: Prisma.StringNullableFilter<"ExternalProductVariant"> | string | null
+  price?: Prisma.DecimalFilter<"ExternalProductVariant"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFilter<"ExternalProductVariant"> | string
+  stock?: Prisma.IntFilter<"ExternalProductVariant"> | number
   status?: Prisma.EnumExternalEntityStatusFilter<"ExternalProductVariant"> | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.StringNullableFilter<"ExternalProductVariant"> | string | null
   sourceUpdatedAt?: Prisma.DateTimeNullableFilter<"ExternalProductVariant"> | Date | string | null
@@ -287,6 +355,9 @@ export type ExternalProductVariantOrderByWithAggregationInput = {
   externalId?: Prisma.SortOrder
   sku?: Prisma.SortOrder
   barcode?: Prisma.SortOrderInput | Prisma.SortOrder
+  price?: Prisma.SortOrder
+  currency?: Prisma.SortOrder
+  stock?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastSeenSyncId?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceUpdatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -294,8 +365,10 @@ export type ExternalProductVariantOrderByWithAggregationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.ExternalProductVariantCountOrderByAggregateInput
+  _avg?: Prisma.ExternalProductVariantAvgOrderByAggregateInput
   _max?: Prisma.ExternalProductVariantMaxOrderByAggregateInput
   _min?: Prisma.ExternalProductVariantMinOrderByAggregateInput
+  _sum?: Prisma.ExternalProductVariantSumOrderByAggregateInput
 }
 
 export type ExternalProductVariantScalarWhereWithAggregatesInput = {
@@ -308,6 +381,9 @@ export type ExternalProductVariantScalarWhereWithAggregatesInput = {
   externalId?: Prisma.StringWithAggregatesFilter<"ExternalProductVariant"> | string
   sku?: Prisma.StringWithAggregatesFilter<"ExternalProductVariant"> | string
   barcode?: Prisma.StringNullableWithAggregatesFilter<"ExternalProductVariant"> | string | null
+  price?: Prisma.DecimalWithAggregatesFilter<"ExternalProductVariant"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringWithAggregatesFilter<"ExternalProductVariant"> | string
+  stock?: Prisma.IntWithAggregatesFilter<"ExternalProductVariant"> | number
   status?: Prisma.EnumExternalEntityStatusWithAggregatesFilter<"ExternalProductVariant"> | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.StringNullableWithAggregatesFilter<"ExternalProductVariant"> | string | null
   sourceUpdatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ExternalProductVariant"> | Date | string | null
@@ -321,6 +397,9 @@ export type ExternalProductVariantCreateInput = {
   externalId: string
   sku: string
   barcode?: string | null
+  price: runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: string
+  stock?: number
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -338,6 +417,9 @@ export type ExternalProductVariantUncheckedCreateInput = {
   externalId: string
   sku: string
   barcode?: string | null
+  price: runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: string
+  stock?: number
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -351,6 +433,9 @@ export type ExternalProductVariantUpdateInput = {
   externalId?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   barcode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  stock?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -368,6 +453,9 @@ export type ExternalProductVariantUncheckedUpdateInput = {
   externalId?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   barcode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  stock?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -383,6 +471,9 @@ export type ExternalProductVariantCreateManyInput = {
   externalId: string
   sku: string
   barcode?: string | null
+  price: runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: string
+  stock?: number
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -396,6 +487,9 @@ export type ExternalProductVariantUpdateManyMutationInput = {
   externalId?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   barcode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  stock?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -411,6 +505,9 @@ export type ExternalProductVariantUncheckedUpdateManyInput = {
   externalId?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   barcode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  stock?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -441,12 +538,20 @@ export type ExternalProductVariantCountOrderByAggregateInput = {
   externalId?: Prisma.SortOrder
   sku?: Prisma.SortOrder
   barcode?: Prisma.SortOrder
+  price?: Prisma.SortOrder
+  currency?: Prisma.SortOrder
+  stock?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastSeenSyncId?: Prisma.SortOrder
   sourceUpdatedAt?: Prisma.SortOrder
   lastSyncedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type ExternalProductVariantAvgOrderByAggregateInput = {
+  price?: Prisma.SortOrder
+  stock?: Prisma.SortOrder
 }
 
 export type ExternalProductVariantMaxOrderByAggregateInput = {
@@ -456,6 +561,9 @@ export type ExternalProductVariantMaxOrderByAggregateInput = {
   externalId?: Prisma.SortOrder
   sku?: Prisma.SortOrder
   barcode?: Prisma.SortOrder
+  price?: Prisma.SortOrder
+  currency?: Prisma.SortOrder
+  stock?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastSeenSyncId?: Prisma.SortOrder
   sourceUpdatedAt?: Prisma.SortOrder
@@ -471,12 +579,20 @@ export type ExternalProductVariantMinOrderByAggregateInput = {
   externalId?: Prisma.SortOrder
   sku?: Prisma.SortOrder
   barcode?: Prisma.SortOrder
+  price?: Prisma.SortOrder
+  currency?: Prisma.SortOrder
+  stock?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastSeenSyncId?: Prisma.SortOrder
   sourceUpdatedAt?: Prisma.SortOrder
   lastSyncedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type ExternalProductVariantSumOrderByAggregateInput = {
+  price?: Prisma.SortOrder
+  stock?: Prisma.SortOrder
 }
 
 export type ExternalProductVariantCreateNestedManyWithoutProductVariantInput = {
@@ -568,6 +684,9 @@ export type ExternalProductVariantCreateWithoutProductVariantInput = {
   externalId: string
   sku: string
   barcode?: string | null
+  price: runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: string
+  stock?: number
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -583,6 +702,9 @@ export type ExternalProductVariantUncheckedCreateWithoutProductVariantInput = {
   externalId: string
   sku: string
   barcode?: string | null
+  price: runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: string
+  stock?: number
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -627,6 +749,9 @@ export type ExternalProductVariantScalarWhereInput = {
   externalId?: Prisma.StringFilter<"ExternalProductVariant"> | string
   sku?: Prisma.StringFilter<"ExternalProductVariant"> | string
   barcode?: Prisma.StringNullableFilter<"ExternalProductVariant"> | string | null
+  price?: Prisma.DecimalFilter<"ExternalProductVariant"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFilter<"ExternalProductVariant"> | string
+  stock?: Prisma.IntFilter<"ExternalProductVariant"> | number
   status?: Prisma.EnumExternalEntityStatusFilter<"ExternalProductVariant"> | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.StringNullableFilter<"ExternalProductVariant"> | string | null
   sourceUpdatedAt?: Prisma.DateTimeNullableFilter<"ExternalProductVariant"> | Date | string | null
@@ -640,6 +765,9 @@ export type ExternalProductVariantCreateWithoutExternalProductInput = {
   externalId: string
   sku: string
   barcode?: string | null
+  price: runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: string
+  stock?: number
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -655,6 +783,9 @@ export type ExternalProductVariantUncheckedCreateWithoutExternalProductInput = {
   externalId: string
   sku: string
   barcode?: string | null
+  price: runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: string
+  stock?: number
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -695,6 +826,9 @@ export type ExternalProductVariantCreateManyProductVariantInput = {
   externalId: string
   sku: string
   barcode?: string | null
+  price: runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: string
+  stock?: number
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -708,6 +842,9 @@ export type ExternalProductVariantUpdateWithoutProductVariantInput = {
   externalId?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   barcode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  stock?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -723,6 +860,9 @@ export type ExternalProductVariantUncheckedUpdateWithoutProductVariantInput = {
   externalId?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   barcode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  stock?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -737,6 +877,9 @@ export type ExternalProductVariantUncheckedUpdateManyWithoutProductVariantInput 
   externalId?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   barcode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  stock?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -751,6 +894,9 @@ export type ExternalProductVariantCreateManyExternalProductInput = {
   externalId: string
   sku: string
   barcode?: string | null
+  price: runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: string
+  stock?: number
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -764,6 +910,9 @@ export type ExternalProductVariantUpdateWithoutExternalProductInput = {
   externalId?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   barcode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  stock?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -779,6 +928,9 @@ export type ExternalProductVariantUncheckedUpdateWithoutExternalProductInput = {
   externalId?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   barcode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  stock?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -793,6 +945,9 @@ export type ExternalProductVariantUncheckedUpdateManyWithoutExternalProductInput
   externalId?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   barcode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  stock?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -810,6 +965,9 @@ export type ExternalProductVariantSelect<ExtArgs extends runtime.Types.Extension
   externalId?: boolean
   sku?: boolean
   barcode?: boolean
+  price?: boolean
+  currency?: boolean
+  stock?: boolean
   status?: boolean
   lastSeenSyncId?: boolean
   sourceUpdatedAt?: boolean
@@ -827,6 +985,9 @@ export type ExternalProductVariantSelectCreateManyAndReturn<ExtArgs extends runt
   externalId?: boolean
   sku?: boolean
   barcode?: boolean
+  price?: boolean
+  currency?: boolean
+  stock?: boolean
   status?: boolean
   lastSeenSyncId?: boolean
   sourceUpdatedAt?: boolean
@@ -844,6 +1005,9 @@ export type ExternalProductVariantSelectUpdateManyAndReturn<ExtArgs extends runt
   externalId?: boolean
   sku?: boolean
   barcode?: boolean
+  price?: boolean
+  currency?: boolean
+  stock?: boolean
   status?: boolean
   lastSeenSyncId?: boolean
   sourceUpdatedAt?: boolean
@@ -861,6 +1025,9 @@ export type ExternalProductVariantSelectScalar = {
   externalId?: boolean
   sku?: boolean
   barcode?: boolean
+  price?: boolean
+  currency?: boolean
+  stock?: boolean
   status?: boolean
   lastSeenSyncId?: boolean
   sourceUpdatedAt?: boolean
@@ -869,7 +1036,7 @@ export type ExternalProductVariantSelectScalar = {
   updatedAt?: boolean
 }
 
-export type ExternalProductVariantOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "externalProductId" | "productVariantId" | "externalId" | "sku" | "barcode" | "status" | "lastSeenSyncId" | "sourceUpdatedAt" | "lastSyncedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["externalProductVariant"]>
+export type ExternalProductVariantOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "externalProductId" | "productVariantId" | "externalId" | "sku" | "barcode" | "price" | "currency" | "stock" | "status" | "lastSeenSyncId" | "sourceUpdatedAt" | "lastSyncedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["externalProductVariant"]>
 export type ExternalProductVariantInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   externalProduct?: boolean | Prisma.ExternalProductDefaultArgs<ExtArgs>
   productVariant?: boolean | Prisma.ProductVariantDefaultArgs<ExtArgs>
@@ -896,6 +1063,9 @@ export type $ExternalProductVariantPayload<ExtArgs extends runtime.Types.Extensi
     externalId: string
     sku: string
     barcode: string | null
+    price: runtime.Decimal
+    currency: string
+    stock: number
     status: $Enums.ExternalEntityStatus
     lastSeenSyncId: string | null
     sourceUpdatedAt: Date | null
@@ -1333,6 +1503,9 @@ export interface ExternalProductVariantFieldRefs {
   readonly externalId: Prisma.FieldRef<"ExternalProductVariant", 'String'>
   readonly sku: Prisma.FieldRef<"ExternalProductVariant", 'String'>
   readonly barcode: Prisma.FieldRef<"ExternalProductVariant", 'String'>
+  readonly price: Prisma.FieldRef<"ExternalProductVariant", 'Decimal'>
+  readonly currency: Prisma.FieldRef<"ExternalProductVariant", 'String'>
+  readonly stock: Prisma.FieldRef<"ExternalProductVariant", 'Int'>
   readonly status: Prisma.FieldRef<"ExternalProductVariant", 'ExternalEntityStatus'>
   readonly lastSeenSyncId: Prisma.FieldRef<"ExternalProductVariant", 'String'>
   readonly sourceUpdatedAt: Prisma.FieldRef<"ExternalProductVariant", 'DateTime'>

@@ -1,14 +1,20 @@
 import { apiFetch } from "@/lib/api/client"
-import type { StoreSummary } from "@/types/store"
+import type { InventoryPolicy, StoreSummary } from "@/types/store"
 
-export function createStore(input: { name: string }) {
+export function createStore(input: {
+  name: string
+  inventoryPolicy?: InventoryPolicy
+}) {
   return apiFetch<StoreSummary>("/stores", {
     method: "POST",
     body: JSON.stringify(input),
   })
 }
 
-export function updateStore(storeId: string, input: { name: string }) {
+export function updateStore(
+  storeId: string,
+  input: { name?: string; inventoryPolicy?: InventoryPolicy }
+) {
   return apiFetch<StoreSummary>(`/stores/${storeId}`, {
     method: "PATCH",
     body: JSON.stringify(input),

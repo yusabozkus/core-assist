@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  InventoryPolicy,
   QuestionAnswerStatus,
   StoreRole,
   StoreStatus,
@@ -21,6 +22,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { createDefaultStoreAiInstructions } from '../knowledge/default-ai-instructions';
 import { BillingEntitlementService } from '../billing/billing-entitlement.service';
 import { resolveTeamAccessLevel } from '../team/team-access';
+import { recalculateStoreVariantInventory } from '../product-sync/inventory-policy';
 
 @Injectable()
 export class StoresService {
@@ -64,6 +66,8 @@ export class StoresService {
         data: {
           name: createStoreDto.name,
           workspaceId: membership.workspaceId,
+          inventoryPolicy:
+            createStoreDto.inventoryPolicy ?? InventoryPolicy.SHARED,
           members: {
             create: workspaceManagers.map((manager) => ({
               userId: manager.userId,
@@ -80,6 +84,7 @@ export class StoresService {
         select: {
           id: true,
           name: true,
+          inventoryPolicy: true,
           status: true,
           createdAt: true,
         },
@@ -98,6 +103,7 @@ export class StoresService {
       select: {
         id: true,
         name: true,
+        inventoryPolicy: true,
         status: true,
         createdAt: true,
         members: {
@@ -139,6 +145,7 @@ export class StoresService {
       select: {
         id: true,
         name: true,
+        inventoryPolicy: true,
         status: true,
         createdAt: true,
       },
@@ -168,8 +175,11 @@ export class StoresService {
   }
 
   async update(id: string, userId: string, updateStoreDto: UpdateStoreDto) {
-    if (updateStoreDto.name === undefined) {
-      throw new BadRequestException('Güncellenecek mağaza adını girin.');
+    if (
+      updateStoreDto.name === undefined &&
+      updateStoreDto.inventoryPolicy === undefined
+    ) {
+      throw new BadRequestException('Güncellenecek mağaza bilgisini girin.');
     }
 
     const store = await this.prisma.store.findFirst({
@@ -191,15 +201,35 @@ export class StoresService {
       );
     }
 
-    return this.prisma.store.update({
-      where: { id: store.id },
-      data: { name: updateStoreDto.name },
-      select: {
-        id: true,
-        name: true,
-        status: true,
-        createdAt: true,
-      },
+    return this.prisma.$transaction(async (transaction) => {
+      const updatedStore = await transaction.store.update({
+        where: { id: store.id },
+        data: {
+          ...(updateStoreDto.name === undefined
+            ? {}
+            : { name: updateStoreDto.name }),
+          ...(updateStoreDto.inventoryPolicy === undefined
+            ? {}
+            : { inventoryPolicy: updateStoreDto.inventoryPolicy }),
+        },
+        select: {
+          id: true,
+          name: true,
+          inventoryPolicy: true,
+          status: true,
+          createdAt: true,
+        },
+      });
+
+      if (updateStoreDto.inventoryPolicy !== undefined) {
+        await recalculateStoreVariantInventory(
+          transaction,
+          store.id,
+          updateStoreDto.inventoryPolicy,
+        );
+      }
+
+      return updatedStore;
     });
   }
 

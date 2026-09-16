@@ -14,6 +14,7 @@ import {
   AiEmojiPolicy,
   AiResponseLength,
   AiTone,
+  InventoryPolicy,
   IntegrationEnvironment,
 } from '../../../generated/prisma/enums';
 
@@ -34,6 +35,9 @@ export class ProvisionOnboardingDto {
 
   @IsEnum(OnboardingChannel)
   selectedChannel: OnboardingChannel;
+
+  @IsEnum(InventoryPolicy)
+  inventoryPolicy: InventoryPolicy;
 
   @IsOptional()
   @IsEnum(IntegrationEnvironment)
@@ -83,6 +87,9 @@ export class ProvisionOnboardingDto {
 export class CompleteOnboardingDto {
   @IsUUID()
   storeId: string;
+
+  @IsEnum(InventoryPolicy)
+  inventoryPolicy: InventoryPolicy;
 
   @IsEnum(AiTone)
   tone: AiTone;

@@ -66,7 +66,7 @@ export function ProductContext({
         <ProductMarketplaceAction sources={product.externalProducts} />
       }
       contentClassName="sm:max-w-5xl"
-      headerClassName="pr-32 sm:pr-48"
+      headerClassName="pr-32 sm:pr-48 lg:pr-[23rem]"
       bodyClassName="px-0 py-0"
       trigger={
         <button

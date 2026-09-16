@@ -10,6 +10,7 @@ import {
   CatalogSyncStage,
   CatalogSyncStatus,
   ChannelConnectionStatus,
+  InventoryPolicy,
   ProductQuestionStatus,
   QuestionAnswerStatus,
   StoreRole,
@@ -19,6 +20,7 @@ import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { PRODUCT_SYNC_DISPATCHER } from '../product-sync/product-sync.constants';
 import type { ProductSyncDispatcher } from '../product-sync/product-sync.types';
+import { recalculateStoreVariantInventory } from '../product-sync/inventory-policy';
 import { QUESTION_SYNC_DISPATCHER } from '../question-sync/question-sync.constants';
 import type { QuestionSyncDispatcher } from '../question-sync/question-sync.types';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -584,6 +586,10 @@ export class ChannelsService {
     }
 
     await this.prisma.$transaction(async (transaction) => {
+      const store = await transaction.store.findUniqueOrThrow({
+        where: { id: storeId },
+        select: { inventoryPolicy: true },
+      });
       await transaction.$executeRaw`
         UPDATE "product_question" AS question
         SET
@@ -678,6 +684,12 @@ export class ChannelsService {
           },
         });
       }
+
+      await recalculateStoreVariantInventory(
+        transaction,
+        storeId,
+        store.inventoryPolicy ?? InventoryPolicy.SHARED,
+      );
 
       await transaction.channelConnection.update({
         where: { id: connectionId },

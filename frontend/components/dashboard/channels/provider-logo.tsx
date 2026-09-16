@@ -14,6 +14,13 @@ type ProviderLogoProps = Omit<
   sizes?: string
 }
 
+type ProviderLogoStackProps = {
+  providers: string[]
+  className?: string
+  logoClassName?: string
+  sizes?: string
+}
+
 const PROVIDER_PRESENTATION: Record<string, { name: string; image: string }> = {
   trendyol: {
     name: "Trendyol",
@@ -71,6 +78,37 @@ export function ProviderLogo({
   )
 }
 
+export function ProviderLogoStack({
+  providers,
+  className,
+  logoClassName,
+  sizes = "24px",
+}: ProviderLogoStackProps) {
+  const visibleProviders = [...new Set(providers)].sort(compareProviders)
+
+  return (
+    <span
+      className={cn("isolate flex shrink-0 -space-x-2", className)}
+      title={visibleProviders
+        .map((provider) => resolveProviderPresentation(provider).name)
+        .join(", ")}
+    >
+      {visibleProviders.map((provider, index) => (
+        <ProviderLogo
+          key={provider}
+          provider={provider}
+          sizes={sizes}
+          className={cn(
+            "size-6 rounded-md border-2 border-card shadow-none",
+            logoClassName
+          )}
+          style={{ zIndex: index + 1 }}
+        />
+      ))}
+    </span>
+  )
+}
+
 function resolveProviderPresentation(provider: string | ProviderIdentity) {
   const providerKey = typeof provider === "string" ? provider : provider.key
   const registeredProvider = PROVIDER_PRESENTATION[providerKey]
@@ -91,6 +129,19 @@ function resolveProviderPresentation(provider: string | ProviderIdentity) {
       humanizeProviderKey(providerKey),
     image: provider.image || registeredProvider?.image || "",
   }
+}
+
+function compareProviders(left: string, right: string) {
+  const order = ["trendyol", "hepsiburada"]
+  const leftIndex = order.indexOf(left)
+  const rightIndex = order.indexOf(right)
+
+  if (leftIndex === -1 && rightIndex === -1) {
+    return left.localeCompare(right, "tr-TR")
+  }
+  if (leftIndex === -1) return 1
+  if (rightIndex === -1) return -1
+  return leftIndex - rightIndex
 }
 
 function humanizeProviderKey(providerKey: string) {

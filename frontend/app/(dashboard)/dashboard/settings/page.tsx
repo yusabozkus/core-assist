@@ -12,6 +12,7 @@ import { getActiveStoreContext } from "@/lib/stores/active-store"
 import { StoreArchiveAction } from "./store-archive-action"
 import { StoreDeleteAction } from "./store-delete-action"
 import { StoreNameForm } from "./store-name-form"
+import { StoreInventoryPolicyForm } from "./store-inventory-policy-form"
 import { StoreRestoreAction } from "./store-restore-action"
 
 export const dynamic = "force-dynamic"
@@ -67,6 +68,13 @@ export default async function SettingsPage() {
           <StoreMeta label="Mağaza kimliği" value={activeStore.id} mono />
         </dl>
       </section>
+
+      <div className="mt-6">
+        <StoreInventoryPolicyForm
+          storeId={activeStore.id}
+          initialValue={activeStore.inventoryPolicy}
+        />
+      </div>
 
       <div className="mt-6 grid gap-4">
         {activeStore.status === "ACTIVE" ? (

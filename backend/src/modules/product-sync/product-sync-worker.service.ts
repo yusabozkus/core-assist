@@ -5,6 +5,7 @@ import {
   AiAutomationMode,
   ChannelConnectionStatus,
   ExternalEntityStatus,
+  InventoryPolicy,
   NotificationSeverity,
   NotificationType,
   ProductIdentityType,
@@ -43,6 +44,7 @@ import type {
   ProductSyncJobData,
   ProductSyncRunResult,
 } from './product-sync.types';
+import { recalculateStoreVariantInventory } from './inventory-policy';
 
 type SyncConnection = {
   id: string;
@@ -430,6 +432,7 @@ export class ProductSyncWorkerService {
     await updateProgress(90);
 
     const productsArchived = await this.reconcileMissingProducts(
+      data.storeId,
       connection.id,
       data.syncRunId,
     );
@@ -555,6 +558,11 @@ export class ProductSyncWorkerService {
       const images = [...new Set(normalized.images.filter(Boolean))];
       const variants = uniqueVariants(normalized.variants);
       const identityCandidates = getProductIdentityCandidates(normalized);
+      const store = await transaction.store.findUniqueOrThrow({
+        where: { id: storeId },
+        select: { inventoryPolicy: true },
+      });
+      const inventoryPolicy = store.inventoryPolicy ?? InventoryPolicy.SHARED;
       const existingExternalProduct =
         await transaction.externalProduct.findUnique({
           where: {
@@ -575,6 +583,8 @@ export class ProductSyncWorkerService {
         storeId,
         existingExternalProduct?.productId,
         identityCandidates,
+        normalized.brand,
+        variants,
       );
       const change: ProductChange = !existingExternalProduct
         ? 'CREATED'
@@ -724,6 +734,8 @@ export class ProductSyncWorkerService {
             storeId,
             productId,
             identityCandidates,
+            normalized.brand,
+            variants,
           )) ?? productId;
       }
 
@@ -735,6 +747,7 @@ export class ProductSyncWorkerService {
           syncRunId,
           variant,
           syncedAt,
+          inventoryPolicy,
         );
       }
 
@@ -742,6 +755,7 @@ export class ProductSyncWorkerService {
         transaction,
         externalProductId,
         syncRunId,
+        inventoryPolicy,
       );
 
       return { productId, externalProductId, change };
@@ -792,6 +806,8 @@ export class ProductSyncWorkerService {
     storeId: string,
     currentProductId: string | undefined,
     identities: ProductIdentityCandidate[],
+    brand: string | undefined,
+    variants: NormalizedProductVariant[],
   ) {
     const identityMatches =
       identities.length === 0
@@ -806,10 +822,18 @@ export class ProductSyncWorkerService {
             },
             select: { productId: true },
           });
+    const variantProductMatches = await this.findVariantProductMatches(
+      transaction,
+      storeId,
+      currentProductId,
+      brand,
+      variants,
+    );
     const candidateIds = [
       ...new Set([
         ...(currentProductId ? [currentProductId] : []),
         ...identityMatches.map((identity) => identity.productId),
+        ...variantProductMatches,
       ]),
     ];
 
@@ -839,11 +863,103 @@ export class ProductSyncWorkerService {
     return canonicalProductId;
   }
 
+  private async findVariantProductMatches(
+    transaction: Prisma.TransactionClient,
+    storeId: string,
+    currentProductId: string | undefined,
+    brand: string | undefined,
+    variants: NormalizedProductVariant[],
+  ) {
+    const excludedCurrentProduct = currentProductId
+      ? { not: currentProductId }
+      : undefined;
+    const barcodes = [
+      ...new Set(
+        variants
+          .map((variant) => variant.barcode?.trim())
+          .filter((barcode): barcode is string => Boolean(barcode)),
+      ),
+    ];
+
+    if (barcodes.length > 0) {
+      const barcodeMatches = await transaction.productVariant.findMany({
+        where: {
+          productId: excludedCurrentProduct,
+          barcode: { in: barcodes },
+          status: { not: ProductVariantStatus.ARCHIVED },
+          product: { storeId, status: { not: ProductStatus.ARCHIVED } },
+        },
+        select: { productId: true },
+      });
+      const matchingProductIds = [
+        ...new Set(barcodeMatches.map((match) => match.productId)),
+      ];
+
+      if (matchingProductIds.length > 0) return matchingProductIds;
+    }
+
+    const normalizedBrand = brand?.trim();
+    const skuOptions = variants
+      .filter((variant) => variant.sku.trim().length >= 3)
+      .map(
+        (variant) =>
+          ({
+            sku: { equals: variant.sku.trim(), mode: 'insensitive' },
+            color: variant.color?.trim()
+              ? { equals: variant.color.trim(), mode: 'insensitive' }
+              : null,
+            size: variant.size?.trim()
+              ? { equals: variant.size.trim(), mode: 'insensitive' }
+              : null,
+          }) satisfies Prisma.ProductVariantWhereInput,
+      );
+
+    if (!normalizedBrand || skuOptions.length === 0) return [];
+
+    const skuMatches = await transaction.productVariant.findMany({
+      where: {
+        productId: excludedCurrentProduct,
+        status: { not: ProductVariantStatus.ARCHIVED },
+        product: {
+          storeId,
+          status: { not: ProductStatus.ARCHIVED },
+          brand: { equals: normalizedBrand, mode: 'insensitive' },
+        },
+        OR: skuOptions,
+      },
+      select: { productId: true },
+    });
+    const matchingProductIds = [
+      ...new Set(skuMatches.map((match) => match.productId)),
+    ];
+
+    return matchingProductIds.length === 1 ? matchingProductIds : [];
+  }
+
   private async mergeProducts(
     transaction: Prisma.TransactionClient,
     canonicalProductId: string,
     duplicateProductIds: string[],
   ) {
+    const duplicateKnowledgeFacts =
+      await transaction.productKnowledgeFact.findMany({
+        where: { productId: { in: duplicateProductIds } },
+        select: {
+          storeId: true,
+          variantId: true,
+          scopeKey: true,
+          factType: true,
+          normalizedKey: true,
+          label: true,
+          value: true,
+          status: true,
+          verifiedByUserId: true,
+          originatingQuestionId: true,
+          verifiedAt: true,
+          archivedAt: true,
+        },
+      });
+
     await transaction.productVariant.updateMany({
       where: { productId: { in: duplicateProductIds } },
       data: { productId: canonicalProductId },
@@ -861,6 +977,15 @@ export class ProductSyncWorkerService {
       where: { productId: { in: duplicateProductIds } },
       data: { productId: canonicalProductId },
     });
+    if (duplicateKnowledgeFacts.length > 0) {
+      await transaction.productKnowledgeFact.createMany({
+        data: duplicateKnowledgeFacts.map((fact) => ({
+          ...fact,
+          productId: canonicalProductId,
+        })),
+        skipDuplicates: true,
+      });
+    }
     await transaction.productIdentity.updateMany({
       where: { productId: { in: duplicateProductIds } },
       data: { productId: canonicalProductId },
@@ -877,6 +1002,7 @@ export class ProductSyncWorkerService {
     syncRunId: string,
     normalized: NormalizedProductVariant,
     syncedAt: Date,
+    inventoryPolicy: InventoryPolicy,
   ) {
     const externalVariant = await transaction.externalProductVariant.findUnique(
       {
@@ -926,7 +1052,12 @@ export class ProductSyncWorkerService {
     let productVariantId: string;
 
     if (externalVariant) {
-      productVariantId = externalVariant.productVariantId;
+      productVariantId = await this.resolveCanonicalVariant(
+        transaction,
+        productId,
+        externalVariant.productVariantId,
+        normalized,
+      );
       await transaction.productVariant.update({
         where: { id: productVariantId },
         data: variantUpdateData,
@@ -936,20 +1067,40 @@ export class ProductSyncWorkerService {
         data: {
           sku: normalized.sku,
           barcode: normalized.barcode ?? null,
+          ...(shouldUpdateInventory
+            ? {
+                price: normalized.price,
+                currency: normalized.currency,
+                stock: normalized.stock,
+              }
+            : {}),
           status: ExternalEntityStatus.ACTIVE,
           lastSeenSyncId: syncRunId,
           sourceUpdatedAt: normalized.sourceUpdatedAt,
           lastSyncedAt: syncedAt,
         },
       });
+      await this.refreshCanonicalVariantInventory(
+        transaction,
+        productVariantId,
+        inventoryPolicy,
+      );
       return;
     }
 
-    const productVariant = await transaction.productVariant.create({
-      data: { productId, ...fullVariantData },
-      select: { id: true },
+    productVariantId =
+      (await this.resolveMatchingVariant(transaction, productId, normalized)) ??
+      (
+        await transaction.productVariant.create({
+          data: { productId, ...fullVariantData },
+          select: { id: true },
+        })
+      ).id;
+
+    await transaction.productVariant.update({
+      where: { id: productVariantId },
+      data: variantUpdateData,
     });
-    productVariantId = productVariant.id;
 
     await transaction.externalProductVariant.create({
       data: {
@@ -958,10 +1109,205 @@ export class ProductSyncWorkerService {
         externalId: normalized.externalId,
         sku: normalized.sku,
         barcode: normalized.barcode,
+        price: normalized.price,
+        currency: normalized.currency,
+        stock: normalized.stock,
         status: ExternalEntityStatus.ACTIVE,
         lastSeenSyncId: syncRunId,
         sourceUpdatedAt: normalized.sourceUpdatedAt,
         lastSyncedAt: syncedAt,
+      },
+    });
+
+    await this.refreshCanonicalVariantInventory(
+      transaction,
+      productVariantId,
+      inventoryPolicy,
+    );
+  }
+
+  private async resolveCanonicalVariant(
+    transaction: Prisma.TransactionClient,
+    productId: string,
+    currentVariantId: string,
+    normalized: NormalizedProductVariant,
+  ) {
+    const matchingVariantIds = await this.findMatchingVariants(
+      transaction,
+      productId,
+      normalized,
+    );
+    const candidateIds = [
+      ...new Set([currentVariantId, ...matchingVariantIds]),
+    ];
+
+    if (candidateIds.length === 1) return currentVariantId;
+
+    const candidates = await transaction.productVariant.findMany({
+      where: { id: { in: candidateIds }, productId },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      select: { id: true },
+    });
+    const canonicalVariantId = candidates[0]?.id ?? currentVariantId;
+    const duplicateVariantIds = candidates
+      .slice(1)
+      .map((variant) => variant.id);
+
+    if (duplicateVariantIds.length > 0) {
+      const duplicateKnowledgeFacts =
+        await transaction.productKnowledgeFact.findMany({
+          where: { variantId: { in: duplicateVariantIds } },
+          select: {
+            storeId: true,
+            productId: true,
+            scopeKey: true,
+            factType: true,
+            normalizedKey: true,
+            label: true,
+            value: true,
+            status: true,
+            verifiedByUserId: true,
+            originatingQuestionId: true,
+            verifiedAt: true,
+            archivedAt: true,
+          },
+        });
+
+      await transaction.externalProductVariant.updateMany({
+        where: { productVariantId: { in: duplicateVariantIds } },
+        data: { productVariantId: canonicalVariantId },
+      });
+      await transaction.productKnowledgeFact.deleteMany({
+        where: { variantId: { in: duplicateVariantIds } },
+      });
+      if (duplicateKnowledgeFacts.length > 0) {
+        await transaction.productKnowledgeFact.createMany({
+          data: duplicateKnowledgeFacts.map((fact) => ({
+            ...fact,
+            variantId: canonicalVariantId,
+          })),
+          skipDuplicates: true,
+        });
+      }
+      await transaction.productVariant.deleteMany({
+        where: { id: { in: duplicateVariantIds } },
+      });
+    }
+
+    return canonicalVariantId;
+  }
+
+  private async resolveMatchingVariant(
+    transaction: Prisma.TransactionClient,
+    productId: string,
+    normalized: NormalizedProductVariant,
+  ) {
+    const matches = await this.findMatchingVariants(
+      transaction,
+      productId,
+      normalized,
+    );
+
+    return matches[0] ?? null;
+  }
+
+  private async findMatchingVariants(
+    transaction: Prisma.TransactionClient,
+    productId: string,
+    normalized: NormalizedProductVariant,
+  ) {
+    const barcode = normalized.barcode?.trim() || null;
+    const baseWhere = {
+      productId,
+      status: { not: ProductVariantStatus.ARCHIVED },
+    } satisfies Prisma.ProductVariantWhereInput;
+    const findMatches = (identity: Prisma.ProductVariantWhereInput) =>
+      transaction.productVariant.findMany({
+        where: { ...baseWhere, ...identity },
+        orderBy: [{ createdAt: 'asc' as const }, { id: 'asc' as const }],
+        select: { id: true },
+      });
+
+    if (barcode) {
+      const barcodeMatches = await findMatches({ barcode });
+      if (barcodeMatches.length > 0) {
+        return barcodeMatches.map((match) => match.id);
+      }
+    }
+
+    const skuMatches = await findMatches({
+      sku: normalized.sku,
+      color: normalized.color ?? null,
+      size: normalized.size ?? null,
+    });
+    if (skuMatches.length > 0) {
+      return skuMatches.map((match) => match.id);
+    }
+
+    if (normalized.color || normalized.size) {
+      const optionMatches = await findMatches({
+        color: normalized.color ?? null,
+        size: normalized.size ?? null,
+      });
+      if (optionMatches.length === 1) return [optionMatches[0].id];
+    }
+
+    return [];
+  }
+
+  private async refreshCanonicalVariantInventory(
+    transaction: Prisma.TransactionClient,
+    productVariantId: string,
+    inventoryPolicy: InventoryPolicy,
+  ) {
+    const snapshots = await transaction.externalProductVariant.findMany({
+      where: {
+        productVariantId,
+        status: ExternalEntityStatus.ACTIVE,
+        externalProduct: {
+          status: ExternalEntityStatus.ACTIVE,
+          connection: { removedAt: null },
+        },
+      },
+      orderBy: [{ lastSyncedAt: 'desc' }, { id: 'asc' }],
+      select: {
+        stock: true,
+        sourceUpdatedAt: true,
+        lastSyncedAt: true,
+      },
+    });
+
+    if (snapshots.length === 0) {
+      await transaction.productVariant.update({
+        where: { id: productVariantId },
+        data: { stock: 0, status: ProductVariantStatus.UNAVAILABLE },
+      });
+      return;
+    }
+
+    const stock =
+      inventoryPolicy === InventoryPolicy.CHANNEL_SPECIFIC
+        ? snapshots.reduce((total, snapshot) => total + snapshot.stock, 0)
+        : Math.min(...snapshots.map((snapshot) => snapshot.stock));
+    const sourceUpdatedAt = snapshots.reduce<Date | null>(
+      (latest, snapshot) =>
+        !snapshot.sourceUpdatedAt ||
+        (latest && latest >= snapshot.sourceUpdatedAt)
+          ? latest
+          : snapshot.sourceUpdatedAt,
+      null,
+    );
+
+    await transaction.productVariant.update({
+      where: { id: productVariantId },
+      data: {
+        stock,
+        status:
+          stock > 0
+            ? ProductVariantStatus.ACTIVE
+            : ProductVariantStatus.OUT_OF_STOCK,
+        sourceUpdatedAt,
+        lastSyncedAt: snapshots[0].lastSyncedAt,
       },
     });
   }
@@ -970,6 +1316,7 @@ export class ProductSyncWorkerService {
     transaction: Prisma.TransactionClient,
     externalProductId: string,
     syncRunId: string,
+    inventoryPolicy: InventoryPolicy,
   ) {
     const staleVariants = await transaction.externalProductVariant.findMany({
       where: {
@@ -990,19 +1337,11 @@ export class ProductSyncWorkerService {
     for (const productVariantId of new Set(
       staleVariants.map((variant) => variant.productVariantId),
     )) {
-      const activeReferences = await transaction.externalProductVariant.count({
-        where: {
-          productVariantId,
-          status: ExternalEntityStatus.ACTIVE,
-        },
-      });
-
-      if (activeReferences === 0) {
-        await transaction.productVariant.update({
-          where: { id: productVariantId },
-          data: { stock: 0, status: ProductVariantStatus.UNAVAILABLE },
-        });
-      }
+      await this.refreshCanonicalVariantInventory(
+        transaction,
+        productVariantId,
+        inventoryPolicy,
+      );
     }
   }
 
@@ -1011,6 +1350,14 @@ export class ProductSyncWorkerService {
     normalized: NormalizedInventoryVariant,
   ) {
     return this.prisma.$transaction(async (transaction) => {
+      const connection = await transaction.channelConnection.findUniqueOrThrow({
+        where: { id: connectionId },
+        select: {
+          store: { select: { inventoryPolicy: true } },
+        },
+      });
+      const inventoryPolicy =
+        connection.store.inventoryPolicy ?? InventoryPolicy.SHARED;
       const externalProduct = await transaction.externalProduct.findUnique({
         where: {
           connectionId_externalId: {
@@ -1033,6 +1380,11 @@ export class ProductSyncWorkerService {
               productVariantId: true,
               externalProductId: true,
               sourceUpdatedAt: true,
+              sku: true,
+              barcode: true,
+              price: true,
+              currency: true,
+              stock: true,
               productVariant: {
                 select: {
                   sku: true,
@@ -1060,6 +1412,11 @@ export class ProductSyncWorkerService {
           productVariantId: true,
           externalProductId: true,
           sourceUpdatedAt: true,
+          sku: true,
+          barcode: true,
+          price: true,
+          currency: true,
+          stock: true,
           productVariant: {
             select: {
               sku: true,
@@ -1083,48 +1440,48 @@ export class ProductSyncWorkerService {
       }
 
       const change: InventoryChange = isSameInventorySnapshot(
-        externalVariant.productVariant,
+        externalVariant,
         normalized,
       )
         ? 'UNCHANGED'
         : 'UPDATED';
-      const stockAlert = getStockAlert(
-        externalVariant.productVariant.stock,
-        normalized.stock,
-      );
+      const stockAlert = getStockAlert(externalVariant.stock, normalized.stock);
 
       const syncedAt = new Date();
-      const inventoryData = {
+      const variantMetadata = {
         sku: normalized.sku,
         barcode: normalized.barcode ?? null,
         ...(normalized.price === undefined ? {} : { price: normalized.price }),
         ...(normalized.currency ? { currency: normalized.currency } : {}),
-        ...(normalized.stock === undefined
-          ? {}
-          : {
-              stock: normalized.stock,
-              status:
-                normalized.stock > 0
-                  ? ProductVariantStatus.ACTIVE
-                  : ProductVariantStatus.OUT_OF_STOCK,
-            }),
         sourceUpdatedAt: normalized.sourceUpdatedAt,
         lastSyncedAt: syncedAt,
       };
       await transaction.productVariant.update({
         where: { id: externalVariant.productVariantId },
-        data: inventoryData,
+        data: variantMetadata,
       });
       await transaction.externalProductVariant.update({
         where: { id: externalVariant.id },
         data: {
           sku: normalized.sku,
           barcode: normalized.barcode ?? null,
+          ...(normalized.price === undefined
+            ? {}
+            : { price: normalized.price }),
+          ...(normalized.currency ? { currency: normalized.currency } : {}),
+          ...(normalized.stock === undefined
+            ? {}
+            : { stock: normalized.stock }),
           status: ExternalEntityStatus.ACTIVE,
           sourceUpdatedAt: normalized.sourceUpdatedAt,
           lastSyncedAt: syncedAt,
         },
       });
+      await this.refreshCanonicalVariantInventory(
+        transaction,
+        externalVariant.productVariantId,
+        inventoryPolicy,
+      );
       const parentExternalProduct = await transaction.externalProduct.update({
         where: { id: externalVariant.externalProductId },
         data: {
@@ -1178,6 +1535,7 @@ export class ProductSyncWorkerService {
   }
 
   private async reconcileMissingProducts(
+    storeId: string,
     connectionId: string,
     syncRunId: string,
   ) {
@@ -1194,6 +1552,10 @@ export class ProductSyncWorkerService {
 
     return this.prisma.$transaction(
       async (transaction) => {
+        const store = await transaction.store.findUniqueOrThrow({
+          where: { id: storeId },
+          select: { inventoryPolicy: true },
+        });
         await transaction.externalProductVariant.updateMany({
           where: { externalProduct: staleExternalProductWhere },
           data: { status: ExternalEntityStatus.UNAVAILABLE },
@@ -1242,6 +1604,12 @@ export class ProductSyncWorkerService {
           },
           data: { stock: 0, status: ProductVariantStatus.ARCHIVED },
         });
+
+        await recalculateStoreVariantInventory(
+          transaction,
+          storeId,
+          store.inventoryPolicy ?? InventoryPolicy.SHARED,
+        );
 
         return archivedProducts.count;
       },

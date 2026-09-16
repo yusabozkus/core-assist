@@ -106,6 +106,7 @@ function emptyInventoryPage(): InventoryPage {
     lowStockThreshold: 5,
     freshnessMaxAgeMs: 15 * 60 * 1_000,
     providers: [],
+    inventoryPolicy: "SHARED",
     summary: {
       variants: 0,
       healthy: 0,

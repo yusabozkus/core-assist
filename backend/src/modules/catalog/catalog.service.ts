@@ -372,6 +372,7 @@ export class CatalogService {
       filteredVariantTotal,
       summaryRows,
       providerConnections,
+      store,
     ] = await Promise.all([
       this.prisma.product.findMany({
         where: productWhere,
@@ -405,7 +406,16 @@ export class CatalogService {
               sourceUpdatedAt: true,
               lastSyncedAt: true,
               externalVariants: {
+                where: {
+                  status: 'ACTIVE',
+                  externalProduct: {
+                    status: 'ACTIVE',
+                    connection: { removedAt: null },
+                  },
+                },
                 select: {
+                  stock: true,
+                  lastSyncedAt: true,
                   externalProduct: {
                     select: {
                       connection: { select: { providerKey: true } },
@@ -460,6 +470,10 @@ export class CatalogService {
         orderBy: { providerKey: 'asc' },
         select: { providerKey: true },
       }),
+      this.prisma.store.findUniqueOrThrow({
+        where: { id: storeId },
+        select: { inventoryPolicy: true },
+      }),
     ]);
 
     const summary = summaryRows[0] ?? {
@@ -510,6 +524,18 @@ export class CatalogService {
               ),
             ),
           ],
+          channelStocks: variant.externalVariants.map((externalVariant) => ({
+            providerKey: externalVariant.externalProduct.connection.providerKey,
+            stock: externalVariant.stock,
+            lastSyncedAt: externalVariant.lastSyncedAt,
+          })),
+          hasStockConflict:
+            store.inventoryPolicy === 'SHARED' &&
+            new Set(
+              variant.externalVariants.map(
+                (externalVariant) => externalVariant.stock,
+              ),
+            ).size > 1,
         })),
       ),
       nextCursor: hasNextPage ? (visibleProducts.at(-1)?.id ?? null) : null,
@@ -520,6 +546,7 @@ export class CatalogService {
       providers: providerConnections.map(
         (connection) => connection.providerKey,
       ),
+      inventoryPolicy: store.inventoryPolicy ?? 'SHARED',
       summary,
     };
   }

@@ -74,7 +74,7 @@ export function ProductDetailDialog({
         ) : null
       }
       contentClassName="sm:max-w-5xl"
-      headerClassName={product ? "pr-32 sm:pr-48" : undefined}
+      headerClassName={product ? "pr-32 sm:pr-48 lg:pr-[23rem]" : undefined}
       bodyClassName="themed-scrollbar px-0 py-0"
     >
       {error ? (

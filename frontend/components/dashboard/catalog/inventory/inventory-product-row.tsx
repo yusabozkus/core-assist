@@ -10,7 +10,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { getProviderName } from "@/components/dashboard/catalog/products/product-catalog-utils"
-import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
+import { ProviderLogoStack } from "@/components/dashboard/channels/provider-logo"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -99,14 +99,11 @@ export function InventoryProductRow({
             </span>
             <span className="mt-1 flex min-w-0 items-center gap-2 text-[10px] text-muted-foreground">
               <span className="flex min-w-0 items-center gap-1.5">
-                {product.providers.slice(0, 2).map((provider) => (
-                  <ProviderLogo
-                    key={provider}
-                    provider={provider}
-                    className="size-4 rounded-sm shadow-none"
-                    sizes="16px"
-                  />
-                ))}
+                <ProviderLogoStack
+                  providers={product.providers}
+                  sizes="16px"
+                  logoClassName="size-4 rounded-sm"
+                />
                 <span className="truncate">
                   {product.providers.map(getProviderName).join(", ") ||
                     "Kanal bilgisi yok"}
@@ -176,6 +173,24 @@ export function InventoryProductRow({
                         ? " · Güncelleme gerekli"
                         : " · Güncel"}
                     </span>
+                    {variant.channelStocks.length > 1 ? (
+                      <span
+                        className={cn(
+                          "mt-1 block truncate text-[10px]",
+                          variant.hasStockConflict
+                            ? "font-medium text-amber-600 dark:text-amber-400"
+                            : "text-muted-foreground"
+                        )}
+                      >
+                        {variant.channelStocks
+                          .map(
+                            (channel) =>
+                              `${getProviderName(channel.providerKey)} ${Math.max(channel.stock, 0).toLocaleString("tr-TR")}`
+                          )
+                          .join(" · ")}
+                        {variant.hasStockConflict ? " · Stok farkı" : ""}
+                      </span>
+                    ) : null}
                   </span>
                 </div>
 

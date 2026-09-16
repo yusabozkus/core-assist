@@ -127,6 +127,12 @@ const QUESTION_DETAIL_SELECT = {
           externalVariants: {
             select: {
               externalProductId: true,
+              price: true,
+              currency: true,
+              stock: true,
+              status: true,
+              sourceUpdatedAt: true,
+              lastSyncedAt: true,
               externalProduct: {
                 select: {
                   connection: { select: { providerKey: true } },
@@ -383,18 +389,43 @@ export class QuestionsService {
                       question.externalProductRecordId,
                   ),
               )
-              .map(({ externalVariants, ...variant }) => ({
-                ...variant,
-                price: Number(variant.price),
-                providers: [
-                  ...new Set(
-                    externalVariants.map(
+              .map(({ externalVariants, ...variant }) => {
+                const channelVariant = question.externalProductRecordId
+                  ? externalVariants.find(
                       (externalVariant) =>
-                        externalVariant.externalProduct.connection.providerKey,
+                        externalVariant.externalProductId ===
+                        question.externalProductRecordId,
+                    )
+                  : null;
+                const stock = channelVariant?.stock ?? variant.stock;
+
+                return {
+                  ...variant,
+                  price: Number(channelVariant?.price ?? variant.price),
+                  currency: channelVariant?.currency ?? variant.currency,
+                  stock,
+                  status: channelVariant
+                    ? channelVariant.status !== 'ACTIVE'
+                      ? 'UNAVAILABLE'
+                      : stock > 0
+                        ? 'ACTIVE'
+                        : 'OUT_OF_STOCK'
+                    : variant.status,
+                  sourceUpdatedAt:
+                    channelVariant?.sourceUpdatedAt ?? variant.sourceUpdatedAt,
+                  lastSyncedAt:
+                    channelVariant?.lastSyncedAt ?? variant.lastSyncedAt,
+                  providers: [
+                    ...new Set(
+                      externalVariants.map(
+                        (externalVariant) =>
+                          externalVariant.externalProduct.connection
+                            .providerKey,
+                      ),
                     ),
-                  ),
-                ],
-              })),
+                  ],
+                };
+              }),
             sizeGuides: question.product.sizeGuides
               .filter(
                 (guide) =>

@@ -1,5 +1,5 @@
-import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
-import { formatPrice, getProviderName } from "./product-catalog-utils"
+import { ProviderLogoStack } from "@/components/dashboard/channels/provider-logo"
+import { formatPrice } from "./product-catalog-utils"
 import { cn } from "@/lib/utils"
 import type { CatalogProductListItem } from "@/types/product"
 
@@ -16,21 +16,7 @@ export function ProductCardProviders({
   const providers = [
     ...new Set(product.providers.map((item) => item.providerKey)),
   ]
-  return (
-    <span
-      className="flex shrink-0 items-center gap-1.5"
-      title={providers.map(getProviderName).join(", ")}
-    >
-      {providers.map((provider) => (
-        <ProviderLogo
-          key={provider}
-          provider={provider}
-          sizes="24px"
-          className="size-6 rounded-md shadow-none"
-        />
-      ))}
-    </span>
-  )
+  return <ProviderLogoStack providers={providers} />
 }
 
 export function ProductCardPrice({

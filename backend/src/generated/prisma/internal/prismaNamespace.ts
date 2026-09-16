@@ -3705,6 +3705,7 @@ export const StoreScalarFieldEnum = {
   name: 'name',
   timezone: 'timezone',
   status: 'status',
+  inventoryPolicy: 'inventoryPolicy',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -3941,6 +3942,9 @@ export const ExternalProductVariantScalarFieldEnum = {
   externalId: 'externalId',
   sku: 'sku',
   barcode: 'barcode',
+  price: 'price',
+  currency: 'currency',
+  stock: 'stock',
   status: 'status',
   lastSeenSyncId: 'lastSeenSyncId',
   sourceUpdatedAt: 'sourceUpdatedAt',
@@ -4446,6 +4450,20 @@ export type EnumStoreStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Pris
  */
 export type ListEnumStoreStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreStatus[]'>
     
+
+
+/**
+ * Reference to a field of type 'InventoryPolicy'
+ */
+export type EnumInventoryPolicyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InventoryPolicy'>
+
+
+
+/**
+ * Reference to a field of type 'InventoryPolicy[]'
+ */
+export type ListEnumInventoryPolicyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InventoryPolicy[]'>
+
 
 
 /**
@@ -5148,4 +5166,3 @@ export type PrismaAction =
  * `PrismaClient` proxy available in interactive transactions.
  */
 export type TransactionClient = Omit<DefaultPrismaClient, runtime.ITXClientDenyList>
-
