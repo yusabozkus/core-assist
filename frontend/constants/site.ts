@@ -15,9 +15,20 @@ import type { IconSvgElement } from "@hugeicons/react"
 export const APP_ROUTES = {
   home: "/",
   login: "/login",
+  authContinue: "/auth/continue",
   register: "/register",
   onboarding: "/onboarding",
   checkout: "/checkout",
+  admin: {
+    root: "/admin",
+    customers: "/admin/customers",
+    support: "/admin/support",
+    billing: "/admin/billing",
+    operations: "/admin/operations",
+    aiUsage: "/admin/ai-usage",
+    system: "/admin/system",
+    auditLogs: "/admin/audit-logs",
+  },
   dashboard: {
     root: "/dashboard",
     inbox: "/dashboard/inbox",

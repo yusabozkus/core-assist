@@ -19,16 +19,16 @@ type LoginFormProps = {
 
 function getSafeReturnTo(returnTo: string | undefined, origin: string) {
   if (!returnTo?.startsWith("/") || returnTo.startsWith("//")) {
-    return APP_ROUTES.dashboard.root
+    return APP_ROUTES.authContinue
   }
 
   try {
     const url = new URL(returnTo, origin)
     return url.origin === origin
       ? `${url.pathname}${url.search}${url.hash}`
-      : APP_ROUTES.dashboard.root
+      : APP_ROUTES.authContinue
   } catch {
-    return APP_ROUTES.dashboard.root
+    return APP_ROUTES.authContinue
   }
 }
 

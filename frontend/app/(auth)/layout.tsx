@@ -23,7 +23,7 @@ export default async function AuthLayout({
   const currentUser = await getCurrentUser()
 
   if (currentUser) {
-    redirect(APP_ROUTES.dashboard.root)
+    redirect(APP_ROUTES.authContinue)
   }
 
   return (

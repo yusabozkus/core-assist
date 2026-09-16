@@ -20,6 +20,7 @@ import { BillingModule } from './modules/billing/billing.module';
 import { getRedisConnection } from './infrastructure/queue/redis-connection';
 import { TeamModule } from './modules/team/team.module';
 import { SupportModule } from './modules/support/support.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { SupportModule } from './modules/support/support.module';
     BillingModule,
     TeamModule,
     SupportModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],
