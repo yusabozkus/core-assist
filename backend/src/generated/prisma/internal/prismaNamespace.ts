@@ -4271,6 +4271,7 @@ export const SupportTicketScalarFieldEnum = {
   workspaceId: 'workspaceId',
   storeId: 'storeId',
   createdByUserId: 'createdByUserId',
+  assignedAdminUserId: 'assignedAdminUserId',
   category: 'category',
   impact: 'impact',
   priority: 'priority',
@@ -4295,6 +4296,7 @@ export const SupportMessageScalarFieldEnum = {
   ticketId: 'ticketId',
   authorUserId: 'authorUserId',
   authorType: 'authorType',
+  isInternal: 'isInternal',
   body: 'body',
   createdAt: 'createdAt'
 } as const

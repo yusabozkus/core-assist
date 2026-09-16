@@ -22,17 +22,21 @@ import {
 const summaryInclude = {
   createdBy: { select: { id: true, name: true, image: true } },
   messages: {
+    where: { isInternal: false },
     orderBy: { createdAt: 'desc' },
     take: 1,
     select: { body: true, authorType: true, createdAt: true },
   },
-  _count: { select: { messages: true } },
+  _count: {
+    select: { messages: { where: { isInternal: false } } },
+  },
 } satisfies Prisma.SupportTicketInclude;
 
 const detailInclude = {
   createdBy: { select: { id: true, name: true, image: true } },
   store: { select: { id: true, name: true } },
   messages: {
+    where: { isInternal: false },
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     include: {
       author: { select: { id: true, name: true, image: true } },

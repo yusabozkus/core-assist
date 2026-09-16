@@ -32,8 +32,9 @@ model User {
   billingPlanChanges            BillingPlanChange[]
   sentWorkspaceInvitations      WorkspaceInvitation[]         @relation("WorkspaceInvitationSender")
   verifiedProductKnowledgeFacts ProductKnowledgeFact[]        @relation("ProductKnowledgeVerifier")
-  createdSupportTickets         SupportTicket[]                @relation("SupportTicketCreator")
-  supportMessages               SupportMessage[]               @relation("SupportMessageAuthor")
+  createdSupportTickets         SupportTicket[]               @relation("SupportTicketCreator")
+  assignedSupportTickets        SupportTicket[]               @relation("SupportTicketAssignee")
+  supportMessages               SupportMessage[]              @relation("SupportMessageAuthor")
 
   @@map("user")
 }
@@ -1160,34 +1161,39 @@ enum SupportMessageAuthorType {
 }
 
 model SupportTicket {
-  id                 String                @id @default(uuid())
-  number             Int                   @unique @default(autoincrement())
-  workspaceId        String
-  storeId            String?
-  createdByUserId    String?
-  category           SupportTicketCategory
-  impact             SupportTicketImpact
-  priority           SupportTicketPriority @default(NORMAL)
-  status             SupportTicketStatus   @default(OPEN)
-  subject            String
-  planSnapshot       BillingPlan
-  context            Json?
-  firstResponseDueAt DateTime
-  firstRespondedAt   DateTime?
-  lastMessageAt      DateTime              @default(now())
-  resolvedAt         DateTime?
-  closedAt           DateTime?
-  createdAt          DateTime              @default(now())
-  updatedAt          DateTime              @updatedAt
+  id                  String                @id @default(uuid())
+  number              Int                   @unique @default(autoincrement())
+  workspaceId         String
+  storeId             String?
+  createdByUserId     String?
+  assignedAdminUserId String?
+  category            SupportTicketCategory
+  impact              SupportTicketImpact
+  priority            SupportTicketPriority @default(NORMAL)
+  status              SupportTicketStatus   @default(OPEN)
+  subject             String
+  planSnapshot        BillingPlan
+  context             Json?
+  firstResponseDueAt  DateTime
+  firstRespondedAt    DateTime?
+  lastMessageAt       DateTime              @default(now())
+  resolvedAt          DateTime?
+  closedAt            DateTime?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 
-  workspace Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  store     Store?           @relation(fields: [storeId], references: [id], onDelete: SetNull)
-  createdBy User?            @relation("SupportTicketCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
-  messages  SupportMessage[]
+  workspace     Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  store         Store?           @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  createdBy     User?            @relation("SupportTicketCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  assignedAdmin User?            @relation("SupportTicketAssignee", fields: [assignedAdminUserId], references: [id], onDelete: SetNull)
+  messages      SupportMessage[]
 
   @@index([storeId, status, lastMessageAt])
   @@index([workspaceId, status, lastMessageAt])
   @@index([createdByUserId, lastMessageAt])
+  @@index([assignedAdminUserId, status, lastMessageAt])
+  @@index([status, firstResponseDueAt])
+  @@index([priority, status, lastMessageAt])
   @@map("support_ticket")
 }
 
@@ -1196,6 +1202,7 @@ model SupportMessage {
   ticketId     String
   authorUserId String?
   authorType   SupportMessageAuthorType
+  isInternal   Boolean                  @default(false)
   body         String
   createdAt    DateTime                 @default(now())
 
@@ -1203,6 +1210,7 @@ model SupportMessage {
   author User?         @relation("SupportMessageAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
 
   @@index([ticketId, createdAt])
+  @@index([ticketId, isInternal, createdAt])
   @@map("support_message")
 }
 

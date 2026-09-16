@@ -222,6 +222,7 @@ export type UserWhereInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationListRelationFilter
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactListRelationFilter
   createdSupportTickets?: Prisma.SupportTicketListRelationFilter
+  assignedSupportTickets?: Prisma.SupportTicketListRelationFilter
   supportMessages?: Prisma.SupportMessageListRelationFilter
 }
 
@@ -250,6 +251,7 @@ export type UserOrderByWithRelationInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationOrderByRelationAggregateInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactOrderByRelationAggregateInput
   createdSupportTickets?: Prisma.SupportTicketOrderByRelationAggregateInput
+  assignedSupportTickets?: Prisma.SupportTicketOrderByRelationAggregateInput
   supportMessages?: Prisma.SupportMessageOrderByRelationAggregateInput
 }
 
@@ -281,6 +283,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationListRelationFilter
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactListRelationFilter
   createdSupportTickets?: Prisma.SupportTicketListRelationFilter
+  assignedSupportTickets?: Prisma.SupportTicketListRelationFilter
   supportMessages?: Prisma.SupportMessageListRelationFilter
 }, "id" | "email">
 
@@ -337,6 +340,7 @@ export type UserCreateInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -365,6 +369,7 @@ export type UserUncheckedCreateInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -393,6 +398,7 @@ export type UserUpdateInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -421,6 +427,7 @@ export type UserUncheckedUpdateInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -692,6 +699,12 @@ export type UserCreateNestedOneWithoutCreatedSupportTicketsInput = {
   connect?: Prisma.UserWhereUniqueInput
 }
 
+export type UserCreateNestedOneWithoutAssignedSupportTicketsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAssignedSupportTicketsInput, Prisma.UserUncheckedCreateWithoutAssignedSupportTicketsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAssignedSupportTicketsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
 export type UserUpdateOneWithoutCreatedSupportTicketsNestedInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutCreatedSupportTicketsInput, Prisma.UserUncheckedCreateWithoutCreatedSupportTicketsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutCreatedSupportTicketsInput
@@ -700,6 +713,16 @@ export type UserUpdateOneWithoutCreatedSupportTicketsNestedInput = {
   delete?: Prisma.UserWhereInput | boolean
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCreatedSupportTicketsInput, Prisma.UserUpdateWithoutCreatedSupportTicketsInput>, Prisma.UserUncheckedUpdateWithoutCreatedSupportTicketsInput>
+}
+
+export type UserUpdateOneWithoutAssignedSupportTicketsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAssignedSupportTicketsInput, Prisma.UserUncheckedCreateWithoutAssignedSupportTicketsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAssignedSupportTicketsInput
+  upsert?: Prisma.UserUpsertWithoutAssignedSupportTicketsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAssignedSupportTicketsInput, Prisma.UserUpdateWithoutAssignedSupportTicketsInput>, Prisma.UserUncheckedUpdateWithoutAssignedSupportTicketsInput>
 }
 
 export type UserCreateNestedOneWithoutSupportMessagesInput = {
@@ -798,6 +821,7 @@ export type UserCreateWithoutSessionsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -825,6 +849,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -868,6 +893,7 @@ export type UserUpdateWithoutSessionsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -895,6 +921,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -922,6 +949,7 @@ export type UserCreateWithoutAccountsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -949,6 +977,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -992,6 +1021,7 @@ export type UserUpdateWithoutAccountsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1019,6 +1049,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1046,6 +1077,7 @@ export type UserCreateWithoutOwnedWorkspaceInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -1073,6 +1105,7 @@ export type UserUncheckedCreateWithoutOwnedWorkspaceInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -1116,6 +1149,7 @@ export type UserUpdateWithoutOwnedWorkspaceInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1143,6 +1177,7 @@ export type UserUncheckedUpdateWithoutOwnedWorkspaceInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1170,6 +1205,7 @@ export type UserCreateWithoutWorkspaceMembersInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -1197,6 +1233,7 @@ export type UserUncheckedCreateWithoutWorkspaceMembersInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -1240,6 +1277,7 @@ export type UserUpdateWithoutWorkspaceMembersInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1267,6 +1305,7 @@ export type UserUncheckedUpdateWithoutWorkspaceMembersInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1294,6 +1333,7 @@ export type UserCreateWithoutSentWorkspaceInvitationsInput = {
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -1321,6 +1361,7 @@ export type UserUncheckedCreateWithoutSentWorkspaceInvitationsInput = {
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -1364,6 +1405,7 @@ export type UserUpdateWithoutSentWorkspaceInvitationsInput = {
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1391,6 +1433,7 @@ export type UserUncheckedUpdateWithoutSentWorkspaceInvitationsInput = {
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1418,6 +1461,7 @@ export type UserCreateWithoutBillingCheckoutsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -1445,6 +1489,7 @@ export type UserUncheckedCreateWithoutBillingCheckoutsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -1488,6 +1533,7 @@ export type UserUpdateWithoutBillingCheckoutsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1515,6 +1561,7 @@ export type UserUncheckedUpdateWithoutBillingCheckoutsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1542,6 +1589,7 @@ export type UserCreateWithoutBillingPlanChangesInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -1569,6 +1617,7 @@ export type UserUncheckedCreateWithoutBillingPlanChangesInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -1612,6 +1661,7 @@ export type UserUpdateWithoutBillingPlanChangesInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1639,6 +1689,7 @@ export type UserUncheckedUpdateWithoutBillingPlanChangesInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1666,6 +1717,7 @@ export type UserCreateWithoutVerifiedProductKnowledgeFactsInput = {
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -1693,6 +1745,7 @@ export type UserUncheckedCreateWithoutVerifiedProductKnowledgeFactsInput = {
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -1736,6 +1789,7 @@ export type UserUpdateWithoutVerifiedProductKnowledgeFactsInput = {
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1763,6 +1817,7 @@ export type UserUncheckedUpdateWithoutVerifiedProductKnowledgeFactsInput = {
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1790,6 +1845,7 @@ export type UserCreateWithoutRequestedAiDraftsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -1817,6 +1873,7 @@ export type UserUncheckedCreateWithoutRequestedAiDraftsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -1860,6 +1917,7 @@ export type UserUpdateWithoutRequestedAiDraftsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1887,6 +1945,7 @@ export type UserUncheckedUpdateWithoutRequestedAiDraftsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -1914,6 +1973,7 @@ export type UserCreateWithoutRequestedQuestionAnswersInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -1941,6 +2001,7 @@ export type UserUncheckedCreateWithoutRequestedQuestionAnswersInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -1984,6 +2045,7 @@ export type UserUpdateWithoutRequestedQuestionAnswersInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -2011,6 +2073,7 @@ export type UserUncheckedUpdateWithoutRequestedQuestionAnswersInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -2038,6 +2101,7 @@ export type UserCreateWithoutStoreMembersInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -2065,6 +2129,7 @@ export type UserUncheckedCreateWithoutStoreMembersInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -2108,6 +2173,7 @@ export type UserUpdateWithoutStoreMembersInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -2135,6 +2201,7 @@ export type UserUncheckedUpdateWithoutStoreMembersInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -2162,6 +2229,7 @@ export type UserCreateWithoutCreatedSupportTicketsInput = {
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -2189,12 +2257,74 @@ export type UserUncheckedCreateWithoutCreatedSupportTicketsInput = {
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutCreatedSupportTicketsInput = {
   where: Prisma.UserWhereUniqueInput
   create: Prisma.XOR<Prisma.UserCreateWithoutCreatedSupportTicketsInput, Prisma.UserUncheckedCreateWithoutCreatedSupportTicketsInput>
+}
+
+export type UserCreateWithoutAssignedSupportTicketsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  onboardingCompletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  ownedWorkspace?: Prisma.WorkspaceCreateNestedOneWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberCreateNestedManyWithoutUserInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptCreateNestedManyWithoutRequestedByInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
+  billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
+  billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
+  sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
+  createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
+}
+
+export type UserUncheckedCreateWithoutAssignedSupportTicketsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  onboardingCompletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  ownedWorkspace?: Prisma.WorkspaceUncheckedCreateNestedOneWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutUserInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutRequestedByInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
+  billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
+  sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
+  createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
+}
+
+export type UserCreateOrConnectWithoutAssignedSupportTicketsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAssignedSupportTicketsInput, Prisma.UserUncheckedCreateWithoutAssignedSupportTicketsInput>
 }
 
 export type UserUpsertWithoutCreatedSupportTicketsInput = {
@@ -2232,6 +2362,7 @@ export type UserUpdateWithoutCreatedSupportTicketsInput = {
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -2259,6 +2390,74 @@ export type UserUncheckedUpdateWithoutCreatedSupportTicketsInput = {
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserUpsertWithoutAssignedSupportTicketsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAssignedSupportTicketsInput, Prisma.UserUncheckedUpdateWithoutAssignedSupportTicketsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAssignedSupportTicketsInput, Prisma.UserUncheckedCreateWithoutAssignedSupportTicketsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAssignedSupportTicketsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAssignedSupportTicketsInput, Prisma.UserUncheckedUpdateWithoutAssignedSupportTicketsInput>
+}
+
+export type UserUpdateWithoutAssignedSupportTicketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  ownedWorkspace?: Prisma.WorkspaceUpdateOneWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUpdateManyWithoutUserNestedInput
+  storeMembers?: Prisma.StoreMemberUpdateManyWithoutUserNestedInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUpdateManyWithoutRequestedByNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
+  billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
+  billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
+  sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
+  createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAssignedSupportTicketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  ownedWorkspace?: Prisma.WorkspaceUncheckedUpdateOneWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutUserNestedInput
+  storeMembers?: Prisma.StoreMemberUncheckedUpdateManyWithoutUserNestedInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutRequestedByNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
+  billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
+  sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
+  createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -2287,6 +2486,7 @@ export type UserCreateWithoutSupportMessagesInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
 }
 
 export type UserUncheckedCreateWithoutSupportMessagesInput = {
@@ -2314,6 +2514,7 @@ export type UserUncheckedCreateWithoutSupportMessagesInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
 }
 
 export type UserCreateOrConnectWithoutSupportMessagesInput = {
@@ -2357,6 +2558,7 @@ export type UserUpdateWithoutSupportMessagesInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSupportMessagesInput = {
@@ -2384,6 +2586,7 @@ export type UserUncheckedUpdateWithoutSupportMessagesInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -2410,6 +2613,7 @@ export type UserCreateWithoutNotificationsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -2437,6 +2641,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -2480,6 +2685,7 @@ export type UserUpdateWithoutNotificationsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -2507,6 +2713,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -2534,6 +2741,7 @@ export type UserCreateWithoutNotificationPreferencesInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -2561,6 +2769,7 @@ export type UserUncheckedCreateWithoutNotificationPreferencesInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -2604,6 +2813,7 @@ export type UserUpdateWithoutNotificationPreferencesInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -2631,6 +2841,7 @@ export type UserUncheckedUpdateWithoutNotificationPreferencesInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -2658,6 +2869,7 @@ export type UserCreateWithoutNotificationDeliverySettingsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -2685,6 +2897,7 @@ export type UserUncheckedCreateWithoutNotificationDeliverySettingsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -2728,6 +2941,7 @@ export type UserUpdateWithoutNotificationDeliverySettingsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -2755,6 +2969,7 @@ export type UserUncheckedUpdateWithoutNotificationDeliverySettingsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -2782,6 +2997,7 @@ export type UserCreateWithoutWebPushSubscriptionsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
 }
 
@@ -2809,6 +3025,7 @@ export type UserUncheckedCreateWithoutWebPushSubscriptionsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
@@ -2852,6 +3069,7 @@ export type UserUpdateWithoutWebPushSubscriptionsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
 }
 
@@ -2879,6 +3097,7 @@ export type UserUncheckedUpdateWithoutWebPushSubscriptionsInput = {
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
   verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
   createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
@@ -2903,6 +3122,7 @@ export type UserCountOutputType = {
   sentWorkspaceInvitations: number
   verifiedProductKnowledgeFacts: number
   createdSupportTickets: number
+  assignedSupportTickets: number
   supportMessages: number
 }
 
@@ -2922,6 +3142,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   sentWorkspaceInvitations?: boolean | UserCountOutputTypeCountSentWorkspaceInvitationsArgs
   verifiedProductKnowledgeFacts?: boolean | UserCountOutputTypeCountVerifiedProductKnowledgeFactsArgs
   createdSupportTickets?: boolean | UserCountOutputTypeCountCreatedSupportTicketsArgs
+  assignedSupportTickets?: boolean | UserCountOutputTypeCountAssignedSupportTicketsArgs
   supportMessages?: boolean | UserCountOutputTypeCountSupportMessagesArgs
 }
 
@@ -3043,6 +3264,13 @@ export type UserCountOutputTypeCountCreatedSupportTicketsArgs<ExtArgs extends ru
 /**
  * UserCountOutputType without action
  */
+export type UserCountOutputTypeCountAssignedSupportTicketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SupportTicketWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
 export type UserCountOutputTypeCountSupportMessagesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.SupportMessageWhereInput
 }
@@ -3073,6 +3301,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   sentWorkspaceInvitations?: boolean | Prisma.User$sentWorkspaceInvitationsArgs<ExtArgs>
   verifiedProductKnowledgeFacts?: boolean | Prisma.User$verifiedProductKnowledgeFactsArgs<ExtArgs>
   createdSupportTickets?: boolean | Prisma.User$createdSupportTicketsArgs<ExtArgs>
+  assignedSupportTickets?: boolean | Prisma.User$assignedSupportTicketsArgs<ExtArgs>
   supportMessages?: boolean | Prisma.User$supportMessagesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
@@ -3128,6 +3357,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   sentWorkspaceInvitations?: boolean | Prisma.User$sentWorkspaceInvitationsArgs<ExtArgs>
   verifiedProductKnowledgeFacts?: boolean | Prisma.User$verifiedProductKnowledgeFactsArgs<ExtArgs>
   createdSupportTickets?: boolean | Prisma.User$createdSupportTicketsArgs<ExtArgs>
+  assignedSupportTickets?: boolean | Prisma.User$assignedSupportTicketsArgs<ExtArgs>
   supportMessages?: boolean | Prisma.User$supportMessagesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -3153,6 +3383,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     sentWorkspaceInvitations: Prisma.$WorkspaceInvitationPayload<ExtArgs>[]
     verifiedProductKnowledgeFacts: Prisma.$ProductKnowledgeFactPayload<ExtArgs>[]
     createdSupportTickets: Prisma.$SupportTicketPayload<ExtArgs>[]
+    assignedSupportTickets: Prisma.$SupportTicketPayload<ExtArgs>[]
     supportMessages: Prisma.$SupportMessagePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -3574,6 +3805,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   sentWorkspaceInvitations<T extends Prisma.User$sentWorkspaceInvitationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$sentWorkspaceInvitationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkspaceInvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   verifiedProductKnowledgeFacts<T extends Prisma.User$verifiedProductKnowledgeFactsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$verifiedProductKnowledgeFactsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductKnowledgeFactPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   createdSupportTickets<T extends Prisma.User$createdSupportTicketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdSupportTicketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportTicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  assignedSupportTickets<T extends Prisma.User$assignedSupportTicketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$assignedSupportTicketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportTicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   supportMessages<T extends Prisma.User$supportMessagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$supportMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -4363,6 +4595,30 @@ export type User$verifiedProductKnowledgeFactsArgs<ExtArgs extends runtime.Types
  * User.createdSupportTickets
  */
 export type User$createdSupportTicketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SupportTicket
+   */
+  select?: Prisma.SupportTicketSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SupportTicket
+   */
+  omit?: Prisma.SupportTicketOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SupportTicketInclude<ExtArgs> | null
+  where?: Prisma.SupportTicketWhereInput
+  orderBy?: Prisma.SupportTicketOrderByWithRelationInput | Prisma.SupportTicketOrderByWithRelationInput[]
+  cursor?: Prisma.SupportTicketWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SupportTicketScalarFieldEnum | Prisma.SupportTicketScalarFieldEnum[]
+}
+
+/**
+ * User.assignedSupportTickets
+ */
+export type User$assignedSupportTicketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the SupportTicket
    */

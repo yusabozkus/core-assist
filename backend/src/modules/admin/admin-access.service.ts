@@ -11,6 +11,14 @@ export class AdminAccessService {
       this.allowedEmails.has(normalizeEmailAddress(user.email))
     );
   }
+
+  isAdminEmail(email: string) {
+    return this.allowedEmails.has(normalizeEmailAddress(email));
+  }
+
+  getAllowedEmailAddresses() {
+    return [...this.allowedEmails];
+  }
 }
 
 function parseAdminEmails(value: string | undefined) {

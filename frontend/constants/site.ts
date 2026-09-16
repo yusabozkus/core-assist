@@ -23,6 +23,7 @@ export const APP_ROUTES = {
     root: "/admin",
     customers: "/admin/customers",
     support: "/admin/support",
+    supportTicket: (ticketId: string) => `/admin/support/${ticketId}`,
     billing: "/admin/billing",
     operations: "/admin/operations",
     aiUsage: "/admin/ai-usage",

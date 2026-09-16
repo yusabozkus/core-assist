@@ -71,5 +71,13 @@ export const ADMIN_NAVIGATION: ReadonlyArray<AdminNavigationItem> = [
 ]
 
 export function getAdminNavigationItem(pathname: string) {
-  return ADMIN_NAVIGATION.find((item) => item.url === pathname) ?? null
+  return (
+    ADMIN_NAVIGATION.find((item) => item.url === pathname) ??
+    ADMIN_NAVIGATION.find(
+      (item) =>
+        item.url !== APP_ROUTES.admin.root &&
+        pathname.startsWith(`${item.url}/`)
+    ) ??
+    null
+  )
 }

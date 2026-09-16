@@ -33,6 +33,7 @@ export function AdminHeader({
 }) {
   const pathname = usePathname()
   const currentItem = getAdminNavigationItem(pathname)
+  const isSupportTicketDetail = /^\/admin\/support\/[^/]+\/?$/.test(pathname)
   const [summary, setSummary] = useState(initialSummary)
 
   const refreshSummary = useCallback(async () => {
@@ -46,6 +47,8 @@ export function AdminHeader({
   }, [])
 
   useEffect(() => {
+    if (isSupportTicketDetail) return
+
     const intervalId = window.setInterval(
       () => void refreshSummary(),
       SUMMARY_REFRESH_INTERVAL_MS
@@ -56,7 +59,9 @@ export function AdminHeader({
       window.clearInterval(intervalId)
       window.removeEventListener("focus", refreshSummary)
     }
-  }, [refreshSummary])
+  }, [isSupportTicketDetail, refreshSummary])
+
+  if (isSupportTicketDetail) return null
 
   return (
     <header className="relative z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border/70 bg-background/92 px-3 backdrop-blur-xl sm:px-4">
