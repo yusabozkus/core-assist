@@ -300,6 +300,7 @@ export class AccountDeletionService {
     const transactions = new Map<string, Transaction>();
     const subscriptions = new Map<string, Subscription>();
     const cancelableTransactions = new Set<string>();
+    const knownCheckoutTransactionIds = new Set<string>();
     const customerIds = new Set<string>();
     const knownSubscriptionIds = new Set<string>();
     const localSubscription = workspace.billingSubscription;
@@ -308,6 +309,8 @@ export class AccountDeletionService {
     if (localSubscription?.paddleCustomerId)
       customerIds.add(localSubscription.paddleCustomerId);
     for (const checkout of workspace.billingCheckouts) {
+      if (checkout.paddleTransactionId)
+        knownCheckoutTransactionIds.add(checkout.paddleTransactionId);
       if (checkout.paddleSubscriptionId)
         knownSubscriptionIds.add(checkout.paddleSubscriptionId);
       if (checkout.previousPaddleSubscriptionId)
@@ -391,7 +394,7 @@ export class AccountDeletionService {
       const active = this.getClient().subscriptions.list({
         customerId: [customerId],
         status: ['active', 'trialing', 'paused', 'past_due'],
-        perPage: 100,
+        perPage: 30,
       });
       for await (const subscription of active) {
         if (!knownSubscriptionIds.has(subscription.id))
@@ -405,8 +408,27 @@ export class AccountDeletionService {
         status: ['draft', 'ready', 'billed', 'past_due', 'paid'],
         perPage: 30,
       });
-      for await (const transaction of outstanding)
+      for await (const transaction of outstanding) {
+        if (transaction.customerId !== customerId) {
+          throw new ConflictException(
+            'Ödeme müşterisi doğrulanamadı; hesap silinmedi. Destek incelemesi gerekiyor.',
+          );
+        }
         transactions.set(transaction.id, transaction);
+
+        // Older checkout attempts may predate the local BillingCheckout
+        // reservation table. The persisted, unique Paddle customer mapping is
+        // authoritative for account closure, so an unbound standalone payment
+        // for that exact customer can be canceled safely. Never infer this
+        // ownership from client-controlled customData, and never cancel a
+        // subscription transaction or a payment that progressed past `ready`.
+        if (
+          !knownCheckoutTransactionIds.has(transaction.id) &&
+          isCancelableStandaloneTransaction(transaction)
+        ) {
+          cancelableTransactions.add(transaction.id);
+        }
+      }
     }
     for (const transaction of transactions.values()) {
       if (
@@ -473,4 +495,11 @@ export class AccountDeletionService {
     });
     return this.client;
   }
+}
+
+function isCancelableStandaloneTransaction(transaction: Transaction) {
+  return (
+    (transaction.status === 'draft' || transaction.status === 'ready') &&
+    !transaction.subscriptionId
+  );
 }
