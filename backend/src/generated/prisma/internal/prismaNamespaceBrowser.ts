@@ -87,6 +87,8 @@ export const ModelName = {
   AiDraftAttempt: 'AiDraftAttempt',
   QuestionAnswer: 'QuestionAnswer',
   StoreMember: 'StoreMember',
+  SupportTicket: 'SupportTicket',
+  SupportMessage: 'SupportMessage',
   Notification: 'Notification',
   NotificationPreference: 'NotificationPreference',
   NotificationDeliverySetting: 'NotificationDeliverySetting',
@@ -767,6 +769,43 @@ export const StoreMemberScalarFieldEnum = {
 } as const
 
 export type StoreMemberScalarFieldEnum = (typeof StoreMemberScalarFieldEnum)[keyof typeof StoreMemberScalarFieldEnum]
+
+
+export const SupportTicketScalarFieldEnum = {
+  id: 'id',
+  number: 'number',
+  workspaceId: 'workspaceId',
+  storeId: 'storeId',
+  createdByUserId: 'createdByUserId',
+  category: 'category',
+  impact: 'impact',
+  priority: 'priority',
+  status: 'status',
+  subject: 'subject',
+  planSnapshot: 'planSnapshot',
+  context: 'context',
+  firstResponseDueAt: 'firstResponseDueAt',
+  firstRespondedAt: 'firstRespondedAt',
+  lastMessageAt: 'lastMessageAt',
+  resolvedAt: 'resolvedAt',
+  closedAt: 'closedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SupportTicketScalarFieldEnum = (typeof SupportTicketScalarFieldEnum)[keyof typeof SupportTicketScalarFieldEnum]
+
+
+export const SupportMessageScalarFieldEnum = {
+  id: 'id',
+  ticketId: 'ticketId',
+  authorUserId: 'authorUserId',
+  authorType: 'authorType',
+  body: 'body',
+  createdAt: 'createdAt'
+} as const
+
+export type SupportMessageScalarFieldEnum = (typeof SupportMessageScalarFieldEnum)[keyof typeof SupportMessageScalarFieldEnum]
 
 
 export const NotificationScalarFieldEnum = {

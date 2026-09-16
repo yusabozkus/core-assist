@@ -68,6 +68,12 @@ export function DashboardHeader({
   syncState,
   isStoreArchived = false,
 }: DashboardHeaderProps) {
+  const pathname = usePathname()
+
+  if (pathname.startsWith(`${APP_ROUTES.dashboard.support}/tickets/`)) {
+    return null
+  }
+
   return (
     <DashboardHeaderContent
       key={`${storeId}:${syncState}`}

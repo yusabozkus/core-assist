@@ -164,13 +164,13 @@ export type ExternalProductVariantAggregateArgs<ExtArgs extends runtime.Types.Ex
   where?: Prisma.ExternalProductVariantWhereInput
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-   *
+   * 
    * Determine the order of ExternalProductVariants to fetch.
    */
   orderBy?: Prisma.ExternalProductVariantOrderByWithRelationInput | Prisma.ExternalProductVariantOrderByWithRelationInput[]
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-   *
+   * 
    * Sets the start position
    */
   cursor?: Prisma.ExternalProductVariantWhereUniqueInput
@@ -200,13 +200,13 @@ export type ExternalProductVariantAggregateArgs<ExtArgs extends runtime.Types.Ex
   _avg?: ExternalProductVariantAvgAggregateInputType
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-   *
+   * 
    * Select which fields to sum
   **/
   _sum?: ExternalProductVariantSumAggregateInputType
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-   *
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: ExternalProductVariantMinAggregateInputType

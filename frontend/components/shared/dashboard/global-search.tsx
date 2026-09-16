@@ -5,6 +5,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import {
   Analytics01Icon,
+  CustomerSupportIcon,
   DashboardSquare01Icon,
   InboxIcon,
   Package01Icon,
@@ -119,6 +120,13 @@ const SEARCH_PAGES: SearchPage[] = [
     url: APP_ROUTES.dashboard.settings.profile,
     icon: Settings02Icon,
     keywords: "profil kullanıcı hesap isim eposta",
+  },
+  {
+    title: "Yardım Merkezi",
+    description: "Kullanım yanıtlarını bulun ve desteğe ulaşın",
+    url: APP_ROUTES.dashboard.support,
+    icon: CustomerSupportIcon,
+    keywords: "yardım destek sorun sss iletişim",
   },
 ]
 

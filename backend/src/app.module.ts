@@ -19,6 +19,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { BillingModule } from './modules/billing/billing.module';
 import { getRedisConnection } from './infrastructure/queue/redis-connection';
 import { TeamModule } from './modules/team/team.module';
+import { SupportModule } from './modules/support/support.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { TeamModule } from './modules/team/team.module';
     NotificationsModule,
     BillingModule,
     TeamModule,
+    SupportModule,
   ],
   controllers: [AppController],
   providers: [AppService],

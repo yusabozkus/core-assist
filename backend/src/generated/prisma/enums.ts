@@ -387,6 +387,56 @@ export const StoreRole = {
 export type StoreRole = (typeof StoreRole)[keyof typeof StoreRole]
 
 
+export const SupportTicketCategory = {
+  CHANNELS: 'CHANNELS',
+  AI_AUTOMATION: 'AI_AUTOMATION',
+  CATALOG_INVENTORY: 'CATALOG_INVENTORY',
+  BILLING_ACCOUNT: 'BILLING_ACCOUNT',
+  TEAM_ACCESS: 'TEAM_ACCESS',
+  OTHER: 'OTHER'
+} as const
+
+export type SupportTicketCategory = (typeof SupportTicketCategory)[keyof typeof SupportTicketCategory]
+
+
+export const SupportTicketImpact = {
+  QUESTION: 'QUESTION',
+  PARTIAL: 'PARTIAL',
+  BLOCKED: 'BLOCKED'
+} as const
+
+export type SupportTicketImpact = (typeof SupportTicketImpact)[keyof typeof SupportTicketImpact]
+
+
+export const SupportTicketPriority = {
+  NORMAL: 'NORMAL',
+  HIGH: 'HIGH',
+  URGENT: 'URGENT'
+} as const
+
+export type SupportTicketPriority = (typeof SupportTicketPriority)[keyof typeof SupportTicketPriority]
+
+
+export const SupportTicketStatus = {
+  OPEN: 'OPEN',
+  IN_PROGRESS: 'IN_PROGRESS',
+  WAITING_CUSTOMER: 'WAITING_CUSTOMER',
+  RESOLVED: 'RESOLVED',
+  CLOSED: 'CLOSED'
+} as const
+
+export type SupportTicketStatus = (typeof SupportTicketStatus)[keyof typeof SupportTicketStatus]
+
+
+export const SupportMessageAuthorType = {
+  CUSTOMER: 'CUSTOMER',
+  SUPPORT: 'SUPPORT',
+  SYSTEM: 'SYSTEM'
+} as const
+
+export type SupportMessageAuthorType = (typeof SupportMessageAuthorType)[keyof typeof SupportMessageAuthorType]
+
+
 export const NotificationType = {
   BILLING_PAYMENT_ISSUE: 'BILLING_PAYMENT_ISSUE',
   BILLING_SUBSCRIPTION_CHANGED: 'BILLING_SUBSCRIPTION_CHANGED',

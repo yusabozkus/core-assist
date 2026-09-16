@@ -169,6 +169,9 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
 }
 
 export function getDashboardNavigationTitle(pathname: string) {
+  const standaloneTitle = DASHBOARD_STANDALONE_TITLES[pathname]
+  if (standaloneTitle) return standaloneTitle
+
   const standaloneItem = [
     DASHBOARD_NAVIGATION.overview,
     ...DASHBOARD_NAVIGATION.primaryItems,
@@ -197,6 +200,12 @@ export function getDashboardNavigationTitle(pathname: string) {
 export function getDashboardBreadcrumbs(
   pathname: string
 ): ReadonlyArray<DashboardBreadcrumb> {
+  const standaloneTitle = DASHBOARD_STANDALONE_TITLES[pathname]
+
+  if (standaloneTitle) {
+    return [{ title: standaloneTitle, url: pathname }]
+  }
+
   const standaloneItem = [
     DASHBOARD_NAVIGATION.overview,
     ...DASHBOARD_NAVIGATION.primaryItems,
@@ -250,4 +259,8 @@ const DASHBOARD_AUXILIARY_TITLES: Readonly<Record<string, string>> = {
   [APP_ROUTES.dashboard.settings.billing]: "Plan ve Faturalama",
   [APP_ROUTES.dashboard.settings.plans]: "Planlar",
   [APP_ROUTES.dashboard.settings.invoices]: "Faturalar",
+}
+
+const DASHBOARD_STANDALONE_TITLES: Readonly<Record<string, string>> = {
+  [APP_ROUTES.dashboard.support]: "Yardım Merkezi",
 }

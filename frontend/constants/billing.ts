@@ -19,7 +19,7 @@ export const SUBSCRIPTION_PLANS: readonly SubscriptionPlan[] = [
     stores: 1,
     members: 1,
     products: 5000,
-    support: "2 iş günü hedefli e-posta desteği",
+    support: "2 iş günü hedefli ticket desteği",
     features: [
       "Tüm desteklenen pazaryerleri",
       "AI taslakları ve güvenli otomatik gönderim",
@@ -36,7 +36,7 @@ export const SUBSCRIPTION_PLANS: readonly SubscriptionPlan[] = [
     stores: 5,
     members: 3,
     products: 25000,
-    support: "1 iş günü hedefli öncelikli e-posta desteği",
+    support: "1 iş günü hedefli öncelikli ticket desteği",
     highlighted: true,
     features: [
       "Starter planındaki tüm özellikler",
