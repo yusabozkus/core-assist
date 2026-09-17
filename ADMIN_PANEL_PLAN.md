@@ -126,7 +126,7 @@ doğrudan `/admin` açılır ve admin arayüzü mağaza dashboard'una bağlantı
   admin layout iskeleti
 - [x] Faz 2 — Destek talepleri listesi ve admin ticket konuşması
 - [x] Faz 3 — Müşteriler listesi ve workspace detay sayfası
-- [ ] Faz 4 — Abonelik ve ödeme operasyonları
+- [x] Faz 4 — Abonelik ve ödeme operasyonları
 - [ ] Faz 5 — Senkronizasyon ve kuyruk operasyonları
 - [ ] Faz 6 — Gerçek verilerle admin genel bakış
 - [ ] Faz 7 — AI/kullanım ve sistem sağlığı

@@ -63,6 +63,7 @@ import { StoreBillingController } from './store-billing.controller';
     BillingUsageService,
     BillingUsageNotificationService,
     BillingEntitlementService,
+    PaddleBillingService,
   ],
 })
 export class BillingModule {}

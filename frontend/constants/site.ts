@@ -26,6 +26,7 @@ export const APP_ROUTES = {
     support: "/admin/support",
     supportTicket: (ticketId: string) => `/admin/support/${ticketId}`,
     billing: "/admin/billing",
+    billingWorkspace: (workspaceId: string) => `/admin/billing/${workspaceId}`,
     operations: "/admin/operations",
     aiUsage: "/admin/ai-usage",
     system: "/admin/system",
