@@ -22,6 +22,7 @@ export const APP_ROUTES = {
   admin: {
     root: "/admin",
     customers: "/admin/customers",
+    customer: (workspaceId: string) => `/admin/customers/${workspaceId}`,
     support: "/admin/support",
     supportTicket: (ticketId: string) => `/admin/support/${ticketId}`,
     billing: "/admin/billing",
