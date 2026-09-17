@@ -18,6 +18,14 @@ import {
 import { paddleCheckoutEnvironment } from '../billing/paddle-billing.config';
 import { entitlementsFor } from '../billing/billing-plan.config';
 import { PaddleBillingService } from '../billing/paddle-billing.service';
+import { AuditAction } from '../audit/audit-actions';
+import {
+  AuditActorType,
+  auditErrorCode,
+  AuditLogService,
+  AuditOrigin,
+  AuditResult,
+} from '../audit/audit-log.service';
 import {
   AdminBillingIssueFilter,
   AdminBillingQueryDto,
@@ -171,6 +179,7 @@ export class AdminBillingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paddle: PaddleBillingService,
+    private readonly audit: AuditLogService,
   ) {}
 
   async findAll(query: AdminBillingQueryDto) {
@@ -263,11 +272,18 @@ export class AdminBillingService {
     return this.toDetail(subscription);
   }
 
-  async reconcile(workspaceId: string) {
+  async reconcile(workspaceId: string, adminUserId: string) {
     const subscription = await this.prisma.billingSubscription.findUnique({
       where: { workspaceId },
       select: {
         id: true,
+        plan: true,
+        cycle: true,
+        status: true,
+        cancelAtPeriodEnd: true,
+        currentPeriodEnd: true,
+        reconcileFailures: true,
+        reconcileErrorCode: true,
         paddleSubscriptionId: true,
         workspace: {
           select: {
@@ -298,6 +314,18 @@ export class AdminBillingService {
       });
     }
 
+    const auditBase = {
+      actorType: AuditActorType.ADMIN,
+      actorUserId: adminUserId,
+      origin: AuditOrigin.API,
+      action: AuditAction.ADMIN_BILLING_RECONCILE,
+      workspaceId,
+      targetType: 'BILLING_SUBSCRIPTION',
+      targetId: subscription.id,
+      before: billingAuditSnapshot(subscription),
+    } as const;
+    await this.audit.record({ ...auditBase, result: AuditResult.STARTED });
+
     try {
       await this.paddle.reconcileWorkspace(workspaceId);
       const checkedAt = new Date();
@@ -324,10 +352,22 @@ export class AdminBillingService {
           reconcileAfter: new Date(Date.now() + 5 * 60_000),
         },
       });
+      await this.audit.recordSafely({
+        ...auditBase,
+        result: AuditResult.FAILURE,
+        errorCode: auditErrorCode(error),
+        metadata: { reconciliationCode: code },
+      });
       throw error;
     }
 
-    return this.findOne(workspaceId);
+    const result = await this.findOne(workspaceId);
+    await this.audit.recordSafely({
+      ...auditBase,
+      result: AuditResult.SUCCESS,
+      after: billingAuditSnapshot(result),
+    });
+    return result;
   }
 
   private buildWhere(
@@ -477,6 +517,26 @@ export class AdminBillingService {
       planChanges: subscription.workspace.billingPlanChanges,
     };
   }
+}
+
+function billingAuditSnapshot(subscription: {
+  plan: unknown;
+  cycle: unknown;
+  status: unknown;
+  cancelAtPeriodEnd: boolean;
+  currentPeriodEnd: Date;
+  reconcileFailures: number;
+  reconcileErrorCode: string | null;
+}) {
+  return {
+    plan: subscription.plan,
+    cycle: subscription.cycle,
+    status: subscription.status,
+    cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+    currentPeriodEnd: subscription.currentPeriodEnd,
+    reconcileFailures: subscription.reconcileFailures,
+    reconcileErrorCode: subscription.reconcileErrorCode,
+  };
 }
 
 function reconciliationFailureCode(error: unknown): string {

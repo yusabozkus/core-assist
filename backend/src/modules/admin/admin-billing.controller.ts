@@ -8,6 +8,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
+import type { AuthenticatedUser } from '../auth/auth.types';
+import { CurrentUser } from '../auth/current-user.decorator';
 import { AdminActionOriginGuard } from './admin-action-origin.guard';
 import { AdminBillingService } from './admin-billing.service';
 import { AdminGuard } from './admin.guard';
@@ -30,7 +32,10 @@ export class AdminBillingController {
 
   @Post(':workspaceId/reconcile')
   @UseGuards(AdminActionOriginGuard)
-  reconcile(@Param('workspaceId', new ParseUUIDPipe()) workspaceId: string) {
-    return this.billing.reconcile(workspaceId);
+  reconcile(
+    @Param('workspaceId', new ParseUUIDPipe()) workspaceId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.billing.reconcile(workspaceId, user.id);
   }
 }

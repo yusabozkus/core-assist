@@ -6,9 +6,11 @@ import {
   PADDLE_WEBHOOK_QUEUE,
   PROCESS_PADDLE_WEBHOOK_JOB,
 } from './paddle-webhook.constants';
+import { LoggingContext } from '../../infrastructure/logging/logging-context';
 
 export type PaddleWebhookJobData = {
   event: EventEntity;
+  correlationId?: string;
 };
 
 const ENQUEUE_DEADLINE_MS = 3_500;
@@ -53,9 +55,10 @@ export class PaddleWebhookQueueService {
   }
 
   private async addOrRetryFailedJob(event: EventEntity) {
+    const correlationId = LoggingContext.get()?.requestId;
     const job = await this.queue.add(
       PROCESS_PADDLE_WEBHOOK_JOB,
-      { event },
+      { event, correlationId },
       {
         jobId: `paddle-webhook-${event.eventId}`,
         attempts: 10,

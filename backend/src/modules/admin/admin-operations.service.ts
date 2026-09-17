@@ -11,6 +11,14 @@ import { PrismaService } from '../../database/prisma.service';
 import { BILLING_RECOVERY_QUEUE } from '../billing/billing-reconciliation.processor';
 import { PADDLE_WEBHOOK_QUEUE } from '../billing/paddle-webhook.constants';
 import { ChannelsService } from '../channels/channels.service';
+import { AuditAction } from '../audit/audit-actions';
+import {
+  AuditActorType,
+  auditErrorCode,
+  AuditLogService,
+  AuditOrigin,
+  AuditResult,
+} from '../audit/audit-log.service';
 import {
   PRODUCT_SYNC_LOCK_TIMEOUT_MS,
   PRODUCT_SYNC_QUEUE,
@@ -111,6 +119,7 @@ export class AdminOperationsService {
     private readonly paddleWebhookQueue: Queue,
     @InjectQueue(BILLING_RECOVERY_QUEUE)
     private readonly billingRecoveryQueue: Queue,
+    private readonly audit: AuditLogService,
   ) {}
 
   async findAll(query: AdminOperationsQueryDto) {
@@ -220,8 +229,55 @@ export class AdminOperationsService {
     };
   }
 
-  retrySyncRun(syncRunId: string) {
-    return this.channels.retrySyncRunAsAdmin(syncRunId);
+  async retrySyncRun(syncRunId: string, adminUserId: string) {
+    const run = await this.prisma.catalogSyncRun.findUnique({
+      where: { id: syncRunId },
+      select: {
+        id: true,
+        kind: true,
+        status: true,
+        connection: {
+          select: {
+            storeId: true,
+            store: { select: { workspaceId: true } },
+          },
+        },
+      },
+    });
+
+    const auditBase = {
+      actorType: AuditActorType.ADMIN,
+      actorUserId: adminUserId,
+      origin: AuditOrigin.API,
+      action: AuditAction.ADMIN_SYNC_RETRY,
+      workspaceId: run?.connection.store.workspaceId,
+      storeId: run?.connection.storeId,
+      targetType: 'CATALOG_SYNC_RUN',
+      targetId: syncRunId,
+      before: run ? { kind: run.kind, status: run.status } : undefined,
+    } as const;
+    await this.audit.record({ ...auditBase, result: AuditResult.STARTED });
+
+    try {
+      const result = await this.channels.retrySyncRunAsAdmin(syncRunId);
+      await this.audit.recordSafely({
+        ...auditBase,
+        result: AuditResult.SUCCESS,
+        after: {
+          syncRunId: result.syncRunId,
+          status: result.status,
+          kind: run?.kind,
+        },
+      });
+      return result;
+    } catch (error) {
+      await this.audit.recordSafely({
+        ...auditBase,
+        result: AuditResult.FAILURE,
+        errorCode: auditErrorCode(error),
+      });
+      throw error;
+    }
   }
 
   private buildWhere(

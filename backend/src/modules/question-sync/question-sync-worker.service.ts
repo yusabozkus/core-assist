@@ -24,6 +24,14 @@ import { QuestionProductLinkService } from '../question-product-link/question-pr
 import { evaluateQuestionResponsePolicy } from '../questions/question-response-policy.service';
 import { QUESTION_DRAFT_DISPATCHER } from '../questions/question-draft.constants';
 import type { QuestionDraftDispatcher } from '../questions/question-draft.types';
+import { AuditAction } from '../audit/audit-actions';
+import {
+  AuditActorType,
+  AuditLogService,
+  AuditOrigin,
+  AuditResult,
+  auditErrorCode,
+} from '../audit/audit-log.service';
 import { QUESTION_SYNC_MAX_BATCHES } from './question-sync.constants';
 import type { QuestionSyncJobData } from './question-sync.types';
 
@@ -47,6 +55,7 @@ export class QuestionSyncWorkerService {
     private readonly notifications: NotificationsService,
     private readonly productLinks: QuestionProductLinkService,
     private readonly billing: BillingSubscriptionService,
+    private readonly audit: AuditLogService,
   ) {}
 
   async run(data: QuestionSyncJobData) {
@@ -172,8 +181,12 @@ export class QuestionSyncWorkerService {
       BILLING_SYNC_STOPPED_MESSAGE,
     );
     const completedAt = new Date();
-    await this.prisma.$transaction([
-      this.prisma.catalogSyncRun.updateMany({
+    await this.prisma.$transaction(async (transaction) => {
+      const store = await transaction.store.findUniqueOrThrow({
+        where: { id: data.storeId },
+        select: { workspaceId: true },
+      });
+      await transaction.catalogSyncRun.updateMany({
         where: { id: data.syncRunId, connectionId: syncConnection.id },
         data: {
           status: CatalogSyncStatus.COMPLETED,
@@ -182,16 +195,31 @@ export class QuestionSyncWorkerService {
           errorMessage: null,
           completedAt,
         },
-      }),
-      this.prisma.channelConnection.updateMany({
+      });
+      await transaction.channelConnection.updateMany({
         where: { id: syncConnection.id, storeId: syncConnection.storeId },
         data: {
           questionSyncStartedAt: null,
           lastQuestionSyncAt: completedAt,
           questionSyncFailureReason: null,
         },
-      }),
-    ]);
+      });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.SYSTEM,
+          origin: AuditOrigin.WORKER,
+          action: AuditAction.QUESTION_SYNC_COMPLETED,
+          result: AuditResult.SUCCESS,
+          workspaceId: store.workspaceId,
+          storeId: data.storeId,
+          targetType: 'CATALOG_SYNC_RUN',
+          targetId: data.syncRunId,
+          after: { questionsProcessed, questionsUnchanged, batchCount },
+          metadata: { connectionId: data.connectionId },
+        },
+        transaction,
+      );
+    });
 
     return { questionsProcessed };
   }
@@ -205,8 +233,12 @@ export class QuestionSyncWorkerService {
     const authenticationError = isProviderAuthenticationError(error);
     const accessError = error instanceof BillingAccessRequiredException;
 
-    await this.prisma.$transaction([
-      this.prisma.catalogSyncRun.updateMany({
+    await this.prisma.$transaction(async (transaction) => {
+      const store = await transaction.store.findUniqueOrThrow({
+        where: { id: data.storeId },
+        select: { workspaceId: true },
+      });
+      await transaction.catalogSyncRun.updateMany({
         where: { id: data.syncRunId, connectionId: data.connectionId },
         data: {
           status: CatalogSyncStatus.FAILED,
@@ -215,8 +247,8 @@ export class QuestionSyncWorkerService {
           errorMessage: message,
           completedAt: new Date(),
         },
-      }),
-      this.prisma.channelConnection.updateMany({
+      });
+      await transaction.channelConnection.updateMany({
         where: { id: data.connectionId, storeId: data.storeId },
         data: {
           ...(authenticationError
@@ -228,8 +260,27 @@ export class QuestionSyncWorkerService {
           questionSyncStartedAt: null,
           questionSyncFailureReason: message,
         },
-      }),
-    ]);
+      });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.SYSTEM,
+          origin: AuditOrigin.WORKER,
+          action: AuditAction.QUESTION_SYNC_FAILED,
+          result: AuditResult.FAILURE,
+          workspaceId: store.workspaceId,
+          storeId: data.storeId,
+          targetType: 'CATALOG_SYNC_RUN',
+          targetId: data.syncRunId,
+          errorCode: auditErrorCode(error),
+          metadata: {
+            connectionId: data.connectionId,
+            authenticationError,
+            accessError,
+          },
+        },
+        transaction,
+      );
+    });
 
     await this.notifications.createForStoreMembers({
       storeId: data.storeId,

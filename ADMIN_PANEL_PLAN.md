@@ -130,7 +130,12 @@ doğrudan `/admin` açılır ve admin arayüzü mağaza dashboard'una bağlantı
 - [x] Faz 5 — Senkronizasyon ve kuyruk operasyonları
 - [ ] Faz 6 — Gerçek verilerle admin genel bakış
 - [ ] Faz 7 — AI/kullanım ve sistem sağlığı
-- [ ] Faz 8 — Audit log modeli ve kritik admin mutasyonlarının tamamı
+- [x] Faz 8 — Audit log modeli ve kritik admin mutasyonlarının tamamı
+  - [x] Append-only audit modeli, migration ve merkezi kayıt servisi
+  - [x] Ödeme uzlaştırma, senkronizasyon yeniden deneme ve destek mutasyonları
+  - [x] Ekip/rol, mağaza, kanal, ödeme ve hesap yaşam döngüsü mutasyonları
+  - [x] Worker ve webhook yaşam döngüsü olayları
+  - [x] Filtrelenebilir `/admin/audit-logs` sayfası
 
 ## 6. İlk sürüm dışında kalanlar
 

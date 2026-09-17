@@ -24,6 +24,14 @@ import { recalculateStoreVariantInventory } from '../product-sync/inventory-poli
 import { QUESTION_SYNC_DISPATCHER } from '../question-sync/question-sync.constants';
 import type { QuestionSyncDispatcher } from '../question-sync/question-sync.types';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AuditAction } from '../audit/audit-actions';
+import {
+  AuditActorType,
+  auditErrorCode,
+  AuditLogService,
+  AuditOrigin,
+  AuditResult,
+} from '../audit/audit-log.service';
 import { channelConnectionSelect } from './channel.constants';
 import { CredentialsEncryptionService } from './credentials-encryption.service';
 import { ConfigureChannelConnectionDto } from './dto/configure-channel-connection.dto';
@@ -47,6 +55,7 @@ export class ChannelsService {
     @Inject(QUESTION_SYNC_DISPATCHER)
     private readonly questionSyncQueue: QuestionSyncDispatcher,
     private readonly notifications: NotificationsService,
+    private readonly audit: AuditLogService,
   ) {}
 
   async findAvailableProviders(storeId: string, userId: string) {
@@ -297,9 +306,35 @@ export class ChannelsService {
   }
 
   async retrySyncRun(storeId: string, syncRunId: string, userId: string) {
-    await this.requireStoreManagement(storeId, userId);
+    const membership = await this.requireStoreManagement(storeId, userId);
+    const auditBase = {
+      actorType: AuditActorType.USER,
+      actorUserId: userId,
+      origin: AuditOrigin.API,
+      action: AuditAction.SYNC_RETRY_REQUESTED,
+      workspaceId: membership.store.workspaceId,
+      storeId,
+      targetType: 'CATALOG_SYNC_RUN',
+      targetId: syncRunId,
+    } as const;
+    await this.audit.record({ ...auditBase, result: AuditResult.STARTED });
 
-    return this.retrySyncRunRecord(syncRunId, storeId);
+    try {
+      const result = await this.retrySyncRunRecord(syncRunId, storeId);
+      await this.audit.recordSafely({
+        ...auditBase,
+        result: AuditResult.SUCCESS,
+        after: { syncRunId: result.syncRunId, status: result.status },
+      });
+      return result;
+    } catch (error) {
+      await this.audit.recordSafely({
+        ...auditBase,
+        result: AuditResult.FAILURE,
+        errorCode: auditErrorCode(error),
+      });
+      throw error;
+    }
   }
 
   async retrySyncRunAsAdmin(syncRunId: string) {
@@ -386,7 +421,7 @@ export class ChannelsService {
     userId: string,
     dto: CreateChannelConnectionDto,
   ) {
-    await this.requireStoreManagement(storeId, userId);
+    const membership = await this.requireStoreManagement(storeId, userId);
     const manifest = this.providers.getManifest(dto.providerKey);
     const credentials = this.providers.validateCredentials(
       dto.providerKey,
@@ -412,40 +447,57 @@ export class ChannelsService {
       credentials,
     });
 
-    if (existingConnection) {
-      return this.prisma.channelConnection.update({
-        where: { id: existingConnection.id },
-        data: {
-          type: manifest.type,
-          environment: dto.environment,
-          credentialsEncrypted: this.encryption.encrypt(credentials),
-          credentialSchemaVersion: 1,
-          status: ChannelConnectionStatus.CONNECTED,
-          connectedAt: new Date(),
-          processingStartedAt: null,
-          lastSyncAt: null,
-          lastInventorySyncAt: null,
-          failureReason: null,
-          questionSyncStartedAt: null,
-          lastQuestionSyncAt: null,
-          questionSyncFailureReason: null,
-          removedAt: null,
+    return this.prisma.$transaction(async (transaction) => {
+      const connection = existingConnection
+        ? await transaction.channelConnection.update({
+            where: { id: existingConnection.id },
+            data: {
+              type: manifest.type,
+              environment: dto.environment,
+              credentialsEncrypted: this.encryption.encrypt(credentials),
+              credentialSchemaVersion: 1,
+              status: ChannelConnectionStatus.CONNECTED,
+              connectedAt: new Date(),
+              processingStartedAt: null,
+              lastSyncAt: null,
+              lastInventorySyncAt: null,
+              failureReason: null,
+              questionSyncStartedAt: null,
+              lastQuestionSyncAt: null,
+              questionSyncFailureReason: null,
+              removedAt: null,
+            },
+            select: channelConnectionSelect,
+          })
+        : await transaction.channelConnection.create({
+            data: {
+              storeId,
+              providerKey: dto.providerKey,
+              type: manifest.type,
+              environment: dto.environment,
+              credentialsEncrypted: this.encryption.encrypt(credentials),
+              status: ChannelConnectionStatus.CONNECTED,
+              connectedAt: new Date(),
+            },
+            select: channelConnectionSelect,
+          });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.USER,
+          actorUserId: userId,
+          origin: AuditOrigin.API,
+          action: AuditAction.CHANNEL_CONNECTED,
+          result: AuditResult.SUCCESS,
+          workspaceId: membership.store.workspaceId,
+          storeId,
+          targetType: 'CHANNEL_CONNECTION',
+          targetId: connection.id,
+          after: channelAuditSnapshot(connection),
+          metadata: { restoredConnection: Boolean(existingConnection) },
         },
-        select: channelConnectionSelect,
-      });
-    }
-
-    return this.prisma.channelConnection.create({
-      data: {
-        storeId,
-        providerKey: dto.providerKey,
-        type: manifest.type,
-        environment: dto.environment,
-        credentialsEncrypted: this.encryption.encrypt(credentials),
-        status: ChannelConnectionStatus.CONNECTED,
-        connectedAt: new Date(),
-      },
-      select: channelConnectionSelect,
+        transaction,
+      );
+      return connection;
     });
   }
 
@@ -455,7 +507,7 @@ export class ChannelsService {
     userId: string,
     dto: ConfigureChannelConnectionDto,
   ) {
-    await this.requireStoreManagement(storeId, userId);
+    const membership = await this.requireStoreManagement(storeId, userId);
     const connection = await this.getConnection(storeId, connectionId);
     const credentials = this.providers.validateCredentials(
       connection.providerKey,
@@ -468,33 +520,71 @@ export class ChannelsService {
       credentials,
     });
 
-    return this.prisma.channelConnection.update({
-      where: { id: connection.id },
-      data: {
-        environment: dto.environment,
-        credentialsEncrypted: this.encryption.encrypt(credentials),
-        credentialSchemaVersion: 1,
-        status: ChannelConnectionStatus.CONNECTED,
-        connectedAt: new Date(),
-        failureReason: null,
-      },
-      select: channelConnectionSelect,
+    return this.prisma.$transaction(async (transaction) => {
+      const configured = await transaction.channelConnection.update({
+        where: { id: connection.id },
+        data: {
+          environment: dto.environment,
+          credentialsEncrypted: this.encryption.encrypt(credentials),
+          credentialSchemaVersion: 1,
+          status: ChannelConnectionStatus.CONNECTED,
+          connectedAt: new Date(),
+          failureReason: null,
+        },
+        select: channelConnectionSelect,
+      });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.USER,
+          actorUserId: userId,
+          origin: AuditOrigin.API,
+          action: AuditAction.CHANNEL_CONFIGURED,
+          result: AuditResult.SUCCESS,
+          workspaceId: membership.store.workspaceId,
+          storeId,
+          targetType: 'CHANNEL_CONNECTION',
+          targetId: connection.id,
+          before: channelAuditSnapshot(connection),
+          after: channelAuditSnapshot(configured),
+        },
+        transaction,
+      );
+      return configured;
     });
   }
 
   async disconnect(storeId: string, connectionId: string, userId: string) {
-    await this.requireStoreManagement(storeId, userId);
-    await this.requireConnection(storeId, connectionId);
+    const membership = await this.requireStoreManagement(storeId, userId);
+    const connection = await this.getConnection(storeId, connectionId);
 
-    return this.prisma.channelConnection.update({
-      where: { id: connectionId },
-      data: { status: ChannelConnectionStatus.DISCONNECTED },
-      select: channelConnectionSelect,
+    return this.prisma.$transaction(async (transaction) => {
+      const disconnected = await transaction.channelConnection.update({
+        where: { id: connectionId },
+        data: { status: ChannelConnectionStatus.DISCONNECTED },
+        select: channelConnectionSelect,
+      });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.USER,
+          actorUserId: userId,
+          origin: AuditOrigin.API,
+          action: AuditAction.CHANNEL_DISCONNECTED,
+          result: AuditResult.SUCCESS,
+          workspaceId: membership.store.workspaceId,
+          storeId,
+          targetType: 'CHANNEL_CONNECTION',
+          targetId: connectionId,
+          before: channelAuditSnapshot(connection),
+          after: channelAuditSnapshot(disconnected),
+        },
+        transaction,
+      );
+      return disconnected;
     });
   }
 
   async reconnect(storeId: string, connectionId: string, userId: string) {
-    await this.requireStoreManagement(storeId, userId);
+    const membership = await this.requireStoreManagement(storeId, userId);
     const connection = await this.getConnection(storeId, connectionId);
 
     if (!connection.credentialsEncrypted) {
@@ -527,17 +617,49 @@ export class ChannelsService {
         storeId,
         connectionId,
       );
+      await this.audit.recordSafely({
+        actorType: AuditActorType.USER,
+        actorUserId: userId,
+        origin: AuditOrigin.API,
+        action: AuditAction.CHANNEL_RECONNECTED,
+        result: AuditResult.FAILURE,
+        workspaceId: membership.store.workspaceId,
+        storeId,
+        targetType: 'CHANNEL_CONNECTION',
+        targetId: connectionId,
+        errorCode: auditErrorCode(error),
+        before: channelAuditSnapshot(connection),
+      });
       throw error;
     }
 
-    return this.prisma.channelConnection.update({
-      where: { id: connectionId },
-      data: {
-        status: ChannelConnectionStatus.CONNECTED,
-        connectedAt: new Date(),
-        failureReason: null,
-      },
-      select: channelConnectionSelect,
+    return this.prisma.$transaction(async (transaction) => {
+      const reconnected = await transaction.channelConnection.update({
+        where: { id: connectionId },
+        data: {
+          status: ChannelConnectionStatus.CONNECTED,
+          connectedAt: new Date(),
+          failureReason: null,
+        },
+        select: channelConnectionSelect,
+      });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.USER,
+          actorUserId: userId,
+          origin: AuditOrigin.API,
+          action: AuditAction.CHANNEL_RECONNECTED,
+          result: AuditResult.SUCCESS,
+          workspaceId: membership.store.workspaceId,
+          storeId,
+          targetType: 'CHANNEL_CONNECTION',
+          targetId: connectionId,
+          before: channelAuditSnapshot(connection),
+          after: channelAuditSnapshot(reconnected),
+        },
+        transaction,
+      );
+      return reconnected;
     });
   }
 
@@ -571,11 +693,14 @@ export class ChannelsService {
   }
 
   async remove(storeId: string, connectionId: string, userId: string) {
-    await this.requireStoreManagement(storeId, userId);
+    const membership = await this.requireStoreManagement(storeId, userId);
     const connection = await this.prisma.channelConnection.findFirst({
       where: { id: connectionId, storeId, removedAt: null },
       select: {
         id: true,
+        providerKey: true,
+        environment: true,
+        status: true,
         processingStartedAt: true,
         questionSyncStartedAt: true,
         syncRuns: {
@@ -724,6 +849,26 @@ export class ChannelsService {
           removedAt: new Date(),
         },
       });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.USER,
+          actorUserId: userId,
+          origin: AuditOrigin.API,
+          action: AuditAction.CHANNEL_REMOVED,
+          result: AuditResult.SUCCESS,
+          workspaceId: membership.store.workspaceId,
+          storeId,
+          targetType: 'CHANNEL_CONNECTION',
+          targetId: connectionId,
+          before: channelAuditSnapshot(connection),
+          after: { removed: true },
+          metadata: {
+            detachedProducts: externalProducts.length,
+            detachedVariants: variantIds.length,
+          },
+        },
+        transaction,
+      );
     });
 
     return { deleted: true };
@@ -736,7 +881,10 @@ export class ChannelsService {
         userId,
         store: { status: StoreStatus.ACTIVE },
       },
-      select: { role: true },
+      select: {
+        role: true,
+        store: { select: { workspaceId: true } },
+      },
     });
 
     if (!membership) {
@@ -759,6 +907,7 @@ export class ChannelsService {
         'Satış kanallarını yönetme yetkiniz bulunmuyor.',
       );
     }
+    return membership;
   }
 
   private async requireConnection(storeId: string, connectionId: string) {
@@ -790,6 +939,18 @@ export class ChannelsService {
 
     return connection;
   }
+}
+
+function channelAuditSnapshot(connection: {
+  providerKey: string;
+  environment: unknown;
+  status: ChannelConnectionStatus;
+}) {
+  return {
+    providerKey: connection.providerKey,
+    environment: connection.environment,
+    status: connection.status,
+  };
 }
 
 function normalizeSyncStage(

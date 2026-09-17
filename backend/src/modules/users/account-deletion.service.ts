@@ -18,6 +18,14 @@ import {
   paddleEnvironment,
   requirePaddleApiKey,
 } from '../billing/paddle-billing.config';
+import { AuditAction } from '../audit/audit-actions';
+import {
+  AuditActorType,
+  AuditLogService,
+  AuditOrigin,
+  AuditResult,
+  auditErrorCode,
+} from '../audit/audit-log.service';
 
 const workspaceInclude = {
   billingSubscription: true,
@@ -47,7 +55,10 @@ export class AccountDeletionService {
   private readonly logger = new Logger(AccountDeletionService.name);
   private client: Paddle | null = null;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditLogService,
+  ) {}
 
   async getStatus(userId: string) {
     return this.summary(await this.inspect(userId));
@@ -55,6 +66,38 @@ export class AccountDeletionService {
 
   async closeBilling(userId: string, sessionId: string) {
     await this.assertFreshSession(userId, sessionId);
+    const auditBase = {
+      actorType: AuditActorType.USER,
+      actorUserId: userId,
+      origin: AuditOrigin.API,
+      action: AuditAction.ACCOUNT_BILLING_CLOSED,
+      targetType: 'USER_ACCOUNT',
+      targetId: userId,
+    } as const;
+    await this.audit.record({ ...auditBase, result: AuditResult.STARTED });
+    try {
+      const result = await this.closeBillingAfterFreshSession(userId);
+      await this.audit.recordSafely({
+        ...auditBase,
+        result: AuditResult.SUCCESS,
+        after: {
+          canDelete: result.canDelete,
+          canResolveBilling: result.canResolveBilling,
+          workspaceCount: result.workspaces.length,
+        },
+      });
+      return result;
+    } catch (error) {
+      await this.audit.recordSafely({
+        ...auditBase,
+        result: AuditResult.FAILURE,
+        errorCode: auditErrorCode(error),
+      });
+      throw error;
+    }
+  }
+
+  private async closeBillingAfterFreshSession(userId: string) {
     const inspection = await this.inspect(userId);
     if (
       inspection.workspaces.some((workspace) =>
@@ -114,6 +157,31 @@ export class AccountDeletionService {
 
   async deleteAccount(userId: string, sessionId: string) {
     await this.assertFreshSession(userId, sessionId);
+    const auditBase = {
+      actorType: AuditActorType.USER,
+      actorUserId: userId,
+      origin: AuditOrigin.API,
+      action: AuditAction.ACCOUNT_DELETED,
+      targetType: 'USER_ACCOUNT',
+      targetId: userId,
+    } as const;
+    await this.audit.record({ ...auditBase, result: AuditResult.STARTED });
+    try {
+      return await this.deleteAccountAfterFreshSession(userId, sessionId);
+    } catch (error) {
+      await this.audit.recordSafely({
+        ...auditBase,
+        result: AuditResult.FAILURE,
+        errorCode: auditErrorCode(error),
+      });
+      throw error;
+    }
+  }
+
+  private async deleteAccountAfterFreshSession(
+    userId: string,
+    sessionId: string,
+  ) {
     const inspection = await this.inspect(userId);
     if (!this.summary(inspection).canDelete) {
       throw new ConflictException(
@@ -230,6 +298,26 @@ export class AccountDeletionService {
         }
         // Session/account/workspace cascades happen atomically with the archive.
         await tx.user.delete({ where: { id: userId } });
+        await this.audit.record(
+          {
+            actorType: AuditActorType.USER,
+            actorUserId: userId,
+            origin: AuditOrigin.API,
+            action: AuditAction.ACCOUNT_DELETED,
+            result: AuditResult.SUCCESS,
+            targetType: 'USER_ACCOUNT',
+            targetId: userId,
+            after: {
+              deleted: true,
+              workspaceCount: locked.length,
+              billingClosureRecordsRetained: inspection.entries.filter(
+                (entry) =>
+                  entry.customerIds.length > 0 || entry.transactions.length > 0,
+              ).length,
+            },
+          },
+          tx,
+        );
       },
       { timeout: 15_000 },
     );

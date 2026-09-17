@@ -6,6 +6,7 @@ import {
   PROCESS_PADDLE_WEBHOOK_JOB,
 } from './paddle-webhook.constants';
 import type { PaddleWebhookJobData } from './paddle-webhook-queue.service';
+import { LoggingContext } from '../../infrastructure/logging/logging-context';
 
 @Processor(PADDLE_WEBHOOK_QUEUE, { concurrency: 1 })
 export class PaddleWebhookProcessor extends WorkerHost {
@@ -18,6 +19,13 @@ export class PaddleWebhookProcessor extends WorkerHost {
       throw new Error(`Unsupported Paddle webhook job: ${job.name}`);
     }
 
-    return this.paddleBilling.processVerifiedWebhook(job.data.event);
+    return LoggingContext.run(
+      {
+        requestId: job.data.correlationId,
+        ...(job.id === undefined ? {} : { jobId: String(job.id) }),
+        queue: PADDLE_WEBHOOK_QUEUE,
+      },
+      () => this.paddleBilling.processVerifiedWebhook(job.data.event),
+    );
   }
 }

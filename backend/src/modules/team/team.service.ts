@@ -25,6 +25,13 @@ import {
   UpdateWorkspaceMemberDto,
 } from './dto/team-member-access.dto';
 import { resolveTeamAccessLevel } from './team-access';
+import { AuditAction } from '../audit/audit-actions';
+import {
+  AuditActorType,
+  AuditLogService,
+  AuditOrigin,
+  AuditResult,
+} from '../audit/audit-log.service';
 
 const INVITATION_LIFETIME_MS = 7 * 24 * 60 * 60 * 1_000;
 
@@ -43,6 +50,7 @@ export class TeamService {
     private readonly prisma: PrismaService,
     private readonly billingEntitlements: BillingEntitlementService,
     private readonly notifications: NotificationsService,
+    private readonly audit: AuditLogService,
   ) {}
 
   async getTeam(workspaceId: string, actorUserId: string) {
@@ -163,39 +171,65 @@ export class TeamService {
         );
       }
 
-      if (existing) {
-        return transaction.workspaceInvitation.update({
-          where: { id: existing.id },
-          data: {
-            email: dto.email.trim(),
-            role: workspaceRoleFor(dto.accessLevel),
-            tokenHash,
-            invitedByUserId: actorUserId,
-            expiresAt,
-            acceptedAt: null,
-            revokedAt: null,
-            storeAccesses: {
-              deleteMany: {},
-              create: storeAccesses,
+      const savedInvitation = existing
+        ? await transaction.workspaceInvitation.update({
+            where: { id: existing.id },
+            data: {
+              email: dto.email.trim(),
+              role: workspaceRoleFor(dto.accessLevel),
+              tokenHash,
+              invitedByUserId: actorUserId,
+              expiresAt,
+              acceptedAt: null,
+              revokedAt: null,
+              storeAccesses: {
+                deleteMany: {},
+                create: storeAccesses,
+              },
             },
-          },
-          include: invitationInclude,
-        });
-      }
+            include: invitationInclude,
+          })
+        : await transaction.workspaceInvitation.create({
+            data: {
+              workspaceId,
+              email: dto.email.trim(),
+              emailNormalized,
+              role: workspaceRoleFor(dto.accessLevel),
+              tokenHash,
+              invitedByUserId: actorUserId,
+              expiresAt,
+              storeAccesses: { create: storeAccesses },
+            },
+            include: invitationInclude,
+          });
 
-      return transaction.workspaceInvitation.create({
-        data: {
+      await this.audit.record(
+        {
+          actorType: AuditActorType.USER,
+          actorUserId,
+          origin: AuditOrigin.API,
+          action: AuditAction.TEAM_INVITATION_CREATED,
+          result: AuditResult.SUCCESS,
           workspaceId,
-          email: dto.email.trim(),
-          emailNormalized,
-          role: workspaceRoleFor(dto.accessLevel),
-          tokenHash,
-          invitedByUserId: actorUserId,
-          expiresAt,
-          storeAccesses: { create: storeAccesses },
+          targetType: 'WORKSPACE_INVITATION',
+          targetId: savedInvitation.id,
+          after: {
+            role: savedInvitation.role,
+            expiresAt: savedInvitation.expiresAt,
+            storeIds: savedInvitation.storeAccesses.map(
+              (access) => access.storeId,
+            ),
+          },
+          metadata: {
+            accessLevel: dto.accessLevel,
+            replacedPendingInvitation: Boolean(existing),
+            inviteeReference: hashAuditReference(emailNormalized),
+          },
         },
-        include: invitationInclude,
-      });
+        transaction,
+      );
+
+      return savedInvitation;
     });
 
     return invitationWithLink(invitation, token);
@@ -229,11 +263,27 @@ export class TeamService {
         );
       }
 
-      return transaction.workspaceInvitation.update({
+      const renewed = await transaction.workspaceInvitation.update({
         where: { id: existing.id },
         data: { tokenHash, expiresAt },
         include: invitationInclude,
       });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.USER,
+          actorUserId,
+          origin: AuditOrigin.API,
+          action: AuditAction.TEAM_INVITATION_LINK_RENEWED,
+          result: AuditResult.SUCCESS,
+          workspaceId,
+          targetType: 'WORKSPACE_INVITATION',
+          targetId: invitationId,
+          before: { expiresAt: existing.expiresAt },
+          after: { expiresAt: renewed.expiresAt },
+        },
+        transaction,
+      );
+      return renewed;
     });
 
     return invitationWithLink(invitation, token);
@@ -244,21 +294,47 @@ export class TeamService {
     invitationId: string,
     actorUserId: string,
   ) {
-    await this.requireManager(this.prisma, workspaceId, actorUserId);
-    const result = await this.prisma.workspaceInvitation.updateMany({
-      where: {
-        id: invitationId,
-        workspaceId,
-        status: WorkspaceInvitationStatus.PENDING,
-      },
-      data: {
-        status: WorkspaceInvitationStatus.REVOKED,
-        revokedAt: new Date(),
-      },
+    return this.prisma.$transaction(async (transaction) => {
+      await this.requireManager(transaction, workspaceId, actorUserId);
+      const invitation = await transaction.workspaceInvitation.findFirst({
+        where: {
+          id: invitationId,
+          workspaceId,
+          status: WorkspaceInvitationStatus.PENDING,
+        },
+        select: { id: true, role: true, expiresAt: true },
+      });
+      if (!invitation)
+        throw new NotFoundException('Bekleyen davet bulunamadı.');
+
+      await transaction.workspaceInvitation.update({
+        where: { id: invitation.id },
+        data: {
+          status: WorkspaceInvitationStatus.REVOKED,
+          revokedAt: new Date(),
+        },
+      });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.USER,
+          actorUserId,
+          origin: AuditOrigin.API,
+          action: AuditAction.TEAM_INVITATION_REVOKED,
+          result: AuditResult.SUCCESS,
+          workspaceId,
+          targetType: 'WORKSPACE_INVITATION',
+          targetId: invitationId,
+          before: {
+            status: WorkspaceInvitationStatus.PENDING,
+            role: invitation.role,
+            expiresAt: invitation.expiresAt,
+          },
+          after: { status: WorkspaceInvitationStatus.REVOKED },
+        },
+        transaction,
+      );
+      return { revoked: true, invitationId };
     });
-    if (!result.count)
-      throw new NotFoundException('Bekleyen davet bulunamadı.');
-    return { revoked: true, invitationId };
   }
 
   async updateMember(
@@ -291,6 +367,11 @@ export class TeamService {
         dto.accessLevel,
         dto.storeIds,
       );
+      const previousStoreAccesses = await transaction.storeMember.findMany({
+        where: { userId: targetUserId, store: { workspaceId } },
+        select: { storeId: true, role: true },
+        orderBy: { storeId: 'asc' },
+      });
 
       await transaction.storeMember.deleteMany({
         where: { userId: targetUserId, store: { workspaceId } },
@@ -322,6 +403,29 @@ export class TeamService {
           entityId: target.id,
           dedupeKey: `team-access-changed:${target.id}:${updatedMember.updatedAt.toISOString()}`,
         });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.USER,
+          actorUserId,
+          origin: AuditOrigin.API,
+          action: AuditAction.TEAM_MEMBER_ACCESS_CHANGED,
+          result: AuditResult.SUCCESS,
+          workspaceId,
+          targetType: 'WORKSPACE_MEMBER',
+          targetId: target.id,
+          before: {
+            userId: targetUserId,
+            role: target.role,
+            storeAccesses: previousStoreAccesses,
+          },
+          after: {
+            userId: targetUserId,
+            role: updatedMember.role,
+            storeAccesses,
+          },
+        },
+        transaction,
+      );
       return {
         response: { updated: true, userId: targetUserId },
         notificationRecipientIds,
@@ -355,6 +459,21 @@ export class TeamService {
         where: { userId: targetUserId, store: { workspaceId } },
       });
       await transaction.workspaceMember.delete({ where: { id: target.id } });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.USER,
+          actorUserId,
+          origin: AuditOrigin.API,
+          action: AuditAction.TEAM_MEMBER_REMOVED,
+          result: AuditResult.SUCCESS,
+          workspaceId,
+          targetType: 'WORKSPACE_MEMBER',
+          targetId: target.id,
+          before: { userId: targetUserId, role: target.role },
+          after: { removed: true },
+        },
+        transaction,
+      );
       return { removed: true, userId: targetUserId };
     });
   }
@@ -500,6 +619,29 @@ export class TeamService {
             entityId: invitation.id,
             dedupeKey: `team-invitation-accepted:${invitation.id}`,
           });
+
+        await this.audit.record(
+          {
+            actorType: AuditActorType.USER,
+            actorUserId: user.id,
+            origin: AuditOrigin.API,
+            action: AuditAction.TEAM_INVITATION_ACCEPTED,
+            result: AuditResult.SUCCESS,
+            workspaceId: invitation.workspaceId,
+            targetType: 'WORKSPACE_INVITATION',
+            targetId: invitation.id,
+            before: { status: invitation.status },
+            after: {
+              status: WorkspaceInvitationStatus.ACCEPTED,
+              userId: user.id,
+              role: invitation.role,
+              storeIds: invitation.storeAccesses.map(
+                (access) => access.storeId,
+              ),
+            },
+          },
+          transaction,
+        );
 
         return {
           response: {
@@ -751,6 +893,10 @@ function createInvitationToken() {
 
 function hashToken(token: string) {
   return createHash('sha256').update(token).digest('hex');
+}
+
+function hashAuditReference(value: string) {
+  return createHash('sha256').update(value).digest('hex').slice(0, 24);
 }
 
 function normalizeEmail(email: string) {

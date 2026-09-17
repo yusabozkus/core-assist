@@ -32,6 +32,14 @@ import { BillingAuthorizationService } from './billing-authorization.service';
 import { PaddleCheckoutBindingService } from './paddle-checkout-binding.service';
 import { PaddleCheckoutService } from './paddle-checkout.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AuditAction } from '../audit/audit-actions';
+import {
+  AuditActorType,
+  AuditLogService,
+  AuditOrigin,
+  AuditResult,
+  auditErrorCode,
+} from '../audit/audit-log.service';
 import { PENDING_PLAN_CHANGE_STATUSES } from './billing-plan-change.policy';
 import { hasBillingAccess } from './billing-access.policy';
 import {
@@ -76,6 +84,7 @@ export class PaddleBillingService {
     private readonly checkouts: PaddleCheckoutService,
     private readonly authorization: BillingAuthorizationService,
     private readonly notifications: NotificationsService,
+    private readonly audit: AuditLogService,
   ) {}
 
   async createCheckout(
@@ -85,15 +94,74 @@ export class PaddleBillingService {
     cycle: BillingCycle,
   ) {
     await this.getManageableSubscription(workspaceId, userId);
-    return this.checkouts.createOrReuse(
-      { workspaceId, userId, plan, cycle },
-      this.getClient(),
-    );
+    const auditBase = {
+      actorType: AuditActorType.USER,
+      actorUserId: userId,
+      origin: AuditOrigin.API,
+      action: AuditAction.BILLING_CHECKOUT_OPENED,
+      workspaceId,
+      targetType: 'BILLING_CHECKOUT',
+      metadata: { plan, cycle },
+    } as const;
+    await this.audit.record({ ...auditBase, result: AuditResult.STARTED });
+    try {
+      const result = await this.checkouts.createOrReuse(
+        { workspaceId, userId, plan, cycle },
+        this.getClient(),
+      );
+      await this.audit.recordSafely({
+        ...auditBase,
+        result: AuditResult.SUCCESS,
+        targetId: result.transactionId,
+        after: {
+          state: result.state,
+          plan: result.plan,
+          cycle: result.cycle,
+          canCancel: result.canCancel,
+        },
+      });
+      return result;
+    } catch (error) {
+      await this.audit.recordSafely({
+        ...auditBase,
+        result: AuditResult.FAILURE,
+        errorCode: auditErrorCode(error),
+      });
+      throw error;
+    }
   }
 
   async cancelPendingCheckout(workspaceId: string, userId: string) {
     await this.getManageableSubscription(workspaceId, userId);
-    return this.checkouts.cancelPending(workspaceId, this.getClient());
+    const auditBase = {
+      actorType: AuditActorType.USER,
+      actorUserId: userId,
+      origin: AuditOrigin.API,
+      action: AuditAction.BILLING_CHECKOUT_CANCELED,
+      workspaceId,
+      targetType: 'BILLING_CHECKOUT',
+    } as const;
+    await this.audit.record({ ...auditBase, result: AuditResult.STARTED });
+    try {
+      const result = await this.checkouts.cancelPending(
+        workspaceId,
+        this.getClient(),
+      );
+      await this.audit.recordSafely({
+        ...auditBase,
+        result: AuditResult.SUCCESS,
+        targetId: result.transactionId,
+        after: { canceled: result.canceled },
+      });
+      return result;
+    } catch (error) {
+      await this.audit.recordSafely({
+        ...auditBase,
+        result: AuditResult.FAILURE,
+        errorCode: auditErrorCode(error),
+      });
+      throw error;
+    }
   }
 
   async getBillingHistory(workspaceId: string, userId: string) {
@@ -358,6 +426,26 @@ export class PaddleBillingService {
             event.data as TransactionNotification,
           );
           if (recovered) {
+            if (recovered.recovered) {
+              await this.audit.record(
+                {
+                  actorType: AuditActorType.SYSTEM,
+                  origin: AuditOrigin.WEBHOOK,
+                  action: AuditAction.BILLING_TRANSACTION_RECOVERED,
+                  result: AuditResult.SUCCESS,
+                  workspaceId: recovered.workspaceId,
+                  targetType: 'BILLING_CHECKOUT',
+                  targetId: recovered.checkoutId,
+                  metadata: {
+                    eventId: event.eventId,
+                    eventType: event.eventType,
+                    paddleTransactionId: (event.data as TransactionNotification)
+                      .id,
+                  },
+                },
+                transaction,
+              );
+            }
             return {
               received: true,
               processed: recovered.recovered,
@@ -391,6 +479,16 @@ export class PaddleBillingService {
         eventId: event.eventId,
         eventType: event.eventType,
         ...webhookFailureDetails(error),
+      });
+      await this.audit.recordSafely({
+        actorType: AuditActorType.SYSTEM,
+        origin: AuditOrigin.WEBHOOK,
+        action: AuditAction.BILLING_WEBHOOK_FAILED,
+        result: AuditResult.FAILURE,
+        targetType: 'PADDLE_WEBHOOK_EVENT',
+        targetId: event.eventId,
+        errorCode: auditErrorCode(error),
+        metadata: { eventType: event.eventType },
       });
       if (error instanceof HttpException) throw error;
 
@@ -645,6 +743,40 @@ export class PaddleBillingService {
               : null,
       },
     });
+    await this.audit.record(
+      {
+        actorType: AuditActorType.SYSTEM,
+        origin: reconciliation ? AuditOrigin.SCHEDULED : AuditOrigin.WEBHOOK,
+        action: AuditAction.BILLING_SUBSCRIPTION_SYNCHRONIZED,
+        result: AuditResult.SUCCESS,
+        workspaceId: existing.workspaceId,
+        targetType: 'BILLING_SUBSCRIPTION',
+        targetId: existing.id,
+        before: billingSubscriptionAuditSnapshot(existing),
+        after: {
+          plan: selection.plan,
+          cycle: selection.cycle,
+          status,
+          paddleSubscriptionId: data.id,
+          paddlePriceId: priceId,
+          currentPeriodStart:
+            parseDate(currentPeriod?.startsAt) ?? existing.currentPeriodStart,
+          currentPeriodEnd:
+            parseDate(currentPeriod?.endsAt) ?? existing.currentPeriodEnd,
+          cancelAtPeriodEnd: data.scheduledChange?.action === 'cancel',
+          scheduledAccessEndsAt:
+            data.scheduledChange?.action === 'cancel' ||
+            data.scheduledChange?.action === 'pause'
+              ? parseDate(data.scheduledChange.effectiveAt)
+              : null,
+        },
+        metadata: {
+          snapshotAt,
+          reconciled: Boolean(reconciliation),
+        },
+      },
+      transaction,
+    );
     const createdNotificationUserIds = new Set<string>();
     if (subscriptionActivated || planChanged) {
       const recipientUserIds =
@@ -1038,6 +1170,30 @@ function subscriptionStatusPriority(status: BillingSubscriptionStatus) {
     case BillingSubscriptionStatus.ACTIVE:
       return 0;
   }
+}
+
+function billingSubscriptionAuditSnapshot(subscription: {
+  plan: BillingPlan;
+  cycle: BillingCycle;
+  status: BillingSubscriptionStatus;
+  paddleSubscriptionId: string | null;
+  paddlePriceId: string | null;
+  currentPeriodStart: Date;
+  currentPeriodEnd: Date;
+  cancelAtPeriodEnd: boolean;
+  scheduledAccessEndsAt: Date | null;
+}) {
+  return {
+    plan: subscription.plan,
+    cycle: subscription.cycle,
+    status: subscription.status,
+    paddleSubscriptionId: subscription.paddleSubscriptionId,
+    paddlePriceId: subscription.paddlePriceId,
+    currentPeriodStart: subscription.currentPeriodStart,
+    currentPeriodEnd: subscription.currentPeriodEnd,
+    cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+    scheduledAccessEndsAt: subscription.scheduledAccessEndsAt,
+  };
 }
 
 function parseDate(value: string | null | undefined) {

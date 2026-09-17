@@ -9,6 +9,13 @@ import {
   SupportTicketStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { AuditAction } from '../audit/audit-actions';
+import {
+  AuditActorType,
+  AuditLogService,
+  AuditOrigin,
+  AuditResult,
+} from '../audit/audit-log.service';
 import { AdminAccessService } from './admin-access.service';
 import { AdminSupportAssigneeDto } from './dto/admin-support-assignee.dto';
 import {
@@ -78,6 +85,7 @@ export class AdminSupportService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly adminAccess: AdminAccessService,
+    private readonly audit: AuditLogService,
   ) {}
 
   async findAll(query: AdminSupportTicketsQueryDto, currentAdminId: string) {
@@ -168,8 +176,8 @@ export class AdminSupportService {
     }
 
     const now = new Date();
-    await this.prisma.$transaction([
-      this.prisma.supportMessage.create({
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.supportMessage.create({
         data: {
           ticketId,
           authorUserId: adminUserId,
@@ -177,8 +185,8 @@ export class AdminSupportService {
           isInternal,
           body: body.message,
         },
-      }),
-      this.prisma.supportTicket.update({
+      });
+      await transaction.supportTicket.update({
         where: { id: ticketId },
         data: isInternal
           ? { updatedAt: now }
@@ -189,8 +197,34 @@ export class AdminSupportService {
               resolvedAt: null,
               closedAt: null,
             },
-      }),
-    ]);
+      });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.ADMIN,
+          actorUserId: adminUserId,
+          origin: AuditOrigin.API,
+          action: isInternal
+            ? AuditAction.ADMIN_SUPPORT_INTERNAL_NOTE_ADDED
+            : AuditAction.ADMIN_SUPPORT_REPLY_ADDED,
+          result: AuditResult.SUCCESS,
+          workspaceId: ticket.workspaceId,
+          storeId: ticket.storeId,
+          targetType: 'SUPPORT_TICKET',
+          targetId: ticketId,
+          before: { status: ticket.status },
+          after: {
+            status: isInternal
+              ? ticket.status
+              : SupportTicketStatus.WAITING_CUSTOMER,
+          },
+          metadata: {
+            visibility: body.visibility,
+            messageLength: body.message.length,
+          },
+        },
+        transaction,
+      );
+    });
 
     return this.findOne(ticketId);
   }
@@ -204,16 +238,16 @@ export class AdminSupportService {
     if (ticket.status === body.status) return this.findOne(ticketId);
 
     const now = new Date();
-    await this.prisma.$transaction([
-      this.prisma.supportMessage.create({
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.supportMessage.create({
         data: {
           ticketId,
           authorUserId: adminUserId,
           authorType: SupportMessageAuthorType.SYSTEM,
           body: statusMessage(body.status),
         },
-      }),
-      this.prisma.supportTicket.update({
+      });
+      await transaction.supportTicket.update({
         where: { id: ticketId },
         data: {
           status: body.status,
@@ -226,8 +260,24 @@ export class AdminSupportService {
                 : ticket.resolvedAt,
           closedAt: body.status === SupportTicketStatus.CLOSED ? now : null,
         },
-      }),
-    ]);
+      });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.ADMIN,
+          actorUserId: adminUserId,
+          origin: AuditOrigin.API,
+          action: AuditAction.ADMIN_SUPPORT_STATUS_CHANGED,
+          result: AuditResult.SUCCESS,
+          workspaceId: ticket.workspaceId,
+          storeId: ticket.storeId,
+          targetType: 'SUPPORT_TICKET',
+          targetId: ticketId,
+          before: { status: ticket.status },
+          after: { status: body.status },
+        },
+        transaction,
+      );
+    });
 
     return this.findOne(ticketId);
   }
@@ -265,8 +315,13 @@ export class AdminSupportService {
       ? `Talep ${assignee.name} adlı yöneticiye atandı.`
       : 'Talebin yönetici ataması kaldırıldı.';
 
-    await this.prisma.$transaction([
-      this.prisma.supportMessage.create({
+    const nextStatus =
+      assignee && ticket.status === SupportTicketStatus.OPEN
+        ? SupportTicketStatus.IN_PROGRESS
+        : ticket.status;
+
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.supportMessage.create({
         data: {
           ticketId,
           authorUserId: adminUserId,
@@ -274,19 +329,38 @@ export class AdminSupportService {
           isInternal: true,
           body: message,
         },
-      }),
-      this.prisma.supportTicket.update({
+      });
+      await transaction.supportTicket.update({
         where: { id: ticketId },
         data: {
           assignedAdminUserId: body.assigneeUserId,
-          status:
-            assignee && ticket.status === SupportTicketStatus.OPEN
-              ? SupportTicketStatus.IN_PROGRESS
-              : ticket.status,
+          status: nextStatus,
           updatedAt: now,
         },
-      }),
-    ]);
+      });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.ADMIN,
+          actorUserId: adminUserId,
+          origin: AuditOrigin.API,
+          action: AuditAction.ADMIN_SUPPORT_ASSIGNEE_CHANGED,
+          result: AuditResult.SUCCESS,
+          workspaceId: ticket.workspaceId,
+          storeId: ticket.storeId,
+          targetType: 'SUPPORT_TICKET',
+          targetId: ticketId,
+          before: {
+            assignedAdminUserId: ticket.assignedAdminUserId,
+            status: ticket.status,
+          },
+          after: {
+            assignedAdminUserId: body.assigneeUserId,
+            status: nextStatus,
+          },
+        },
+        transaction,
+      );
+    });
 
     return this.findOne(ticketId);
   }
@@ -380,6 +454,8 @@ export class AdminSupportService {
         resolvedAt: true,
         closedAt: true,
         assignedAdminUserId: true,
+        workspaceId: true,
+        storeId: true,
       },
     });
     if (!ticket) throw new NotFoundException('Destek talebi bulunamadı.');

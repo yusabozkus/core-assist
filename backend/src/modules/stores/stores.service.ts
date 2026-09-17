@@ -23,12 +23,20 @@ import { createDefaultStoreAiInstructions } from '../knowledge/default-ai-instru
 import { BillingEntitlementService } from '../billing/billing-entitlement.service';
 import { resolveTeamAccessLevel } from '../team/team-access';
 import { recalculateStoreVariantInventory } from '../product-sync/inventory-policy';
+import { AuditAction } from '../audit/audit-actions';
+import {
+  AuditActorType,
+  AuditLogService,
+  AuditOrigin,
+  AuditResult,
+} from '../audit/audit-log.service';
 
 @Injectable()
 export class StoresService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly billingEntitlements: BillingEntitlementService,
+    private readonly audit: AuditLogService,
   ) {}
 
   async create(userId: string, createStoreDto: CreateStoreDto) {
@@ -62,7 +70,7 @@ export class StoresService {
         select: { userId: true, role: true },
       });
 
-      return transaction.store.create({
+      const createdStore = await transaction.store.create({
         data: {
           name: createStoreDto.name,
           workspaceId: membership.workspaceId,
@@ -89,6 +97,22 @@ export class StoresService {
           createdAt: true,
         },
       });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.USER,
+          actorUserId: userId,
+          origin: AuditOrigin.API,
+          action: AuditAction.STORE_CREATED,
+          result: AuditResult.SUCCESS,
+          workspaceId: membership.workspaceId,
+          storeId: createdStore.id,
+          targetType: 'STORE',
+          targetId: createdStore.id,
+          after: storeAuditSnapshot(createdStore),
+        },
+        transaction,
+      );
+      return createdStore;
     });
   }
 
@@ -192,7 +216,13 @@ export class StoresService {
           },
         },
       },
-      select: { id: true },
+      select: {
+        id: true,
+        workspaceId: true,
+        name: true,
+        inventoryPolicy: true,
+        status: true,
+      },
     });
 
     if (!store) {
@@ -229,6 +259,23 @@ export class StoresService {
         );
       }
 
+      await this.audit.record(
+        {
+          actorType: AuditActorType.USER,
+          actorUserId: userId,
+          origin: AuditOrigin.API,
+          action: AuditAction.STORE_UPDATED,
+          result: AuditResult.SUCCESS,
+          workspaceId: store.workspaceId,
+          storeId: store.id,
+          targetType: 'STORE',
+          targetId: store.id,
+          before: storeAuditSnapshot(store),
+          after: storeAuditSnapshot(updatedStore),
+        },
+        transaction,
+      );
+
       return updatedStore;
     });
   }
@@ -255,6 +302,10 @@ export class StoresService {
         },
         select: {
           id: true,
+          workspaceId: true,
+          name: true,
+          inventoryPolicy: true,
+          status: true,
           channelConnections: {
             where: {
               OR: [
@@ -300,6 +351,23 @@ export class StoresService {
         data: { status: StoreStatus.INACTIVE },
       });
 
+      await this.audit.record(
+        {
+          actorType: AuditActorType.USER,
+          actorUserId: userId,
+          origin: AuditOrigin.API,
+          action: AuditAction.STORE_ARCHIVED,
+          result: AuditResult.SUCCESS,
+          workspaceId: store.workspaceId,
+          storeId: store.id,
+          targetType: 'STORE',
+          targetId: store.id,
+          before: storeAuditSnapshot(store),
+          after: { ...storeAuditSnapshot(store), status: StoreStatus.INACTIVE },
+        },
+        transaction,
+      );
+
       return {
         archived: true as const,
         archivedStoreId: id,
@@ -320,7 +388,13 @@ export class StoresService {
             },
           },
         },
-        select: { id: true, workspaceId: true },
+        select: {
+          id: true,
+          workspaceId: true,
+          name: true,
+          inventoryPolicy: true,
+          status: true,
+        },
       });
 
       if (!store) {
@@ -334,7 +408,7 @@ export class StoresService {
         store.workspaceId,
       );
 
-      return transaction.store.update({
+      const restoredStore = await transaction.store.update({
         where: { id },
         data: { status: StoreStatus.ACTIVE },
         select: {
@@ -344,6 +418,23 @@ export class StoresService {
           createdAt: true,
         },
       });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.USER,
+          actorUserId: userId,
+          origin: AuditOrigin.API,
+          action: AuditAction.STORE_RESTORED,
+          result: AuditResult.SUCCESS,
+          workspaceId: store.workspaceId,
+          storeId: store.id,
+          targetType: 'STORE',
+          targetId: store.id,
+          before: storeAuditSnapshot(store),
+          after: storeAuditSnapshot(restoredStore),
+        },
+        transaction,
+      );
+      return restoredStore;
     });
   }
 
@@ -374,6 +465,10 @@ export class StoresService {
         },
         select: {
           id: true,
+          workspaceId: true,
+          name: true,
+          inventoryPolicy: true,
+          status: true,
           channelConnections: {
             where: {
               OR: [
@@ -429,6 +524,22 @@ export class StoresService {
       });
 
       await transaction.store.delete({ where: { id: store.id } });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.USER,
+          actorUserId: userId,
+          origin: AuditOrigin.API,
+          action: AuditAction.STORE_DELETED,
+          result: AuditResult.SUCCESS,
+          workspaceId: store.workspaceId,
+          storeId: store.id,
+          targetType: 'STORE',
+          targetId: store.id,
+          before: storeAuditSnapshot(store),
+          after: { deleted: true },
+        },
+        transaction,
+      );
 
       return {
         deleted: true as const,
@@ -437,4 +548,16 @@ export class StoresService {
       };
     });
   }
+}
+
+function storeAuditSnapshot(store: {
+  name: string;
+  inventoryPolicy?: InventoryPolicy | null;
+  status: StoreStatus;
+}) {
+  return {
+    name: store.name,
+    inventoryPolicy: store.inventoryPolicy ?? null,
+    status: store.status,
+  };
 }

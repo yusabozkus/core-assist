@@ -21,11 +21,13 @@ import { getRedisConnection } from './infrastructure/queue/redis-connection';
 import { TeamModule } from './modules/team/team.module';
 import { SupportModule } from './modules/support/support.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { AuditModule } from './modules/audit/audit.module';
 
 @Module({
   imports: [
     BullModule.forRoot({ connection: getRedisConnection() }),
     PrismaModule,
+    AuditModule,
     AuthModule,
     WorkspacesModule,
     StoresModule,

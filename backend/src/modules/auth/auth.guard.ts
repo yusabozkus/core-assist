@@ -7,6 +7,7 @@ import {
 import { fromNodeHeaders } from 'better-auth/node';
 import { AuthService } from './auth.service';
 import type { RequestWithAuth } from './auth.types';
+import { LoggingContext } from '../../infrastructure/logging/logging-context';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -24,6 +25,7 @@ export class AuthGuard implements CanActivate {
 
     request.user = session.user;
     request.session = session.session;
+    LoggingContext.update({ userId: session.user.id });
     return true;
   }
 }

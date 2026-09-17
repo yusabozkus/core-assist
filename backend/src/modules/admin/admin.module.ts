@@ -23,6 +23,8 @@ import { AdminOperationsController } from './admin-operations.controller';
 import { AdminOperationsService } from './admin-operations.service';
 import { AdminSupportController } from './admin-support.controller';
 import { AdminSupportService } from './admin-support.service';
+import { AdminAuditLogsController } from './admin-audit-logs.controller';
+import { AdminAuditLogsService } from './admin-audit-logs.service';
 
 @Module({
   imports: [
@@ -40,6 +42,7 @@ import { AdminSupportService } from './admin-support.service';
     ),
   ],
   controllers: [
+    AdminAuditLogsController,
     AdminController,
     AdminBillingController,
     AdminCustomersController,
@@ -47,6 +50,7 @@ import { AdminSupportService } from './admin-support.service';
     AdminSupportController,
   ],
   providers: [
+    AdminAuditLogsService,
     AdminAccessService,
     AdminActionOriginGuard,
     AdminBillingService,

@@ -84,6 +84,57 @@ model Verification {
   @@map("verification")
 }
 
+enum AuditActorType {
+  USER
+  ADMIN
+  SYSTEM
+}
+
+enum AuditOrigin {
+  API
+  WORKER
+  WEBHOOK
+  SCHEDULED
+  SYSTEM
+}
+
+enum AuditResult {
+  STARTED
+  SUCCESS
+  FAILURE
+}
+
+// Append-only operational evidence. Deliberately has no foreign keys so that
+// account/workspace deletion cannot erase the administrative history.
+model AuditLog {
+  id          String         @id @default(uuid())
+  actorType   AuditActorType
+  actorUserId String?
+  origin      AuditOrigin
+  action      String
+  result      AuditResult
+  workspaceId String?
+  storeId     String?
+  targetType  String?
+  targetId    String?
+  requestId   String?
+  ipAddress   String?
+  userAgent   String?
+  errorCode   String?
+  before      Json?
+  after       Json?
+  metadata    Json?
+  createdAt   DateTime       @default(now())
+
+  @@index([createdAt])
+  @@index([workspaceId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([action, createdAt])
+  @@index([targetType, targetId, createdAt])
+  @@index([result, createdAt])
+  @@map("audit_log")
+}
+
 model Workspace {
   id        String   @id @default(uuid())
   name      String

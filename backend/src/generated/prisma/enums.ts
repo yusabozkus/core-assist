@@ -9,6 +9,35 @@
 * 🟢 You can import this file directly.
 */
 
+export const AuditActorType = {
+  USER: 'USER',
+  ADMIN: 'ADMIN',
+  SYSTEM: 'SYSTEM'
+} as const
+
+export type AuditActorType = (typeof AuditActorType)[keyof typeof AuditActorType]
+
+
+export const AuditOrigin = {
+  API: 'API',
+  WORKER: 'WORKER',
+  WEBHOOK: 'WEBHOOK',
+  SCHEDULED: 'SCHEDULED',
+  SYSTEM: 'SYSTEM'
+} as const
+
+export type AuditOrigin = (typeof AuditOrigin)[keyof typeof AuditOrigin]
+
+
+export const AuditResult = {
+  STARTED: 'STARTED',
+  SUCCESS: 'SUCCESS',
+  FAILURE: 'FAILURE'
+} as const
+
+export type AuditResult = (typeof AuditResult)[keyof typeof AuditResult]
+
+
 export const WorkspaceRole = {
   OWNER: 'OWNER',
   ADMIN: 'ADMIN',

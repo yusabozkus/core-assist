@@ -33,6 +33,14 @@ import {
 } from '../billing/billing.errors';
 import { BillingSubscriptionService } from '../billing/billing-subscription.service';
 import { BILLING_SYNC_STOPPED_MESSAGE } from '../billing/billing-access.policy';
+import { AuditAction } from '../audit/audit-actions';
+import {
+  AuditActorType,
+  AuditLogService,
+  AuditOrigin,
+  AuditResult,
+  auditErrorCode,
+} from '../audit/audit-log.service';
 import type { QuestionDraftDispatcher } from '../questions/question-draft.types';
 import {
   PRODUCT_SYNC_BATCHES_PER_JOB,
@@ -107,6 +115,7 @@ export class ProductSyncWorkerService {
     @Inject(QUESTION_DRAFT_DISPATCHER)
     private readonly questionDrafts: QuestionDraftDispatcher,
     private readonly billing: BillingSubscriptionService,
+    private readonly audit: AuditLogService,
   ) {}
 
   async run(
@@ -242,8 +251,12 @@ export class ProductSyncWorkerService {
             failureReason: message,
           };
 
-    await this.prisma.$transaction([
-      this.prisma.catalogSyncRun.updateMany({
+    await this.prisma.$transaction(async (transaction) => {
+      const store = await transaction.store.findUniqueOrThrow({
+        where: { id: data.storeId },
+        select: { workspaceId: true },
+      });
+      await transaction.catalogSyncRun.updateMany({
         where: { id: data.syncRunId },
         data: {
           status: CatalogSyncStatus.FAILED,
@@ -252,12 +265,33 @@ export class ProductSyncWorkerService {
           errorMessage: message,
           completedAt: new Date(),
         },
-      }),
-      this.prisma.channelConnection.updateMany({
+      });
+      await transaction.channelConnection.updateMany({
         where: { id: data.connectionId },
         data: connectionData,
-      }),
-    ]);
+      });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.SYSTEM,
+          origin: AuditOrigin.WORKER,
+          action: AuditAction.CATALOG_SYNC_FAILED,
+          result: AuditResult.FAILURE,
+          workspaceId: store.workspaceId,
+          storeId: data.storeId,
+          targetType: 'CATALOG_SYNC_RUN',
+          targetId: data.syncRunId,
+          errorCode: auditErrorCode(error),
+          metadata: {
+            kind: data.kind,
+            connectionId: data.connectionId,
+            authenticationError,
+            planLimitError,
+            accessError,
+          },
+        },
+        transaction,
+      );
+    });
 
     if (accessError) {
       await this.notifications.createForStoreMembers({
@@ -1704,8 +1738,12 @@ export class ProductSyncWorkerService {
         : { lastInventorySyncAt: completedAt }),
     };
 
-    await this.prisma.$transaction([
-      this.prisma.catalogSyncRun.update({
+    await this.prisma.$transaction(async (transaction) => {
+      const store = await transaction.store.findUniqueOrThrow({
+        where: { id: data.storeId },
+        select: { workspaceId: true },
+      });
+      await transaction.catalogSyncRun.update({
         where: { id: data.syncRunId },
         data: {
           status: CatalogSyncStatus.COMPLETED,
@@ -1726,12 +1764,36 @@ export class ProductSyncWorkerService {
           cursor: null,
           completedAt,
         },
-      }),
-      this.prisma.channelConnection.update({
+      });
+      await transaction.channelConnection.update({
         where: { id: data.connectionId },
         data: connectionData,
-      }),
-    ]);
+      });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.SYSTEM,
+          origin: AuditOrigin.WORKER,
+          action: AuditAction.CATALOG_SYNC_COMPLETED,
+          result: AuditResult.SUCCESS,
+          workspaceId: store.workspaceId,
+          storeId: data.storeId,
+          targetType: 'CATALOG_SYNC_RUN',
+          targetId: data.syncRunId,
+          after: {
+            kind: data.kind,
+            productsProcessed: counters.productsProcessed,
+            productsCreated: counters.productsCreated,
+            productsUpdated: counters.productsUpdated,
+            productsUnchanged: counters.productsUnchanged,
+            productsSkipped: counters.productsSkipped,
+            productsArchived: counters.productsArchived,
+            variantsProcessed: counters.variantsProcessed,
+          },
+          metadata: { connectionId: data.connectionId },
+        },
+        transaction,
+      );
+    });
   }
 
   private async notifyProductLimit(

@@ -33,6 +33,14 @@ import {
   assertPaidRecurringPrice,
   requirePaidRecurringPrice,
 } from './paddle-price.policy';
+import { AuditAction } from '../audit/audit-actions';
+import {
+  AuditActorType,
+  AuditLogService,
+  AuditOrigin,
+  AuditResult,
+  auditErrorCode,
+} from '../audit/audit-log.service';
 
 type Change = Prisma.BillingPlanChangeGetPayload<object>;
 type LocalSubscription = Prisma.BillingSubscriptionGetPayload<object>;
@@ -50,6 +58,7 @@ export class PaddlePlanChangeService {
     private readonly prisma: PrismaService,
     private readonly authorization: BillingAuthorizationService,
     private readonly usage: BillingUsageService,
+    private readonly audit: AuditLogService,
   ) {}
 
   async preview(
@@ -150,6 +159,49 @@ export class PaddlePlanChangeService {
 
   async confirm(workspaceId: string, userId: string, changeId: string) {
     await this.authorization.requireWorkspaceAccess(workspaceId, userId);
+    const auditBase = {
+      actorType: AuditActorType.USER,
+      actorUserId: userId,
+      origin: AuditOrigin.API,
+      action: AuditAction.BILLING_PLAN_CHANGE_CONFIRMED,
+      workspaceId,
+      targetType: 'BILLING_PLAN_CHANGE',
+      targetId: changeId,
+    } as const;
+    await this.audit.record({ ...auditBase, result: AuditResult.STARTED });
+    try {
+      const result = await this.confirmAuthorized(
+        workspaceId,
+        userId,
+        changeId,
+      );
+      await this.audit.recordSafely({
+        ...auditBase,
+        result: AuditResult.SUCCESS,
+        after: {
+          status: result.status,
+          plan: result.plan,
+          cycle: result.cycle,
+          failureCode: result.failureCode,
+          retryAt: result.retryAt,
+        },
+      });
+      return result;
+    } catch (error) {
+      await this.audit.recordSafely({
+        ...auditBase,
+        result: AuditResult.FAILURE,
+        errorCode: auditErrorCode(error),
+      });
+      throw error;
+    }
+  }
+
+  private async confirmAuthorized(
+    workspaceId: string,
+    userId: string,
+    changeId: string,
+  ) {
     const existingChange = await this.findChange(
       this.prisma,
       workspaceId,
