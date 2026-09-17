@@ -1,6 +1,15 @@
+import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { BillingModule } from '../billing/billing.module';
+import { BILLING_RECOVERY_QUEUE } from '../billing/billing-reconciliation.processor';
+import { PADDLE_WEBHOOK_QUEUE } from '../billing/paddle-webhook.constants';
+import { ChannelsModule } from '../channels/channels.module';
+import { PRODUCT_SYNC_QUEUE } from '../product-sync/product-sync.constants';
+import { QUESTION_ANSWER_QUEUE } from '../question-answer/question-answer.constants';
+import { QUESTION_SYNC_QUEUE } from '../question-sync/question-sync.constants';
+import { QUESTION_DRAFT_QUEUE } from '../questions/question-draft.constants';
+import { SIZE_GUIDE_QUEUE } from '../size-guides/size-guide.constants';
 import { AdminAccessService } from './admin-access.service';
 import { AdminActionOriginGuard } from './admin-action-origin.guard';
 import { AdminBillingController } from './admin-billing.controller';
@@ -10,15 +19,31 @@ import { AdminCustomersController } from './admin-customers.controller';
 import { AdminCustomersService } from './admin-customers.service';
 import { AdminGuard } from './admin.guard';
 import { AdminOverviewService } from './admin-overview.service';
+import { AdminOperationsController } from './admin-operations.controller';
+import { AdminOperationsService } from './admin-operations.service';
 import { AdminSupportController } from './admin-support.controller';
 import { AdminSupportService } from './admin-support.service';
 
 @Module({
-  imports: [AuthModule, BillingModule],
+  imports: [
+    AuthModule,
+    BillingModule,
+    ChannelsModule,
+    BullModule.registerQueue(
+      { name: PRODUCT_SYNC_QUEUE },
+      { name: QUESTION_SYNC_QUEUE },
+      { name: QUESTION_DRAFT_QUEUE },
+      { name: QUESTION_ANSWER_QUEUE },
+      { name: SIZE_GUIDE_QUEUE },
+      { name: PADDLE_WEBHOOK_QUEUE },
+      { name: BILLING_RECOVERY_QUEUE },
+    ),
+  ],
   controllers: [
     AdminController,
     AdminBillingController,
     AdminCustomersController,
+    AdminOperationsController,
     AdminSupportController,
   ],
   providers: [
@@ -28,6 +53,7 @@ import { AdminSupportService } from './admin-support.service';
     AdminGuard,
     AdminCustomersService,
     AdminOverviewService,
+    AdminOperationsService,
     AdminSupportService,
   ],
   exports: [AdminAccessService, AdminGuard],

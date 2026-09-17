@@ -299,8 +299,19 @@ export class ChannelsService {
   async retrySyncRun(storeId: string, syncRunId: string, userId: string) {
     await this.requireStoreManagement(storeId, userId);
 
+    return this.retrySyncRunRecord(syncRunId, storeId);
+  }
+
+  async retrySyncRunAsAdmin(syncRunId: string) {
+    return this.retrySyncRunRecord(syncRunId);
+  }
+
+  private async retrySyncRunRecord(syncRunId: string, storeId?: string) {
     const run = await this.prisma.catalogSyncRun.findFirst({
-      where: { id: syncRunId, connection: { storeId } },
+      where: {
+        id: syncRunId,
+        ...(storeId ? { connection: { storeId } } : {}),
+      },
       select: {
         id: true,
         kind: true,
@@ -308,6 +319,7 @@ export class ChannelsService {
         connection: {
           select: {
             id: true,
+            storeId: true,
             status: true,
             credentialsEncrypted: true,
           },
@@ -348,16 +360,25 @@ export class ChannelsService {
     }
 
     if (run.kind === 'QUESTION') {
-      return this.questionSyncQueue.enqueue(storeId, run.connection.id, {
-        trigger: 'RETRY',
-        retryOfId: run.id,
-      });
+      return this.questionSyncQueue.enqueue(
+        run.connection.storeId,
+        run.connection.id,
+        {
+          trigger: 'RETRY',
+          retryOfId: run.id,
+        },
+      );
     }
 
-    return this.productSyncQueue.enqueue(storeId, run.connection.id, run.kind, {
-      trigger: 'RETRY',
-      retryOfId: run.id,
-    });
+    return this.productSyncQueue.enqueue(
+      run.connection.storeId,
+      run.connection.id,
+      run.kind,
+      {
+        trigger: 'RETRY',
+        retryOfId: run.id,
+      },
+    );
   }
 
   async create(
