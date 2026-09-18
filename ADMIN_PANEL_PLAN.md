@@ -129,7 +129,7 @@ doğrudan `/admin` açılır ve admin arayüzü mağaza dashboard'una bağlantı
 - [x] Faz 4 — Abonelik ve ödeme operasyonları
 - [x] Faz 5 — Senkronizasyon ve kuyruk operasyonları
 - [x] Faz 6 — Gerçek verilerle admin genel bakış
-- [ ] Faz 7 — AI/kullanım ve sistem sağlığı
+- [x] Faz 7 — AI/kullanım ve sistem sağlığı
 - [x] Faz 8 — Audit log modeli ve kritik admin mutasyonlarının tamamı
   - [x] Append-only audit modeli, migration ve merkezi kayıt servisi
   - [x] Ödeme uzlaştırma, senkronizasyon yeniden deneme ve destek mutasyonları

@@ -1,11 +1,15 @@
-import { AdminSectionPlaceholder } from "@/components/admin/admin-section-placeholder"
+import type { Metadata } from "next"
 
-export default function AdminSystemPage() {
-  return (
-    <AdminSectionPlaceholder
-      eyebrow="Altyapı görünürlüğü"
-      title="Sistem sağlığı"
-      description="API, worker, Redis, PostgreSQL, webhook ve pazaryeri entegrasyonlarının durumu burada izlenecek."
-    />
-  )
+import { AdminSystemHealthDashboard } from "@/components/admin/system/admin-system-health-dashboard"
+import { getServerAdminSystemHealth } from "@/lib/api/admin-insights.server"
+
+export const metadata: Metadata = {
+  title: "Sistem Sağlığı | Core Asistan Admin",
+}
+
+export const dynamic = "force-dynamic"
+
+export default async function AdminSystemPage() {
+  const data = await getServerAdminSystemHealth()
+  return <AdminSystemHealthDashboard data={data} />
 }

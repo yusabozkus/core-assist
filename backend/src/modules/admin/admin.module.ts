@@ -25,6 +25,9 @@ import { AdminSupportController } from './admin-support.controller';
 import { AdminSupportService } from './admin-support.service';
 import { AdminAuditLogsController } from './admin-audit-logs.controller';
 import { AdminAuditLogsService } from './admin-audit-logs.service';
+import { AdminAiUsageService } from './admin-ai-usage.service';
+import { AdminInsightsController } from './admin-insights.controller';
+import { AdminSystemHealthService } from './admin-system-health.service';
 
 @Module({
   imports: [
@@ -43,6 +46,7 @@ import { AdminAuditLogsService } from './admin-audit-logs.service';
   ],
   controllers: [
     AdminAuditLogsController,
+    AdminInsightsController,
     AdminController,
     AdminBillingController,
     AdminCustomersController,
@@ -51,6 +55,7 @@ import { AdminAuditLogsService } from './admin-audit-logs.service';
   ],
   providers: [
     AdminAuditLogsService,
+    AdminAiUsageService,
     AdminAccessService,
     AdminActionOriginGuard,
     AdminBillingService,
@@ -59,6 +64,7 @@ import { AdminAuditLogsService } from './admin-audit-logs.service';
     AdminOverviewService,
     AdminOperationsService,
     AdminSupportService,
+    AdminSystemHealthService,
   ],
   exports: [AdminAccessService, AdminGuard],
 })
