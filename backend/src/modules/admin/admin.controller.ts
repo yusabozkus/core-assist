@@ -27,4 +27,9 @@ export class AdminController {
   getHeaderSummary() {
     return this.overviewService.getHeaderSummary();
   }
+
+  @Get('overview')
+  getOverview() {
+    return this.overviewService.getOverview();
+  }
 }
