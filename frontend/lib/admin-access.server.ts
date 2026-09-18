@@ -135,8 +135,14 @@ function isAdminHeaderSummary(value: unknown): value is AdminHeaderSummary {
     isNonNegativeInteger(summary.openSupportTickets) &&
     isNonNegativeInteger(summary.paymentIssues) &&
     isNonNegativeInteger(summary.activeSyncs) &&
+    isSystemStatus(summary.systemStatus) &&
+    isNonNegativeInteger(summary.systemIssues) &&
     typeof summary.checkedAt === "string"
   )
+}
+
+function isSystemStatus(value: unknown) {
+  return value === "HEALTHY" || value === "DEGRADED" || value === "DOWN"
 }
 
 function isNonNegativeInteger(value: unknown) {

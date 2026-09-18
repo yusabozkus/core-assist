@@ -18,11 +18,23 @@ import { SIZE_GUIDE_QUEUE } from '../size-guides/size-guide.constants';
 
 const DAY = 24 * 60 * 60 * 1000;
 const RECONCILIATION_GRACE_MS = 15 * 60 * 1000;
+const HEALTH_CACHE_MS = 15 * 1000;
+const HEADER_HEALTH_TIMEOUT_MS = 2_500;
 
 type HealthStatus = 'HEALTHY' | 'DEGRADED' | 'DOWN';
 
 @Injectable()
 export class AdminSystemHealthService {
+  private cachedHealth: {
+    expiresAt: number;
+    value: Awaited<
+      ReturnType<AdminSystemHealthService['collectHealthSnapshot']>
+    >;
+  } | null = null;
+  private healthRequest: ReturnType<
+    AdminSystemHealthService['collectHealthSnapshot']
+  > | null = null;
+
   constructor(
     private readonly prisma: PrismaService,
     @InjectQueue(PRODUCT_SYNC_QUEUE)
@@ -42,6 +54,61 @@ export class AdminSystemHealthService {
   ) {}
 
   async getHealth() {
+    if (this.cachedHealth && this.cachedHealth.expiresAt > Date.now()) {
+      return this.cachedHealth.value;
+    }
+    if (this.healthRequest) return this.healthRequest;
+
+    const request = this.collectHealthSnapshot();
+    this.healthRequest = request;
+
+    try {
+      const value = await request;
+      this.cachedHealth = {
+        expiresAt: Date.now() + HEALTH_CACHE_MS,
+        value,
+      };
+      return value;
+    } finally {
+      if (this.healthRequest === request) this.healthRequest = null;
+    }
+  }
+
+  async getHeaderHealth() {
+    let timeoutId: NodeJS.Timeout | undefined;
+
+    try {
+      const health = await Promise.race([
+        this.getHealth(),
+        new Promise<null>((resolve) => {
+          timeoutId = setTimeout(() => resolve(null), HEADER_HEALTH_TIMEOUT_MS);
+          timeoutId.unref();
+        }),
+      ]);
+
+      if (!health) return { status: 'DOWN' as const, issueCount: 1 };
+
+      const unavailableServices = Object.values(health.services).filter(
+        (service) => service.status === 'DOWN',
+      ).length;
+
+      return {
+        status: health.status,
+        issueCount:
+          unavailableServices +
+          health.summary.unavailableQueues +
+          health.summary.pausedQueues +
+          health.summary.billingIssues +
+          health.summary.connectionIssues,
+      };
+    } catch {
+      return { status: 'DOWN' as const, issueCount: 1 };
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  }
+
+  private async collectHealthSnapshot() {
     const now = new Date();
     const [database, redis, queues] = await Promise.all([
       this.getDatabaseSnapshot(now),

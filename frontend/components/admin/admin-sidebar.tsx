@@ -18,7 +18,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { ADMIN_NAVIGATION } from "@/constants/admin"
+import { ADMIN_NAVIGATION_GROUPS } from "@/constants/admin"
 import { APP_ROUTES } from "@/constants/site"
 
 type AdminSidebarProps = React.ComponentProps<typeof Sidebar> & {
@@ -62,35 +62,37 @@ export function AdminSidebar({ user, ...props }: AdminSidebarProps) {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Yönetim</SidebarGroupLabel>
-          <SidebarMenu>
-            {ADMIN_NAVIGATION.map((item) => {
-              const isActive =
-                item.url === APP_ROUTES.admin.root
-                  ? pathname === item.url
-                  : pathname.startsWith(item.url)
+        {ADMIN_NAVIGATION_GROUPS.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarMenu>
+              {group.items.map((item) => {
+                const isActive =
+                  item.url === APP_ROUTES.admin.root
+                    ? pathname === item.url
+                    : pathname.startsWith(item.url)
 
-              return (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton
-                    asChild
-                    tooltip={item.title}
-                    isActive={isActive}
-                  >
-                    <Link
-                      href={item.url}
-                      aria-current={isActive ? "page" : undefined}
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip={item.title}
+                      isActive={isActive}
                     >
-                      <HugeiconsIcon icon={item.icon} strokeWidth={2} />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )
-            })}
-          </SidebarMenu>
-        </SidebarGroup>
+                      <Link
+                        href={item.url}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        <HugeiconsIcon icon={item.icon} strokeWidth={2} />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter>

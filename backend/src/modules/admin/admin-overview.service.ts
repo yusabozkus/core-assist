@@ -14,6 +14,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { PRODUCT_SYNC_LOCK_TIMEOUT_MS } from '../product-sync/product-sync.constants';
 import { QUESTION_SYNC_LOCK_TIMEOUT_MS } from '../question-sync/question-sync.constants';
+import { AdminSystemHealthService } from './admin-system-health.service';
 
 const DAY = 24 * 60 * 60 * 1000;
 const OPEN_SUPPORT_STATUSES = [
@@ -24,25 +25,32 @@ const OPEN_SUPPORT_STATUSES = [
 
 @Injectable()
 export class AdminOverviewService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly systemHealth: AdminSystemHealthService,
+  ) {}
 
   async getHeaderSummary() {
-    const [openSupportTickets, paymentIssues, activeSyncs] = await Promise.all([
-      this.prisma.supportTicket.count({
-        where: { status: { in: OPEN_SUPPORT_STATUSES } },
-      }),
-      this.prisma.billingSubscription.count({
-        where: { status: BillingSubscriptionStatus.PAST_DUE },
-      }),
-      this.prisma.catalogSyncRun.count({
-        where: { status: CatalogSyncStatus.RUNNING },
-      }),
-    ]);
+    const [openSupportTickets, paymentIssues, activeSyncs, headerHealth] =
+      await Promise.all([
+        this.prisma.supportTicket.count({
+          where: { status: { in: OPEN_SUPPORT_STATUSES } },
+        }),
+        this.prisma.billingSubscription.count({
+          where: { status: BillingSubscriptionStatus.PAST_DUE },
+        }),
+        this.prisma.catalogSyncRun.count({
+          where: { status: CatalogSyncStatus.RUNNING },
+        }),
+        this.systemHealth.getHeaderHealth(),
+      ]);
 
     return {
       openSupportTickets,
       paymentIssues,
       activeSyncs,
+      systemStatus: headerHealth.status,
+      systemIssues: headerHealth.issueCount,
       checkedAt: new Date().toISOString(),
     };
   }

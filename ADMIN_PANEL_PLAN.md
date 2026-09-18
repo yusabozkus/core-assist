@@ -136,6 +136,10 @@ doğrudan `/admin` açılır ve admin arayüzü mağaza dashboard'una bağlantı
   - [x] Ekip/rol, mağaza, kanal, ödeme ve hesap yaşam döngüsü mutasyonları
   - [x] Worker ve webhook yaşam döngüsü olayları
   - [x] Filtrelenebilir `/admin/audit-logs` sayfası
+- [x] Faz 9 — Panel içi operasyonel sağlık uyarıları
+  - [x] Header'da kalıcı sistem sağlık göstergesi
+  - [x] Sağlık kötüleştiğinde veya sorun sayısı arttığında tekil uyarı kartı
+  - [x] Sağlık sorguları için kısa süreli snapshot cache'i ve timeout koruması
 
 ## 6. İlk sürüm dışında kalanlar
 

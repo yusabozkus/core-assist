@@ -19,6 +19,11 @@ export type AdminNavigationItem = Readonly<{
   icon: IconSvgElement
 }>
 
+export type AdminNavigationGroup = Readonly<{
+  label: string
+  items: ReadonlyArray<AdminNavigationItem>
+}>
+
 export const ADMIN_NAVIGATION: ReadonlyArray<AdminNavigationItem> = [
   {
     title: "Genel Bakış",
@@ -67,6 +72,17 @@ export const ADMIN_NAVIGATION: ReadonlyArray<AdminNavigationItem> = [
     description: "Kritik admin işlemleri",
     url: APP_ROUTES.admin.auditLogs,
     icon: ShieldCheckIcon,
+  },
+]
+
+export const ADMIN_NAVIGATION_GROUPS: ReadonlyArray<AdminNavigationGroup> = [
+  {
+    label: "Yönetim",
+    items: ADMIN_NAVIGATION.slice(0, 4),
+  },
+  {
+    label: "Sistem ve Operasyon",
+    items: ADMIN_NAVIGATION.slice(4),
   },
 ]
 
