@@ -12,6 +12,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { APP_ROUTES } from "@/constants/site"
 import { getCurrentUser } from "@/lib/server-auth"
 import { getProductScreenshots } from "@/lib/product-screenshots"
+import { AppLogo } from "@/components/shared/brand/app-logo"
 
 export const dynamic = "force-dynamic"
 
@@ -30,23 +31,13 @@ export default async function AuthLayout({
     <div className="grid min-h-dvh bg-background lg:grid-cols-[minmax(420px,1fr)_minmax(0,1fr)] lg:gap-3 lg:p-3">
       <section className="flex min-h-dvh min-w-0 flex-col px-5 py-5 sm:px-10 sm:py-8 lg:min-h-[calc(100dvh-24px)] lg:px-8 lg:py-6 xl:px-14">
         <header className="flex items-center justify-between gap-4">
-          <Link
+          <AppLogo
             href="/"
-            aria-label="Core Asistan ana sayfa"
             className="group flex items-center gap-3 rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:outline-none"
-          >
-            <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm motion-safe:transition-transform motion-safe:group-hover:-translate-y-0.5">
-              <HugeiconsIcon icon={Layers01Icon} className="size-5" />
-            </span>
-            <span>
-              <span className="block text-[16px] leading-none font-semibold tracking-[-0.035em] text-foreground">
-                Core Asistan
-              </span>
-              <span className="mt-1.5 block text-[10px] leading-none text-muted-foreground">
-                Pazaryeri yanıt asistanınız
-              </span>
-            </span>
-          </Link>
+            showIcon={false}
+            textWidth={150}
+            description="Pazaryeri yanıt asistanınız"
+          />
           <ThemeToggle className="border border-border bg-card shadow-xs hover:bg-muted" />
         </header>
 

@@ -25,6 +25,7 @@ import type {
   BillingPlanId,
   BillingSummary,
 } from "@/types/billing"
+import Image from "next/image"
 
 export function PlansClient({
   initialBillingSummary,
@@ -56,9 +57,9 @@ export function PlansClient({
   const pendingChange = initialBillingSummary?.pendingPlanChange
   const currentPlan = managed
     ? SUBSCRIPTION_PLANS.find(
-        (plan) =>
-          plan.id === initialBillingSummary?.subscription.plan.toLowerCase()
-      )
+      (plan) =>
+        plan.id === initialBillingSummary?.subscription.plan.toLowerCase()
+    )
     : null
   const currentPlanLabel =
     currentPlan?.name ??
@@ -76,7 +77,11 @@ export function PlansClient({
     <main className="themed-scrollbar fixed inset-0 z-40 overflow-y-auto overscroll-y-contain bg-background">
       <header className="sticky top-0 z-10 border-b border-border bg-background/95">
         <div className="mx-auto flex h-18 w-full max-w-[1440px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-10">
-          <AppLogo href={billingRoutes(workspaceId).overview} />
+          <AppLogo
+            href={billingRoutes(workspaceId).overview}
+            description="Commerce Operations"
+            showIcon={true}
+          />
           <div className="flex items-center gap-5">
             <span className="hidden text-xs text-muted-foreground sm:block">
               Mevcut planınız{" "}
@@ -197,19 +202,19 @@ export function PlansClient({
               onSelect={
                 managed
                   ? () => {
-                      setSelection({
-                        plan: plan.id,
-                        cycle: billingCycle,
-                        key: Date.now(),
-                      })
-                      setChangeOpen(true)
-                    }
+                    setSelection({
+                      plan: plan.id,
+                      cycle: billingCycle,
+                      key: Date.now(),
+                    })
+                    setChangeOpen(true)
+                  }
                   : undefined
               }
               current={
                 currentPlan?.id === plan.id &&
                 initialBillingSummary?.subscription.cycle.toLowerCase() ===
-                  billingCycle
+                billingCycle
               }
             />
           ))}
@@ -234,7 +239,13 @@ export function PlansClient({
         </div>
         <PlanQuestions />
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 text-xs text-muted-foreground">
-          <span>Core Asistan · Planlar ve fiyatlandırma</span>
+          <div className="flex flex-row gap-0 items-center">
+            <AppLogo
+              textWidth={80}
+              className="-ml-1 -mt-1"
+            />
+            <span className="mt-1">· Planlar ve fiyatlandırma</span>
+          </div>
           <span>Ödemeler Paddle güvencesiyle işlenir.</span>
         </footer>
       </div>

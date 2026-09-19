@@ -4,6 +4,7 @@ import { Layers01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 
 export function LandingBrand({
   compact = false,
@@ -24,17 +25,20 @@ export function LandingBrand({
         className
       )}
     >
-      <span className="flex size-9 items-center justify-center rounded-[11px] bg-[#173f31] text-white shadow-[0_6px_20px_rgba(23,63,49,0.18)]">
-        <HugeiconsIcon icon={Layers01Icon} className="size-[17px]" />
-      </span>
-      <span
-        className={cn(
-          "text-[15px] font-bold tracking-[-0.035em] text-[#17201d]",
-          compact && "hidden sm:inline"
-        )}
-      >
-        Core Asistan
-      </span>
+      <div className="flex flex-row items-center justify-center gap-4">
+        {/* <Image
+          src={'/logo/icon.png'}
+          alt="Core Asistan Logo"
+          width={40}
+          height={40}
+        /> */}
+        <Image
+          src={'/logo/text.png'}
+          alt="Core Asistan Logo"
+          height={0}
+          width={160}
+        />
+      </div>
     </Link>
   )
 }

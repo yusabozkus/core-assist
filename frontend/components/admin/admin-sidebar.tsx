@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/sidebar"
 import { ADMIN_NAVIGATION_GROUPS } from "@/constants/admin"
 import { APP_ROUTES } from "@/constants/site"
+import { AppLogo } from "../shared/brand/app-logo"
 
 type AdminSidebarProps = React.ComponentProps<typeof Sidebar> & {
   user: {
@@ -41,21 +42,17 @@ export function AdminSidebar({ user, ...props }: AdminSidebarProps) {
               asChild
               size="lg"
               tooltip="Core Asistan Admin"
-              className="h-14"
+              className="h-12"
             >
-              <Link href={APP_ROUTES.admin.root}>
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <HugeiconsIcon icon={Layers01Icon} className="size-4" />
-                </span>
-                <span className="grid min-w-0 flex-1 text-left leading-tight">
-                  <span className="truncate text-sm font-semibold">
-                    Core Asistan
-                  </span>
-                  <span className="truncate text-[10px] tracking-[0.12em] text-sidebar-foreground/55 uppercase">
-                    Yönetim paneli
-                  </span>
-                </span>
-              </Link>
+              <AppLogo
+                href={APP_ROUTES.admin.root}
+                description="Yönetim paneli"
+                showIcon={true}
+                showText={true}
+                iconSize={32}
+                textWidth={120}
+                fullDark={true}
+              />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
