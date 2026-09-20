@@ -41,10 +41,12 @@ export function ConnectedAccounts({
   initialAccounts,
   initialLinkedProvider,
   initialLinkError,
+  callbackPath = APP_ROUTES.dashboard.settings.profile,
 }: {
   initialAccounts: AuthAccountSummary[]
   initialLinkedProvider?: string
   initialLinkError?: string
+  callbackPath?: string
 }) {
   const [accounts, setAccounts] = useState(initialAccounts)
   const [linkingProvider, setLinkingProvider] = useState<AuthProvider | null>(
@@ -75,15 +77,9 @@ export function ConnectedAccounts({
     setError(null)
 
     try {
-      const callbackURL = new URL(
-        APP_ROUTES.dashboard.settings.profile,
-        window.location.origin
-      )
+      const callbackURL = new URL(callbackPath, window.location.origin)
       callbackURL.searchParams.set("linked", provider)
-      const errorCallbackURL = new URL(
-        APP_ROUTES.dashboard.settings.profile,
-        window.location.origin
-      )
+      const errorCallbackURL = new URL(callbackPath, window.location.origin)
 
       const result = await authClient.linkSocial({
         provider,

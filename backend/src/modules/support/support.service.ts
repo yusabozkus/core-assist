@@ -334,10 +334,29 @@ export class SupportService {
         authorType: message.authorType,
         body: message.body,
         createdAt: message.createdAt,
-        author: message.author,
+        author: message.author
+          ? {
+              ...message.author,
+              name:
+                message.authorType === SupportMessageAuthorType.SUPPORT
+                  ? publicSupportName(message.author.name)
+                  : message.author.name,
+            }
+          : null,
       })),
     };
   }
+}
+
+function publicSupportName(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return parts[0] || 'Destek ekibi';
+
+  const firstName = parts[0];
+  const surnameInitial = Array.from(parts[parts.length - 1])[0];
+  if (!surnameInitial) return firstName;
+
+  return `${firstName} ${surnameInitial.toLocaleUpperCase('tr-TR')}.`;
 }
 
 function resolvePriority(

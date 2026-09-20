@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import {
   ArrowUpDownIcon,
   ComputerIcon,
@@ -9,6 +10,7 @@ import {
   PaintBoardIcon,
   ShieldCheckIcon,
   Sun03Icon,
+  UserCircleIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { useTheme } from "next-themes"
@@ -118,6 +120,12 @@ export function AdminUserMenu({ user }: { user: AdminUser }) {
               />
               Admin erişimi doğrulandı
             </div>
+            <DropdownMenuItem asChild>
+              <Link href={APP_ROUTES.admin.account}>
+                <HugeiconsIcon icon={UserCircleIcon} />
+                Hesap ve güvenlik
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <HugeiconsIcon icon={PaintBoardIcon} />

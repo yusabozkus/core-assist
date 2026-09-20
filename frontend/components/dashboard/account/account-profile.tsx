@@ -21,10 +21,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { updateCurrentUser } from "@/lib/api/users"
-import {
-  getTeamAccessDescription,
-  getTeamAccessLabel,
-} from "@/lib/team"
+import { getTeamAccessDescription, getTeamAccessLabel } from "@/lib/team"
 import { getInitials } from "@/lib/utils"
 import type { TeamAccessLevel } from "@/types/team"
 
@@ -35,13 +32,25 @@ type AccountProfileProps = {
     emailVerified: boolean
     image?: string | null
   }
-  accessLevel: "OWNER" | TeamAccessLevel
+  accessLevel?: "OWNER" | TeamAccessLevel
+  roleLabel?: string
+  roleDescription?: string
 }
 
-export function AccountProfile({ user, accessLevel }: AccountProfileProps) {
+export function AccountProfile({
+  user,
+  accessLevel,
+  roleLabel,
+  roleDescription,
+}: AccountProfileProps) {
   const router = useRouter()
-  const accessLabel = getTeamAccessLabel(accessLevel)
-  const accessDescription = getTeamAccessDescription(accessLevel)
+  const accessLabel =
+    roleLabel ?? (accessLevel ? getTeamAccessLabel(accessLevel) : "Kullanıcı")
+  const accessDescription =
+    roleDescription ??
+    (accessLevel
+      ? getTeamAccessDescription(accessLevel)
+      : "Hesabınızın uygulamadaki erişim rolü.")
   const [name, setName] = useState(user.name)
   const [savedName, setSavedName] = useState(user.name)
   const [isSaving, setIsSaving] = useState(false)

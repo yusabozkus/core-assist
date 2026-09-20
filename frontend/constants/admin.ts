@@ -86,7 +86,23 @@ export const ADMIN_NAVIGATION_GROUPS: ReadonlyArray<AdminNavigationGroup> = [
   },
 ]
 
+export const ADMIN_ACCOUNT_NAVIGATION_ITEM: AdminNavigationItem = {
+  title: "Hesap ve güvenlik",
+  description: "Profil, giriş yöntemleri ve oturumlar",
+  url: APP_ROUTES.admin.account,
+  icon: ShieldCheckIcon,
+}
+
+export const ADMIN_SEARCH_NAVIGATION = [
+  ...ADMIN_NAVIGATION,
+  ADMIN_ACCOUNT_NAVIGATION_ITEM,
+] as const
+
 export function getAdminNavigationItem(pathname: string) {
+  if (pathname === APP_ROUTES.admin.account) {
+    return ADMIN_ACCOUNT_NAVIGATION_ITEM
+  }
+
   return (
     ADMIN_NAVIGATION.find((item) => item.url === pathname) ??
     ADMIN_NAVIGATION.find(

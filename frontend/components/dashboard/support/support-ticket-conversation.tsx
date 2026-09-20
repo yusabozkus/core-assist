@@ -288,7 +288,7 @@ function SupportMessageBubble({ message }: { message: SupportMessage }) {
   const isCustomer = message.authorType === "CUSTOMER"
   const name = isCustomer
     ? (message.author?.name ?? "Ekip üyesi")
-    : "Core Asistan"
+    : (message.author?.name ?? "Destek ekibi")
 
   return (
     <div

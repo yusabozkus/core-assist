@@ -14,7 +14,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { ADMIN_NAVIGATION } from "@/constants/admin"
+import { ADMIN_SEARCH_NAVIGATION } from "@/constants/admin"
 import { cn } from "@/lib/utils"
 
 export function AdminGlobalSearch({ className }: { className?: string }) {
@@ -78,7 +78,7 @@ export function AdminGlobalSearch({ className }: { className?: string }) {
           <CommandList>
             <CommandEmpty>Eşleşen yönetim alanı bulunamadı.</CommandEmpty>
             <CommandGroup heading="Yönetim alanları">
-              {ADMIN_NAVIGATION.map((item) => (
+              {ADMIN_SEARCH_NAVIGATION.map((item) => (
                 <CommandItem
                   key={item.url}
                   value={`${item.title} ${item.description}`}

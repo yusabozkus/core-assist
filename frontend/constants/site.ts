@@ -31,6 +31,7 @@ export const APP_ROUTES = {
     aiUsage: "/admin/ai-usage",
     system: "/admin/system",
     auditLogs: "/admin/audit-logs",
+    account: "/admin/account",
   },
   dashboard: {
     root: "/dashboard",

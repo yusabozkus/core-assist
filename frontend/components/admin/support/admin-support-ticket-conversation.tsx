@@ -4,16 +4,26 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft01Icon,
+  Calendar03Icon,
   CustomerSupportIcon,
+  LinkSquare02Icon,
   Loading03Icon,
+  Mail01Icon,
   NoteIcon,
   SentIcon,
+  Store01Icon,
 } from "@hugeicons/core-free-icons"
+import type { IconSvgElement } from "@hugeicons/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable"
 import {
   Select,
   SelectContent,
@@ -23,6 +33,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { getSupportCategoryLabel } from "@/components/dashboard/support/support-ticket-presentation"
+import { useIsDesktop } from "@/hooks/use-desktop"
 import {
   addAdminSupportMessage,
   getAdminSupportTicket,
@@ -55,6 +66,7 @@ export function AdminSupportTicketConversation({
   agents: AdminSupportPerson[]
 }) {
   const router = useRouter()
+  const isDesktop = useIsDesktop()
   const [ticket, setTicket] = useState(initialTicket)
   const [referenceTime] = useState(() => Date.now())
   const [message, setMessage] = useState("")
@@ -62,7 +74,8 @@ export function AdminSupportTicketConversation({
   const [pendingAction, setPendingAction] = useState<
     "message" | "status" | "assignee" | null
   >(null)
-  const [error, setError] = useState<string | null>(null)
+  const [messageError, setMessageError] = useState<string | null>(null)
+  const [ticketError, setTicketError] = useState<string | null>(null)
   const messagesViewportRef = useRef<HTMLElement>(null)
   const messageInputRef = useRef<HTMLTextAreaElement>(null)
   const hasScrolledRef = useRef(false)
@@ -118,14 +131,14 @@ export function AdminSupportTicketConversation({
     const value = message.trim()
     if (value.length < 2 || pendingAction || publicReplyDisabled) return
 
-    setError(null)
+    setMessageError(null)
     setPendingAction("message")
     mutationPendingRef.current = true
     try {
       setTicket(await addAdminSupportMessage(ticket.id, value, visibility))
       setMessage("")
     } catch (caughtError) {
-      setError(
+      setMessageError(
         caughtError instanceof Error
           ? caughtError.message
           : "Mesaj gönderilemedi. Lütfen tekrar deneyin."
@@ -138,13 +151,13 @@ export function AdminSupportTicketConversation({
 
   async function changeStatus(status: SupportTicketStatus) {
     if (pendingAction || status === ticket.status) return
-    setError(null)
+    setTicketError(null)
     setPendingAction("status")
     mutationPendingRef.current = true
     try {
       setTicket(await updateAdminSupportStatus(ticket.id, status))
     } catch (caughtError) {
-      setError(
+      setTicketError(
         caughtError instanceof Error
           ? caughtError.message
           : "Talep durumu güncellenemedi."
@@ -157,7 +170,7 @@ export function AdminSupportTicketConversation({
 
   async function changeAssignee(assigneeUserId: string) {
     if (pendingAction) return
-    setError(null)
+    setTicketError(null)
     setPendingAction("assignee")
     mutationPendingRef.current = true
     try {
@@ -168,7 +181,7 @@ export function AdminSupportTicketConversation({
         )
       )
     } catch (caughtError) {
-      setError(
+      setTicketError(
         caughtError instanceof Error
           ? caughtError.message
           : "Talep ataması güncellenemedi."
@@ -185,55 +198,69 @@ export function AdminSupportTicketConversation({
   return (
     <div className="flex min-h-svh flex-col bg-background lg:h-[calc(100svh-1rem)] lg:min-h-0 lg:overflow-hidden">
       <header className="sticky top-0 z-20 shrink-0 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm sm:px-7">
-        <div className="mx-auto flex w-full max-w-[1440px] items-start gap-3">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="mt-0.5 shrink-0"
-            onClick={() => router.back()}
-            aria-label="Destek taleplerine dön"
-          >
-            <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
-          </Button>
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="mt-0.5 shrink-0"
+              onClick={() => router.back()}
+              aria-label="Destek taleplerine dön"
+            >
+              <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
+            </Button>
 
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[10px] font-semibold tracking-wide text-muted-foreground">
-                {ticket.code}
-              </span>
-              <Badge
-                variant="outline"
-                className={cn("px-2 py-0 text-[10px]", status.className)}
-              >
-                {status.label}
-              </Badge>
-              <span
-                className={cn("text-[10px] font-medium", priority.className)}
-              >
-                {priority.label} öncelik
-              </span>
-            </div>
-            <h1 className="mt-1.5 truncate text-lg font-semibold tracking-tight sm:text-xl">
-              {ticket.subject}
-            </h1>
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-              <span>{ticket.createdBy?.name ?? "Silinmiş kullanıcı"}</span>
-              <span>{ticket.workspace.name}</span>
-              <span>
-                {formatAdminSupportDate(ticket.createdAt)} tarihinde açıldı
-              </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] font-semibold tracking-wide text-muted-foreground">
+                  {ticket.code}
+                </span>
+                <Badge
+                  variant="outline"
+                  className={cn("px-2 py-0 text-[10px]", status.className)}
+                >
+                  {status.label}
+                </Badge>
+                <span
+                  className={cn("text-[10px] font-medium", priority.className)}
+                >
+                  {priority.label} öncelik
+                </span>
+              </div>
+              <h1 className="mt-1.5 truncate text-lg font-semibold tracking-tight sm:text-xl">
+                {ticket.subject}
+              </h1>
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                <span>
+                  {formatAdminSupportDate(ticket.createdAt)} tarihinde açıldı
+                </span>
+                <span>{ticket.messageCount} mesaj</span>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto flex min-h-0 w-full max-w-[1440px] flex-1 flex-col lg:overflow-hidden lg:flex-row">
+      <TicketPanelLayout
+        isDesktop={Boolean(isDesktop)}
+        inspector={
+          <TicketInspector
+            ticket={ticket}
+            agents={agents}
+            pending={Boolean(pendingAction)}
+            referenceTime={referenceTime}
+            error={ticketError}
+            onStatusChange={changeStatus}
+            onAssigneeChange={changeAssignee}
+          />
+        }
+      >
         <section className="flex min-h-[620px] min-w-0 flex-1 flex-col lg:min-h-0">
           <main
             ref={messagesViewportRef}
             className="themed-scrollbar min-h-0 flex-1 overflow-y-auto px-4 py-7 sm:px-8"
           >
-            <div className="mx-auto flex w-full max-w-4xl flex-col gap-5">
+            <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
               {ticket.messages.map((item) => (
                 <AdminMessageBubble key={item.id} message={item} />
               ))}
@@ -241,7 +268,7 @@ export function AdminSupportTicketConversation({
           </main>
 
           <footer className="sticky bottom-0 z-10 shrink-0 bg-background/95 px-4 pt-3 pb-5 backdrop-blur-sm sm:px-8 sm:pb-7 lg:static">
-            <div className="mx-auto w-full max-w-4xl">
+            <div className="mx-auto w-full max-w-5xl">
               <div className="mb-2 flex items-center justify-between gap-3 px-1">
                 <div className="flex rounded-lg bg-muted p-0.5">
                   <ComposerModeButton
@@ -344,110 +371,214 @@ export function AdminSupportTicketConversation({
                 </div>
               </div>
 
-              {error ? (
+              {messageError ? (
                 <p className="mt-2 px-1 text-xs text-destructive" role="alert">
-                  {error}
+                  {messageError}
                 </p>
               ) : null}
             </div>
           </footer>
         </section>
-
-        <aside className="w-full shrink-0 border-t border-border bg-muted/15 lg:sticky lg:top-0 lg:h-full lg:w-80 lg:overflow-y-auto lg:border-t-0 lg:border-l">
-          <div className="space-y-6 p-5">
-            <DetailSection title="İşlem">
-              <LabeledControl label="Durum">
-                <Select
-                  value={ticket.status}
-                  disabled={Boolean(pendingAction)}
-                  onValueChange={(value) =>
-                    void changeStatus(value as SupportTicketStatus)
-                  }
-                >
-                  <SelectTrigger className="w-full rounded-xl border-border bg-card">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent align="end">
-                    {ADMIN_SUPPORT_STATUS_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </LabeledControl>
-
-              <LabeledControl label="Sorumlu">
-                <Select
-                  value={ticket.assignedAdmin?.id ?? UNASSIGNED}
-                  disabled={Boolean(pendingAction)}
-                  onValueChange={(value) => void changeAssignee(value)}
-                >
-                  <SelectTrigger className="w-full rounded-xl border-border bg-card">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent align="end">
-                    <SelectItem value={UNASSIGNED}>Atanmamış</SelectItem>
-                    {agents.map((agent) => (
-                      <SelectItem key={agent.id} value={agent.id}>
-                        {agent.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </LabeledControl>
-            </DetailSection>
-
-            <DetailSection title="Müşteri">
-              <div className="flex items-center gap-3">
-                <Avatar className="size-9">
-                  <AvatarImage src={ticket.createdBy?.image ?? undefined} />
-                  <AvatarFallback className="text-xs">
-                    {getInitials(ticket.createdBy?.name ?? "Kullanıcı")}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">
-                    {ticket.createdBy?.name ?? "Silinmiş kullanıcı"}
-                  </p>
-                  <p className="truncate text-[11px] text-muted-foreground">
-                    {ticket.createdBy?.email ?? "E-posta bulunmuyor"}
-                  </p>
-                </div>
-              </div>
-            </DetailSection>
-
-            <DetailSection title="Talep bilgileri">
-              <DetailRow label="Çalışma alanı" value={ticket.workspace.name} />
-              <DetailRow label="Mağaza" value={ticket.store?.name ?? "—"} />
-              <DetailRow
-                label="Kategori"
-                value={getSupportCategoryLabel(ticket.category)}
-              />
-              <DetailRow label="Plan" value={ticket.planSnapshot} />
-              <DetailRow
-                label="İlk yanıt hedefi"
-                value={
-                  ticket.firstRespondedAt
-                    ? "Yanıtlandı"
-                    : formatAdminSupportDate(ticket.firstResponseDueAt)
-                }
-                danger={
-                  !ticket.firstRespondedAt &&
-                  new Date(ticket.firstResponseDueAt).getTime() < referenceTime
-                }
-              />
-              {ticket.context?.pagePath ? (
-                <DetailRow
-                  label="Kaynak sayfa"
-                  value={ticket.context.pagePath}
-                />
-              ) : null}
-            </DetailSection>
-          </div>
-        </aside>
-      </div>
+      </TicketPanelLayout>
     </div>
+  )
+}
+
+function TicketPanelLayout({
+  isDesktop,
+  inspector,
+  children,
+}: {
+  isDesktop: boolean
+  inspector: React.ReactNode
+  children: React.ReactNode
+}) {
+  if (!isDesktop) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="shrink-0 border-b border-border">{inspector}</div>
+        {children}
+      </div>
+    )
+  }
+
+  return (
+    <div className="mx-auto min-h-0 w-full max-w-[1440px] flex-1 overflow-hidden">
+      <ResizablePanelGroup
+        id="admin-support-ticket-layout"
+        orientation="horizontal"
+        className="min-h-0"
+      >
+        <ResizablePanel id="ticket-conversation" minSize="28rem">
+          <div className="flex h-full min-w-0 flex-col">{children}</div>
+        </ResizablePanel>
+        <ResizableHandle
+          withHandle
+          className="bg-border/70 transition-colors hover:bg-primary/45 focus-visible:bg-primary/45"
+        />
+        <ResizablePanel
+          id="ticket-inspector"
+          defaultSize="22rem"
+          minSize="17rem"
+          maxSize="30rem"
+          groupResizeBehavior="preserve-pixel-size"
+        >
+          {inspector}
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </div>
+  )
+}
+
+function TicketInspector({
+  ticket,
+  agents,
+  pending,
+  referenceTime,
+  error,
+  onStatusChange,
+  onAssigneeChange,
+}: {
+  ticket: AdminSupportTicketDetail
+  agents: AdminSupportPerson[]
+  pending: boolean
+  referenceTime: number
+  error: string | null
+  onStatusChange: (status: SupportTicketStatus) => Promise<void>
+  onAssigneeChange: (userId: string) => Promise<void>
+}) {
+  const firstResponseOverdue =
+    !ticket.firstRespondedAt &&
+    new Date(ticket.firstResponseDueAt).getTime() < referenceTime
+
+  return (
+    <aside className="themed-scrollbar h-full overflow-y-auto bg-muted/12">
+      <section className="border-b border-border p-5">
+        <p className="text-[9px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
+          Müşteri
+        </p>
+        <div className="mt-3 flex items-center gap-3">
+          <Avatar className="size-10 shrink-0">
+            <AvatarImage src={ticket.createdBy?.image ?? undefined} />
+            <AvatarFallback className="text-xs">
+              {getInitials(ticket.createdBy?.name ?? "Kullanıcı")}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold">
+              {ticket.createdBy?.name ?? "Silinmiş kullanıcı"}
+            </p>
+            {ticket.createdBy?.email ? (
+              <a
+                href={`mailto:${ticket.createdBy.email}`}
+                className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+              >
+                <HugeiconsIcon icon={Mail01Icon} className="size-3 shrink-0" />
+                <span className="truncate">{ticket.createdBy.email}</span>
+              </a>
+            ) : (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                E-posta bulunmuyor
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-border p-5">
+        <p className="text-[9px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
+          İşlem
+        </p>
+        <div className="mt-3 grid gap-3">
+          <TicketControl label="Durum">
+            <Select
+              value={ticket.status}
+              disabled={pending}
+              onValueChange={(value) =>
+                void onStatusChange(value as SupportTicketStatus)
+              }
+            >
+              <SelectTrigger className="h-9 w-full rounded-lg border-border bg-background text-xs shadow-none">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="end">
+                {ADMIN_SUPPORT_STATUS_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </TicketControl>
+
+          <TicketControl label="Sorumlu">
+            <Select
+              value={ticket.assignedAdmin?.id ?? UNASSIGNED}
+              disabled={pending}
+              onValueChange={(value) => void onAssigneeChange(value)}
+            >
+              <SelectTrigger className="h-9 w-full rounded-lg border-border bg-background text-xs shadow-none">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectItem value={UNASSIGNED}>Atanmamış</SelectItem>
+                {agents.map((agent) => (
+                  <SelectItem key={agent.id} value={agent.id}>
+                    {agent.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </TicketControl>
+        </div>
+
+        {error ? (
+          <p className="mt-3 text-xs leading-5 text-destructive" role="alert">
+            {error}
+          </p>
+        ) : null}
+      </section>
+
+      <section className="p-5">
+        <p className="text-[9px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
+          Talep ayrıntıları
+        </p>
+        <dl className="mt-1 divide-y divide-border/70">
+          <InspectorDetail
+            label="Mağaza"
+            value={ticket.store?.name ?? "Mağaza bulunmuyor"}
+            icon={Store01Icon}
+          />
+          <InspectorDetail
+            label="Kategori"
+            value={getSupportCategoryLabel(ticket.category)}
+            icon={CustomerSupportIcon}
+          />
+          <InspectorDetail
+            label="Plan"
+            value={formatPlanName(ticket.planSnapshot)}
+          />
+          <InspectorDetail
+            label="İlk yanıt"
+            value={
+              ticket.firstRespondedAt
+                ? "Yanıtlandı"
+                : formatAdminSupportDate(ticket.firstResponseDueAt)
+            }
+            icon={Calendar03Icon}
+            danger={firstResponseOverdue}
+          />
+          {ticket.context?.pagePath ? (
+            <InspectorDetail
+              label="Kaynak sayfa"
+              value={ticket.context.pagePath}
+              icon={LinkSquare02Icon}
+              mono
+            />
+          ) : null}
+        </dl>
+      </section>
+    </aside>
   )
 }
 
@@ -547,58 +678,63 @@ function ComposerModeButton({
   )
 }
 
-function DetailSection({
-  title,
-  children,
-}: {
-  title: string
-  children: React.ReactNode
-}) {
-  return (
-    <section className="border-b border-border pb-6 last:border-b-0 last:pb-0">
-      <h2 className="mb-3 text-[10px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
-        {title}
-      </h2>
-      <div className="space-y-3">{children}</div>
-    </section>
-  )
-}
-
-function LabeledControl({
+function TicketControl({
   label,
   children,
+  className,
 }: {
   label: string
   children: React.ReactNode
+  className?: string
 }) {
   return (
-    <label className="block space-y-1.5">
-      <span className="text-[11px] text-muted-foreground">{label}</span>
+    <div className={cn("space-y-1", className)}>
+      <span className="block px-0.5 text-[9px] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
+        {label}
+      </span>
       {children}
-    </label>
+    </div>
   )
 }
 
-function DetailRow({
+function InspectorDetail({
   label,
   value,
   danger = false,
+  mono = false,
+  icon,
 }: {
   label: string
   value: string
   danger?: boolean
+  mono?: boolean
+  icon?: IconSvgElement
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 text-xs">
-      <span className="shrink-0 text-muted-foreground">{label}</span>
-      <span
-        className={cn(
-          "min-w-0 text-right font-medium break-words",
-          danger && "text-destructive"
+    <div className="flex items-start gap-3 py-3">
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-background text-muted-foreground ring-1 ring-border/70 ring-inset">
+        {icon ? (
+          <HugeiconsIcon icon={icon} strokeWidth={2} className="size-3.5" />
+        ) : (
+          <span className="size-1.5 rounded-full bg-current" />
         )}
-      >
-        {value}
       </span>
+      <div className="min-w-0 flex-1">
+        <dt className="text-[10px] text-muted-foreground">{label}</dt>
+        <dd
+          className={cn(
+            "mt-0.5 text-xs font-medium break-words",
+            mono && "font-mono text-[10px]",
+            danger && "text-destructive"
+          )}
+        >
+          {value}
+        </dd>
+      </div>
     </div>
   )
+}
+
+function formatPlanName(plan: AdminSupportTicketDetail["planSnapshot"]) {
+  return { STARTER: "Starter", GROWTH: "Growth", BUSINESS: "Business" }[plan]
 }
