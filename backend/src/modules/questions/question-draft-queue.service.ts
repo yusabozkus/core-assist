@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import type { Queue } from 'bullmq';
 import { PrismaService } from '../../database/prisma.service';
+import { failedJobRetention } from '../../infrastructure/queue/queue-retention';
 import { BillingSubscriptionService } from '../billing/billing-subscription.service';
 import { BillingUsageService } from '../billing/billing-usage.service';
 import {
@@ -44,7 +45,7 @@ export class QuestionDraftQueueService
       { every: 5 * 60_000 },
       {
         name: RESUME_BILLING_BLOCKED_DRAFTS_JOB,
-        opts: { removeOnComplete: true, removeOnFail: { count: 10 } },
+        opts: { removeOnComplete: true, removeOnFail: failedJobRetention(10) },
       },
     );
   }
@@ -178,7 +179,7 @@ export class QuestionDraftQueueService
           attempts: 3,
           backoff: { type: 'exponential', delay: 10_000 },
           removeOnComplete: true,
-          removeOnFail: true,
+          removeOnFail: failedJobRetention(250),
         },
       );
     } catch (error) {

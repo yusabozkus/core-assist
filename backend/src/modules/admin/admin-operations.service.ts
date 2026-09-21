@@ -1,5 +1,5 @@
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Queue } from 'bullmq';
 import { Prisma } from '../../generated/prisma/client';
 import {
@@ -35,6 +35,7 @@ import {
   AdminOperationOrder,
   AdminOperationPeriod,
   AdminOperationsQueryDto,
+  AdminQueueFailuresQueryDto,
 } from './dto/admin-operations-query.dto';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -188,7 +189,7 @@ export class AdminOperationsService {
         orderBy: { providerKey: 'asc' },
         select: { providerKey: true },
       }),
-      this.getQueueHealth(),
+      this.getQueueHealth(now),
     ]);
 
     const completedLastDay =
@@ -278,6 +279,53 @@ export class AdminOperationsService {
       });
       throw error;
     }
+  }
+
+  async findQueueFailures(queueKey: string, query: AdminQueueFailuresQueryDto) {
+    const definition = this.getQueueDefinitions().find(
+      (queue) => queue.key === queueKey,
+    );
+    if (!definition) {
+      throw new NotFoundException('Worker kuyruğu bulunamadı.');
+    }
+
+    const now = new Date();
+    const counts = await definition.queue.getJobCounts(
+      'waiting',
+      'active',
+      'delayed',
+      'failed',
+    );
+    const total = counts.failed ?? 0;
+    const start = (query.page - 1) * query.pageSize;
+    const end = start + query.pageSize - 1;
+    const [paused, recentFailuresLast24Hours, failures] = await Promise.all([
+      definition.queue.isPaused(),
+      countRecentQueueFailures(definition.queue, now.getTime() - DAY),
+      definition.queue.getJobs(['failed'], start, end, false),
+    ]);
+
+    return {
+      key: definition.key,
+      label: definition.label,
+      available: true,
+      paused,
+      recentFailuresLast24Hours,
+      counts: {
+        waiting: counts.waiting ?? 0,
+        active: counts.active ?? 0,
+        delayed: counts.delayed ?? 0,
+        failed: total,
+      },
+      failures: failures.map(toQueueFailure),
+      pagination: {
+        page: query.page,
+        pageSize: query.pageSize,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / query.pageSize)),
+      },
+      generatedAt: now,
+    };
   }
 
   private buildWhere(
@@ -440,8 +488,47 @@ export class AdminOperationsService {
     };
   }
 
-  private getQueueHealth() {
-    const queues = [
+  private getQueueHealth(now: Date) {
+    return Promise.all(
+      this.getQueueDefinitions().map(async ({ key, label, queue }) => {
+        try {
+          const failedSince = now.getTime() - DAY;
+          const [counts, paused, recentFailuresLast24Hours] = await Promise.all(
+            [
+              queue.getJobCounts('waiting', 'active', 'delayed', 'failed'),
+              queue.isPaused(),
+              countRecentQueueFailures(queue, failedSince),
+            ],
+          );
+          return {
+            key,
+            label,
+            available: true,
+            paused,
+            recentFailuresLast24Hours,
+            counts: {
+              waiting: counts.waiting ?? 0,
+              active: counts.active ?? 0,
+              delayed: counts.delayed ?? 0,
+              failed: counts.failed ?? 0,
+            },
+          };
+        } catch {
+          return {
+            key,
+            label,
+            available: false,
+            paused: false,
+            recentFailuresLast24Hours: 0,
+            counts: { waiting: 0, active: 0, delayed: 0, failed: 0 },
+          };
+        }
+      }),
+    );
+  }
+
+  private getQueueDefinitions() {
+    return [
       {
         key: 'product-sync',
         label: 'Katalog ve stok',
@@ -474,38 +561,42 @@ export class AdminOperationsService {
         queue: this.billingRecoveryQueue,
       },
     ];
-
-    return Promise.all(
-      queues.map(async ({ key, label, queue }) => {
-        try {
-          const [counts, paused] = await Promise.all([
-            queue.getJobCounts('waiting', 'active', 'delayed', 'failed'),
-            queue.isPaused(),
-          ]);
-          return {
-            key,
-            label,
-            available: true,
-            paused,
-            counts: {
-              waiting: counts.waiting ?? 0,
-              active: counts.active ?? 0,
-              delayed: counts.delayed ?? 0,
-              failed: counts.failed ?? 0,
-            },
-          };
-        } catch {
-          return {
-            key,
-            label,
-            available: false,
-            paused: false,
-            counts: { waiting: 0, active: 0, delayed: 0, failed: 0 },
-          };
-        }
-      }),
-    );
   }
+}
+
+function sanitizeQueueFailureReason(reason: string | undefined) {
+  const normalized = reason?.replace(/\s+/g, ' ').trim();
+  if (!normalized) return 'Hata ayrıntısı worker tarafından kaydedilmedi.';
+  return normalized.slice(0, 1_000);
+}
+
+function toQueueFailure(job: {
+  id?: string;
+  name: string;
+  failedReason?: string;
+  attemptsMade: number;
+  finishedOn?: number;
+  timestamp: number;
+}) {
+  return {
+    id: String(job.id ?? 'unknown'),
+    name: job.name,
+    failedReason: sanitizeQueueFailureReason(job.failedReason),
+    attemptsMade: job.attemptsMade,
+    failedAt: new Date(job.finishedOn ?? job.timestamp),
+  };
+}
+
+async function countRecentQueueFailures(queue: Queue, failedSince: number) {
+  const client = await queue.getBackend().connection.client;
+  const entries = await client.zrange(queue.toKey('failed'), 0, -1, {
+    WITHSCORES: true,
+  });
+  let count = 0;
+  for (let index = 1; index < entries.length; index += 2) {
+    if (Number(entries[index]) >= failedSince) count += 1;
+  }
+  return count;
 }
 
 function resolvePeriodStart(

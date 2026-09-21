@@ -28,6 +28,8 @@ export const APP_ROUTES = {
     billing: "/admin/billing",
     billingWorkspace: (workspaceId: string) => `/admin/billing/${workspaceId}`,
     operations: "/admin/operations",
+    operationQueue: (queueKey: string) =>
+      `/admin/operations/queues/${queueKey}`,
     aiUsage: "/admin/ai-usage",
     system: "/admin/system",
     auditLogs: "/admin/audit-logs",

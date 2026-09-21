@@ -3,8 +3,13 @@ export type AdminHealthStatus = "HEALTHY" | "DEGRADED" | "DOWN"
 export type AdminSystemQueue = {
   key: string
   label: string
+  status: AdminHealthStatus
   available: boolean
   paused: boolean
+  backlogWarningThreshold: number
+  backlogExceeded: boolean
+  recentFailuresLast24Hours: number
+  errorCode: string | null
   counts: {
     waiting: number
     active: number
@@ -33,7 +38,11 @@ export type AdminSystemHealth = {
     queueBacklog: number
     unavailableQueues: number
     pausedQueues: number
+    backloggedQueues: number
+    queuesWithRecentFailures: number
     retainedQueueFailures: number
+    recentQueueFailures: number
+    failedSyncsLast24Hours: number
     connectionIssues: number
     billingIssues: number
   }

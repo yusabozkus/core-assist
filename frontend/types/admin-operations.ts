@@ -14,12 +14,32 @@ export type AdminOperationQueue = {
   label: string
   available: boolean
   paused: boolean
+  recentFailuresLast24Hours: number
   counts: {
     waiting: number
     active: number
     delayed: number
     failed: number
   }
+}
+
+export type AdminOperationQueueFailure = {
+  id: string
+  name: string
+  failedReason: string
+  attemptsMade: number
+  failedAt: string
+}
+
+export type AdminOperationQueueDetail = AdminOperationQueue & {
+  failures: AdminOperationQueueFailure[]
+  pagination: {
+    page: number
+    pageSize: number
+    total: number
+    totalPages: number
+  }
+  generatedAt: string
 }
 
 export type AdminOperation = {

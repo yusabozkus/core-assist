@@ -57,10 +57,13 @@ export function AdminSystemHealthDashboard({
         <MetricCard
           label="Kuyrukta bekleyen"
           value={data.summary.queueBacklog}
-          helper={`${data.summary.unavailableQueues} erişilemeyen · ${data.summary.pausedQueues} duraklatılmış kuyruk`}
+          helper={`${data.summary.backloggedQueues} eşik aşımı · ${data.summary.recentQueueFailures} son hata`}
           icon={Clock01Icon}
           alert={
-            data.summary.unavailableQueues > 0 || data.summary.pausedQueues > 0
+            data.summary.unavailableQueues > 0 ||
+            data.summary.pausedQueues > 0 ||
+            data.summary.backloggedQueues > 0 ||
+            data.summary.queuesWithRecentFailures > 0
           }
         />
         <MetricCard
@@ -112,7 +115,7 @@ export function AdminSystemHealthDashboard({
       <section className="mt-5">
         <Panel
           title="Kuyruklar"
-          description="Worker iş yükü ve saklanan başarısız işler"
+          description="Worker iş yükü, uyarı eşikleri ve son 24 saatteki hatalar"
           href={APP_ROUTES.admin.operations}
         >
           <QueueTable queues={data.queues} />
@@ -306,7 +309,8 @@ function OverallStatus({
     },
     DOWN: {
       title: "Temel servislerden birine erişilemiyor",
-      detail: "PostgreSQL veya Redis bağlantısını hemen kontrol edin.",
+      detail:
+        "PostgreSQL, Redis veya erişilemeyen kuyrukları hemen kontrol edin.",
       icon: AlertCircleIcon,
       className: "border-destructive/20 bg-destructive/6 text-destructive",
     },
@@ -393,9 +397,11 @@ function ServiceCard({
       <span
         className={cn(
           "flex size-10 shrink-0 items-center justify-center rounded-xl",
-          status === "HEALTHY"
-            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-            : "bg-destructive/10 text-destructive"
+          status === "HEALTHY" &&
+            "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+          status === "DEGRADED" &&
+            "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+          status === "DOWN" && "bg-destructive/10 text-destructive"
         )}
       >
         <HugeiconsIcon icon={icon} className="size-5" />
@@ -474,7 +480,7 @@ function QueueTable({ queues }: { queues: AdminSystemQueue[] }) {
           <span className="text-right">Bekleyen</span>
           <span className="text-right">Çalışan</span>
           <span className="text-right">Geciken</span>
-          <span className="text-right">Başarısız</span>
+          <span className="text-right">24 sa. hata</span>
           <span className="text-right">Durum</span>
         </div>
         {queues.map((queue) => (
@@ -482,24 +488,35 @@ function QueueTable({ queues }: { queues: AdminSystemQueue[] }) {
             key={queue.key}
             className="grid grid-cols-[minmax(200px,1fr)_repeat(4,100px)_120px] items-center border-b border-border px-5 py-3.5 text-xs last:border-b-0"
           >
-            <span className="font-medium">{queue.label}</span>
+            <div className="min-w-0">
+              <p className="font-medium">{queue.label}</p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                Uyarı eşiği: {formatNumber(queue.backlogWarningThreshold)}
+              </p>
+            </div>
             <QueueNumber value={queue.counts.waiting} />
             <QueueNumber value={queue.counts.active} />
             <QueueNumber value={queue.counts.delayed} />
-            <QueueNumber value={queue.counts.failed} alert />
+            <QueueNumber value={queue.recentFailuresLast24Hours} alert />
             <span
               className={cn(
                 "text-right font-medium",
-                !queue.available || queue.paused
-                  ? "text-destructive"
-                  : "text-emerald-600 dark:text-emerald-400"
+                queue.status === "HEALTHY" &&
+                  "text-emerald-600 dark:text-emerald-400",
+                queue.status === "DEGRADED" &&
+                  "text-amber-600 dark:text-amber-400",
+                queue.status === "DOWN" && "text-destructive"
               )}
             >
               {!queue.available
                 ? "Erişilemiyor"
                 : queue.paused
                   ? "Duraklatıldı"
-                  : "Aktif"}
+                  : queue.backlogExceeded
+                    ? "Yoğun"
+                    : queue.recentFailuresLast24Hours > 0
+                      ? "Hata var"
+                      : "Aktif"}
             </span>
           </div>
         ))}

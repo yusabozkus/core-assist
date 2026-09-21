@@ -84,3 +84,18 @@ export class AdminOperationsQueryDto {
   @Max(100)
   pageSize: number = 25;
 }
+
+export class AdminQueueFailuresQueryDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page: number = 1;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(10)
+  @Max(100)
+  pageSize: number = 25;
+}

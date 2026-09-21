@@ -1,6 +1,7 @@
 import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
 import type { Job, Queue } from 'bullmq';
 import { UnrecoverableError } from 'bullmq';
+import { failedJobRetention } from '../../infrastructure/queue/queue-retention';
 import { BillingAccessRequiredException } from '../billing/billing.errors';
 import {
   PRODUCT_SYNC_QUEUE,
@@ -76,7 +77,7 @@ export class ProductSyncProcessor extends WorkerHost {
         attempts: 3,
         backoff: { type: 'exponential', delay: 2_000 },
         removeOnComplete: { count: 100 },
-        removeOnFail: { count: 250 },
+        removeOnFail: failedJobRetention(250),
       },
     );
   }

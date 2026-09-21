@@ -15,7 +15,10 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { AdminActionOriginGuard } from './admin-action-origin.guard';
 import { AdminGuard } from './admin.guard';
 import { AdminOperationsService } from './admin-operations.service';
-import { AdminOperationsQueryDto } from './dto/admin-operations-query.dto';
+import {
+  AdminOperationsQueryDto,
+  AdminQueueFailuresQueryDto,
+} from './dto/admin-operations-query.dto';
 
 @Controller('admin/operations')
 @UseGuards(AuthGuard, AdminGuard)
@@ -25,6 +28,14 @@ export class AdminOperationsController {
   @Get()
   findAll(@Query() query: AdminOperationsQueryDto) {
     return this.operations.findAll(query);
+  }
+
+  @Get('queues/:queueKey')
+  findQueueFailures(
+    @Param('queueKey') queueKey: string,
+    @Query() query: AdminQueueFailuresQueryDto,
+  ) {
+    return this.operations.findQueueFailures(queueKey, query);
   }
 
   @Post('sync-runs/:syncRunId/retry')

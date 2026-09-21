@@ -12,6 +12,7 @@ import {
   StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { failedJobRetention } from '../../infrastructure/queue/queue-retention';
 import { BillingSubscriptionService } from '../billing/billing-subscription.service';
 import { BILLING_SYNC_STOPPED_MESSAGE } from '../billing/billing-access.policy';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
@@ -113,7 +114,7 @@ export class QuestionSyncQueueService implements QuestionSyncDispatcher {
           attempts: 3,
           backoff: { type: 'exponential', delay: 2_000 },
           removeOnComplete: { count: 100 },
-          removeOnFail: { count: 250 },
+          removeOnFail: failedJobRetention(250),
         },
       );
 

@@ -15,13 +15,28 @@ import { QUESTION_ANSWER_QUEUE } from '../question-answer/question-answer.consta
 import { QUESTION_SYNC_QUEUE } from '../question-sync/question-sync.constants';
 import { QUESTION_DRAFT_QUEUE } from '../questions/question-draft.constants';
 import { SIZE_GUIDE_QUEUE } from '../size-guides/size-guide.constants';
+import { SUPPORT_NOTIFICATION_QUEUE } from '../support/support-notification.constants';
 
 const DAY = 24 * 60 * 60 * 1000;
 const RECONCILIATION_GRACE_MS = 15 * 60 * 1000;
 const HEALTH_CACHE_MS = 15 * 1000;
 const HEADER_HEALTH_TIMEOUT_MS = 2_500;
+const HEALTH_REQUEST_TIMEOUT_MS = 5_000;
+const DATABASE_HEALTH_TIMEOUT_MS = 4_000;
+const REDIS_HEALTH_TIMEOUT_MS = 1_500;
+const QUEUE_HEALTH_TIMEOUT_MS = 2_000;
+const DATABASE_SLOW_THRESHOLD_MS = 750;
+const REDIS_SLOW_THRESHOLD_MS = 300;
+const RECENT_FAILED_JOB_LIMIT = 100;
 
 type HealthStatus = 'HEALTHY' | 'DEGRADED' | 'DOWN';
+
+type QueueDefinition = {
+  key: string;
+  label: string;
+  queue: Queue;
+  backlogWarningThreshold: number;
+};
 
 @Injectable()
 export class AdminSystemHealthService {
@@ -51,6 +66,8 @@ export class AdminSystemHealthService {
     private readonly paddleWebhookQueue: Queue,
     @InjectQueue(BILLING_RECOVERY_QUEUE)
     private readonly billingRecoveryQueue: Queue,
+    @InjectQueue(SUPPORT_NOTIFICATION_QUEUE)
+    private readonly supportNotificationQueue: Queue,
   ) {}
 
   async getHealth() {
@@ -59,7 +76,13 @@ export class AdminSystemHealthService {
     }
     if (this.healthRequest) return this.healthRequest;
 
-    const request = this.collectHealthSnapshot();
+    const request = withTimeout(
+      this.collectHealthSnapshot(),
+      HEALTH_REQUEST_TIMEOUT_MS,
+      'HEALTH_CHECK_TIMEOUT',
+    ).catch((error) =>
+      this.createUnavailableHealthSnapshot(healthErrorCode(error)),
+    );
     this.healthRequest = request;
 
     try {
@@ -88,16 +111,19 @@ export class AdminSystemHealthService {
 
       if (!health) return { status: 'DOWN' as const, issueCount: 1 };
 
-      const unavailableServices = Object.values(health.services).filter(
-        (service) => service.status === 'DOWN',
+      const serviceIssues = Object.values(health.services).filter(
+        (service) => service.status !== 'HEALTHY',
       ).length;
 
       return {
         status: health.status,
         issueCount:
-          unavailableServices +
+          serviceIssues +
           health.summary.unavailableQueues +
           health.summary.pausedQueues +
+          health.summary.backloggedQueues +
+          health.summary.queuesWithRecentFailures +
+          health.summary.failedSyncsLast24Hours +
           health.summary.billingIssues +
           health.summary.connectionIssues,
       };
@@ -111,35 +137,58 @@ export class AdminSystemHealthService {
   private async collectHealthSnapshot() {
     const now = new Date();
     const [database, redis, queues] = await Promise.all([
-      this.getDatabaseSnapshot(now),
-      this.getRedisHealth(),
+      withTimeout(
+        this.getDatabaseSnapshot(now),
+        DATABASE_HEALTH_TIMEOUT_MS,
+        'DATABASE_TIMEOUT',
+      ).catch((error) => unavailableDatabase(healthErrorCode(error))),
+      withTimeout(
+        this.getRedisHealth(),
+        REDIS_HEALTH_TIMEOUT_MS,
+        'REDIS_TIMEOUT',
+      ).catch((error) => unavailableRedis(healthErrorCode(error))),
       this.getQueueHealth(),
     ]);
     const queueBacklog = queues.reduce(
-      (total, queue) =>
-        total +
-        queue.counts.waiting +
-        queue.counts.active +
-        queue.counts.delayed,
+      (total, queue) => total + queue.counts.waiting,
       0,
     );
     const unavailableQueues = queues.filter((queue) => !queue.available).length;
     const pausedQueues = queues.filter((queue) => queue.paused).length;
+    const backloggedQueues = queues.filter(
+      (queue) => queue.backlogExceeded,
+    ).length;
+    const queuesWithRecentFailures = queues.filter(
+      (queue) => queue.recentFailuresLast24Hours > 0,
+    ).length;
+    const retainedQueueFailures = queues.reduce(
+      (total, queue) => total + queue.counts.failed,
+      0,
+    );
+    const recentQueueFailures = queues.reduce(
+      (total, queue) => total + queue.recentFailuresLast24Hours,
+      0,
+    );
+    const billingIssues =
+      database.billing.webhookFailuresLast24Hours +
+      database.billing.overdueReconciliations +
+      database.billing.reconciliationFailures;
     const status = overallStatus({
       database: database.status,
       redis: redis.status,
       unavailableQueues,
       pausedQueues,
-      billingIssues:
-        database.billing.webhookFailuresLast24Hours +
-        database.billing.overdueReconciliations,
+      backloggedQueues,
+      queuesWithRecentFailures,
+      failedSyncsLast24Hours: database.syncs.failedLast24Hours,
+      billingIssues,
       connectionIssues: database.marketplaces.issueCount,
     });
 
     return {
       status,
       services: {
-        api: { status: 'HEALTHY' as const },
+        api: { status: 'HEALTHY' as HealthStatus },
         database: {
           status: database.status,
           latencyMs: database.latencyMs,
@@ -152,14 +201,13 @@ export class AdminSystemHealthService {
         queueBacklog,
         unavailableQueues,
         pausedQueues,
-        retainedQueueFailures: queues.reduce(
-          (total, queue) => total + queue.counts.failed,
-          0,
-        ),
+        backloggedQueues,
+        queuesWithRecentFailures,
+        retainedQueueFailures,
+        recentQueueFailures,
+        failedSyncsLast24Hours: database.syncs.failedLast24Hours,
         connectionIssues: database.marketplaces.issueCount,
-        billingIssues:
-          database.billing.webhookFailuresLast24Hours +
-          database.billing.overdueReconciliations,
+        billingIssues,
       },
       billing: database.billing,
       marketplaces: database.marketplaces,
@@ -322,7 +370,10 @@ export class AdminSystemHealthService {
       }
 
       return {
-        status: 'HEALTHY' as HealthStatus,
+        status:
+          latencyMs >= DATABASE_SLOW_THRESHOLD_MS
+            ? ('DEGRADED' as HealthStatus)
+            : ('HEALTHY' as HealthStatus),
         latencyMs,
         errorCode: null as string | null,
         billing: {
@@ -379,9 +430,13 @@ export class AdminSystemHealthService {
     const startedAt = Date.now();
     try {
       await this.productSyncQueue.getJobCounts('waiting');
+      const latencyMs = Date.now() - startedAt;
       return {
-        status: 'HEALTHY' as HealthStatus,
-        latencyMs: Date.now() - startedAt,
+        status:
+          latencyMs >= REDIS_SLOW_THRESHOLD_MS
+            ? ('DEGRADED' as HealthStatus)
+            : ('HEALTHY' as HealthStatus),
+        latencyMs,
         errorCode: null as string | null,
       };
     } catch (error) {
@@ -394,70 +449,164 @@ export class AdminSystemHealthService {
   }
 
   private getQueueHealth() {
-    const queues = [
-      {
-        key: 'product-sync',
-        label: 'Katalog ve stok',
-        queue: this.productSyncQueue,
-      },
-      {
-        key: 'question-sync',
-        label: 'Soru toplama',
-        queue: this.questionSyncQueue,
-      },
-      {
-        key: 'question-draft',
-        label: 'AI taslak',
-        queue: this.questionDraftQueue,
-      },
-      {
-        key: 'question-answer',
-        label: 'Cevap gönderimi',
-        queue: this.questionAnswerQueue,
-      },
-      { key: 'size-guide', label: 'Beden tablosu', queue: this.sizeGuideQueue },
-      {
-        key: 'paddle-webhooks',
-        label: 'Paddle webhook',
-        queue: this.paddleWebhookQueue,
-      },
-      {
-        key: 'billing-recovery',
-        label: 'Faturalama kontrolü',
-        queue: this.billingRecoveryQueue,
-      },
-    ];
+    const queues = this.getQueueDefinitions();
+    const failedSince = Date.now() - DAY;
 
     return Promise.all(
-      queues.map(async ({ key, label, queue }) => {
+      queues.map(async ({ key, label, queue, backlogWarningThreshold }) => {
         try {
-          const [counts, paused] = await Promise.all([
-            queue.getJobCounts('waiting', 'active', 'delayed', 'failed'),
-            queue.isPaused(),
-          ]);
+          const [counts, paused, failedJobs] = await withTimeout(
+            Promise.all([
+              queue.getJobCounts('waiting', 'active', 'delayed', 'failed'),
+              queue.isPaused(),
+              queue.getJobs(['failed'], 0, RECENT_FAILED_JOB_LIMIT - 1, false),
+            ]),
+            QUEUE_HEALTH_TIMEOUT_MS,
+            `QUEUE_TIMEOUT:${key}`,
+          );
+          const recentFailuresLast24Hours = failedJobs.filter(
+            (job) => (job.finishedOn ?? job.timestamp) >= failedSince,
+          ).length;
+          const waiting = counts.waiting ?? 0;
+          const backlogExceeded = waiting >= backlogWarningThreshold;
+          const status: HealthStatus =
+            paused || backlogExceeded || recentFailuresLast24Hours > 0
+              ? 'DEGRADED'
+              : 'HEALTHY';
+
           return {
             key,
             label,
+            status,
             available: true,
             paused,
+            backlogWarningThreshold,
+            backlogExceeded,
+            recentFailuresLast24Hours,
+            errorCode: null as string | null,
             counts: {
-              waiting: counts.waiting ?? 0,
+              waiting,
               active: counts.active ?? 0,
               delayed: counts.delayed ?? 0,
               failed: counts.failed ?? 0,
             },
           };
-        } catch {
-          return {
+        } catch (error) {
+          return unavailableQueue(
             key,
             label,
-            available: false,
-            paused: false,
-            counts: { waiting: 0, active: 0, delayed: 0, failed: 0 },
-          };
+            backlogWarningThreshold,
+            healthErrorCode(error, 'QUEUE_UNAVAILABLE'),
+          );
         }
       }),
     );
+  }
+
+  private getQueueDefinitions(): QueueDefinition[] {
+    return [
+      {
+        key: 'product-sync',
+        label: 'Katalog ve stok',
+        queue: this.productSyncQueue,
+        backlogWarningThreshold: 25,
+      },
+      {
+        key: 'question-sync',
+        label: 'Soru toplama',
+        queue: this.questionSyncQueue,
+        backlogWarningThreshold: 50,
+      },
+      {
+        key: 'question-draft',
+        label: 'AI taslak',
+        queue: this.questionDraftQueue,
+        backlogWarningThreshold: 250,
+      },
+      {
+        key: 'question-answer',
+        label: 'Cevap gönderimi',
+        queue: this.questionAnswerQueue,
+        backlogWarningThreshold: 100,
+      },
+      {
+        key: 'size-guide',
+        label: 'Beden tablosu',
+        queue: this.sizeGuideQueue,
+        backlogWarningThreshold: 100,
+      },
+      {
+        key: 'paddle-webhooks',
+        label: 'Paddle webhook',
+        queue: this.paddleWebhookQueue,
+        backlogWarningThreshold: 50,
+      },
+      {
+        key: 'billing-recovery',
+        label: 'Faturalama kontrolü',
+        queue: this.billingRecoveryQueue,
+        backlogWarningThreshold: 50,
+      },
+      {
+        key: 'support-notifications',
+        label: 'Destek bildirimleri',
+        queue: this.supportNotificationQueue,
+        backlogWarningThreshold: 50,
+      },
+    ];
+  }
+
+  private createUnavailableHealthSnapshot(
+    errorCode: string,
+  ): Awaited<ReturnType<AdminSystemHealthService['collectHealthSnapshot']>> {
+    const now = new Date();
+    const queues = this.getQueueDefinitions().map((queue) =>
+      unavailableQueue(
+        queue.key,
+        queue.label,
+        queue.backlogWarningThreshold,
+        errorCode,
+      ),
+    );
+
+    return {
+      status: 'DOWN',
+      services: {
+        api: { status: 'DOWN' },
+        database: {
+          status: 'DOWN',
+          latencyMs: null,
+          errorCode,
+        },
+        redis: unavailableRedis(errorCode),
+      },
+      queues,
+      summary: {
+        queueBacklog: 0,
+        unavailableQueues: queues.length,
+        pausedQueues: 0,
+        backloggedQueues: 0,
+        queuesWithRecentFailures: 0,
+        retainedQueueFailures: 0,
+        recentQueueFailures: 0,
+        failedSyncsLast24Hours: 0,
+        connectionIssues: 0,
+        billingIssues: 0,
+      },
+      billing: emptyBillingHealth(),
+      marketplaces: {
+        issueCount: 0,
+        providers: [],
+        issues: [],
+      },
+      syncs: {
+        completedLast24Hours: 0,
+        failedLast24Hours: 0,
+        running: 0,
+      },
+      recentErrors: [],
+      generatedAt: now,
+    };
   }
 }
 
@@ -466,13 +615,26 @@ function overallStatus(input: {
   redis: HealthStatus;
   unavailableQueues: number;
   pausedQueues: number;
+  backloggedQueues: number;
+  queuesWithRecentFailures: number;
+  failedSyncsLast24Hours: number;
   billingIssues: number;
   connectionIssues: number;
 }): HealthStatus {
-  if (input.database === 'DOWN' || input.redis === 'DOWN') return 'DOWN';
   if (
-    input.unavailableQueues > 0 ||
+    input.database === 'DOWN' ||
+    input.redis === 'DOWN' ||
+    input.unavailableQueues > 0
+  ) {
+    return 'DOWN';
+  }
+  if (
+    input.database === 'DEGRADED' ||
+    input.redis === 'DEGRADED' ||
     input.pausedQueues > 0 ||
+    input.backloggedQueues > 0 ||
+    input.queuesWithRecentFailures > 0 ||
+    input.failedSyncsLast24Hours > 0 ||
     input.billingIssues > 0 ||
     input.connectionIssues > 0
   ) {
@@ -502,15 +664,95 @@ function emptyBillingHealth() {
 }
 
 function databaseErrorCode(error: unknown) {
-  if (typeof error === 'object' && error && 'code' in error) {
-    return String(error.code);
-  }
-  return 'DATABASE_UNAVAILABLE';
+  return healthErrorCode(error, 'DATABASE_UNAVAILABLE');
 }
 
 function redisErrorCode(error: unknown) {
+  return healthErrorCode(error, 'REDIS_UNAVAILABLE');
+}
+
+function healthErrorCode(error: unknown, fallback = 'HEALTH_CHECK_FAILED') {
   if (typeof error === 'object' && error && 'code' in error) {
     return String(error.code);
   }
-  return 'REDIS_UNAVAILABLE';
+  return fallback;
+}
+
+function unavailableDatabase(errorCode: string) {
+  return {
+    status: 'DOWN' as HealthStatus,
+    latencyMs: null as number | null,
+    errorCode,
+    billing: emptyBillingHealth(),
+    marketplaces: {
+      issueCount: 0,
+      providers: [],
+      issues: [],
+    },
+    syncs: {
+      completedLast24Hours: 0,
+      failedLast24Hours: 0,
+      running: 0,
+    },
+    recentErrors: [],
+  };
+}
+
+function unavailableRedis(errorCode: string) {
+  return {
+    status: 'DOWN' as HealthStatus,
+    latencyMs: null as number | null,
+    errorCode,
+  };
+}
+
+function unavailableQueue(
+  key: string,
+  label: string,
+  backlogWarningThreshold: number,
+  errorCode: string,
+) {
+  return {
+    key,
+    label,
+    status: 'DOWN' as HealthStatus,
+    available: false,
+    paused: false,
+    backlogWarningThreshold,
+    backlogExceeded: false,
+    recentFailuresLast24Hours: 0,
+    errorCode,
+    counts: { waiting: 0, active: 0, delayed: 0, failed: 0 },
+  };
+}
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  code: string,
+): Promise<T> {
+  let timeoutId: NodeJS.Timeout | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(
+      () => reject(new HealthTimeoutError(code)),
+      timeoutMs,
+    );
+    timeoutId.unref();
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
+class HealthTimeoutError extends Error {
+  readonly code: string;
+
+  constructor(code: string) {
+    super(code);
+    this.name = 'HealthTimeoutError';
+    this.code = code;
+  }
 }

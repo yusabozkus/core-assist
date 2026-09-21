@@ -2,6 +2,7 @@ import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
 import { HttpException, Logger, OnModuleInit } from '@nestjs/common';
 import type { Job, Queue } from 'bullmq';
 import { PrismaService } from '../../database/prisma.service';
+import { failedJobRetention } from '../../infrastructure/queue/queue-retention';
 import { NotificationsService } from '../notifications/notifications.service';
 import { hasBillingAccess } from './billing-access.policy';
 import { PaddleBillingService } from './paddle-billing.service';
@@ -41,7 +42,10 @@ export class BillingReconciliationProcessor
         {
           name: RECONCILE_BILLING,
           data: {},
-          opts: { removeOnComplete: true, removeOnFail: { count: 25 } },
+          opts: {
+            removeOnComplete: true,
+            removeOnFail: failedJobRetention(25),
+          },
         },
       ),
       this.queue.upsertJobScheduler(
@@ -54,7 +58,7 @@ export class BillingReconciliationProcessor
             attempts: 3,
             backoff: { type: 'exponential', delay: 5_000 },
             removeOnComplete: true,
-            removeOnFail: { count: 25 },
+            removeOnFail: failedJobRetention(25),
           },
         },
       ),

@@ -19,6 +19,7 @@ import {
 } from '../../generated/prisma/enums';
 import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
+import { failedJobRetention } from '../../infrastructure/queue/queue-retention';
 import { BillingSubscriptionService } from '../billing/billing-subscription.service';
 import { BILLING_AUTOMATION_STOPPED_MESSAGE } from '../billing/billing-access.policy';
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
@@ -279,7 +280,7 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
           attempts: 3,
           backoff: { type: 'exponential', delay: 2_000 },
           removeOnComplete: { count: 250 },
-          removeOnFail: { count: 500 },
+          removeOnFail: failedJobRetention(500),
         },
       );
     } catch (error) {

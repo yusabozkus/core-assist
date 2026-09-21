@@ -3,6 +3,7 @@ import "server-only"
 import { headers } from "next/headers"
 
 import type {
+  AdminOperationQueueDetail,
   AdminOperationsPage,
   AdminOperationsQuery,
 } from "@/types/admin-operations"
@@ -21,6 +22,20 @@ export function getServerAdminOperations(query: AdminOperationsQuery) {
   const suffix = search.size ? `?${search.toString()}` : ""
   return adminOperationsServerFetch<AdminOperationsPage>(
     `/admin/operations${suffix}`
+  )
+}
+
+export function getServerAdminOperationQueue(
+  queueKey: string,
+  page: number,
+  pageSize = 25
+) {
+  const search = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize),
+  })
+  return adminOperationsServerFetch<AdminOperationQueueDetail>(
+    `/admin/operations/queues/${encodeURIComponent(queueKey)}?${search.toString()}`
   )
 }
 

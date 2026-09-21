@@ -5,6 +5,7 @@ import type { Queue } from 'bullmq';
 import { Prisma } from '../../generated/prisma/client';
 import { SizeGuideStatus } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { failedJobRetention } from '../../infrastructure/queue/queue-retention';
 import { BILLING_SYNC_STOPPED_MESSAGE } from '../billing/billing-access.policy';
 import {
   EXTRACT_SIZE_GUIDE_JOB,
@@ -109,7 +110,7 @@ export class SizeGuideQueueService extends SizeGuideDispatcher {
         attempts: 3,
         backoff: { type: 'exponential', delay: 5_000 },
         removeOnComplete: { count: 250 },
-        removeOnFail: { count: 500 },
+        removeOnFail: failedJobRetention(500),
       },
     );
     this.logger.debug(`Beden tablosu analizi kuyruğa eklendi: ${guide.id}`);

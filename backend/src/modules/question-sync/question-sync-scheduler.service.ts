@@ -7,6 +7,7 @@ import {
   StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { failedJobRetention } from '../../infrastructure/queue/queue-retention';
 import { activeBillingSubscriptionWhere } from '../billing/billing-access.policy';
 import {
   DEFAULT_QUESTION_SYNC_INTERVAL_MS,
@@ -37,7 +38,7 @@ export class QuestionSyncSchedulerService implements OnModuleInit {
         data: {},
         opts: {
           removeOnComplete: true,
-          removeOnFail: { count: 25 },
+          removeOnFail: failedJobRetention(25),
         },
       },
     );

@@ -1,6 +1,7 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Queue } from 'bullmq';
+import { failedJobRetention } from '../../infrastructure/queue/queue-retention';
 import {
   CHECK_SUPPORT_SLA_JOB,
   DEFAULT_SUPPORT_SLA_CHECK_INTERVAL_MS,
@@ -29,7 +30,7 @@ export class SupportNotificationScheduler implements OnModuleInit {
         name: CHECK_SUPPORT_SLA_JOB,
         opts: {
           removeOnComplete: 50,
-          removeOnFail: 100,
+          removeOnFail: failedJobRetention(100),
         },
       },
     );

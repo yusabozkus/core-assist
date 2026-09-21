@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useTransition } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   AlertCircleIcon,
@@ -227,7 +228,8 @@ export function AdminOperationsListView({
           <div>
             <h2 className="text-sm font-semibold">Worker kuyrukları</h2>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Redis üzerindeki bekleyen, aktif, geciken ve başarısız işler.
+              Aktif yük ve son 24 saatte tamamlanamayan işler. Ayrıntı için bir
+              kuyruğu seçin.
             </p>
           </div>
           <span className="text-[10px] text-muted-foreground">
@@ -242,6 +244,13 @@ export function AdminOperationsListView({
       </section>
 
       <section className="mt-6">
+        <div className="mb-3">
+          <h2 className="text-sm font-semibold">Senkronizasyon geçmişi</h2>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Katalog, stok ve soru toplama işlemleri. AI, cevap ve faturalama
+            hataları yukarıdaki kuyruk ayrıntılarında gösterilir.
+          </p>
+        </div>
         <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
             <form
@@ -577,17 +586,33 @@ function OperationRow({
 function QueueCard({ queue }: { queue: AdminOperationQueue }) {
   const backlog = queue.counts.waiting + queue.counts.active
   const unhealthy = !queue.available || queue.paused
+  const hasRecentFailure = queue.recentFailuresLast24Hours > 0
+  const retainedOldFailures = Math.max(
+    0,
+    queue.counts.failed - queue.recentFailuresLast24Hours
+  )
+
   return (
-    <div className="rounded-xl border border-border bg-card px-3 py-3 shadow-xs">
+    <Link
+      href={APP_ROUTES.admin.operationQueue(queue.key)}
+      className="group rounded-xl border border-border bg-card px-3 py-3 text-left shadow-xs transition-colors hover:border-primary/25 hover:bg-muted/20 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      aria-label={`${queue.label} kuyruğunun ayrıntılarını aç`}
+    >
       <div className="flex items-start justify-between gap-2">
         <p className="text-[11px] leading-4 font-semibold">{queue.label}</p>
-        <span
-          className={cn(
-            "mt-1 size-1.5 shrink-0 rounded-full bg-emerald-500",
-            backlog > 0 && "bg-amber-500",
-            (unhealthy || queue.counts.failed > 0) && "bg-destructive"
-          )}
-        />
+        <div className="flex items-center gap-1.5">
+          <span
+            className={cn(
+              "size-1.5 shrink-0 rounded-full bg-emerald-500",
+              backlog > 0 && "bg-amber-500",
+              (unhealthy || hasRecentFailure) && "bg-destructive"
+            )}
+          />
+          <HugeiconsIcon
+            icon={ArrowRight01Icon}
+            className="size-3 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+          />
+        </div>
       </div>
       <div className="mt-3 flex items-end justify-between gap-2">
         <div>
@@ -597,17 +622,22 @@ function QueueCard({ queue }: { queue: AdminOperationQueue }) {
         <div className="text-right text-[9px] leading-4 text-muted-foreground">
           <p>{queue.counts.active} çalışıyor</p>
           <p>{queue.counts.delayed} zamanlandı</p>
-          <p className={cn(queue.counts.failed > 0 && "text-destructive")}>
-            {queue.counts.failed} başarısız
+          <p className={cn(hasRecentFailure && "font-medium text-destructive")}>
+            Son 24 saat: {queue.recentFailuresLast24Hours} hata
           </p>
         </div>
       </div>
+      {retainedOldFailures > 0 ? (
+        <p className="mt-2 border-t border-border/70 pt-2 text-[9px] text-muted-foreground">
+          Redis’te {retainedOldFailures} geçmiş hata kaydı
+        </p>
+      ) : null}
       {!queue.available || queue.paused ? (
         <p className="mt-2 border-t border-border pt-2 text-[9px] font-medium text-destructive">
           {!queue.available ? "Redis bağlantısı yok" : "Kuyruk duraklatıldı"}
         </p>
       ) : null}
-    </div>
+    </Link>
   )
 }
 
