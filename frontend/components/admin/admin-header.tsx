@@ -18,6 +18,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { toast } from "sonner"
 
 import { AdminGlobalSearch } from "@/components/admin/admin-global-search"
+import { NotificationCenter } from "@/components/shared/dashboard/notification-center"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import {
   Tooltip,
@@ -163,6 +164,11 @@ export function AdminHeader({
             issueCount={summary.systemIssues}
           />
         </nav>
+        <span
+          aria-hidden="true"
+          className="mx-1.5 hidden h-4 w-px bg-border sm:block"
+        />
+        <NotificationCenter scope="admin" />
       </div>
     </header>
   )

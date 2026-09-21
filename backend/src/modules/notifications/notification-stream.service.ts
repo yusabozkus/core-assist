@@ -66,7 +66,7 @@ export class NotificationStreamService
     }
   }
 
-  forUser(userId: string, storeId: string): Observable<MessageEvent> {
+  forUser(userId: string, storeId: string | null): Observable<MessageEvent> {
     const connected: MessageEvent = {
       data: {
         kind: 'CONNECTED',
@@ -79,7 +79,9 @@ export class NotificationStreamService
       filter(
         (change) =>
           change.recipientUserId === userId &&
-          (change.storeId === storeId || change.storeId === null),
+          (storeId === null
+            ? change.storeId === null
+            : change.storeId === storeId || change.storeId === null),
       ),
       map((change): MessageEvent => ({
         data: { kind: 'CHANGED', ...change },

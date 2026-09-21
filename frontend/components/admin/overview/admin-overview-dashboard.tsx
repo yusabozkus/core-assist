@@ -629,6 +629,11 @@ function actorLabel(actorType: "USER" | "ADMIN" | "SYSTEM") {
 function auditActionLabel(action: string) {
   return (
     {
+      ADMIN_SIGNED_IN: "Yönetici oturum açtı",
+      ADMIN_AUTH_PROVIDER_LINKED: "Giriş sağlayıcısı bağlandı",
+      ADMIN_AUTH_PROVIDER_UNLINKED: "Giriş sağlayıcısı kaldırıldı",
+      ADMIN_OTHER_SESSION_REVOKED: "Diğer cihazdaki oturum sonlandırıldı",
+      ADMIN_PROFILE_UPDATED: "Yönetici profili güncellendi",
       ADMIN_BILLING_RECONCILE: "Abonelik yeniden uzlaştırıldı",
       ADMIN_SYNC_RETRY: "Senkronizasyon tekrarlandı",
       ADMIN_SUPPORT_REPLY_ADDED: "Destek yanıtı eklendi",

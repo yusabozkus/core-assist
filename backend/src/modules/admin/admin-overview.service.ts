@@ -224,6 +224,8 @@ export class AdminOverviewService {
           id: true,
           actorType: true,
           actorUserId: true,
+          actorName: true,
+          actorEmail: true,
           origin: true,
           action: true,
           result: true,
@@ -311,9 +313,14 @@ export class AdminOverviewService {
       },
       recentAuditEvents: recentAuditEvents.map((event) => ({
         ...event,
-        actor: event.actorUserId
-          ? (auditContext.actors.get(event.actorUserId) ?? null)
-          : null,
+        actor:
+          event.actorUserId || event.actorName || event.actorEmail
+            ? {
+                id: event.actorUserId,
+                name: event.actorName ?? '',
+                email: event.actorEmail ?? '',
+              }
+            : null,
         workspace: event.workspaceId
           ? (auditContext.workspaces.get(event.workspaceId) ?? null)
           : null,
@@ -343,18 +350,9 @@ export class AdminOverviewService {
   }
 
   private async resolveAuditContext(
-    events: Array<{ actorUserId: string | null; workspaceId: string | null }>,
+    events: Array<{ workspaceId: string | null }>,
   ) {
-    const actorIds = unique(events.map((event) => event.actorUserId));
     const workspaceIds = unique(events.map((event) => event.workspaceId));
-    const actorQuery: Promise<
-      Array<{ id: string; name: string; email: string }>
-    > = actorIds.length
-      ? this.prisma.user.findMany({
-          where: { id: { in: actorIds } },
-          select: { id: true, name: true, email: true },
-        })
-      : Promise.resolve([]);
     const workspaceQuery: Promise<Array<{ id: string; name: string }>> =
       workspaceIds.length
         ? this.prisma.workspace.findMany({
@@ -362,13 +360,9 @@ export class AdminOverviewService {
             select: { id: true, name: true },
           })
         : Promise.resolve([]);
-    const [actors, workspaces] = await Promise.all([
-      actorQuery,
-      workspaceQuery,
-    ]);
+    const workspaces = await workspaceQuery;
 
     return {
-      actors: new Map(actors.map((actor) => [actor.id, actor] as const)),
       workspaces: new Map(
         workspaces.map((workspace) => [workspace.id, workspace] as const),
       ),

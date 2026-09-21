@@ -10,6 +10,7 @@ import { QUESTION_ANSWER_QUEUE } from '../question-answer/question-answer.consta
 import { QUESTION_SYNC_QUEUE } from '../question-sync/question-sync.constants';
 import { QUESTION_DRAFT_QUEUE } from '../questions/question-draft.constants';
 import { SIZE_GUIDE_QUEUE } from '../size-guides/size-guide.constants';
+import { SupportModule } from '../support/support.module';
 import { AdminAccessService } from './admin-access.service';
 import { AdminActionOriginGuard } from './admin-action-origin.guard';
 import { AdminBillingController } from './admin-billing.controller';
@@ -34,6 +35,7 @@ import { AdminSystemHealthService } from './admin-system-health.service';
     AuthModule,
     BillingModule,
     ChannelsModule,
+    SupportModule,
     BullModule.registerQueue(
       { name: PRODUCT_SYNC_QUEUE },
       { name: QUESTION_SYNC_QUEUE },

@@ -110,6 +110,8 @@ model AuditLog {
   id          String         @id @default(uuid())
   actorType   AuditActorType
   actorUserId String?
+  actorName   String?
+  actorEmail  String?
   origin      AuditOrigin
   action      String
   result      AuditResult
@@ -1285,6 +1287,11 @@ enum NotificationType {
   TEAM_ACCESS_CHANGED
   SECURITY_ACCOUNT_CHANGED
   SECURITY_SESSIONS_REVOKED
+  SUPPORT_NEW_TICKET
+  SUPPORT_CUSTOMER_MESSAGE
+  SUPPORT_ADMIN_REPLY
+  SUPPORT_SLA_BREACHED
+  SUPPORT_ASSIGNMENT_CHANGED
 }
 
 enum NotificationSeverity {

@@ -18,6 +18,11 @@ export type NotificationType =
   | "TEAM_ACCESS_CHANGED"
   | "SECURITY_ACCOUNT_CHANGED"
   | "SECURITY_SESSIONS_REVOKED"
+  | "SUPPORT_NEW_TICKET"
+  | "SUPPORT_CUSTOMER_MESSAGE"
+  | "SUPPORT_ADMIN_REPLY"
+  | "SUPPORT_SLA_BREACHED"
+  | "SUPPORT_ASSIGNMENT_CHANGED"
 
 export type NotificationSeverity = "INFO" | "WARNING" | "ERROR"
 export type NotificationReadFilter = "ALL" | "UNREAD"

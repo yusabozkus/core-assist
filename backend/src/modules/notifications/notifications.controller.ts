@@ -19,6 +19,7 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { ListNotificationsQueryDto } from './dto/list-notifications-query.dto';
 import { MarkAllNotificationsReadDto } from './dto/mark-all-notifications-read.dto';
 import { NotificationStoreQueryDto } from './dto/notification-store-query.dto';
+import { NotificationStreamQueryDto } from './dto/notification-stream-query.dto';
 import { UpdateNotificationPreferencesDto } from './dto/update-notification-preferences.dto';
 import { UpdateNotificationDeliverySettingsDto } from './dto/update-notification-delivery-settings.dto';
 import {
@@ -43,7 +44,7 @@ export class NotificationsController {
   @Sse('stream')
   stream(
     @CurrentUser() user: AuthenticatedUser,
-    @Query() query: NotificationStoreQueryDto,
+    @Query() query: NotificationStreamQueryDto,
   ) {
     return this.notifications.stream(user.id, query.storeId);
   }

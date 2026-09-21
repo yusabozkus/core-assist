@@ -87,9 +87,11 @@ export function getNotificationPreferences(
   )
 }
 
-export function getNotificationStreamUrl(storeId: string) {
-  const searchParams = new URLSearchParams({ storeId })
-  return getApiUrl(`/notifications/stream?${searchParams.toString()}`)
+export function getNotificationStreamUrl(storeId?: string) {
+  const searchParams = new URLSearchParams()
+  if (storeId) searchParams.set("storeId", storeId)
+  const query = searchParams.size ? `?${searchParams.toString()}` : ""
+  return getApiUrl(`/notifications/stream${query}`)
 }
 
 export function updateNotificationPreferences(
@@ -154,7 +156,11 @@ export function saveWebPushSubscription(
   subscription: PushSubscription
 ) {
   const serialized = subscription.toJSON()
-  if (!serialized.endpoint || !serialized.keys?.p256dh || !serialized.keys.auth) {
+  if (
+    !serialized.endpoint ||
+    !serialized.keys?.p256dh ||
+    !serialized.keys.auth
+  ) {
     throw new Error("Tarayıcı abonelik bilgisi alınamadı.")
   }
 

@@ -1,7 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { WorkspaceRole } from '../../generated/prisma/enums';
+import {
+  AuditActorType,
+  AuditOrigin,
+  AuditResult,
+  WorkspaceRole,
+} from '../../generated/prisma/enums';
+import { isConfiguredAdminIdentity } from '../admin/admin-access.policy';
+import { AuditAction } from '../audit/audit-actions';
+import { AuditLogService } from '../audit/audit-log.service';
 import { resolveTeamAccessLevel } from '../team/team-access';
 
 const publicProfileSelect = {
@@ -16,7 +24,10 @@ const publicProfileSelect = {
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditLogService,
+  ) {}
 
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
@@ -32,16 +43,40 @@ export class UsersService {
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
-    const result = await this.prisma.user.updateMany({
-      where: { id: userId },
-      data: { name: dto.name },
+    return this.prisma.$transaction(async (transaction) => {
+      const current = await transaction.user.findUnique({
+        where: { id: userId },
+        select: publicProfileSelect,
+      });
+      if (!current) throw new NotFoundException('Kullanıcı bulunamadı.');
+      if (current.name === dto.name) return current;
+
+      const updated = await transaction.user.update({
+        where: { id: userId },
+        data: { name: dto.name },
+        select: publicProfileSelect,
+      });
+      if (isConfiguredAdminIdentity(current)) {
+        await this.audit.record(
+          {
+            actorType: AuditActorType.ADMIN,
+            actorUserId: updated.id,
+            actorName: updated.name,
+            actorEmail: updated.email,
+            origin: AuditOrigin.API,
+            action: AuditAction.ADMIN_PROFILE_UPDATED,
+            result: AuditResult.SUCCESS,
+            targetType: 'AUTH_USER',
+            targetId: updated.id,
+            before: { name: current.name },
+            after: { name: updated.name },
+          },
+          transaction,
+        );
+      }
+
+      return updated;
     });
-
-    if (result.count === 0) {
-      throw new NotFoundException('Kullanıcı bulunamadı.');
-    }
-
-    return this.getProfile(userId);
   }
 
   async getAccountOverview(userId: string, currentSessionId: string) {

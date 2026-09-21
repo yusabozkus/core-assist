@@ -660,6 +660,11 @@ function actionLabel(action: string) {
 }
 
 const ACTION_LABELS: Record<string, string> = {
+  ADMIN_SIGNED_IN: "Yönetici oturum açtı",
+  ADMIN_AUTH_PROVIDER_LINKED: "Giriş sağlayıcısı bağlandı",
+  ADMIN_AUTH_PROVIDER_UNLINKED: "Giriş sağlayıcısı kaldırıldı",
+  ADMIN_OTHER_SESSION_REVOKED: "Diğer cihazdaki oturum sonlandırıldı",
+  ADMIN_PROFILE_UPDATED: "Yönetici profili güncellendi",
   ADMIN_BILLING_RECONCILE: "Abonelik yeniden uzlaştırıldı",
   ADMIN_SYNC_RETRY: "Senkronizasyon yönetici tarafından tekrarlandı",
   SYNC_RETRY_REQUESTED: "Senkronizasyon yeniden denendi",

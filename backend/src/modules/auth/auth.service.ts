@@ -4,9 +4,15 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { lastLoginMethod } from 'better-auth/plugins';
 import { PrismaService } from '../../database/prisma.service';
 import {
+  AuditActorType,
+  AuditOrigin,
+  AuditResult,
   NotificationSeverity,
   NotificationType,
 } from '../../generated/prisma/enums';
+import { isConfiguredAdminIdentity } from '../admin/admin-access.policy';
+import { AuditAction } from '../audit/audit-actions';
+import { AuditLogService } from '../audit/audit-log.service';
 import { NotificationsService } from '../notifications/notifications.service';
 
 function requiredEnvironmentVariable(name: string): string {
@@ -36,6 +42,7 @@ function environmentURL(name: string, developmentFallback: string): string {
 function createAppAuth(
   prisma: PrismaService,
   notifications: NotificationsService,
+  audit: AuditLogService,
 ) {
   const isProduction = process.env.NODE_ENV === 'production';
   const baseURL = environmentURL('BETTER_AUTH_URL', 'http://localhost:4001');
@@ -118,58 +125,155 @@ function createAppAuth(
       account: {
         create: {
           after: async (account) => {
-            const accountCount = await prisma.account.count({
-              where: { userId: account.userId },
-            });
+            const [accountCount, user] = await Promise.all([
+              prisma.account.count({ where: { userId: account.userId } }),
+              findAuditUser(prisma, account.userId),
+            ]);
             if (accountCount < 2) return;
 
-            await notifications.createForUser({
-              recipientUserId: account.userId,
-              type: NotificationType.SECURITY_ACCOUNT_CHANGED,
-              severity: NotificationSeverity.INFO,
-              title: 'Yeni giriş yöntemi bağlandı',
-              message: `${authProviderLabel(account.providerId)} hesabı Core Asistan profilinize bağlandı. Bu işlemi siz yapmadıysanız bağlı hesaplarınızı kontrol edin.`,
-              actionUrl: '/dashboard/settings/profile',
-              entityType: 'AUTH_ACCOUNT',
-              entityId: account.id,
-              dedupeKey: `security-account-linked:${account.id}`,
-            });
+            const isAdmin = Boolean(user && isConfiguredAdminIdentity(user));
+            await Promise.all([
+              notifications.createForUser({
+                recipientUserId: account.userId,
+                type: NotificationType.SECURITY_ACCOUNT_CHANGED,
+                severity: NotificationSeverity.INFO,
+                title: 'Yeni giriş yöntemi bağlandı',
+                message: `${authProviderLabel(account.providerId)} hesabı Core Asistan profilinize bağlandı. Bu işlemi siz yapmadıysanız bağlı hesaplarınızı kontrol edin.`,
+                actionUrl: isAdmin
+                  ? '/admin/account'
+                  : '/dashboard/settings/profile',
+                entityType: 'AUTH_ACCOUNT',
+                entityId: account.id,
+                dedupeKey: `security-account-linked:${account.id}`,
+              }),
+              isAdmin && user
+                ? audit.recordSafely({
+                    actorType: AuditActorType.ADMIN,
+                    actorUserId: user.id,
+                    actorName: user.name,
+                    actorEmail: user.email,
+                    origin: AuditOrigin.API,
+                    action: AuditAction.ADMIN_AUTH_PROVIDER_LINKED,
+                    result: AuditResult.SUCCESS,
+                    targetType: 'AUTH_ACCOUNT',
+                    targetId: account.id,
+                    after: { providerId: account.providerId, linked: true },
+                  })
+                : Promise.resolve(null),
+            ]);
           },
         },
         delete: {
           after: async (account) => {
-            await notifications.createForUser({
-              recipientUserId: account.userId,
-              type: NotificationType.SECURITY_ACCOUNT_CHANGED,
-              severity: NotificationSeverity.WARNING,
-              title: 'Giriş yöntemi kaldırıldı',
-              message: `${authProviderLabel(account.providerId)} hesabı Core Asistan profilinizden kaldırıldı. Bu işlemi siz yapmadıysanız hesabınızı kontrol edin.`,
-              actionUrl: '/dashboard/settings/profile',
-              entityType: 'AUTH_ACCOUNT',
-              entityId: account.id,
-              dedupeKey: `security-account-unlinked:${account.id}`,
-            });
+            const user = await findAuditUser(prisma, account.userId);
+            const isAdmin = Boolean(user && isConfiguredAdminIdentity(user));
+            await Promise.all([
+              notifications.createForUser({
+                recipientUserId: account.userId,
+                type: NotificationType.SECURITY_ACCOUNT_CHANGED,
+                severity: NotificationSeverity.WARNING,
+                title: 'Giriş yöntemi kaldırıldı',
+                message: `${authProviderLabel(account.providerId)} hesabı Core Asistan profilinizden kaldırıldı. Bu işlemi siz yapmadıysanız hesabınızı kontrol edin.`,
+                actionUrl: isAdmin
+                  ? '/admin/account'
+                  : '/dashboard/settings/profile',
+                entityType: 'AUTH_ACCOUNT',
+                entityId: account.id,
+                dedupeKey: `security-account-unlinked:${account.id}`,
+              }),
+              isAdmin && user
+                ? audit.recordSafely({
+                    actorType: AuditActorType.ADMIN,
+                    actorUserId: user.id,
+                    actorName: user.name,
+                    actorEmail: user.email,
+                    origin: AuditOrigin.API,
+                    action: AuditAction.ADMIN_AUTH_PROVIDER_UNLINKED,
+                    result: AuditResult.SUCCESS,
+                    targetType: 'AUTH_ACCOUNT',
+                    targetId: account.id,
+                    before: { providerId: account.providerId, linked: true },
+                    after: { providerId: account.providerId, linked: false },
+                  })
+                : Promise.resolve(null),
+            ]);
           },
         },
       },
       session: {
+        create: {
+          after: async (session, context) => {
+            const user = await findAuditUser(prisma, session.userId);
+            if (!user || !isConfiguredAdminIdentity(user)) return;
+
+            const providerId =
+              typeof context?.params?.id === 'string'
+                ? context.params.id
+                : null;
+            await audit.recordSafely({
+              actorType: AuditActorType.ADMIN,
+              actorUserId: user.id,
+              actorName: user.name,
+              actorEmail: user.email,
+              origin: AuditOrigin.API,
+              action: AuditAction.ADMIN_SIGNED_IN,
+              result: AuditResult.SUCCESS,
+              targetType: 'AUTH_SESSION',
+              targetId: session.id,
+              metadata: {
+                providerId,
+                authPath: context?.path ?? null,
+              },
+            });
+          },
+        },
         delete: {
           after: async (session, context) => {
-            if (context?.path !== '/revoke-other-sessions') return;
+            const isBulkRevocation = context?.path === '/revoke-other-sessions';
+            const isSingleRevocation = context?.path === '/revoke-session';
+            if (!isBulkRevocation && !isSingleRevocation) return;
 
+            const user = await findAuditUser(prisma, session.userId);
+            const isAdmin = Boolean(user && isConfiguredAdminIdentity(user));
             const minuteBucket = Math.floor(Date.now() / 60_000);
-            await notifications.createForUser({
-              recipientUserId: session.userId,
-              type: NotificationType.SECURITY_SESSIONS_REVOKED,
-              severity: NotificationSeverity.INFO,
-              title: 'Diğer oturumlar sonlandırıldı',
-              message:
-                'Hesabınızın diğer cihazlardaki aktif oturumları kapatıldı.',
-              actionUrl: '/dashboard/settings/profile',
-              entityType: 'AUTH_USER',
-              entityId: session.userId,
-              dedupeKey: `security-sessions-revoked:${session.userId}:${minuteBucket}`,
-            });
+            const notification = isBulkRevocation
+              ? notifications.createForUser({
+                  recipientUserId: session.userId,
+                  type: NotificationType.SECURITY_SESSIONS_REVOKED,
+                  severity: NotificationSeverity.INFO,
+                  title: 'Diğer oturumlar sonlandırıldı',
+                  message:
+                    'Hesabınızın diğer cihazlardaki aktif oturumları kapatıldı.',
+                  actionUrl: isAdmin
+                    ? '/admin/account'
+                    : '/dashboard/settings/profile',
+                  entityType: 'AUTH_USER',
+                  entityId: session.userId,
+                  dedupeKey: `security-sessions-revoked:${session.userId}:${minuteBucket}`,
+                })
+              : Promise.resolve(null);
+            const auditEntry =
+              isAdmin && user
+                ? audit.recordSafely({
+                    actorType: AuditActorType.ADMIN,
+                    actorUserId: user.id,
+                    actorName: user.name,
+                    actorEmail: user.email,
+                    origin: AuditOrigin.API,
+                    action: AuditAction.ADMIN_OTHER_SESSION_REVOKED,
+                    result: AuditResult.SUCCESS,
+                    targetType: 'AUTH_SESSION',
+                    targetId: session.id,
+                    before: { active: true },
+                    after: { active: false },
+                    metadata: {
+                      scope: isBulkRevocation
+                        ? 'OTHER_SESSIONS'
+                        : 'SELECTED_SESSION',
+                    },
+                  })
+                : Promise.resolve(null);
+            await Promise.all([notification, auditEntry]);
           },
         },
       },
@@ -208,9 +312,25 @@ type AppAuth = ReturnType<typeof createAppAuth>;
 export class AuthService {
   readonly auth: AppAuth;
 
-  constructor(prisma: PrismaService, notifications: NotificationsService) {
-    this.auth = createAppAuth(prisma, notifications);
+  constructor(
+    prisma: PrismaService,
+    notifications: NotificationsService,
+    audit: AuditLogService,
+  ) {
+    this.auth = createAppAuth(prisma, notifications, audit);
   }
+}
+
+function findAuditUser(prisma: PrismaService, userId: string) {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      emailVerified: true,
+    },
+  });
 }
 
 function authProviderLabel(providerId: string) {

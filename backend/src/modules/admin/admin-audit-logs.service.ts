@@ -51,17 +51,8 @@ export class AdminAuditLogsService {
         }),
       ]);
 
-    const actorIds = unique(logs.map((log) => log.actorUserId));
     const workspaceIds = unique(logs.map((log) => log.workspaceId));
     const storeIds = unique(logs.map((log) => log.storeId));
-    const actorQuery: Promise<
-      Array<{ id: string; name: string; email: string }>
-    > = actorIds.length
-      ? this.prisma.user.findMany({
-          where: { id: { in: actorIds } },
-          select: { id: true, name: true, email: true },
-        })
-      : Promise.resolve([]);
     const workspaceQuery: Promise<Array<{ id: string; name: string }>> =
       workspaceIds.length
         ? this.prisma.workspace.findMany({
@@ -76,13 +67,11 @@ export class AdminAuditLogsService {
             select: { id: true, name: true },
           })
         : Promise.resolve([]);
-    const [actors, workspaces, stores] = await Promise.all([
-      actorQuery,
+    const [workspaces, stores] = await Promise.all([
       workspaceQuery,
       storeQuery,
     ]);
 
-    const actorById = new Map(actors.map((actor) => [actor.id, actor]));
     const workspaceById = new Map(
       workspaces.map((workspace) => [workspace.id, workspace]),
     );
@@ -91,9 +80,14 @@ export class AdminAuditLogsService {
     return {
       items: logs.map((log) => ({
         ...log,
-        actor: log.actorUserId
-          ? (actorById.get(log.actorUserId) ?? null)
-          : null,
+        actor:
+          log.actorUserId || log.actorName || log.actorEmail
+            ? {
+                id: log.actorUserId,
+                name: log.actorName ?? '',
+                email: log.actorEmail ?? '',
+              }
+            : null,
         workspace: log.workspaceId
           ? (workspaceById.get(log.workspaceId) ?? null)
           : null,
@@ -128,6 +122,8 @@ function buildWhere(
         { id: { contains: query.q, mode: 'insensitive' } },
         { action: { contains: query.q, mode: 'insensitive' } },
         { actorUserId: { contains: query.q, mode: 'insensitive' } },
+        { actorName: { contains: query.q, mode: 'insensitive' } },
+        { actorEmail: { contains: query.q, mode: 'insensitive' } },
         { workspaceId: { contains: query.q, mode: 'insensitive' } },
         { storeId: { contains: query.q, mode: 'insensitive' } },
         { targetType: { contains: query.q, mode: 'insensitive' } },

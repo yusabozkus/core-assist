@@ -36,7 +36,13 @@ import type { AppNotification } from "@/types/notification"
 
 const FALLBACK_POLL_INTERVAL_MS = 60_000
 
-export function NotificationCenter({ storeId }: { storeId: string }) {
+export function NotificationCenter({
+  storeId,
+  scope = "dashboard",
+}: {
+  storeId?: string
+  scope?: "dashboard" | "admin"
+}) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<AppNotification[]>([])
@@ -106,9 +112,9 @@ export function NotificationCenter({ storeId }: { storeId: string }) {
       }
 
       setOpen(false)
-      router.push(getSafeActionUrl(notification.actionUrl))
+      router.push(getSafeActionUrl(notification.actionUrl, scope))
     },
-    [refreshCount, router, storeId]
+    [refreshCount, router, scope, storeId]
   )
 
   const showCreatedNotifications = useCallback(
@@ -308,7 +314,12 @@ export function NotificationCenter({ storeId }: { storeId: string }) {
           type="button"
           variant="outline"
           size="icon-sm"
-          className="relative bg-card shadow-xs"
+          className={cn(
+            "relative",
+            scope === "admin"
+              ? "border-0 bg-transparent text-muted-foreground shadow-none hover:bg-muted/80 hover:text-foreground"
+              : "bg-card shadow-xs"
+          )}
           aria-label={
             unreadCount
               ? `Bildirimler, ${unreadCount} okunmamış bildirim`
@@ -385,7 +396,9 @@ export function NotificationCenter({ storeId }: { storeId: string }) {
               </span>
               <p className="mt-3 text-sm font-medium">Her şey yolunda</p>
               <p className="mt-1 max-w-64 text-xs leading-5 text-muted-foreground">
-                İncelemeniz gereken yeni bir mağaza olayı bulunmuyor.
+                {scope === "admin"
+                  ? "İncelemeniz gereken yeni bir yönetim olayı bulunmuyor."
+                  : "İncelemeniz gereken yeni bir mağaza olayı bulunmuyor."}
               </p>
             </div>
           ) : (
@@ -410,10 +423,16 @@ export function NotificationCenter({ storeId }: { storeId: string }) {
             className="w-full justify-between"
           >
             <Link
-              href={APP_ROUTES.dashboard.settings.notifications}
+              href={
+                scope === "admin"
+                  ? APP_ROUTES.admin.support
+                  : APP_ROUTES.dashboard.settings.notifications
+              }
               onClick={() => setOpen(false)}
             >
-              Tüm bildirimleri görüntüle
+              {scope === "admin"
+                ? "Destek taleplerine git"
+                : "Tüm bildirimleri görüntüle"}
               <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
             </Link>
           </Button>
@@ -432,15 +451,26 @@ export function NotificationCenter({ storeId }: { storeId: string }) {
   )
 }
 
-function getSafeActionUrl(actionUrl: string | null) {
-  return isInternalNotificationUrl(actionUrl)
+function getSafeActionUrl(
+  actionUrl: string | null,
+  scope: "dashboard" | "admin"
+) {
+  return isInternalNotificationUrl(actionUrl, scope)
     ? actionUrl
-    : APP_ROUTES.dashboard.settings.notifications
+    : scope === "admin"
+      ? APP_ROUTES.admin.support
+      : APP_ROUTES.dashboard.settings.notifications
 }
 
 function isInternalNotificationUrl(
-  actionUrl: string | null
+  actionUrl: string | null,
+  scope: "dashboard" | "admin"
 ): actionUrl is string {
+  if (scope === "admin") {
+    return Boolean(
+      actionUrl && (actionUrl === "/admin" || actionUrl.startsWith("/admin/"))
+    )
+  }
   return Boolean(
     actionUrl &&
     (actionUrl === "/dashboard" ||

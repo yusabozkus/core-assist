@@ -6,7 +6,9 @@ export type AdminAuditLog = {
   id: string
   actorType: AuditActorType
   actorUserId: string | null
-  actor: { id: string; name: string; email: string } | null
+  actorName: string | null
+  actorEmail: string | null
+  actor: { id: string | null; name: string; email: string } | null
   origin: AuditOrigin
   action: string
   result: AuditResult

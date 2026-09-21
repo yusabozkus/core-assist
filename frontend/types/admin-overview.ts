@@ -81,7 +81,9 @@ export type AdminOverview = {
     id: string
     actorType: "USER" | "ADMIN" | "SYSTEM"
     actorUserId: string | null
-    actor: { id: string; name: string; email: string } | null
+    actorName: string | null
+    actorEmail: string | null
+    actor: { id: string | null; name: string; email: string } | null
     origin: "API" | "WORKER" | "WEBHOOK" | "SCHEDULED" | "SYSTEM"
     action: string
     result: "STARTED" | "SUCCESS" | "FAILURE"

@@ -1,6 +1,7 @@
 import {
   AiBrain01Icon,
   AlertCircleIcon,
+  CustomerSupportIcon,
   InboxIcon,
   Package01Icon,
   PlugSocketIcon,
@@ -45,6 +46,20 @@ export const NOTIFICATION_TYPE_DETAILS: Record<
   SECURITY_SESSIONS_REVOKED: {
     label: "Hesap güvenliği",
     icon: Shield01Icon,
+  },
+  SUPPORT_NEW_TICKET: {
+    label: "Yeni destek talebi",
+    icon: CustomerSupportIcon,
+  },
+  SUPPORT_CUSTOMER_MESSAGE: {
+    label: "Destek mesajı",
+    icon: CustomerSupportIcon,
+  },
+  SUPPORT_ADMIN_REPLY: { label: "Destek yanıtı", icon: CustomerSupportIcon },
+  SUPPORT_SLA_BREACHED: { label: "SLA uyarısı", icon: CustomerSupportIcon },
+  SUPPORT_ASSIGNMENT_CHANGED: {
+    label: "Talep ataması",
+    icon: CustomerSupportIcon,
   },
 }
 

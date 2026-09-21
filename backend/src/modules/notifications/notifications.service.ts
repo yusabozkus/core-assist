@@ -94,9 +94,9 @@ export class NotificationsService {
     private readonly delivery: NotificationDeliveryService,
   ) {}
 
-  async stream(userId: string, storeId: string) {
-    await this.assertStoreMembership(userId, storeId);
-    return this.streamEvents.forUser(userId, storeId);
+  async stream(userId: string, storeId?: string) {
+    if (storeId) await this.assertStoreMembership(userId, storeId);
+    return this.streamEvents.forUser(userId, storeId ?? null);
   }
 
   async getPreferences(userId: string, storeId: string) {

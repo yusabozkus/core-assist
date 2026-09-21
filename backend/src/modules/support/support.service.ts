@@ -18,6 +18,7 @@ import {
   SupportTicketUserAction,
   UpdateSupportTicketStatusDto,
 } from './dto/update-support-ticket-status.dto';
+import { SupportNotificationService } from './support-notification.service';
 
 const summaryInclude = {
   createdBy: { select: { id: true, name: true, image: true } },
@@ -54,7 +55,10 @@ type DetailRecord = Prisma.SupportTicketGetPayload<{
 
 @Injectable()
 export class SupportService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly supportNotifications: SupportNotificationService,
+  ) {}
 
   async findAll(storeId: string, userId: string) {
     await this.requireStoreMembership(storeId, userId);
@@ -116,30 +120,38 @@ export class SupportService {
       ...(userAgent ? { userAgent: userAgent.slice(0, 500) } : {}),
     } satisfies Prisma.InputJsonObject;
 
-    const ticket = await this.prisma.supportTicket.create({
-      data: {
-        workspaceId: membership.store.workspaceId,
-        storeId,
-        createdByUserId: userId,
-        category: body.category,
-        impact: body.impact,
-        priority: resolvePriority(plan, body.impact),
-        subject: body.subject,
-        planSnapshot: plan,
-        firstResponseDueAt: resolveFirstResponseDueAt(plan, now),
-        context,
-        messages: {
-          create: {
-            authorUserId: userId,
-            authorType: SupportMessageAuthorType.CUSTOMER,
-            body: body.message,
+    const result = await this.prisma.$transaction(async (transaction) => {
+      const ticket = await transaction.supportTicket.create({
+        data: {
+          workspaceId: membership.store.workspaceId,
+          storeId,
+          createdByUserId: userId,
+          category: body.category,
+          impact: body.impact,
+          priority: resolvePriority(plan, body.impact),
+          subject: body.subject,
+          planSnapshot: plan,
+          firstResponseDueAt: resolveFirstResponseDueAt(plan, now),
+          context,
+          messages: {
+            create: {
+              authorUserId: userId,
+              authorType: SupportMessageAuthorType.CUSTOMER,
+              body: body.message,
+            },
           },
         },
-      },
-      include: detailInclude,
+        include: detailInclude,
+      });
+      const recipients = await this.supportNotifications.notifyNewTicket(
+        transaction,
+        ticket,
+      );
+      return { ticket, recipients };
     });
 
-    return this.toDetail(ticket);
+    this.supportNotifications.emitCreated(result.recipients, null);
+    return this.toDetail(result.ticket);
   }
 
   async reply(
@@ -162,16 +174,16 @@ export class SupportService {
     }
 
     const now = new Date();
-    await this.prisma.$transaction([
-      this.prisma.supportMessage.create({
+    const recipients = await this.prisma.$transaction(async (transaction) => {
+      const message = await transaction.supportMessage.create({
         data: {
           ticketId,
           authorUserId: userId,
           authorType: SupportMessageAuthorType.CUSTOMER,
           body: body.message,
         },
-      }),
-      this.prisma.supportTicket.update({
+      });
+      await transaction.supportTicket.update({
         where: { id: ticketId },
         data: {
           lastMessageAt: now,
@@ -180,8 +192,15 @@ export class SupportService {
               ? SupportTicketStatus.OPEN
               : ticket.status,
         },
-      }),
-    ]);
+      });
+      return this.supportNotifications.notifyCustomerMessage(
+        transaction,
+        ticket,
+        message.id,
+      );
+    });
+
+    this.supportNotifications.emitCreated(recipients, null);
 
     return this.findOne(storeId, ticketId, userId);
   }
@@ -203,13 +222,15 @@ export class SupportService {
       ) {
         return this.findOne(storeId, ticketId, userId);
       }
-      await this.updateStatusWithSystemMessage({
+      const slaRecipients = await this.updateStatusWithSystemMessage({
         ticketId,
         status: SupportTicketStatus.RESOLVED,
         message: 'Talep kullanıcı tarafından çözüldü olarak işaretlendi.',
         now,
         resolvedAt: now,
+        resolveSla: true,
       });
+      this.supportNotifications.emitRead(slaRecipients);
     } else {
       if (
         ticket.status !== SupportTicketStatus.RESOLVED &&
@@ -223,6 +244,7 @@ export class SupportService {
         message: 'Talep kullanıcı tarafından yeniden açıldı.',
         now,
         resolvedAt: null,
+        resolveSla: false,
       });
     }
 
@@ -235,16 +257,17 @@ export class SupportService {
     message: string;
     now: Date;
     resolvedAt: Date | null;
+    resolveSla: boolean;
   }) {
-    await this.prisma.$transaction([
-      this.prisma.supportMessage.create({
+    return this.prisma.$transaction(async (transaction) => {
+      await transaction.supportMessage.create({
         data: {
           ticketId: input.ticketId,
           authorType: SupportMessageAuthorType.SYSTEM,
           body: input.message,
         },
-      }),
-      this.prisma.supportTicket.update({
+      });
+      await transaction.supportTicket.update({
         where: { id: input.ticketId },
         data: {
           status: input.status,
@@ -252,8 +275,14 @@ export class SupportService {
           closedAt: null,
           lastMessageAt: input.now,
         },
-      }),
-    ]);
+      });
+      return input.resolveSla
+        ? this.supportNotifications.resolveSlaNotification(
+            transaction,
+            input.ticketId,
+          )
+        : [];
+    });
   }
 
   private async requireStoreMembership(storeId: string, userId: string) {
@@ -284,7 +313,16 @@ export class SupportService {
   private async requireTicket(storeId: string, ticketId: string) {
     const ticket = await this.prisma.supportTicket.findFirst({
       where: { id: ticketId, storeId },
-      select: { id: true, status: true },
+      select: {
+        id: true,
+        number: true,
+        subject: true,
+        createdAt: true,
+        storeId: true,
+        createdByUserId: true,
+        assignedAdminUserId: true,
+        status: true,
+      },
     });
     if (!ticket) throw new NotFoundException('Destek talebi bulunamadı.');
     return ticket;

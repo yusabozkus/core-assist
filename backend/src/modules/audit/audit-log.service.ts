@@ -12,11 +12,13 @@ import { sanitizeLogValue } from '../../infrastructure/logging/structured-logger
 const MAX_IDENTIFIER_LENGTH = 160;
 const MAX_AUDIT_JSON_BYTES = 16 * 1024;
 
-type AuditDatabaseClient = Pick<Prisma.TransactionClient, 'auditLog'>;
+type AuditDatabaseClient = Pick<Prisma.TransactionClient, 'auditLog' | 'user'>;
 
 export type RecordAuditLogInput = {
   actorType: AuditActorType;
   actorUserId?: string | null;
+  actorName?: string | null;
+  actorEmail?: string | null;
   origin: AuditOrigin;
   action: string;
   result: AuditResult;
@@ -36,15 +38,20 @@ export class AuditLogService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  record(
+  async record(
     input: RecordAuditLogInput,
     client: AuditDatabaseClient = this.prisma,
   ) {
     const context = LoggingContext.get();
+    const actorUserId = normalizeIdentifier(input.actorUserId);
+    const actor = await resolveActorSnapshot(input, actorUserId, client);
+
     return client.auditLog.create({
       data: {
         actorType: input.actorType,
-        actorUserId: normalizeIdentifier(input.actorUserId),
+        actorUserId,
+        actorName: actor.name,
+        actorEmail: actor.email,
         origin: input.origin,
         action: requireIdentifier(input.action, 'action'),
         result: input.result,
@@ -77,6 +84,28 @@ export class AuditLogService {
       return null;
     }
   }
+}
+
+async function resolveActorSnapshot(
+  input: RecordAuditLogInput,
+  actorUserId: string | null,
+  client: AuditDatabaseClient,
+) {
+  const suppliedName = normalizeText(input.actorName, MAX_IDENTIFIER_LENGTH);
+  const suppliedEmail = normalizeText(input.actorEmail, 320);
+  if (!actorUserId || (suppliedName && suppliedEmail)) {
+    return { name: suppliedName, email: suppliedEmail };
+  }
+
+  const actor = await client.user.findUnique({
+    where: { id: actorUserId },
+    select: { name: true, email: true },
+  });
+
+  return {
+    name: suppliedName ?? normalizeText(actor?.name, MAX_IDENTIFIER_LENGTH),
+    email: suppliedEmail ?? normalizeText(actor?.email, 320),
+  };
 }
 
 function sanitizeAuditPayload(value: Record<string, unknown> | undefined) {

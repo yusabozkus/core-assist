@@ -248,6 +248,11 @@ export class AccountDeletionService {
           );
         }
 
+        const actorSnapshot = await tx.user.findUniqueOrThrow({
+          where: { id: userId },
+          select: { name: true, email: true },
+        });
+
         for (const entry of inspection.entries) {
           if (!entry.customerIds.length && !entry.transactions.length) continue;
           // An independent, minimal audit record, not an undeleted user profile.
@@ -302,6 +307,8 @@ export class AccountDeletionService {
           {
             actorType: AuditActorType.USER,
             actorUserId: userId,
+            actorName: actorSnapshot.name,
+            actorEmail: actorSnapshot.email,
             origin: AuditOrigin.API,
             action: AuditAction.ACCOUNT_DELETED,
             result: AuditResult.SUCCESS,
