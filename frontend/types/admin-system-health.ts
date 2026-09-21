@@ -13,7 +13,8 @@ export type AdminSystemQueue = {
   counts: {
     waiting: number
     active: number
-    delayed: number
+    scheduled: number
+    overdue: number
     failed: number
   }
 }
@@ -39,6 +40,7 @@ export type AdminSystemHealth = {
     unavailableQueues: number
     pausedQueues: number
     backloggedQueues: number
+    queuesWithOverdueJobs: number
     queuesWithRecentFailures: number
     retainedQueueFailures: number
     recentQueueFailures: number
@@ -56,6 +58,24 @@ export type AdminSystemHealth = {
     webhookFailuresLast24Hours: number
     overdueReconciliations: number
     reconciliationFailures: number
+    reconciliationIssues: Array<{
+      id: string
+      workspaceId: string
+      owner: {
+        id: string
+        name: string
+        email: string
+      }
+      plan: "STARTER" | "GROWTH" | "BUSINESS"
+      status:
+        "TRIALING" | "ACTIVE" | "PAST_DUE" | "PAUSED" | "CANCELED" | "EXPIRED"
+      paddleSubscriptionId: string | null
+      reconcileAfter: string
+      lastReconciledAt: string | null
+      reconcileFailures: number
+      reconcileErrorCode: string | null
+      issueTypes: Array<"OVERDUE" | "FAILED">
+    }>
   }
   marketplaces: {
     issueCount: number

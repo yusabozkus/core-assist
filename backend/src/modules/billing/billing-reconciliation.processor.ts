@@ -7,6 +7,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { hasBillingAccess } from './billing-access.policy';
 import { PaddleBillingService } from './paddle-billing.service';
 import { paddleCheckoutEnvironment } from './paddle-billing.config';
+import { billingReconciliationCandidateWhere } from './billing-reconciliation.policy';
 import { PaddlePlanChangeService } from './paddle-plan-change.service';
 import { BillingRetentionService } from './billing-retention.service';
 
@@ -86,24 +87,7 @@ export class BillingReconciliationProcessor
         planChangesRetried += 1;
     }
     const candidates = await this.prisma.billingSubscription.findMany({
-      where: {
-        reconcileAfter: { lte: now },
-        OR: [
-          { paddleSubscriptionId: { not: null } },
-          {
-            workspace: {
-              billingCheckouts: {
-                some: {
-                  environment: paddleCheckoutEnvironment(),
-                  status: 'OPEN',
-                  paddleTransactionId: { not: null },
-                  boundAt: null,
-                },
-              },
-            },
-          },
-        ],
-      },
+      where: billingReconciliationCandidateWhere(now),
       orderBy: [{ reconcileAfter: 'asc' }, { id: 'asc' }],
       take: 20,
       select: {

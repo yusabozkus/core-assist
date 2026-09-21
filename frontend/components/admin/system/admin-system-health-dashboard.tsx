@@ -57,7 +57,7 @@ export function AdminSystemHealthDashboard({
         <MetricCard
           label="Kuyrukta bekleyen"
           value={data.summary.queueBacklog}
-          helper={`${data.summary.backloggedQueues} eşik aşımı · ${data.summary.recentQueueFailures} son hata`}
+          helper={`${data.summary.backloggedQueues} eşik aşımı · ${data.summary.queuesWithOverdueJobs} süre aşımı · ${data.summary.recentQueueFailures} son hata`}
           icon={Clock01Icon}
           alert={
             data.summary.unavailableQueues > 0 ||
@@ -157,6 +157,10 @@ export function AdminSystemHealthDashboard({
                 : "Henüz kayıt yok"}
             </span>
           </div>
+          <BillingIssueList
+            issues={data.billing.reconciliationIssues}
+            generatedAt={data.generatedAt}
+          />
         </Panel>
 
         <Panel
@@ -474,19 +478,21 @@ function Panel({
 function QueueTable({ queues }: { queues: AdminSystemQueue[] }) {
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[720px]">
-        <div className="grid grid-cols-[minmax(200px,1fr)_repeat(4,100px)_120px] border-b border-border bg-muted/35 px-5 py-2.5 text-[11px] font-medium text-muted-foreground">
+      <div className="min-w-[860px]">
+        <div className="grid grid-cols-[minmax(200px,1fr)_repeat(5,100px)_120px] border-b border-border bg-muted/35 px-5 py-2.5 text-[11px] font-medium text-muted-foreground">
           <span>Kuyruk</span>
           <span className="text-right">Bekleyen</span>
           <span className="text-right">Çalışan</span>
-          <span className="text-right">Geciken</span>
+          <span className="text-right">Zamanlanmış</span>
+          <span className="text-right">Süresi aşan</span>
           <span className="text-right">24 sa. hata</span>
           <span className="text-right">Durum</span>
         </div>
         {queues.map((queue) => (
-          <div
+          <Link
             key={queue.key}
-            className="grid grid-cols-[minmax(200px,1fr)_repeat(4,100px)_120px] items-center border-b border-border px-5 py-3.5 text-xs last:border-b-0"
+            href={APP_ROUTES.admin.operationQueue(queue.key)}
+            className="grid grid-cols-[minmax(200px,1fr)_repeat(5,100px)_120px] items-center border-b border-border px-5 py-3.5 text-xs transition-colors last:border-b-0 hover:bg-muted/35 focus-visible:bg-muted/35 focus-visible:outline-none"
           >
             <div className="min-w-0">
               <p className="font-medium">{queue.label}</p>
@@ -496,7 +502,8 @@ function QueueTable({ queues }: { queues: AdminSystemQueue[] }) {
             </div>
             <QueueNumber value={queue.counts.waiting} />
             <QueueNumber value={queue.counts.active} />
-            <QueueNumber value={queue.counts.delayed} />
+            <QueueNumber value={queue.counts.scheduled} />
+            <QueueNumber value={queue.counts.overdue} alert />
             <QueueNumber value={queue.recentFailuresLast24Hours} alert />
             <span
               className={cn(
@@ -514,11 +521,13 @@ function QueueTable({ queues }: { queues: AdminSystemQueue[] }) {
                   ? "Duraklatıldı"
                   : queue.backlogExceeded
                     ? "Yoğun"
-                    : queue.recentFailuresLast24Hours > 0
-                      ? "Hata var"
-                      : "Aktif"}
+                    : queue.counts.overdue > 0
+                      ? "Süre aştı"
+                      : queue.recentFailuresLast24Hours > 0
+                        ? "Hata var"
+                        : "Aktif"}
             </span>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
@@ -568,6 +577,86 @@ function SmallValue({
   )
 }
 
+function BillingIssueList({
+  issues,
+  generatedAt,
+}: {
+  issues: AdminSystemHealth["billing"]["reconciliationIssues"]
+  generatedAt: string
+}) {
+  if (!issues.length) {
+    return (
+      <div className="flex items-center gap-2 border-t border-border px-5 py-4 text-xs text-muted-foreground">
+        <HugeiconsIcon
+          icon={CheckmarkCircle01Icon}
+          className="size-4 text-emerald-600 dark:text-emerald-400"
+        />
+        İşlem gerektiren abonelik kontrolü yok.
+      </div>
+    )
+  }
+
+  return (
+    <div className="border-t border-border">
+      <div className="px-5 pt-4 pb-2">
+        <p className="text-xs font-medium">İşlem gerektiren abonelikler</p>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Geciken veya son kontrolünde hata alınan müşteriler
+        </p>
+      </div>
+      <div className="divide-y divide-border">
+        {issues.map((issue) => (
+          <Link
+            key={issue.id}
+            href={APP_ROUTES.admin.billingWorkspace(issue.workspaceId)}
+            className="group flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-muted/45"
+          >
+            <span
+              className={cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                issue.issueTypes.includes("FAILED")
+                  ? "bg-destructive/10 text-destructive"
+                  : "bg-amber-500/10 text-amber-700 dark:text-amber-300"
+              )}
+            >
+              <HugeiconsIcon
+                icon={
+                  issue.issueTypes.includes("FAILED")
+                    ? AlertCircleIcon
+                    : Clock01Icon
+                }
+                className="size-4"
+              />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-center gap-2">
+                <p className="truncate text-xs font-medium">
+                  {issue.owner.name}
+                </p>
+                <span className="shrink-0 text-[10px] text-muted-foreground">
+                  {billingPlanLabel(issue.plan)}
+                </span>
+              </div>
+              <p className="mt-1 truncate text-[11px] text-muted-foreground">
+                {issue.owner.email} · {billingIssueSummary(issue, generatedAt)}
+              </p>
+              {issue.reconcileErrorCode ? (
+                <code className="mt-1 block truncate text-[10px] text-destructive">
+                  {issue.reconcileErrorCode}
+                </code>
+              ) : null}
+            </div>
+            <HugeiconsIcon
+              icon={ArrowRight01Icon}
+              className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+            />
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function EmptyState({ text }: { text: string }) {
   return (
     <div className="flex min-h-32 flex-col items-center justify-center px-5 py-8 text-center">
@@ -595,6 +684,45 @@ function formatDate(value: string) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value))
+}
+
+function billingIssueSummary(
+  issue: AdminSystemHealth["billing"]["reconciliationIssues"][number],
+  generatedAt: string
+) {
+  const parts: string[] = []
+  if (issue.issueTypes.includes("OVERDUE")) {
+    const minutes = Math.max(
+      1,
+      Math.floor(
+        (new Date(generatedAt).getTime() -
+          new Date(issue.reconcileAfter).getTime()) /
+          60_000
+      )
+    )
+    parts.push(`${formatDuration(minutes)} gecikti`)
+  }
+  if (issue.issueTypes.includes("FAILED")) {
+    parts.push(`${formatNumber(issue.reconcileFailures)} başarısız kontrol`)
+  }
+  return parts.join(" · ")
+}
+
+function formatDuration(minutes: number) {
+  if (minutes < 60) return `${minutes} dk`
+  const hours = Math.floor(minutes / 60)
+  const remainder = minutes % 60
+  return remainder ? `${hours} sa ${remainder} dk` : `${hours} sa`
+}
+
+function billingPlanLabel(value: "STARTER" | "GROWTH" | "BUSINESS") {
+  return (
+    {
+      STARTER: "Starter",
+      GROWTH: "Growth",
+      BUSINESS: "Business",
+    }[value] ?? value
+  )
 }
 
 function providerLabel(value: string) {

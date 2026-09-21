@@ -15,7 +15,10 @@ import { Button } from "@/components/ui/button"
 import { APP_ROUTES } from "@/constants/site"
 import { cn } from "@/lib/utils"
 import type { AdminOperationQueueDetail } from "@/types/admin-operations"
-import { formatAdminOperationDate } from "./admin-operations-presentation"
+import {
+  formatAdminOperationDate,
+  formatAdminOperationDuration,
+} from "./admin-operations-presentation"
 
 const QUEUE_DESCRIPTIONS: Record<string, string> = {
   "product-sync":
@@ -32,6 +35,8 @@ const QUEUE_DESCRIPTIONS: Record<string, string> = {
     "Paddle tarafından iletilen ödeme ve abonelik olaylarını güvenli biçimde işleyen worker işlemleri.",
   "billing-recovery":
     "Abonelikleri Paddle kayıtlarıyla karşılaştıran ve kaçırılan ödeme olaylarını onaran periyodik işlemler.",
+  "support-notifications":
+    "Destek taleplerinin yanıt hedeflerini izleyen ve gerekli bildirimleri oluşturan periyodik işlemler.",
 }
 
 export function AdminQueueDetailView({
@@ -79,7 +84,7 @@ export function AdminQueueDetailView({
         </p>
       </div>
 
-      <section className="mt-7 grid overflow-hidden rounded-xl border border-border bg-card sm:grid-cols-2 xl:grid-cols-6">
+      <section className="mt-7 grid overflow-hidden rounded-xl border border-border bg-card sm:grid-cols-2 xl:grid-cols-7">
         <QueueMetric
           label="Aktif yük"
           value={activeLoad}
@@ -101,10 +106,17 @@ export function AdminQueueDetailView({
           tone={queue.counts.active > 0 ? "positive" : "neutral"}
         />
         <QueueMetric
-          label="Zamanlanan"
-          value={queue.counts.delayed}
-          helper="İleri tarihli işler"
+          label="Zamanlanmış"
+          value={queue.counts.scheduled}
+          helper="Periyodik ve bekleyen"
           icon={Clock01Icon}
+        />
+        <QueueMetric
+          label="Süresi aşan"
+          value={queue.counts.overdue}
+          helper="1 dk toleransı geçti"
+          icon={AlertCircleIcon}
+          tone={queue.counts.overdue > 0 ? "danger" : "neutral"}
         />
         <QueueMetric
           label="Son 24 saat hata"
@@ -135,6 +147,8 @@ export function AdminQueueDetailView({
           </p>
         </div>
       </div>
+
+      <ScheduledJobsSection queue={queue} />
 
       <section className="mt-6 overflow-hidden rounded-xl border border-border bg-card shadow-xs">
         <div className="flex flex-col justify-between gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center">
@@ -250,6 +264,105 @@ export function AdminQueueDetailView({
   )
 }
 
+function ScheduledJobsSection({ queue }: { queue: AdminOperationQueueDetail }) {
+  return (
+    <section className="mt-6 overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+      <div className="flex flex-col justify-between gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center">
+        <div>
+          <h2 className="text-sm font-semibold">Zamanlanmış işler</h2>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Periyodik kontroller, ileri tarihli işler ve yeniden deneme
+            bekleyenleri.
+          </p>
+        </div>
+        <span className="text-[10px] text-muted-foreground">
+          {queue.counts.scheduled} iş
+        </span>
+      </div>
+
+      {queue.scheduledJobs.length ? (
+        <div className="divide-y divide-border">
+          {queue.scheduledJobs.map((job) => {
+            const kind = scheduledJobKind(job.kind)
+            return (
+              <article
+                key={job.id}
+                className={cn(
+                  "flex flex-col gap-3 px-5 py-4 sm:px-6 lg:flex-row lg:items-center",
+                  job.overdue && "bg-destructive/3"
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/8 text-primary",
+                    job.overdue && "bg-destructive/10 text-destructive"
+                  )}
+                >
+                  <HugeiconsIcon
+                    icon={job.overdue ? AlertCircleIcon : Clock01Icon}
+                    className="size-4"
+                  />
+                </span>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-xs font-semibold">
+                      {formatQueueJobName(job.name)}
+                    </p>
+                    <Badge
+                      variant="outline"
+                      className={cn("px-2 py-0 text-[9px]", kind.className)}
+                    >
+                      {kind.label}
+                    </Badge>
+                    {job.overdue ? (
+                      <Badge
+                        variant="outline"
+                        className="border-destructive/25 bg-destructive/8 px-2 py-0 text-[9px] text-destructive"
+                      >
+                        {formatAdminOperationDuration(job.overdueByMs)} gecikti
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    {job.overdue ? "Planlanan zaman" : "Sonraki çalışma"}:{" "}
+                    {formatAdminOperationDate(job.scheduledFor)}
+                    {job.recurrence
+                      ? ` · ${recurrenceLabel(job.recurrence)}`
+                      : ""}
+                    {job.kind === "RETRY"
+                      ? ` · ${job.attemptsMade}/${job.maxAttempts || "—"} deneme`
+                      : ""}
+                  </p>
+                </div>
+
+                <code className="max-w-full truncate rounded-md bg-muted px-2 py-1 text-[9px] text-muted-foreground lg:max-w-72">
+                  {job.id}
+                </code>
+              </article>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="flex min-h-32 flex-col items-center justify-center px-6 text-center">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+            <HugeiconsIcon icon={Clock01Icon} className="size-4" />
+          </span>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Bu kuyrukta zamanlanmış iş bulunmuyor.
+          </p>
+        </div>
+      )}
+
+      {queue.counts.scheduled > queue.scheduledJobs.length ? (
+        <p className="border-t border-border px-5 py-3 text-[10px] text-muted-foreground">
+          İlk {queue.scheduledJobs.length} iş gösteriliyor.
+        </p>
+      ) : null}
+    </section>
+  )
+}
+
 function QueueMetric({
   label,
   value,
@@ -288,6 +401,44 @@ function QueueMetric({
   )
 }
 
+function scheduledJobKind(
+  kind: AdminOperationQueueDetail["scheduledJobs"][number]["kind"]
+) {
+  if (kind === "RECURRING") {
+    return {
+      label: "Periyodik",
+      className: "border-primary/20 bg-primary/6 text-primary",
+    }
+  }
+  if (kind === "RETRY") {
+    return {
+      label: "Yeniden deneme",
+      className:
+        "border-amber-500/20 bg-amber-500/8 text-amber-700 dark:text-amber-300",
+    }
+  }
+  return {
+    label: "İleri tarihli",
+    className: "border-border bg-muted/60 text-muted-foreground",
+  }
+}
+
+function recurrenceLabel(
+  recurrence: AdminOperationQueueDetail["scheduledJobs"][number]["recurrence"]
+) {
+  if (!recurrence) return ""
+  if (recurrence.everyMs) {
+    if (recurrence.everyMs === 86_400_000) return "Her gün"
+    return `Her ${formatAdminOperationDuration(recurrence.everyMs)}`
+  }
+  if (recurrence.pattern) {
+    return recurrence.timezone
+      ? `${recurrence.pattern} · ${recurrence.timezone}`
+      : recurrence.pattern
+  }
+  return "Periyodik"
+}
+
 function resolveQueueStatus(queue: AdminOperationQueueDetail) {
   if (!queue.available) {
     return {
@@ -311,6 +462,17 @@ function resolveQueueStatus(queue: AdminOperationQueueDetail) {
         "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300",
       panelClassName:
         "border-amber-500/20 bg-amber-500/5 text-amber-800 dark:text-amber-200",
+    }
+  }
+  if (queue.counts.overdue > 0) {
+    return {
+      label: "Süre aşımı",
+      title: "Zamanlanmış işler çalışma zamanını geçti",
+      description:
+        "Worker bu işleri planlanan zamandan sonraki bir dakika içinde alamadı. Redis bağlantısını ve worker sürecini kontrol edin.",
+      icon: AlertCircleIcon,
+      className: "border-destructive/25 bg-destructive/8 text-destructive",
+      panelClassName: "border-destructive/20 bg-destructive/5 text-destructive",
     }
   }
   if (queue.recentFailuresLast24Hours > 0) {

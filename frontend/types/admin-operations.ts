@@ -18,9 +18,27 @@ export type AdminOperationQueue = {
   counts: {
     waiting: number
     active: number
-    delayed: number
+    scheduled: number
+    overdue: number
     failed: number
   }
+}
+
+export type AdminOperationScheduledJob = {
+  id: string
+  name: string
+  kind: "RECURRING" | "RETRY" | "DELAYED"
+  createdAt: string
+  scheduledFor: string
+  overdue: boolean
+  overdueByMs: number
+  attemptsMade: number
+  maxAttempts: number
+  recurrence: {
+    everyMs: number | null
+    pattern: string | null
+    timezone: string | null
+  } | null
 }
 
 export type AdminOperationQueueFailure = {
@@ -32,6 +50,7 @@ export type AdminOperationQueueFailure = {
 }
 
 export type AdminOperationQueueDetail = AdminOperationQueue & {
+  scheduledJobs: AdminOperationScheduledJob[]
   failures: AdminOperationQueueFailure[]
   pagination: {
     page: number

@@ -31,11 +31,11 @@ export class AdminOperationsController {
   }
 
   @Get('queues/:queueKey')
-  findQueueFailures(
+  findQueueDetail(
     @Param('queueKey') queueKey: string,
     @Query() query: AdminQueueFailuresQueryDto,
   ) {
-    return this.operations.findQueueFailures(queueKey, query);
+    return this.operations.findQueueDetail(queueKey, query);
   }
 
   @Post('sync-runs/:syncRunId/retry')

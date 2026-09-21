@@ -585,7 +585,7 @@ function OperationRow({
 
 function QueueCard({ queue }: { queue: AdminOperationQueue }) {
   const backlog = queue.counts.waiting + queue.counts.active
-  const unhealthy = !queue.available || queue.paused
+  const unhealthy = !queue.available || queue.paused || queue.counts.overdue > 0
   const hasRecentFailure = queue.recentFailuresLast24Hours > 0
   const retainedOldFailures = Math.max(
     0,
@@ -621,7 +621,12 @@ function QueueCard({ queue }: { queue: AdminOperationQueue }) {
         </div>
         <div className="text-right text-[9px] leading-4 text-muted-foreground">
           <p>{queue.counts.active} çalışıyor</p>
-          <p>{queue.counts.delayed} zamanlandı</p>
+          <p>{queue.counts.scheduled} zamanlandı</p>
+          {queue.counts.overdue > 0 ? (
+            <p className="font-medium text-destructive">
+              {queue.counts.overdue} süre aştı
+            </p>
+          ) : null}
           <p className={cn(hasRecentFailure && "font-medium text-destructive")}>
             Son 24 saat: {queue.recentFailuresLast24Hours} hata
           </p>

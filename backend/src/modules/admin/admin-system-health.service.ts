@@ -3,12 +3,12 @@ import { Injectable } from '@nestjs/common';
 import type { Queue } from 'bullmq';
 import {
   AuditResult,
-  BillingSubscriptionStatus,
   CatalogSyncStatus,
   ChannelConnectionStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { BILLING_RECOVERY_QUEUE } from '../billing/billing-reconciliation.processor';
+import { billingReconciliationTargetWhere } from '../billing/billing-reconciliation.policy';
 import { PADDLE_WEBHOOK_QUEUE } from '../billing/paddle-webhook.constants';
 import { PRODUCT_SYNC_QUEUE } from '../product-sync/product-sync.constants';
 import { QUESTION_ANSWER_QUEUE } from '../question-answer/question-answer.constants';
@@ -16,6 +16,7 @@ import { QUESTION_SYNC_QUEUE } from '../question-sync/question-sync.constants';
 import { QUESTION_DRAFT_QUEUE } from '../questions/question-draft.constants';
 import { SIZE_GUIDE_QUEUE } from '../size-guides/size-guide.constants';
 import { SUPPORT_NOTIFICATION_QUEUE } from '../support/support-notification.constants';
+import { inspectScheduledJobs } from './admin-queue-monitoring';
 
 const DAY = 24 * 60 * 60 * 1000;
 const RECONCILIATION_GRACE_MS = 15 * 60 * 1000;
@@ -122,6 +123,7 @@ export class AdminSystemHealthService {
           health.summary.unavailableQueues +
           health.summary.pausedQueues +
           health.summary.backloggedQueues +
+          health.summary.queuesWithOverdueJobs +
           health.summary.queuesWithRecentFailures +
           health.summary.failedSyncsLast24Hours +
           health.summary.billingIssues +
@@ -158,6 +160,9 @@ export class AdminSystemHealthService {
     const backloggedQueues = queues.filter(
       (queue) => queue.backlogExceeded,
     ).length;
+    const queuesWithOverdueJobs = queues.filter(
+      (queue) => queue.counts.overdue > 0,
+    ).length;
     const queuesWithRecentFailures = queues.filter(
       (queue) => queue.recentFailuresLast24Hours > 0,
     ).length;
@@ -179,6 +184,7 @@ export class AdminSystemHealthService {
       unavailableQueues,
       pausedQueues,
       backloggedQueues,
+      queuesWithOverdueJobs,
       queuesWithRecentFailures,
       failedSyncsLast24Hours: database.syncs.failedLast24Hours,
       billingIssues,
@@ -202,6 +208,7 @@ export class AdminSystemHealthService {
         unavailableQueues,
         pausedQueues,
         backloggedQueues,
+        queuesWithOverdueJobs,
         queuesWithRecentFailures,
         retainedQueueFailures,
         recentQueueFailures,
@@ -226,12 +233,31 @@ export class AdminSystemHealthService {
       const overdueReconcileBefore = new Date(
         now.getTime() - RECONCILIATION_GRACE_MS,
       );
+      const reconciliationTarget = billingReconciliationTargetWhere();
+      const overdueReconciliationWhere = {
+        AND: [
+          reconciliationTarget,
+          { reconcileAfter: { lt: overdueReconcileBefore } },
+        ],
+      };
+      const failedReconciliationWhere = {
+        AND: [
+          reconciliationTarget,
+          {
+            OR: [
+              { reconcileFailures: { gt: 0 } },
+              { reconcileErrorCode: { not: null } },
+            ],
+          },
+        ],
+      };
       const [
         lastWebhook,
         webhookEventsLastDay,
         webhookFailuresLastDay,
         overdueReconciliations,
         reconciliationFailures,
+        reconciliationIssues,
         connectionGroups,
         connectionIssueCount,
         connectionIssues,
@@ -253,20 +279,44 @@ export class AdminSystemHealthService {
           },
         }),
         this.prisma.billingSubscription.count({
-          where: {
-            status: {
-              in: [
-                BillingSubscriptionStatus.TRIALING,
-                BillingSubscriptionStatus.ACTIVE,
-                BillingSubscriptionStatus.PAST_DUE,
-                BillingSubscriptionStatus.PAUSED,
-              ],
-            },
-            reconcileAfter: { lt: overdueReconcileBefore },
-          },
+          where: overdueReconciliationWhere,
         }),
         this.prisma.billingSubscription.count({
-          where: { reconcileFailures: { gt: 0 } },
+          where: failedReconciliationWhere,
+        }),
+        this.prisma.billingSubscription.findMany({
+          where: {
+            AND: [
+              reconciliationTarget,
+              {
+                OR: [
+                  { reconcileAfter: { lt: overdueReconcileBefore } },
+                  { reconcileFailures: { gt: 0 } },
+                  { reconcileErrorCode: { not: null } },
+                ],
+              },
+            ],
+          },
+          select: {
+            id: true,
+            workspaceId: true,
+            plan: true,
+            status: true,
+            paddleSubscriptionId: true,
+            reconcileAfter: true,
+            lastReconciledAt: true,
+            reconcileFailures: true,
+            reconcileErrorCode: true,
+            workspace: {
+              select: {
+                owner: {
+                  select: { id: true, name: true, email: true },
+                },
+              },
+            },
+          },
+          orderBy: [{ reconcileFailures: 'desc' }, { reconcileAfter: 'asc' }],
+          take: 8,
         }),
         this.prisma.channelConnection.groupBy({
           by: ['providerKey', 'status'],
@@ -382,6 +432,26 @@ export class AdminSystemHealthService {
           webhookFailuresLast24Hours: webhookFailuresLastDay,
           overdueReconciliations,
           reconciliationFailures,
+          reconciliationIssues: reconciliationIssues.map((issue) => ({
+            id: issue.id,
+            workspaceId: issue.workspaceId,
+            owner: issue.workspace.owner,
+            plan: issue.plan,
+            status: issue.status,
+            paddleSubscriptionId: issue.paddleSubscriptionId,
+            reconcileAfter: issue.reconcileAfter,
+            lastReconciledAt: issue.lastReconciledAt,
+            reconcileFailures: issue.reconcileFailures,
+            reconcileErrorCode: issue.reconcileErrorCode,
+            issueTypes: [
+              ...(issue.reconcileAfter < overdueReconcileBefore
+                ? (['OVERDUE'] as const)
+                : []),
+              ...(issue.reconcileFailures > 0 || issue.reconcileErrorCode
+                ? (['FAILED'] as const)
+                : []),
+            ],
+          })),
         },
         marketplaces: {
           issueCount: connectionIssueCount,
@@ -455,11 +525,12 @@ export class AdminSystemHealthService {
     return Promise.all(
       queues.map(async ({ key, label, queue, backlogWarningThreshold }) => {
         try {
-          const [counts, paused, failedJobs] = await withTimeout(
+          const [counts, paused, failedJobs, scheduledJobs] = await withTimeout(
             Promise.all([
               queue.getJobCounts('waiting', 'active', 'delayed', 'failed'),
               queue.isPaused(),
               queue.getJobs(['failed'], 0, RECENT_FAILED_JOB_LIMIT - 1, false),
+              inspectScheduledJobs(queue),
             ]),
             QUEUE_HEALTH_TIMEOUT_MS,
             `QUEUE_TIMEOUT:${key}`,
@@ -470,7 +541,10 @@ export class AdminSystemHealthService {
           const waiting = counts.waiting ?? 0;
           const backlogExceeded = waiting >= backlogWarningThreshold;
           const status: HealthStatus =
-            paused || backlogExceeded || recentFailuresLast24Hours > 0
+            paused ||
+            backlogExceeded ||
+            scheduledJobs.overdue > 0 ||
+            recentFailuresLast24Hours > 0
               ? 'DEGRADED'
               : 'HEALTHY';
 
@@ -487,7 +561,8 @@ export class AdminSystemHealthService {
             counts: {
               waiting,
               active: counts.active ?? 0,
-              delayed: counts.delayed ?? 0,
+              scheduled: counts.delayed ?? 0,
+              overdue: scheduledJobs.overdue,
               failed: counts.failed ?? 0,
             },
           };
@@ -586,6 +661,7 @@ export class AdminSystemHealthService {
         unavailableQueues: queues.length,
         pausedQueues: 0,
         backloggedQueues: 0,
+        queuesWithOverdueJobs: 0,
         queuesWithRecentFailures: 0,
         retainedQueueFailures: 0,
         recentQueueFailures: 0,
@@ -616,6 +692,7 @@ function overallStatus(input: {
   unavailableQueues: number;
   pausedQueues: number;
   backloggedQueues: number;
+  queuesWithOverdueJobs: number;
   queuesWithRecentFailures: number;
   failedSyncsLast24Hours: number;
   billingIssues: number;
@@ -633,6 +710,7 @@ function overallStatus(input: {
     input.redis === 'DEGRADED' ||
     input.pausedQueues > 0 ||
     input.backloggedQueues > 0 ||
+    input.queuesWithOverdueJobs > 0 ||
     input.queuesWithRecentFailures > 0 ||
     input.failedSyncsLast24Hours > 0 ||
     input.billingIssues > 0 ||
@@ -660,6 +738,7 @@ function emptyBillingHealth() {
     webhookFailuresLast24Hours: 0,
     overdueReconciliations: 0,
     reconciliationFailures: 0,
+    reconciliationIssues: [],
   };
 }
 
@@ -722,7 +801,13 @@ function unavailableQueue(
     backlogExceeded: false,
     recentFailuresLast24Hours: 0,
     errorCode,
-    counts: { waiting: 0, active: 0, delayed: 0, failed: 0 },
+    counts: {
+      waiting: 0,
+      active: 0,
+      scheduled: 0,
+      overdue: 0,
+      failed: 0,
+    },
   };
 }
 

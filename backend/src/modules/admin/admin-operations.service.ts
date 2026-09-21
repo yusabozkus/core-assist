@@ -30,6 +30,8 @@ import {
 } from '../question-sync/question-sync.constants';
 import { QUESTION_DRAFT_QUEUE } from '../questions/question-draft.constants';
 import { SIZE_GUIDE_QUEUE } from '../size-guides/size-guide.constants';
+import { SUPPORT_NOTIFICATION_QUEUE } from '../support/support-notification.constants';
+import { inspectScheduledJobs } from './admin-queue-monitoring';
 import {
   AdminOperationIssueFilter,
   AdminOperationOrder,
@@ -120,6 +122,8 @@ export class AdminOperationsService {
     private readonly paddleWebhookQueue: Queue,
     @InjectQueue(BILLING_RECOVERY_QUEUE)
     private readonly billingRecoveryQueue: Queue,
+    @InjectQueue(SUPPORT_NOTIFICATION_QUEUE)
+    private readonly supportNotificationQueue: Queue,
     private readonly audit: AuditLogService,
   ) {}
 
@@ -281,7 +285,7 @@ export class AdminOperationsService {
     }
   }
 
-  async findQueueFailures(queueKey: string, query: AdminQueueFailuresQueryDto) {
+  async findQueueDetail(queueKey: string, query: AdminQueueFailuresQueryDto) {
     const definition = this.getQueueDefinitions().find(
       (queue) => queue.key === queueKey,
     );
@@ -299,11 +303,13 @@ export class AdminOperationsService {
     const total = counts.failed ?? 0;
     const start = (query.page - 1) * query.pageSize;
     const end = start + query.pageSize - 1;
-    const [paused, recentFailuresLast24Hours, failures] = await Promise.all([
-      definition.queue.isPaused(),
-      countRecentQueueFailures(definition.queue, now.getTime() - DAY),
-      definition.queue.getJobs(['failed'], start, end, false),
-    ]);
+    const [paused, recentFailuresLast24Hours, failures, scheduledJobs] =
+      await Promise.all([
+        definition.queue.isPaused(),
+        countRecentQueueFailures(definition.queue, now.getTime() - DAY),
+        definition.queue.getJobs(['failed'], start, end, false),
+        inspectScheduledJobs(definition.queue, now.getTime()),
+      ]);
 
     return {
       key: definition.key,
@@ -314,9 +320,11 @@ export class AdminOperationsService {
       counts: {
         waiting: counts.waiting ?? 0,
         active: counts.active ?? 0,
-        delayed: counts.delayed ?? 0,
+        scheduled: counts.delayed ?? 0,
+        overdue: scheduledJobs.overdue,
         failed: total,
       },
+      scheduledJobs: scheduledJobs.jobs.slice(0, 50),
       failures: failures.map(toQueueFailure),
       pagination: {
         page: query.page,
@@ -493,13 +501,13 @@ export class AdminOperationsService {
       this.getQueueDefinitions().map(async ({ key, label, queue }) => {
         try {
           const failedSince = now.getTime() - DAY;
-          const [counts, paused, recentFailuresLast24Hours] = await Promise.all(
-            [
+          const [counts, paused, recentFailuresLast24Hours, scheduledJobs] =
+            await Promise.all([
               queue.getJobCounts('waiting', 'active', 'delayed', 'failed'),
               queue.isPaused(),
               countRecentQueueFailures(queue, failedSince),
-            ],
-          );
+              inspectScheduledJobs(queue, now.getTime()),
+            ]);
           return {
             key,
             label,
@@ -509,7 +517,8 @@ export class AdminOperationsService {
             counts: {
               waiting: counts.waiting ?? 0,
               active: counts.active ?? 0,
-              delayed: counts.delayed ?? 0,
+              scheduled: counts.delayed ?? 0,
+              overdue: scheduledJobs.overdue,
               failed: counts.failed ?? 0,
             },
           };
@@ -520,7 +529,13 @@ export class AdminOperationsService {
             available: false,
             paused: false,
             recentFailuresLast24Hours: 0,
-            counts: { waiting: 0, active: 0, delayed: 0, failed: 0 },
+            counts: {
+              waiting: 0,
+              active: 0,
+              scheduled: 0,
+              overdue: 0,
+              failed: 0,
+            },
           };
         }
       }),
@@ -559,6 +574,11 @@ export class AdminOperationsService {
         key: 'billing-recovery',
         label: 'Faturalama kontrolü',
         queue: this.billingRecoveryQueue,
+      },
+      {
+        key: 'support-notifications',
+        label: 'Destek bildirimleri',
+        queue: this.supportNotificationQueue,
       },
     ];
   }

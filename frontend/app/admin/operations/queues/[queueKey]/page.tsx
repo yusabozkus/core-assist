@@ -18,6 +18,7 @@ const QUEUE_KEYS = new Set([
   "size-guide",
   "paddle-webhooks",
   "billing-recovery",
+  "support-notifications",
 ])
 
 export default async function AdminOperationQueuePage({
