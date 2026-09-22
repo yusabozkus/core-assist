@@ -3,6 +3,51 @@ import type { BillingSubscriptionStatus } from "@/types/billing"
 
 export type AdminAiUsagePeriod = "7D" | "30D" | "90D"
 
+export type AdminAiBlockerType =
+  | "generation-failures"
+  | "delivery-failures"
+  | "quota"
+  | "subscription"
+  | "missing-information"
+  | "knowledge-conflicts"
+
+export type AdminAiBlockerItem = {
+  id: string
+  kind: "QUESTION" | "DELIVERY" | "KNOWLEDGE"
+  title: string
+  description: string
+  error: string | null
+  occurredAt: string
+  status: string
+  questionId: string | null
+  externalQuestionId: string | null
+  store: {
+    id: string
+    name: string
+    account: {
+      id: string
+      name: string
+      owner: { name: string; email: string }
+    }
+  }
+  metadata: Array<{ label: string; value: string }>
+}
+
+export type AdminAiBlockerList = {
+  type: AdminAiBlockerType
+  title: string
+  description: string
+  total: number
+  items: AdminAiBlockerItem[]
+  pagination: {
+    page: number
+    pageSize: number
+    total: number
+    totalPages: number
+  }
+  generatedAt: string
+}
+
 export type AdminAiUsage = {
   period: AdminAiUsagePeriod
   periodStart: string

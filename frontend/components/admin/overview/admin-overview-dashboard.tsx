@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { APP_ROUTES } from "@/constants/site"
 import { cn } from "@/lib/utils"
 import type { AdminOverview } from "@/types/admin-overview"
+import { AdminSubscriptionDistributionChart } from "./admin-subscription-distribution-chart"
 
 const numberFormatter = new Intl.NumberFormat("tr-TR")
 
@@ -86,7 +87,7 @@ export function AdminOverviewDashboard({ data }: { data: AdminOverview }) {
           description="Tüm çalışma alanlarının güncel abonelik durumu"
           href={APP_ROUTES.admin.billing}
         >
-          <SubscriptionDistribution metrics={metrics.subscriptions} />
+          <AdminSubscriptionDistributionChart metrics={metrics.subscriptions} />
         </Panel>
 
         <Panel
@@ -405,60 +406,6 @@ function Panel({
         ) : null}
       </div>
       {children}
-    </div>
-  )
-}
-
-function SubscriptionDistribution({
-  metrics,
-}: {
-  metrics: AdminOverview["metrics"]["subscriptions"]
-}) {
-  const segments = [
-    { label: "Aktif", value: metrics.active, className: "bg-emerald-500" },
-    { label: "Deneme", value: metrics.trialing, className: "bg-sky-500" },
-    { label: "Gecikmiş", value: metrics.pastDue, className: "bg-destructive" },
-    {
-      label: "Duraklatılmış",
-      value: metrics.paused,
-      className: "bg-amber-500",
-    },
-    {
-      label: "İptal / süresi dolmuş",
-      value: metrics.canceled + metrics.expired,
-      className: "bg-muted-foreground/35",
-    },
-  ]
-  const total = Math.max(metrics.total, 1)
-
-  return (
-    <div className="p-5">
-      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted">
-        {segments.map((segment) =>
-          segment.value ? (
-            <span
-              key={segment.label}
-              className={segment.className}
-              style={{ width: `${(segment.value / total) * 100}%` }}
-            />
-          ) : null
-        )}
-      </div>
-      <div className="mt-5 grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        {segments.map((segment) => (
-          <div key={segment.label}>
-            <div className="flex items-center gap-2">
-              <span className={cn("size-2 rounded-full", segment.className)} />
-              <p className="truncate text-xs text-muted-foreground">
-                {segment.label}
-              </p>
-            </div>
-            <p className="mt-2 text-lg font-semibold tabular-nums">
-              {formatNumber(segment.value)}
-            </p>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }

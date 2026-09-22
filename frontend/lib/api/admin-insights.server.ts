@@ -2,7 +2,12 @@ import "server-only"
 
 import { headers } from "next/headers"
 
-import type { AdminAiUsage, AdminAiUsagePeriod } from "@/types/admin-ai-usage"
+import type {
+  AdminAiBlockerList,
+  AdminAiBlockerType,
+  AdminAiUsage,
+  AdminAiUsagePeriod,
+} from "@/types/admin-ai-usage"
 import type { AdminSystemHealth } from "@/types/admin-system-health"
 
 const apiUrl = (
@@ -14,6 +19,20 @@ const apiUrl = (
 export function getServerAdminAiUsage(period: AdminAiUsagePeriod) {
   return adminInsightsFetch<AdminAiUsage>(
     `/admin/ai-usage?period=${encodeURIComponent(period)}`
+  )
+}
+
+export function getServerAdminAiBlockers(
+  type: AdminAiBlockerType,
+  page: number,
+  pageSize = 25
+) {
+  const params = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize),
+  })
+  return adminInsightsFetch<AdminAiBlockerList>(
+    `/admin/ai-usage/blockers/${encodeURIComponent(type)}?${params}`
   )
 }
 

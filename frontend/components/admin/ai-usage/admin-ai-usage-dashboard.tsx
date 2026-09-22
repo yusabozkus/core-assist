@@ -15,6 +15,10 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { APP_ROUTES } from "@/constants/site"
 import { cn } from "@/lib/utils"
 import type { AdminAiUsage, AdminAiUsagePeriod } from "@/types/admin-ai-usage"
+import {
+  AdminDailyDraftChart,
+  AdminDraftDecisionChart,
+} from "./admin-ai-usage-charts"
 
 const PERIOD_OPTIONS: Array<{ value: AdminAiUsagePeriod; label: string }> = [
   { value: "7D", label: "7 gün" },
@@ -97,7 +101,7 @@ export function AdminAiUsageDashboard({ data }: { data: AdminAiUsage }) {
           title="Taslak karar dağılımı"
           description="AI tarafından verilen son kararların oranı"
         >
-          <DecisionDistribution data={data} />
+          <AdminDraftDecisionChart data={data} />
         </Panel>
         <Panel
           title="Güncel işlem engelleri"
@@ -109,36 +113,42 @@ export function AdminAiUsageDashboard({ data }: { data: AdminAiUsage }) {
               value={data.blockers.generationFailures}
               icon={AlertCircleIcon}
               alert={data.blockers.generationFailures > 0}
+              href={APP_ROUTES.admin.aiUsageBlocker("generation-failures")}
             />
             <CompactMetric
               label="Cevap gönderim hatası"
               value={data.blockers.deliveryFailures}
               icon={ArrowRight01Icon}
               alert={data.blockers.deliveryFailures > 0}
+              href={APP_ROUTES.admin.aiUsageBlocker("delivery-failures")}
             />
             <CompactMetric
               label="Kota nedeniyle bekleyen"
               value={data.blockers.quota}
               icon={CreditCardIcon}
               alert={data.blockers.quota > 0}
+              href={APP_ROUTES.admin.aiUsageBlocker("quota")}
             />
             <CompactMetric
               label="Abonelik nedeniyle bekleyen"
               value={data.blockers.subscription}
               icon={Clock01Icon}
               alert={data.blockers.subscription > 0}
+              href={APP_ROUTES.admin.aiUsageBlocker("subscription")}
             />
             <CompactMetric
               label="Eksik ürün bilgisi"
               value={data.blockers.missingInformation}
               icon={AiSparklesIcon}
               alert={data.blockers.missingInformation > 0}
+              href={APP_ROUTES.admin.aiUsageBlocker("missing-information")}
             />
             <CompactMetric
               label="Bilgi çakışması"
               value={data.blockers.knowledgeConflicts}
               icon={AlertCircleIcon}
               alert={data.blockers.knowledgeConflicts > 0}
+              href={APP_ROUTES.admin.aiUsageBlocker("knowledge-conflicts")}
             />
           </div>
         </Panel>
@@ -149,7 +159,7 @@ export function AdminAiUsageDashboard({ data }: { data: AdminAiUsage }) {
           title="Günlük taslak hacmi"
           description={`${formatDay(data.periodStart)} – ${formatDay(data.periodEnd)}`}
         >
-          <DailyActivity data={data.daily} />
+          <AdminDailyDraftChart data={data.daily} />
         </Panel>
       </section>
 
@@ -357,72 +367,24 @@ function Panel({
   )
 }
 
-function DecisionDistribution({ data }: { data: AdminAiUsage }) {
-  const { summary } = data
-  const total = Math.max(summary.totalDrafts, 1)
-  const segments = [
-    {
-      label: "Gönderime hazır",
-      value: summary.readyForSend,
-      className: "bg-emerald-500",
-    },
-    {
-      label: "İnceleme gerekli",
-      value: summary.needsReview,
-      className: "bg-amber-500",
-    },
-    {
-      label: "Yanıt verilmemeli",
-      value: summary.doNotReply,
-      className: "bg-muted-foreground/45",
-    },
-  ]
-  return (
-    <div className="p-5">
-      <div className="flex h-2.5 overflow-hidden rounded-full bg-muted">
-        {segments.map((segment) =>
-          segment.value ? (
-            <span
-              key={segment.label}
-              className={segment.className}
-              style={{ width: `${(segment.value / total) * 100}%` }}
-            />
-          ) : null
-        )}
-      </div>
-      <div className="mt-5 grid gap-4 sm:grid-cols-3">
-        {segments.map((segment) => (
-          <div key={segment.label}>
-            <div className="flex items-center gap-2">
-              <span className={cn("size-2 rounded-full", segment.className)} />
-              <p className="text-xs text-muted-foreground">{segment.label}</p>
-            </div>
-            <p className="mt-2 text-xl font-semibold tabular-nums">
-              {formatNumber(segment.value)}
-            </p>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              %{ratio(segment.value, summary.totalDrafts)}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 function CompactMetric({
   label,
   value,
   icon,
   alert,
+  href,
 }: {
   label: string
   value: number
   icon: IconSvgElement
   alert: boolean
+  href: string
 }) {
   return (
-    <div className="bg-card p-5">
+    <Link
+      href={href}
+      className="group bg-card p-5 outline-none transition-colors hover:bg-muted/45 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
+    >
       <div className="flex items-center justify-between gap-3">
         <span
           className={cn(
@@ -443,39 +405,14 @@ function CompactMetric({
           {formatNumber(value)}
         </p>
       </div>
-      <p className="mt-4 text-xs text-muted-foreground">{label}</p>
-    </div>
-  )
-}
-
-function DailyActivity({ data }: { data: AdminAiUsage["daily"] }) {
-  const maximum = Math.max(...data.map((point) => point.drafts), 1)
-  return (
-    <div className="overflow-x-auto px-5 pt-5 pb-4">
-      <div
-        className="flex h-48 min-w-[640px] items-end gap-1"
-        aria-label="Günlük taslak grafiği"
-      >
-        {data.map((point) => (
-          <div
-            key={point.date}
-            className="group flex h-full min-w-1 flex-1 items-end"
-            title={`${formatDay(point.date)}: ${formatNumber(point.drafts)} taslak`}
-          >
-            <div
-              className="w-full rounded-t-sm bg-primary/20 transition-colors group-hover:bg-primary"
-              style={{
-                height: `${Math.max(3, (point.drafts / maximum) * 100)}%`,
-              }}
-            />
-          </div>
-        ))}
+      <div className="mt-4 flex items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <HugeiconsIcon
+          icon={ArrowRight01Icon}
+          className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
+        />
       </div>
-      <div className="mt-3 flex min-w-[640px] justify-between text-[10px] text-muted-foreground">
-        <span>{formatDay(data[0]?.date)}</span>
-        <span>{formatDay(data.at(-1)?.date)}</span>
-      </div>
-    </div>
+    </Link>
   )
 }
 

@@ -1,5 +1,6 @@
 "use client"
 import { useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import {
   ArrowUpDownIcon,
@@ -15,13 +16,12 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -105,8 +105,11 @@ export function SidebarUser({
             align="end"
             sideOffset={6}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-2 py-2 text-left text-sm">
+            <DropdownMenuItem asChild className="p-0 font-normal">
+              <Link
+                href={APP_ROUTES.dashboard.settings.profile}
+                className="flex items-center gap-2 px-2 py-2 text-left text-sm"
+              >
                 <UserAvatar user={user} initials={initials} />
                 <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
@@ -114,8 +117,8 @@ export function SidebarUser({
                     {user.email}
                   </span>
                 </div>
-              </div>
-            </DropdownMenuLabel>
+              </Link>
+            </DropdownMenuItem>
 
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
@@ -201,14 +204,29 @@ function UserAvatar({
   user: SidebarUserData
   initials: string
 }) {
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState<string | null>(null)
+  const avatarUrl =
+    user.avatarUrl && user.avatarUrl !== failedAvatarUrl
+      ? user.avatarUrl
+      : null
+
   return (
-    <Avatar className="size-8">
-      {user.avatarUrl ? (
-        <AvatarImage src={user.avatarUrl} alt={user.name} />
-      ) : null}
+    <Avatar className="size-8 overflow-hidden">
       <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
         {initials}
       </AvatarFallback>
+      {avatarUrl ? (
+        <Image
+          src={avatarUrl}
+          alt={user.name}
+          width={32}
+          height={32}
+          unoptimized
+          referrerPolicy="no-referrer"
+          onError={() => setFailedAvatarUrl(avatarUrl)}
+          className="absolute inset-0 z-10 size-full rounded-full object-cover"
+        />
+      ) : null}
     </Avatar>
   )
 }

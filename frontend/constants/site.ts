@@ -35,6 +35,7 @@ export const APP_ROUTES = {
     operationQueue: (queueKey: string) =>
       `/admin/operations/queues/${queueKey}`,
     aiUsage: "/admin/ai-usage",
+    aiUsageBlocker: (type: string) => `/admin/ai-usage/blockers/${type}`,
     system: "/admin/system",
     auditLogs: "/admin/audit-logs",
     account: "/admin/account",

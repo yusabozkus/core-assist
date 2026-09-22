@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -13,6 +14,8 @@ import {
   StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { QUESTION_DRAFT_DISPATCHER } from '../questions/question-draft.constants';
+import type { QuestionDraftDispatcher } from '../questions/question-draft.types';
 import type { UpdateStoreKnowledgeDto } from './dto/update-store-knowledge.dto';
 
 const profileSelect = {
@@ -36,7 +39,11 @@ const profileSelect = {
 
 @Injectable()
 export class KnowledgeService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(QUESTION_DRAFT_DISPATCHER)
+    private readonly questionDrafts: QuestionDraftDispatcher,
+  ) {}
 
   async findOne(storeId: string, userId: string) {
     await this.requireMembership(storeId, userId);
@@ -188,6 +195,8 @@ export class KnowledgeService {
         }
       }
     });
+
+    await this.questionDrafts.scheduleAutomationSettingsApply(storeId);
 
     return this.read(storeId);
   }

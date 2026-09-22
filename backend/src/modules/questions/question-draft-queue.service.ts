@@ -14,10 +14,17 @@ import {
   BillingQuotaExceededException,
 } from '../billing/billing.errors';
 import {
+  AiAutomationMode,
+  AiDraftOutcome,
+  ChannelConnectionStatus,
   ProductQuestionStatus,
+  QuestionAnswerStatus,
   QuestionDraftProcessingStatus,
+  QuestionReplyDecision,
+  StoreStatus,
 } from '../../generated/prisma/enums';
 import {
+  APPLY_AUTOMATION_SETTINGS_JOB,
   GENERATE_QUESTION_DRAFT_JOB,
   QUESTION_DRAFT_QUEUE,
   RESUME_BILLING_BLOCKED_DRAFTS_JOB,
@@ -25,7 +32,10 @@ import {
 import type {
   QuestionDraftDispatcher,
   QuestionDraftJobData,
+  QuestionDraftQueueJobData,
 } from './question-draft.types';
+
+const AUTOMATION_SETTINGS_BATCH_SIZE = 100;
 
 @Injectable()
 export class QuestionDraftQueueService
@@ -33,7 +43,7 @@ export class QuestionDraftQueueService
 {
   constructor(
     @InjectQueue(QUESTION_DRAFT_QUEUE)
-    private readonly queue: Queue<QuestionDraftJobData>,
+    private readonly queue: Queue<QuestionDraftQueueJobData>,
     private readonly prisma: PrismaService,
     private readonly billing: BillingSubscriptionService,
     private readonly billingUsage: BillingUsageService,
@@ -91,6 +101,150 @@ export class QuestionDraftQueueService
       for (const question of questions)
         await this.enqueue(store.id, question.id);
     }
+  }
+
+  async scheduleAutomationSettingsApply(storeId: string) {
+    await this.queue.add(
+      APPLY_AUTOMATION_SETTINGS_JOB,
+      { storeId },
+      {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2_000 },
+        removeOnComplete: true,
+        removeOnFail: failedJobRetention(25),
+      },
+    );
+  }
+
+  async applyAutomationSettings(storeId: string) {
+    const store = await this.prisma.store.findFirst({
+      where: { id: storeId, status: StoreStatus.ACTIVE },
+      select: {
+        knowledgeProfile: { select: { automationMode: true } },
+      },
+    });
+    const automationMode = store?.knowledgeProfile?.automationMode;
+    if (
+      automationMode !== AiAutomationMode.SHADOW &&
+      automationMode !== AiAutomationMode.SAFE_AUTO
+    ) {
+      return { pendingQueued: 0, readyQueued: 0 };
+    }
+    if (!(await this.billing.hasStoreAccess(storeId))) {
+      return { pendingQueued: 0, readyQueued: 0 };
+    }
+
+    const pendingQuestions = await this.prisma.productQuestion.findMany({
+      where: {
+        storeId,
+        status: ProductQuestionStatus.PENDING,
+        productId: { not: null },
+        connection: { status: ChannelConnectionStatus.CONNECTED },
+        draftProcessingStatus: {
+          in: [QuestionDraftProcessingStatus.FAILED],
+        },
+      },
+      orderBy: [{ externalCreatedAt: 'asc' }, { id: 'asc' }],
+      take: AUTOMATION_SETTINGS_BATCH_SIZE,
+      select: { id: true },
+    });
+
+    const waitingQuestions =
+      pendingQuestions.length < AUTOMATION_SETTINGS_BATCH_SIZE
+        ? await this.prisma.productQuestion.findMany({
+            where: {
+              storeId,
+              status: ProductQuestionStatus.PENDING,
+              productId: { not: null },
+              connection: { status: ChannelConnectionStatus.CONNECTED },
+              draftProcessingStatus: null,
+            },
+            orderBy: [{ externalCreatedAt: 'asc' }, { id: 'asc' }],
+            take: AUTOMATION_SETTINGS_BATCH_SIZE - pendingQuestions.length,
+            select: { id: true },
+          })
+        : [];
+    const draftCandidates = [...pendingQuestions, ...waitingQuestions];
+
+    for (const question of draftCandidates) {
+      await this.enqueue(storeId, question.id, { reason: 'AUTOMATION' });
+    }
+
+    const readyQuestions =
+      automationMode === AiAutomationMode.SAFE_AUTO
+        ? await this.prisma.productQuestion.findMany({
+            where: {
+              storeId,
+              status: ProductQuestionStatus.DRAFTED,
+              draftDecision: QuestionReplyDecision.READY_FOR_SEND,
+              answer: { not: null },
+              connection: { status: ChannelConnectionStatus.CONNECTED },
+              draftAttempts: {
+                some: {
+                  outcome: AiDraftOutcome.AVAILABLE,
+                  autoSendEligible: true,
+                },
+              },
+              OR: [
+                { answerDelivery: { is: null } },
+                {
+                  answerDelivery: {
+                    is: { status: QuestionAnswerStatus.FAILED },
+                  },
+                },
+              ],
+            },
+            orderBy: [{ externalCreatedAt: 'asc' }, { id: 'asc' }],
+            take: AUTOMATION_SETTINGS_BATCH_SIZE,
+            select: {
+              id: true,
+              draftAttempts: {
+                orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+                take: 1,
+                select: { autoSendEligible: true },
+              },
+            },
+          })
+        : [];
+    const eligibleReadyQuestions = readyQuestions.filter(
+      (question) => question.draftAttempts[0]?.autoSendEligible,
+    );
+
+    for (const question of eligibleReadyQuestions) {
+      await this.queue.add(
+        GENERATE_QUESTION_DRAFT_JOB,
+        { storeId, questionId: question.id, reason: 'AUTOMATION' },
+        {
+          jobId: `question-draft-${question.id}`,
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 10_000 },
+          removeOnComplete: true,
+          removeOnFail: failedJobRetention(250),
+        },
+      );
+    }
+
+    if (
+      draftCandidates.length === AUTOMATION_SETTINGS_BATCH_SIZE ||
+      eligibleReadyQuestions.length === AUTOMATION_SETTINGS_BATCH_SIZE
+    ) {
+      await this.queue.add(
+        APPLY_AUTOMATION_SETTINGS_JOB,
+        { storeId },
+        {
+          delay: 500,
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2_000 },
+          removeOnComplete: true,
+          removeOnFail: failedJobRetention(25),
+        },
+      );
+    }
+
+    return {
+      pendingQueued: draftCandidates.length,
+      readyQueued: eligibleReadyQuestions.length,
+    };
   }
 
   async enqueue(

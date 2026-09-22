@@ -85,7 +85,15 @@ export const ADMIN_NAVIGATION: ReadonlyArray<AdminNavigationItem> = [
 export const ADMIN_NAVIGATION_GROUPS: ReadonlyArray<AdminNavigationGroup> = [
   {
     label: "Yönetim",
-    items: ADMIN_NAVIGATION.slice(0, 5),
+    items: [
+      ADMIN_NAVIGATION[0],
+      ADMIN_NAVIGATION[1],
+      ADMIN_NAVIGATION[4],
+    ],
+  },
+  {
+    label: "Destek ve İletişim",
+    items: [ADMIN_NAVIGATION[2], ADMIN_NAVIGATION[3]],
   },
   {
     label: "Sistem ve Operasyon",

@@ -20,7 +20,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -98,8 +97,11 @@ export function AdminUserMenu({ user }: { user: AdminUser }) {
             align="end"
             sideOffset={6}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-2 py-2 text-left">
+            <DropdownMenuItem asChild className="p-0 font-normal">
+              <Link
+                href={APP_ROUTES.admin.account}
+                className="flex items-center gap-2 px-2 py-2 text-left"
+              >
                 <UserAvatar user={user} initials={initials} />
                 <div className="grid min-w-0 flex-1 leading-tight">
                   <span className="truncate text-sm font-medium">
@@ -109,8 +111,8 @@ export function AdminUserMenu({ user }: { user: AdminUser }) {
                     {user.email}
                   </span>
                 </div>
-              </div>
-            </DropdownMenuLabel>
+              </Link>
+            </DropdownMenuItem>
 
             <DropdownMenuSeparator />
             <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
