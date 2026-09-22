@@ -31,6 +31,7 @@ import { AdminAuditLogsService } from './admin-audit-logs.service';
 import { AdminAiUsageService } from './admin-ai-usage.service';
 import { AdminInsightsController } from './admin-insights.controller';
 import { AdminSystemHealthService } from './admin-system-health.service';
+import { AdminGlobalSearchService } from './admin-global-search.service';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { AdminSystemHealthService } from './admin-system-health.service';
     AdminOperationsService,
     AdminSupportService,
     AdminSystemHealthService,
+    AdminGlobalSearchService,
   ],
   exports: [AdminAccessService, AdminGuard],
 })

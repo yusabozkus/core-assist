@@ -33,7 +33,7 @@ export const ADMIN_NAVIGATION: ReadonlyArray<AdminNavigationItem> = [
   },
   {
     title: "Müşteriler",
-    description: "Kullanıcı ve çalışma alanları",
+    description: "Müşteri hesapları ve ekipleri",
     url: APP_ROUTES.admin.customers,
     icon: UserGroupIcon,
   },
