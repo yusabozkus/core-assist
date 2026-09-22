@@ -10,7 +10,9 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { BILLING_RECOVERY_QUEUE } from '../billing/billing-reconciliation.processor';
 import { PADDLE_WEBHOOK_QUEUE } from '../billing/paddle-webhook.constants';
+import { getChannelSyncRetryEligibility } from '../channels/channel-sync-retry.policy';
 import { ChannelsService } from '../channels/channels.service';
+import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
 import { AuditAction } from '../audit/audit-actions';
 import {
   AuditActorType,
@@ -32,7 +34,12 @@ import { QUESTION_DRAFT_QUEUE } from '../questions/question-draft.constants';
 import { SIZE_GUIDE_QUEUE } from '../size-guides/size-guide.constants';
 import { SUPPORT_NOTIFICATION_QUEUE } from '../support/support-notification.constants';
 import { DATA_RETENTION_QUEUE } from '../data-retention/data-retention.constants';
-import { inspectScheduledJobs } from './admin-queue-monitoring';
+import {
+  countRecentQueueFailures,
+  getQueueRuntimeThresholds,
+  inspectQueueRuntime,
+  inspectScheduledJobs,
+} from './admin-queue-monitoring';
 import {
   AdminOperationIssueFilter,
   AdminOperationOrder,
@@ -42,6 +49,7 @@ import {
 } from './dto/admin-operations-query.dto';
 
 const DAY = 24 * 60 * 60 * 1000;
+const QUEUE_READ_TIMEOUT_MS = 2_000;
 
 const operationSelect = {
   id: true,
@@ -81,7 +89,10 @@ const operationSelect = {
       credentialsEncrypted: true,
       failureReason: true,
       questionSyncFailureReason: true,
+      connectedAt: true,
       removedAt: true,
+      processingStartedAt: true,
+      questionSyncStartedAt: true,
       store: {
         select: {
           id: true,
@@ -92,6 +103,16 @@ const operationSelect = {
               id: true,
               name: true,
               owner: { select: { name: true, email: true } },
+              billingSubscription: {
+                select: {
+                  status: true,
+                  trialEndsAt: true,
+                  currentPeriodEnd: true,
+                  paddleSubscriptionId: true,
+                  cancelAtPeriodEnd: true,
+                  scheduledAccessEndsAt: true,
+                },
+              },
             },
           },
         },
@@ -109,6 +130,7 @@ export class AdminOperationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly channels: ChannelsService,
+    private readonly providers: ProviderRegistryService,
     @InjectQueue(PRODUCT_SYNC_QUEUE)
     private readonly productSyncQueue: Queue,
     @InjectQueue(QUESTION_SYNC_QUEUE)
@@ -207,6 +229,7 @@ export class AdminOperationsService {
       recentStatuses.find((group) => group.status === CatalogSyncStatus.FAILED)
         ?._count._all ?? 0;
     const finishedLastDay = completedLastDay + failedInGroups;
+    const unavailableQueues = queues.filter((queue) => !queue.available).length;
 
     return {
       items: runs.map((run) => this.toItem(run, now)),
@@ -226,10 +249,13 @@ export class AdminOperationsService {
           finishedLastDay === 0
             ? null
             : Math.round((completedLastDay / finishedLastDay) * 100),
-        queueBacklog: queues.reduce(
-          (sum, queue) => sum + queue.counts.waiting + queue.counts.active,
-          0,
-        ),
+        queueBacklog: unavailableQueues
+          ? null
+          : queues.reduce(
+              (sum, queue) => sum + queue.counts.waiting + queue.counts.active,
+              0,
+            ),
+        unavailableQueues,
       },
       providers: providerRows.map((row) => row.providerKey),
       queues,
@@ -297,29 +323,43 @@ export class AdminOperationsService {
     }
 
     const now = new Date();
-    const counts = await definition.queue.getJobCounts(
-      'waiting',
-      'active',
-      'delayed',
-      'failed',
-    );
-    const total = counts.failed ?? 0;
     const start = (query.page - 1) * query.pageSize;
     const end = start + query.pageSize - 1;
-    const [paused, recentFailuresLast24Hours, failures, scheduledJobs] =
-      await Promise.all([
-        definition.queue.isPaused(),
-        countRecentQueueFailures(definition.queue, now.getTime() - DAY),
-        definition.queue.getJobs(['failed'], start, end, false),
-        inspectScheduledJobs(definition.queue, now.getTime()),
-      ]);
+
+    let result: Awaited<ReturnType<typeof readQueueDetail>>;
+    try {
+      result = await withQueueTimeout(
+        readQueueDetail(definition.queue, definition.key, start, end, now),
+        definition.key,
+      );
+    } catch (error) {
+      return unavailableQueueDetail(
+        definition.key,
+        definition.label,
+        query,
+        now,
+        queueErrorCode(error),
+      );
+    }
+
+    const {
+      counts,
+      paused,
+      recentFailuresLast24Hours,
+      failures,
+      scheduledJobs,
+      runtime,
+    } = result;
+    const total = counts.failed ?? 0;
 
     return {
       key: definition.key,
       label: definition.label,
       available: true,
+      errorCode: null,
       paused,
       recentFailuresLast24Hours,
+      ...runtime,
       counts: {
         waiting: counts.waiting ?? 0,
         active: counts.active ?? 0,
@@ -449,6 +489,24 @@ export class AdminOperationsService {
     const stale = isStaleRun(run, now);
     const connectionFailure =
       run.connection.failureReason ?? run.connection.questionSyncFailureReason;
+    const retryEligibility = getChannelSyncRetryEligibility(
+      {
+        runStatus: run.status,
+        kind: run.kind,
+        storeStatus: run.connection.store.status,
+        connectionStatus: run.connection.status,
+        credentialsEncrypted: run.connection.credentialsEncrypted,
+        connectedAt: run.connection.connectedAt,
+        removedAt: run.connection.removedAt,
+        processingStartedAt: run.connection.processingStartedAt,
+        questionSyncStartedAt: run.connection.questionSyncStartedAt,
+        supportsProductQuestions: this.providers.supportsProductQuestions(
+          run.connection.providerKey,
+        ),
+        subscription: run.connection.store.workspace.billingSubscription,
+      },
+      now,
+    );
     return {
       id: run.id,
       kind: run.kind,
@@ -482,12 +540,8 @@ export class AdminOperationsService {
       durationMs:
         (run.completedAt?.getTime() ?? now.getTime()) - run.startedAt.getTime(),
       isStale: stale,
-      canRetry:
-        run.status === CatalogSyncStatus.FAILED &&
-        run.connection.store.status === 'ACTIVE' &&
-        run.connection.status !== ChannelConnectionStatus.DISCONNECTED &&
-        Boolean(run.connection.credentialsEncrypted) &&
-        !run.connection.removedAt,
+      canRetry: retryEligibility.canRetry,
+      retryBlockedReason: retryEligibility.reason,
       connection: {
         id: run.connection.id,
         providerKey: run.connection.providerKey,
@@ -495,7 +549,16 @@ export class AdminOperationsService {
         status: run.connection.status,
         failureReason: connectionFailure,
       },
-      store: run.connection.store,
+      store: {
+        id: run.connection.store.id,
+        name: run.connection.store.name,
+        status: run.connection.store.status,
+        workspace: {
+          id: run.connection.store.workspace.id,
+          name: run.connection.store.workspace.name,
+          owner: run.connection.store.workspace.owner,
+        },
+      },
     };
   }
 
@@ -504,19 +567,30 @@ export class AdminOperationsService {
       this.getQueueDefinitions().map(async ({ key, label, queue }) => {
         try {
           const failedSince = now.getTime() - DAY;
-          const [counts, paused, recentFailuresLast24Hours, scheduledJobs] =
-            await Promise.all([
+          const [
+            counts,
+            paused,
+            recentFailuresLast24Hours,
+            scheduledJobs,
+            runtime,
+          ] = await withQueueTimeout(
+            Promise.all([
               queue.getJobCounts('waiting', 'active', 'delayed', 'failed'),
               queue.isPaused(),
               countRecentQueueFailures(queue, failedSince),
               inspectScheduledJobs(queue, now.getTime()),
-            ]);
+              inspectQueueRuntime(queue, key, now.getTime()),
+            ]),
+            key,
+          );
           return {
             key,
             label,
             available: true,
+            errorCode: null,
             paused,
             recentFailuresLast24Hours,
+            ...runtime,
             counts: {
               waiting: counts.waiting ?? 0,
               active: counts.active ?? 0,
@@ -525,13 +599,15 @@ export class AdminOperationsService {
               failed: counts.failed ?? 0,
             },
           };
-        } catch {
+        } catch (error) {
           return {
             key,
             label,
             available: false,
+            errorCode: queueErrorCode(error),
             paused: false,
             recentFailuresLast24Hours: 0,
+            ...unavailableQueueRuntime(key),
             counts: {
               waiting: 0,
               active: 0,
@@ -615,16 +691,131 @@ function toQueueFailure(job: {
   };
 }
 
-async function countRecentQueueFailures(queue: Queue, failedSince: number) {
-  const client = await queue.getBackend().connection.client;
-  const entries = await client.zrange(queue.toKey('failed'), 0, -1, {
-    WITHSCORES: true,
+async function readQueueDetail(
+  queue: Queue,
+  queueKey: string,
+  start: number,
+  end: number,
+  now: Date,
+) {
+  const [
+    counts,
+    paused,
+    recentFailuresLast24Hours,
+    failures,
+    scheduledJobs,
+    runtime,
+  ] = await Promise.all([
+    queue.getJobCounts('waiting', 'active', 'delayed', 'failed'),
+    queue.isPaused(),
+    countRecentQueueFailures(queue, now.getTime() - DAY),
+    queue.getJobs(['failed'], start, end, false),
+    inspectScheduledJobs(queue, now.getTime()),
+    inspectQueueRuntime(queue, queueKey, now.getTime()),
+  ]);
+
+  return {
+    counts,
+    paused,
+    recentFailuresLast24Hours,
+    failures,
+    scheduledJobs,
+    runtime,
+  };
+}
+
+function unavailableQueueDetail(
+  key: string,
+  label: string,
+  query: AdminQueueFailuresQueryDto,
+  now: Date,
+  errorCode: string,
+) {
+  return {
+    key,
+    label,
+    available: false,
+    errorCode,
+    paused: false,
+    recentFailuresLast24Hours: 0,
+    ...unavailableQueueRuntime(key),
+    counts: emptyQueueCounts(),
+    scheduledJobs: [],
+    failures: [],
+    pagination: {
+      page: query.page,
+      pageSize: query.pageSize,
+      total: 0,
+      totalPages: 1,
+    },
+    generatedAt: now,
+  };
+}
+
+function unavailableQueueRuntime(queueKey: string) {
+  const thresholds = getQueueRuntimeThresholds(queueKey);
+  return {
+    workerCount: null,
+    workerUnavailable: false,
+    oldestWaitingAgeMs: null,
+    longestActiveAgeMs: null,
+    waitingAgeWarningMs: thresholds.waitingAgeWarningMs,
+    activeDurationWarningMs: thresholds.activeDurationWarningMs,
+    activeStallWarningMs: thresholds.activeStallWarningMs,
+    waitingAgeExceeded: false,
+    activeDurationExceeded: false,
+    stalledActiveJobs: 0,
+  };
+}
+
+function emptyQueueCounts() {
+  return {
+    waiting: 0,
+    active: 0,
+    scheduled: 0,
+    overdue: 0,
+    failed: 0,
+  };
+}
+
+async function withQueueTimeout<T>(promise: Promise<T>, queueKey: string) {
+  let timeoutId: NodeJS.Timeout | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(
+      () => reject(new QueueReadTimeoutError(queueKey)),
+      QUEUE_READ_TIMEOUT_MS,
+    );
+    timeoutId.unref();
   });
-  let count = 0;
-  for (let index = 1; index < entries.length; index += 2) {
-    if (Number(entries[index]) >= failedSince) count += 1;
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
-  return count;
+}
+
+function queueErrorCode(error: unknown) {
+  if (
+    typeof error === 'object' &&
+    error &&
+    'code' in error &&
+    typeof error.code === 'string'
+  ) {
+    return error.code.slice(0, 120);
+  }
+  return 'QUEUE_UNAVAILABLE';
+}
+
+class QueueReadTimeoutError extends Error {
+  readonly code: string;
+
+  constructor(queueKey: string) {
+    const code = `QUEUE_TIMEOUT:${queueKey}`;
+    super(code);
+    this.name = 'QueueReadTimeoutError';
+    this.code = code;
+  }
 }
 
 function resolvePeriodStart(

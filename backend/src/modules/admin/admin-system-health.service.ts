@@ -17,7 +17,12 @@ import { QUESTION_DRAFT_QUEUE } from '../questions/question-draft.constants';
 import { SIZE_GUIDE_QUEUE } from '../size-guides/size-guide.constants';
 import { SUPPORT_NOTIFICATION_QUEUE } from '../support/support-notification.constants';
 import { DATA_RETENTION_QUEUE } from '../data-retention/data-retention.constants';
-import { inspectScheduledJobs } from './admin-queue-monitoring';
+import {
+  countRecentQueueFailures,
+  getQueueRuntimeThresholds,
+  inspectQueueRuntime,
+  inspectScheduledJobs,
+} from './admin-queue-monitoring';
 
 const DAY = 24 * 60 * 60 * 1000;
 const RECONCILIATION_GRACE_MS = 15 * 60 * 1000;
@@ -29,8 +34,6 @@ const REDIS_HEALTH_TIMEOUT_MS = 1_500;
 const QUEUE_HEALTH_TIMEOUT_MS = 2_000;
 const DATABASE_SLOW_THRESHOLD_MS = 750;
 const REDIS_SLOW_THRESHOLD_MS = 300;
-const RECENT_FAILED_JOB_LIMIT = 100;
-
 type HealthStatus = 'HEALTHY' | 'DEGRADED' | 'DOWN';
 
 type QueueDefinition = {
@@ -127,6 +130,9 @@ export class AdminSystemHealthService {
           health.summary.pausedQueues +
           health.summary.backloggedQueues +
           health.summary.queuesWithOverdueJobs +
+          health.summary.queuesWithoutWorkers +
+          health.summary.queuesWithStuckWaitingJobs +
+          health.summary.queuesWithLongRunningJobs +
           health.summary.queuesWithRecentFailures +
           health.summary.failedSyncsLast24Hours +
           health.summary.billingIssues +
@@ -169,6 +175,15 @@ export class AdminSystemHealthService {
     const queuesWithRecentFailures = queues.filter(
       (queue) => queue.recentFailuresLast24Hours > 0,
     ).length;
+    const queuesWithoutWorkers = queues.filter(
+      (queue) => queue.workerUnavailable,
+    ).length;
+    const queuesWithStuckWaitingJobs = queues.filter(
+      (queue) => queue.waitingAgeExceeded,
+    ).length;
+    const queuesWithLongRunningJobs = queues.filter(
+      (queue) => queue.activeDurationExceeded,
+    ).length;
     const retainedQueueFailures = queues.reduce(
       (total, queue) => total + queue.counts.failed,
       0,
@@ -188,6 +203,9 @@ export class AdminSystemHealthService {
       pausedQueues,
       backloggedQueues,
       queuesWithOverdueJobs,
+      queuesWithoutWorkers,
+      queuesWithStuckWaitingJobs,
+      queuesWithLongRunningJobs,
       queuesWithRecentFailures,
       failedSyncsLast24Hours: database.syncs.failedLast24Hours,
       billingIssues,
@@ -212,6 +230,9 @@ export class AdminSystemHealthService {
         pausedQueues,
         backloggedQueues,
         queuesWithOverdueJobs,
+        queuesWithoutWorkers,
+        queuesWithStuckWaitingJobs,
+        queuesWithLongRunningJobs,
         queuesWithRecentFailures,
         retainedQueueFailures,
         recentQueueFailures,
@@ -528,25 +549,32 @@ export class AdminSystemHealthService {
     return Promise.all(
       queues.map(async ({ key, label, queue, backlogWarningThreshold }) => {
         try {
-          const [counts, paused, failedJobs, scheduledJobs] = await withTimeout(
+          const [
+            counts,
+            paused,
+            recentFailuresLast24Hours,
+            scheduledJobs,
+            runtime,
+          ] = await withTimeout(
             Promise.all([
               queue.getJobCounts('waiting', 'active', 'delayed', 'failed'),
               queue.isPaused(),
-              queue.getJobs(['failed'], 0, RECENT_FAILED_JOB_LIMIT - 1, false),
+              countRecentQueueFailures(queue, failedSince),
               inspectScheduledJobs(queue),
+              inspectQueueRuntime(queue, key),
             ]),
             QUEUE_HEALTH_TIMEOUT_MS,
             `QUEUE_TIMEOUT:${key}`,
           );
-          const recentFailuresLast24Hours = failedJobs.filter(
-            (job) => (job.finishedOn ?? job.timestamp) >= failedSince,
-          ).length;
           const waiting = counts.waiting ?? 0;
           const backlogExceeded = waiting >= backlogWarningThreshold;
           const status: HealthStatus =
             paused ||
             backlogExceeded ||
             scheduledJobs.overdue > 0 ||
+            runtime.workerUnavailable ||
+            runtime.waitingAgeExceeded ||
+            runtime.activeDurationExceeded ||
             recentFailuresLast24Hours > 0
               ? 'DEGRADED'
               : 'HEALTHY';
@@ -560,6 +588,7 @@ export class AdminSystemHealthService {
             backlogWarningThreshold,
             backlogExceeded,
             recentFailuresLast24Hours,
+            ...runtime,
             errorCode: null as string | null,
             counts: {
               waiting,
@@ -671,6 +700,9 @@ export class AdminSystemHealthService {
         pausedQueues: 0,
         backloggedQueues: 0,
         queuesWithOverdueJobs: 0,
+        queuesWithoutWorkers: 0,
+        queuesWithStuckWaitingJobs: 0,
+        queuesWithLongRunningJobs: 0,
         queuesWithRecentFailures: 0,
         retainedQueueFailures: 0,
         recentQueueFailures: 0,
@@ -702,6 +734,9 @@ function overallStatus(input: {
   pausedQueues: number;
   backloggedQueues: number;
   queuesWithOverdueJobs: number;
+  queuesWithoutWorkers: number;
+  queuesWithStuckWaitingJobs: number;
+  queuesWithLongRunningJobs: number;
   queuesWithRecentFailures: number;
   failedSyncsLast24Hours: number;
   billingIssues: number;
@@ -720,6 +755,9 @@ function overallStatus(input: {
     input.pausedQueues > 0 ||
     input.backloggedQueues > 0 ||
     input.queuesWithOverdueJobs > 0 ||
+    input.queuesWithoutWorkers > 0 ||
+    input.queuesWithStuckWaitingJobs > 0 ||
+    input.queuesWithLongRunningJobs > 0 ||
     input.queuesWithRecentFailures > 0 ||
     input.failedSyncsLast24Hours > 0 ||
     input.billingIssues > 0 ||
@@ -800,6 +838,7 @@ function unavailableQueue(
   backlogWarningThreshold: number,
   errorCode: string,
 ) {
+  const runtimeThresholds = getQueueRuntimeThresholds(key);
   return {
     key,
     label,
@@ -809,6 +848,16 @@ function unavailableQueue(
     backlogWarningThreshold,
     backlogExceeded: false,
     recentFailuresLast24Hours: 0,
+    workerCount: null,
+    workerUnavailable: false,
+    oldestWaitingAgeMs: null,
+    longestActiveAgeMs: null,
+    waitingAgeWarningMs: runtimeThresholds.waitingAgeWarningMs,
+    activeDurationWarningMs: runtimeThresholds.activeDurationWarningMs,
+    activeStallWarningMs: runtimeThresholds.activeStallWarningMs,
+    waitingAgeExceeded: false,
+    activeDurationExceeded: false,
+    stalledActiveJobs: 0,
     errorCode,
     counts: {
       waiting: 0,

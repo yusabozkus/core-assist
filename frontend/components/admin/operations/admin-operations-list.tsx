@@ -73,7 +73,11 @@ export function AdminOperationsListView({
   const [isNavigating, startTransition] = useTransition()
   const selectedRun =
     data.items.find((item) => item.id === selectedRunId) ?? null
-  const hasLiveWork = data.summary.running > 0 || data.summary.queueBacklog > 0
+  const hasKnownQueueLoad = (data.summary.queueBacklog ?? 0) > 0
+  const hasLiveWork =
+    data.summary.running > 0 ||
+    hasKnownQueueLoad ||
+    data.summary.unavailableQueues > 0
 
   useEffect(() => {
     if (!hasLiveWork) return
@@ -216,10 +220,20 @@ export function AdminOperationsListView({
         />
         <SummaryMetric
           label="Kuyruk yükü"
-          value={data.summary.queueBacklog}
-          helper="Bekleyen ve aktif işler"
+          value={data.summary.queueBacklog ?? "—"}
+          helper={
+            data.summary.unavailableQueues
+              ? `${data.summary.unavailableQueues} kuyruktan bilgi alınamadı`
+              : "Bekleyen ve aktif işler"
+          }
           icon={RefreshIcon}
-          tone={data.summary.queueBacklog ? "attention" : "neutral"}
+          tone={
+            data.summary.unavailableQueues
+              ? "danger"
+              : data.summary.queueBacklog
+                ? "attention"
+                : "neutral"
+          }
         />
       </section>
 
@@ -585,7 +599,13 @@ function OperationRow({
 
 function QueueCard({ queue }: { queue: AdminOperationQueue }) {
   const backlog = queue.counts.waiting + queue.counts.active
-  const unhealthy = !queue.available || queue.paused || queue.counts.overdue > 0
+  const unhealthy =
+    !queue.available ||
+    queue.paused ||
+    queue.counts.overdue > 0 ||
+    queue.workerUnavailable ||
+    queue.waitingAgeExceeded ||
+    queue.activeDurationExceeded
   const hasRecentFailure = queue.recentFailuresLast24Hours > 0
   const retainedOldFailures = Math.max(
     0,
@@ -616,20 +636,36 @@ function QueueCard({ queue }: { queue: AdminOperationQueue }) {
       </div>
       <div className="mt-3 flex items-end justify-between gap-2">
         <div>
-          <p className="text-lg font-semibold tabular-nums">{backlog}</p>
-          <p className="text-[9px] text-muted-foreground">aktif yük</p>
+          <p className="text-lg font-semibold tabular-nums">
+            {queue.available ? backlog : "—"}
+          </p>
+          <p className="text-[9px] text-muted-foreground">
+            {queue.available ? "aktif yük" : "bilgi alınamadı"}
+          </p>
         </div>
         <div className="text-right text-[9px] leading-4 text-muted-foreground">
-          <p>{queue.counts.active} çalışıyor</p>
-          <p>{queue.counts.scheduled} zamanlandı</p>
+          {queue.available ? (
+            <>
+              <p>{queue.counts.active} çalışıyor</p>
+              <p>
+                {queue.workerCount === null
+                  ? "Worker ölçülemedi"
+                  : `${queue.workerCount} worker`}
+              </p>
+            </>
+          ) : null}
           {queue.counts.overdue > 0 ? (
             <p className="font-medium text-destructive">
               {queue.counts.overdue} süre aştı
             </p>
           ) : null}
-          <p className={cn(hasRecentFailure && "font-medium text-destructive")}>
-            Son 24 saat: {queue.recentFailuresLast24Hours} hata
-          </p>
+          {queue.available ? (
+            <p
+              className={cn(hasRecentFailure && "font-medium text-destructive")}
+            >
+              Son 24 saat: {queue.recentFailuresLast24Hours} hata
+            </p>
+          ) : null}
         </div>
       </div>
       {retainedOldFailures > 0 ? (
@@ -639,7 +675,22 @@ function QueueCard({ queue }: { queue: AdminOperationQueue }) {
       ) : null}
       {!queue.available || queue.paused ? (
         <p className="mt-2 border-t border-border pt-2 text-[9px] font-medium text-destructive">
-          {!queue.available ? "Redis bağlantısı yok" : "Kuyruk duraklatıldı"}
+          {!queue.available
+            ? `Kuyruk bilgisi alınamadı${queue.errorCode ? ` · ${queue.errorCode}` : ""}`
+            : "Kuyruk duraklatıldı"}
+        </p>
+      ) : null}
+      {queue.available &&
+      !queue.paused &&
+      (queue.workerUnavailable ||
+        queue.waitingAgeExceeded ||
+        queue.activeDurationExceeded) ? (
+        <p className="mt-2 border-t border-border pt-2 text-[9px] font-medium text-destructive">
+          {queue.workerUnavailable
+            ? "Aktif worker bulunamadı"
+            : queue.waitingAgeExceeded
+              ? `En eski iş ${formatAdminOperationDuration(queue.oldestWaitingAgeMs ?? 0)} bekliyor`
+              : `Bir iş ${formatAdminOperationDuration(queue.longestActiveAgeMs ?? 0)} süredir çalışıyor`}
         </p>
       ) : null}
     </Link>
@@ -654,7 +705,7 @@ function SummaryMetric({
   tone = "neutral",
 }: {
   label: string
-  value: number
+  value: number | string
   helper: string
   icon: IconSvgElement
   tone?: "neutral" | "positive" | "attention" | "danger"

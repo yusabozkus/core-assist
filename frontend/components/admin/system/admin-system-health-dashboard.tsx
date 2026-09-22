@@ -57,12 +57,15 @@ export function AdminSystemHealthDashboard({
         <MetricCard
           label="Kuyrukta bekleyen"
           value={data.summary.queueBacklog}
-          helper={`${data.summary.backloggedQueues} eşik aşımı · ${data.summary.queuesWithOverdueJobs} süre aşımı · ${data.summary.recentQueueFailures} son hata`}
+          helper={`${data.summary.backloggedQueues} yoğun · ${data.summary.queuesWithStuckWaitingJobs + data.summary.queuesWithLongRunningJobs} takılmış · ${data.summary.queuesWithoutWorkers} workersız`}
           icon={Clock01Icon}
           alert={
             data.summary.unavailableQueues > 0 ||
             data.summary.pausedQueues > 0 ||
             data.summary.backloggedQueues > 0 ||
+            data.summary.queuesWithoutWorkers > 0 ||
+            data.summary.queuesWithStuckWaitingJobs > 0 ||
+            data.summary.queuesWithLongRunningJobs > 0 ||
             data.summary.queuesWithRecentFailures > 0
           }
         />
@@ -115,7 +118,7 @@ export function AdminSystemHealthDashboard({
       <section className="mt-5">
         <Panel
           title="Kuyruklar"
-          description="Worker iş yükü, uyarı eşikleri ve son 24 saatteki hatalar"
+          description="Worker canlılığı, iş süreleri ve Redis’te saklanan son 24 saat hataları"
           href={APP_ROUTES.admin.operations}
         >
           <QueueTable queues={data.queues} />
@@ -478,9 +481,10 @@ function Panel({
 function QueueTable({ queues }: { queues: AdminSystemQueue[] }) {
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[860px]">
-        <div className="grid grid-cols-[minmax(200px,1fr)_repeat(5,100px)_120px] border-b border-border bg-muted/35 px-5 py-2.5 text-[11px] font-medium text-muted-foreground">
+      <div className="min-w-[980px]">
+        <div className="grid grid-cols-[minmax(240px,1fr)_80px_repeat(5,100px)_120px] border-b border-border bg-muted/35 px-5 py-2.5 text-[11px] font-medium text-muted-foreground">
           <span>Kuyruk</span>
+          <span className="text-right">Worker</span>
           <span className="text-right">Bekleyen</span>
           <span className="text-right">Çalışan</span>
           <span className="text-right">Zamanlanmış</span>
@@ -492,14 +496,46 @@ function QueueTable({ queues }: { queues: AdminSystemQueue[] }) {
           <Link
             key={queue.key}
             href={APP_ROUTES.admin.operationQueue(queue.key)}
-            className="grid grid-cols-[minmax(200px,1fr)_repeat(5,100px)_120px] items-center border-b border-border px-5 py-3.5 text-xs transition-colors last:border-b-0 hover:bg-muted/35 focus-visible:bg-muted/35 focus-visible:outline-none"
+            className="grid grid-cols-[minmax(240px,1fr)_80px_repeat(5,100px)_120px] items-center border-b border-border px-5 py-3.5 text-xs transition-colors last:border-b-0 hover:bg-muted/35 focus-visible:bg-muted/35 focus-visible:outline-none"
           >
             <div className="min-w-0">
               <p className="font-medium">{queue.label}</p>
               <p className="mt-0.5 text-[10px] text-muted-foreground">
                 Uyarı eşiği: {formatNumber(queue.backlogWarningThreshold)}
               </p>
+              {queue.oldestWaitingAgeMs !== null ||
+              queue.longestActiveAgeMs !== null ? (
+                <p
+                  className={cn(
+                    "mt-0.5 text-[10px] text-muted-foreground",
+                    (queue.waitingAgeExceeded ||
+                      queue.activeDurationExceeded) &&
+                      "font-medium text-destructive"
+                  )}
+                >
+                  {queue.oldestWaitingAgeMs !== null
+                    ? `En eski bekleme ${formatRuntimeAge(queue.oldestWaitingAgeMs)}`
+                    : null}
+                  {queue.oldestWaitingAgeMs !== null &&
+                  queue.longestActiveAgeMs !== null
+                    ? " · "
+                    : null}
+                  {queue.longestActiveAgeMs !== null
+                    ? `En uzun çalışma ${formatRuntimeAge(queue.longestActiveAgeMs)}`
+                    : null}
+                </p>
+              ) : null}
             </div>
+            <span
+              className={cn(
+                "text-right tabular-nums",
+                queue.workerUnavailable && "font-medium text-destructive"
+              )}
+            >
+              {queue.workerCount === null
+                ? "—"
+                : formatNumber(queue.workerCount)}
+            </span>
             <QueueNumber value={queue.counts.waiting} />
             <QueueNumber value={queue.counts.active} />
             <QueueNumber value={queue.counts.scheduled} />
@@ -519,6 +555,12 @@ function QueueTable({ queues }: { queues: AdminSystemQueue[] }) {
                 ? "Erişilemiyor"
                 : queue.paused
                   ? "Duraklatıldı"
+                  : queue.workerUnavailable
+                    ? "Worker yok"
+                    : queue.waitingAgeExceeded
+                      ? "Bekleme takıldı"
+                      : queue.activeDurationExceeded
+                        ? "İşlem takıldı"
                   : queue.backlogExceeded
                     ? "Yoğun"
                     : queue.counts.overdue > 0
@@ -713,6 +755,11 @@ function formatDuration(minutes: number) {
   const hours = Math.floor(minutes / 60)
   const remainder = minutes % 60
   return remainder ? `${hours} sa ${remainder} dk` : `${hours} sa`
+}
+
+function formatRuntimeAge(valueMs: number) {
+  if (valueMs < 60_000) return "1 dk altı"
+  return formatDuration(Math.ceil(valueMs / 60_000))
 }
 
 function billingPlanLabel(value: "STARTER" | "GROWTH" | "BUSINESS") {

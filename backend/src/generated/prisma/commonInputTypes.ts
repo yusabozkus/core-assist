@@ -386,6 +386,16 @@ export type EnumPaddleEnvironmentFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumPaddleEnvironmentFilter<$PrismaModel> | $Enums.PaddleEnvironment
 }
 
+export type EnumPaddleEnvironmentWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PaddleEnvironment | Prisma.EnumPaddleEnvironmentFieldRefInput<$PrismaModel>
+  in?: $Enums.PaddleEnvironment[] | Prisma.ListEnumPaddleEnvironmentFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PaddleEnvironment[] | Prisma.ListEnumPaddleEnvironmentFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPaddleEnvironmentWithAggregatesFilter<$PrismaModel> | $Enums.PaddleEnvironment
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPaddleEnvironmentFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPaddleEnvironmentFilter<$PrismaModel>
+}
+
 export type JsonFilter<$PrismaModel = never> =
 | Prisma.PatchUndefined<
     Prisma.Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
@@ -408,16 +418,6 @@ export type JsonFilterBase<$PrismaModel = never> = {
   gt?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel>
   gte?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel>
   not?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel> | Prisma.JsonNullValueFilter
-}
-
-export type EnumPaddleEnvironmentWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.PaddleEnvironment | Prisma.EnumPaddleEnvironmentFieldRefInput<$PrismaModel>
-  in?: $Enums.PaddleEnvironment[] | Prisma.ListEnumPaddleEnvironmentFieldRefInput<$PrismaModel>
-  notIn?: $Enums.PaddleEnvironment[] | Prisma.ListEnumPaddleEnvironmentFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumPaddleEnvironmentWithAggregatesFilter<$PrismaModel> | $Enums.PaddleEnvironment
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumPaddleEnvironmentFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumPaddleEnvironmentFilter<$PrismaModel>
 }
 
 export type JsonWithAggregatesFilter<$PrismaModel = never> =

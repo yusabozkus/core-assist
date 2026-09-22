@@ -60,7 +60,8 @@ export function AdminOperationDetailDialog({
             <p className="text-[11px] leading-5 text-muted-foreground">
               {run.canRetry
                 ? "Yeni deneme ayrı bir işlem kaydı oluşturur ve mevcut kaydı değiştirmez."
-                : "Kanal veya mağaza durumu düzeltilmeden bu işlem yeniden başlatılamaz."}
+                : (run.retryBlockedReason ??
+                  "Bu işlem mevcut koşullarda yeniden başlatılamaz.")}
             </p>
             {run.canRetry ? (
               <Button

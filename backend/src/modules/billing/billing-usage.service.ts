@@ -1,9 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
-import {
-  AiDraftOutcome,
-  BillingUsageMetric,
-} from '../../generated/prisma/enums';
+import { BillingUsageMetric } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import {
   BillingAccessRequiredException,
@@ -115,7 +112,6 @@ export class BillingUsageService {
       where: {
         storeId,
         questionId,
-        outcome: { not: AiDraftOutcome.FAILED },
       },
     });
     const subscription = await this.subscriptions.getOrCreateForWorkspace(
@@ -163,7 +159,6 @@ export class BillingUsageService {
       where: {
         storeId: input.storeId,
         questionId: input.questionId,
-        outcome: { not: AiDraftOutcome.FAILED },
       },
     });
     if (draftOrdinal > 1 && draftOrdinal <= 3) {

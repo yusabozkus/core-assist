@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { APP_ROUTES } from "@/constants/site"
 import {
   getAdminAccess,
-  getAdminHeaderSummary,
+  getAdminHeaderSummaryOrUnavailable,
 } from "@/lib/admin-access.server"
 
 export const dynamic = "force-dynamic"
@@ -28,7 +28,9 @@ export default async function AdminLayout({
   }
 
   const { user } = access.session
-  const headerSummary = await getAdminHeaderSummary()
+  // Access remains fail-closed above. The header summary is operational
+  // decoration and must not make an authorized admin session unusable.
+  const headerSummary = await getAdminHeaderSummaryOrUnavailable()
 
   return (
     <SidebarProvider className="min-h-svh">

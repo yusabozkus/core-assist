@@ -48,11 +48,19 @@ export class QuestionSyncQueueService implements QuestionSyncDispatcher {
     const staleBefore = new Date(
       queuedAt.getTime() - QUESTION_SYNC_LOCK_TIMEOUT_MS,
     );
+    const allowedConnectionStatus = options.recoverErroredConnection
+      ? {
+          in: [
+            ChannelConnectionStatus.CONNECTED,
+            ChannelConnectionStatus.ERROR,
+          ],
+        }
+      : ChannelConnectionStatus.CONNECTED;
     const connection = await this.prisma.channelConnection.findFirst({
       where: {
         id: connectionId,
         storeId,
-        status: ChannelConnectionStatus.CONNECTED,
+        status: allowedConnectionStatus,
         credentialsEncrypted: { not: null },
         store: { status: StoreStatus.ACTIVE },
       },
@@ -72,7 +80,7 @@ export class QuestionSyncQueueService implements QuestionSyncDispatcher {
       where: {
         id: connectionId,
         storeId,
-        status: ChannelConnectionStatus.CONNECTED,
+        status: allowedConnectionStatus,
         credentialsEncrypted: { not: null },
         store: { status: StoreStatus.ACTIVE },
         OR: [
@@ -82,7 +90,6 @@ export class QuestionSyncQueueService implements QuestionSyncDispatcher {
       },
       data: {
         questionSyncStartedAt: queuedAt,
-        questionSyncFailureReason: null,
       },
     });
 
@@ -108,7 +115,12 @@ export class QuestionSyncQueueService implements QuestionSyncDispatcher {
 
       await this.queue.add(
         SYNC_STORE_QUESTIONS_JOB,
-        { storeId, connectionId, syncRunId },
+        {
+          storeId,
+          connectionId,
+          syncRunId,
+          recoverErroredConnection: options.recoverErroredConnection,
+        },
         {
           jobId: `question-sync-${connectionId}-${queuedAt.getTime()}`,
           attempts: 3,
@@ -134,7 +146,6 @@ export class QuestionSyncQueueService implements QuestionSyncDispatcher {
         where: { id: connectionId },
         data: {
           questionSyncStartedAt: null,
-          questionSyncFailureReason: 'Soru senkronizasyonu kuyruğa eklenemedi.',
         },
       }),
     ];

@@ -148,7 +148,6 @@ export class QuestionAnswerWorkerService {
     if (!claimed) {
       await this.failPendingDelivery(
         data,
-        delivery.draftAttemptId,
         'Mağaza aktif olmadığı için cevap gönderilmedi.',
       );
       return;
@@ -332,36 +331,23 @@ export class QuestionAnswerWorkerService {
 
     const delivery = await this.prisma.questionAnswer.findFirst({
       where: { id: data.answerId, storeId: data.storeId },
-      select: { draftAttemptId: true, questionId: true, connectionId: true },
+      select: { questionId: true, connectionId: true },
     });
 
-    const updatedCount = await this.prisma.$transaction(async (transaction) => {
-      const updated = await transaction.questionAnswer.updateMany({
-        where: {
-          id: data.answerId,
-          storeId: data.storeId,
-          status: { not: QuestionAnswerStatus.SENT },
-        },
-        data: {
-          status: QuestionAnswerStatus.FAILED,
-          processingStartedAt: null,
-          lastError: message,
-        },
-      });
-      if (delivery?.draftAttemptId) {
-        await transaction.aiDraftAttempt.updateMany({
-          where: { id: delivery.draftAttemptId },
-          data: {
-            outcome: AiDraftOutcome.FAILED,
-            finalizedAt: new Date(),
-          },
-        });
-      }
-
-      return updated.count;
+    const updated = await this.prisma.questionAnswer.updateMany({
+      where: {
+        id: data.answerId,
+        storeId: data.storeId,
+        status: { not: QuestionAnswerStatus.SENT },
+      },
+      data: {
+        status: QuestionAnswerStatus.FAILED,
+        processingStartedAt: null,
+        lastError: message,
+      },
     });
 
-    if (updatedCount > 0 && delivery) {
+    if (updated.count > 0 && delivery) {
       await this.notifications.createForStoreMembers({
         storeId: data.storeId,
         type: NotificationType.ANSWER_DELIVERY_FAILED,
@@ -425,18 +411,12 @@ export class QuestionAnswerWorkerService {
           await transaction.aiDraftAttempt.updateMany({
             where: { id: draftAttemptId, storeId: data.storeId },
             data: {
-              outcome: billingBlocked
-                ? AiDraftOutcome.AVAILABLE
-                : AiDraftOutcome.FAILED,
-              finalizedAt: billingBlocked ? null : new Date(),
-              ...(billingBlocked
-                ? {
-                    selectedAt: null,
-                    autoSendEligible: false,
-                    decision: QuestionReplyDecision.NEEDS_REVIEW,
-                    eligibilityReasons: ['REVIEW_REQUIRED'],
-                  }
-                : {}),
+              outcome: AiDraftOutcome.AVAILABLE,
+              finalizedAt: null,
+              selectedAt: null,
+              autoSendEligible: false,
+              decision: QuestionReplyDecision.NEEDS_REVIEW,
+              eligibilityReasons: ['REVIEW_REQUIRED'],
               ...(inventoryInvalidated
                 ? {
                     autoSendEligible: false,
@@ -507,33 +487,21 @@ export class QuestionAnswerWorkerService {
 
   private async failPendingDelivery(
     data: QuestionAnswerJobData,
-    draftAttemptId: string | null,
     message: string,
   ) {
-    await this.prisma.$transaction(async (transaction) => {
-      const updated = await transaction.questionAnswer.updateMany({
-        where: {
-          id: data.answerId,
-          storeId: data.storeId,
-          status: {
-            in: [QuestionAnswerStatus.QUEUED, QuestionAnswerStatus.PROCESSING],
-          },
+    await this.prisma.questionAnswer.updateMany({
+      where: {
+        id: data.answerId,
+        storeId: data.storeId,
+        status: {
+          in: [QuestionAnswerStatus.QUEUED, QuestionAnswerStatus.PROCESSING],
         },
-        data: {
-          status: QuestionAnswerStatus.FAILED,
-          processingStartedAt: null,
-          lastError: message,
-        },
-      });
-      if (updated.count !== 1 || !draftAttemptId) return;
-
-      await transaction.aiDraftAttempt.updateMany({
-        where: { id: draftAttemptId, storeId: data.storeId },
-        data: {
-          outcome: AiDraftOutcome.FAILED,
-          finalizedAt: new Date(),
-        },
-      });
+      },
+      data: {
+        status: QuestionAnswerStatus.FAILED,
+        processingStartedAt: null,
+        lastError: message,
+      },
     });
   }
 }

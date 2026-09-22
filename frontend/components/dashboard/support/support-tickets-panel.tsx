@@ -47,7 +47,7 @@ export function SupportTicketsPanel({
         if (!normalizedQuery) return true
 
         return normalizeSearch(
-          `${ticket.code} ${ticket.subject} ${ticket.lastMessage?.body ?? ""} ${getSupportCategoryLabel(ticket.category)}`
+          `${ticket.code} ${ticket.subject} ${ticket.store?.name ?? ""} ${ticket.lastMessage?.body ?? ""} ${getSupportCategoryLabel(ticket.category)}`
         ).includes(normalizedQuery)
       }),
     [filter, normalizedQuery, tickets.items]
@@ -159,6 +159,9 @@ function TicketListItem({ ticket }: { ticket: SupportTicketSummary }) {
           </Badge>
           <span className="text-[10px] text-muted-foreground">
             {getSupportCategoryLabel(ticket.category)}
+          </span>
+          <span className="text-[10px] text-muted-foreground">
+            {ticket.store?.name ?? "Genel hesap talebi"}
           </span>
         </div>
         <h3 className="mt-2 truncate text-sm font-semibold tracking-tight">

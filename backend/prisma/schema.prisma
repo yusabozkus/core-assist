@@ -144,16 +144,17 @@ model Workspace {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  owner               User                  @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  members             WorkspaceMember[]
-  stores              Store[]
-  billingSubscription BillingSubscription?
-  billingUsagePeriods BillingUsagePeriod[]
-  billingUsageEvents  BillingUsageEvent[]
-  billingCheckouts    BillingCheckout[]
-  billingPlanChanges  BillingPlanChange[]
-  invitations         WorkspaceInvitation[]
-  supportTickets      SupportTicket[]
+  owner                        User                          @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members                      WorkspaceMember[]
+  stores                       Store[]
+  billingSubscription          BillingSubscription?
+  billingUsagePeriods          BillingUsagePeriod[]
+  billingUsageEvents           BillingUsageEvent[]
+  billingCheckouts             BillingCheckout[]
+  billingPlanChanges           BillingPlanChange[]
+  billingTransactionReferences BillingTransactionReference[]
+  invitations                  WorkspaceInvitation[]
+  supportTickets               SupportTicket[]
 
   @@map("workspace")
 }
@@ -291,6 +292,30 @@ model BillingWebhookEvent {
   @@index([eventType, occurredAt])
   @@index([processedAt])
   @@map("billing_webhook_event")
+}
+
+// Searchable Paddle identifiers for initial and recurring transactions.
+// Payment payloads, amounts and payment-method data are deliberately excluded.
+model BillingTransactionReference {
+  id                   String            @id @default(uuid())
+  workspaceId          String
+  environment          PaddleEnvironment
+  paddleTransactionId  String
+  paddleSubscriptionId String?
+  paddleCustomerId     String?
+  origin               String?
+  occurredAt           DateTime
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([environment, paddleTransactionId], map: "billing_tx_ref_environment_transaction_key")
+  @@index([workspaceId, occurredAt])
+  @@index([environment, paddleSubscriptionId], map: "billing_tx_ref_environment_subscription_idx")
+  @@index([environment, paddleCustomerId])
+  @@index([updatedAt])
+  @@map("billing_transaction_reference")
 }
 
 // Minimal financial closure evidence survives account/workspace deletion.
@@ -1084,6 +1109,8 @@ model ProductQuestion {
   @@index([storeId, answeredAt])
   @@index([storeId, draftDecision])
   @@index([storeId, draftProcessingStatus])
+  @@index([status, draftDecision])
+  @@index([status, draftProcessingStatus])
   @@index([productId])
   @@index([externalProductRecordId])
   @@map("product_question")
@@ -1157,6 +1184,7 @@ model QuestionAnswer {
   @@index([storeId, status, queuedAt])
   @@index([storeId, status, sentAt])
   @@index([connectionId, status])
+  @@index([status, updatedAt])
   @@map("question_answer")
 }
 

@@ -1,16 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import {
-  AiDraftOutcome,
   BillingUsageMetric,
   ProductKnowledgeFactStatus,
+  ProductQuestionStatus,
   QuestionAnswerOrigin,
   QuestionAnswerStatus,
   QuestionDraftProcessingStatus,
   QuestionReplyDecision,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { activeBillingSubscriptionWhere } from '../billing/billing-access.policy';
 import { entitlementsFor } from '../billing/billing-plan.config';
+import {
+  findBillingUsagePeriodForWindow,
+  resolveBillingUsageWindow,
+} from '../billing/billing-usage-window';
 import {
   AdminAiUsagePeriod,
   AdminAiUsageQueryDto,
@@ -41,12 +46,12 @@ export class AdminAiUsageService {
       draftAggregate,
       previousDraftCount,
       decisionGroups,
-      outcomeGroups,
       autoEligible,
       answerGroups,
       processingGroups,
+      deliveryFailures,
       usageAggregate,
-      quotaPeriods,
+      quotaSubscriptions,
       storeGroups,
       modelGroups,
       missingInformationRows,
@@ -66,11 +71,6 @@ export class AdminAiUsageService {
         where: { createdAt: { gte: periodStart, lte: now } },
         _count: { _all: true },
       }),
-      this.prisma.aiDraftAttempt.groupBy({
-        by: ['outcome'],
-        where: { createdAt: { gte: periodStart, lte: now } },
-        _count: { _all: true },
-      }),
       this.prisma.aiDraftAttempt.count({
         where: {
           createdAt: { gte: periodStart, lte: now },
@@ -85,10 +85,19 @@ export class AdminAiUsageService {
       this.prisma.productQuestion.groupBy({
         by: ['draftProcessingStatus'],
         where: {
-          updatedAt: { gte: periodStart, lte: now },
-          draftProcessingStatus: { not: null },
+          status: ProductQuestionStatus.PENDING,
+          draftProcessingStatus: {
+            in: [
+              QuestionDraftProcessingStatus.FAILED,
+              QuestionDraftProcessingStatus.BLOCKED_QUOTA,
+              QuestionDraftProcessingStatus.BLOCKED_SUBSCRIPTION,
+            ],
+          },
         },
         _count: { _all: true },
+      }),
+      this.prisma.questionAnswer.count({
+        where: { status: QuestionAnswerStatus.FAILED },
       }),
       this.prisma.billingUsageEvent.aggregate({
         where: {
@@ -97,14 +106,22 @@ export class AdminAiUsageService {
         },
         _sum: { quantity: true },
       }),
-      this.prisma.billingUsagePeriod.findMany({
-        where: { periodStart: { lte: now }, periodEnd: { gt: now } },
+      this.prisma.billingSubscription.findMany({
+        where: activeBillingSubscriptionWhere(now),
         select: {
           workspaceId: true,
-          periodStart: true,
-          periodEnd: true,
-          aiQuestionUnits: true,
-          subscription: { select: { plan: true, status: true } },
+          plan: true,
+          cycle: true,
+          status: true,
+          currentPeriodStart: true,
+          currentPeriodEnd: true,
+          usagePeriodAnchor: true,
+          usagePeriods: {
+            where: { periodStart: { lte: now } },
+            orderBy: { periodStart: 'desc' },
+            take: 1,
+            select: { periodStart: true, aiQuestionUnits: true },
+          },
           workspace: {
             select: {
               name: true,
@@ -127,12 +144,16 @@ export class AdminAiUsageService {
       }),
       this.prisma.$queryRaw<CountRow[]>(Prisma.sql`
         SELECT COUNT(*)::bigint AS "count"
-        FROM "product_question"
-        WHERE "updatedAt" >= ${periodStart}
-          AND "updatedAt" <= ${now}
-          AND "draftDecision" = 'NEEDS_REVIEW'
-          AND "draftMissingInformation" IS NOT NULL
-          AND "draftMissingInformation"::text NOT IN ('[]', '{}', 'null')
+        FROM "product_question" AS question
+        WHERE question."status" = 'DRAFTED'::"ProductQuestionStatus"
+          AND question."draftDecision" = 'NEEDS_REVIEW'
+          AND question."draftMissingInformation" IS NOT NULL
+          AND question."draftMissingInformation"::text NOT IN ('[]', '{}', 'null')
+          AND NOT EXISTS (
+            SELECT 1
+            FROM "question_answer" AS answer
+            WHERE answer."questionId" = question."id"
+          )
       `),
       this.prisma.productKnowledgeFact.count({
         where: { status: ProductKnowledgeFactStatus.CONFLICT },
@@ -162,28 +183,34 @@ export class AdminAiUsageService {
         })
       : [];
     const storeById = new Map(stores.map((store) => [store.id, store]));
-    const quotaUsage = quotaPeriods
-      .filter((period) => period.subscription)
-      .map((period) => {
-        const subscription = period.subscription!;
+    const quotaUsage = quotaSubscriptions
+      .map((subscription) => {
+        const usageWindow = resolveBillingUsageWindow(subscription, now);
+        const usage = findBillingUsagePeriodForWindow(
+          subscription.usagePeriods,
+          usageWindow,
+        );
         const limit = entitlementsFor(
           subscription.plan,
           subscription.status,
         ).monthlyAiQuestions;
         return {
-          workspaceId: period.workspaceId,
-          workspaceName: period.workspace.name,
-          ownerName: period.workspace.owner.name,
-          ownerEmail: period.workspace.owner.email,
+          workspaceId: subscription.workspaceId,
+          workspaceName: subscription.workspace.name,
+          ownerName: subscription.workspace.owner.name,
+          ownerEmail: subscription.workspace.owner.email,
           plan: subscription.plan,
           status: subscription.status,
-          used: period.aiQuestionUnits,
+          used: usage?.aiQuestionUnits ?? 0,
           limit,
           utilization: limit
-            ? Math.min(100, Math.round((period.aiQuestionUnits / limit) * 100))
+            ? Math.min(
+                100,
+                Math.round(((usage?.aiQuestionUnits ?? 0) / limit) * 100),
+              )
             : 0,
-          periodStart: period.periodStart,
-          periodEnd: period.periodEnd,
+          periodStart: usageWindow.start,
+          periodEnd: usageWindow.end,
         };
       })
       .sort((left, right) => right.utilization - left.utilization)
@@ -232,11 +259,6 @@ export class AdminAiUsageService {
           'decision',
           QuestionReplyDecision.DO_NOT_REPLY,
         ),
-        failedDrafts: groupCount(
-          outcomeGroups,
-          'outcome',
-          AiDraftOutcome.FAILED,
-        ),
         autoSendEligible: autoEligible,
         autoSent,
         autoFailed,
@@ -244,11 +266,12 @@ export class AdminAiUsageService {
         billedAiQuestions: usageAggregate._sum.quantity ?? 0,
       },
       blockers: {
-        failed: groupCount(
+        generationFailures: groupCount(
           processingGroups,
           'draftProcessingStatus',
           QuestionDraftProcessingStatus.FAILED,
         ),
+        deliveryFailures,
         quota: groupCount(
           processingGroups,
           'draftProcessingStatus',

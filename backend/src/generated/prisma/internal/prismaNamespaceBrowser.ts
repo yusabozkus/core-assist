@@ -62,6 +62,7 @@ export const ModelName = {
   WorkspaceInvitationStoreAccess: 'WorkspaceInvitationStoreAccess',
   BillingSubscription: 'BillingSubscription',
   BillingWebhookEvent: 'BillingWebhookEvent',
+  BillingTransactionReference: 'BillingTransactionReference',
   BillingClosureRecord: 'BillingClosureRecord',
   BillingCheckout: 'BillingCheckout',
   BillingPlanChange: 'BillingPlanChange',
@@ -287,6 +288,22 @@ export const BillingWebhookEventScalarFieldEnum = {
 } as const
 
 export type BillingWebhookEventScalarFieldEnum = (typeof BillingWebhookEventScalarFieldEnum)[keyof typeof BillingWebhookEventScalarFieldEnum]
+
+
+export const BillingTransactionReferenceScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  environment: 'environment',
+  paddleTransactionId: 'paddleTransactionId',
+  paddleSubscriptionId: 'paddleSubscriptionId',
+  paddleCustomerId: 'paddleCustomerId',
+  origin: 'origin',
+  occurredAt: 'occurredAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingTransactionReferenceScalarFieldEnum = (typeof BillingTransactionReferenceScalarFieldEnum)[keyof typeof BillingTransactionReferenceScalarFieldEnum]
 
 
 export const BillingClosureRecordScalarFieldEnum = {

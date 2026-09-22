@@ -5,6 +5,7 @@ import { BillingModule } from '../billing/billing.module';
 import { BILLING_RECOVERY_QUEUE } from '../billing/billing-reconciliation.processor';
 import { PADDLE_WEBHOOK_QUEUE } from '../billing/paddle-webhook.constants';
 import { ChannelsModule } from '../channels/channels.module';
+import { IntegrationsModule } from '../integrations/integrations.module';
 import { PRODUCT_SYNC_QUEUE } from '../product-sync/product-sync.constants';
 import { QUESTION_ANSWER_QUEUE } from '../question-answer/question-answer.constants';
 import { QUESTION_SYNC_QUEUE } from '../question-sync/question-sync.constants';
@@ -38,6 +39,7 @@ import { AdminGlobalSearchService } from './admin-global-search.service';
     AuthModule,
     BillingModule,
     ChannelsModule,
+    IntegrationsModule,
     SupportModule,
     BullModule.registerQueue(
       { name: PRODUCT_SYNC_QUEUE },

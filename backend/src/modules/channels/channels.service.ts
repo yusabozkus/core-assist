@@ -24,6 +24,7 @@ import { recalculateStoreVariantInventory } from '../product-sync/inventory-poli
 import { QUESTION_SYNC_DISPATCHER } from '../question-sync/question-sync.constants';
 import type { QuestionSyncDispatcher } from '../question-sync/question-sync.types';
 import { NotificationsService } from '../notifications/notifications.service';
+import { BillingAccessRequiredException } from '../billing/billing.errors';
 import { AuditAction } from '../audit/audit-actions';
 import {
   AuditActorType,
@@ -33,6 +34,7 @@ import {
   AuditResult,
 } from '../audit/audit-log.service';
 import { channelConnectionSelect } from './channel.constants';
+import { getChannelSyncRetryEligibility } from './channel-sync-retry.policy';
 import { CredentialsEncryptionService } from './credentials-encryption.service';
 import { ConfigureChannelConnectionDto } from './dto/configure-channel-connection.dto';
 import { CreateChannelConnectionDto } from './dto/create-channel-connection.dto';
@@ -357,6 +359,30 @@ export class ChannelsService {
             storeId: true,
             status: true,
             credentialsEncrypted: true,
+            connectedAt: true,
+            removedAt: true,
+            processingStartedAt: true,
+            questionSyncStartedAt: true,
+            providerKey: true,
+            store: {
+              select: {
+                status: true,
+                workspace: {
+                  select: {
+                    billingSubscription: {
+                      select: {
+                        status: true,
+                        trialEndsAt: true,
+                        currentPeriodEnd: true,
+                        paddleSubscriptionId: true,
+                        cancelAtPeriodEnd: true,
+                        scheduledAccessEndsAt: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -366,33 +392,35 @@ export class ChannelsService {
       throw new NotFoundException('Senkronizasyon işlemi bulunamadı.');
     }
 
-    if (run.status !== CatalogSyncStatus.FAILED) {
-      throw new ConflictException(
-        'Yalnızca başarısız senkronizasyonlar yeniden denenebilir.',
-      );
+    const eligibility = getChannelSyncRetryEligibility({
+      runStatus: run.status,
+      kind: run.kind,
+      storeStatus: run.connection.store.status,
+      connectionStatus: run.connection.status,
+      credentialsEncrypted: run.connection.credentialsEncrypted,
+      connectedAt: run.connection.connectedAt,
+      removedAt: run.connection.removedAt,
+      processingStartedAt: run.connection.processingStartedAt,
+      questionSyncStartedAt: run.connection.questionSyncStartedAt,
+      supportsProductQuestions: this.providers.supportsProductQuestions(
+        run.connection.providerKey,
+      ),
+      subscription: run.connection.store.workspace.billingSubscription,
+    });
+
+    if (!eligibility.canRetry) {
+      const reason = eligibility.reason ?? 'Senkronizasyon yeniden denenemez.';
+      if (eligibility.code === 'BILLING_ACCESS_INACTIVE') {
+        throw new BillingAccessRequiredException(reason);
+      }
+      if (eligibility.code === 'RUN_NOT_FAILED') {
+        throw new ConflictException(reason);
+      }
+      throw new BadRequestException(reason);
     }
 
-    if (!run.connection.credentialsEncrypted) {
-      throw new BadRequestException(
-        'Yeniden denemeden önce kanal bağlantı bilgilerini tamamlayın.',
-      );
-    }
-
-    if (run.connection.status === ChannelConnectionStatus.DISCONNECTED) {
-      throw new BadRequestException(
-        'Yeniden denemeden önce kanal bağlantısını yeniden bağlayın.',
-      );
-    }
-
-    if (run.connection.status === ChannelConnectionStatus.ERROR) {
-      await this.prisma.channelConnection.update({
-        where: { id: run.connection.id },
-        data: {
-          status: ChannelConnectionStatus.CONNECTED,
-          failureReason: null,
-        },
-      });
-    }
+    const recoverErroredConnection =
+      run.connection.status === ChannelConnectionStatus.ERROR;
 
     if (run.kind === 'QUESTION') {
       return this.questionSyncQueue.enqueue(
@@ -401,6 +429,7 @@ export class ChannelsService {
         {
           trigger: 'RETRY',
           retryOfId: run.id,
+          recoverErroredConnection,
         },
       );
     }
@@ -412,6 +441,7 @@ export class ChannelsService {
       {
         trigger: 'RETRY',
         retryOfId: run.id,
+        recoverErroredConnection,
       },
     );
   }

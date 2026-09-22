@@ -35,6 +35,7 @@ export type SupportTicketSummary = {
   createdAt: string
   updatedAt: string
   resolvedAt: string | null
+  store: { id: string; name: string } | null
   createdBy: SupportTicketPerson | null
   messageCount: number
   lastMessage: {
@@ -53,7 +54,6 @@ export type SupportMessage = {
 }
 
 export type SupportTicketDetail = SupportTicketSummary & {
-  store: { id: string; name: string } | null
   messages: SupportMessage[]
 }
 
@@ -64,6 +64,7 @@ export type SupportTicketList = {
 }
 
 export type CreateSupportTicketInput = {
+  storeId?: string
   category: SupportTicketCategory
   impact: SupportTicketImpact
   subject: string

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft01Icon,
@@ -40,6 +40,7 @@ import {
   updateAdminSupportAssignee,
   updateAdminSupportStatus,
 } from "@/lib/api/admin-support"
+import { NOTIFICATIONS_CHANGED_EVENT } from "@/lib/api/notifications"
 import { cn, getInitials } from "@/lib/utils"
 import type {
   AdminSupportMessage,
@@ -80,8 +81,50 @@ export function AdminSupportTicketConversation({
   const messageInputRef = useRef<HTMLTextAreaElement>(null)
   const hasScrolledRef = useRef(false)
   const mutationPendingRef = useRef(false)
+  const refreshQueuedRef = useRef(false)
+  const refreshRequestRef = useRef<AbortController | null>(null)
+  const refreshVersionRef = useRef(0)
   const isClosed = ticket.status === "RESOLVED" || ticket.status === "CLOSED"
   const publicReplyDisabled = isClosed && visibility === "PUBLIC"
+
+  const cancelPendingRefresh = useCallback(() => {
+    refreshVersionRef.current += 1
+    refreshRequestRef.current?.abort()
+    refreshRequestRef.current = null
+  }, [])
+
+  const refreshTicket = useCallback(async () => {
+    if (document.visibilityState === "hidden") return
+    if (mutationPendingRef.current) {
+      refreshQueuedRef.current = true
+      return
+    }
+
+    cancelPendingRefresh()
+    const requestVersion = refreshVersionRef.current
+    const controller = new AbortController()
+    refreshRequestRef.current = controller
+
+    try {
+      const nextTicket = await getAdminSupportTicket(
+        ticket.id,
+        controller.signal
+      )
+      if (
+        !controller.signal.aborted &&
+        !mutationPendingRef.current &&
+        refreshVersionRef.current === requestVersion
+      ) {
+        setTicket(nextTicket)
+      }
+    } catch {
+      // Geçici bağlantı hatalarında son başarılı konuşma korunur.
+    } finally {
+      if (refreshRequestRef.current === controller) {
+        refreshRequestRef.current = null
+      }
+    }
+  }, [cancelPendingRefresh, ticket.id])
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -108,32 +151,53 @@ export function AdminSupportTicketConversation({
   }, [message])
 
   useEffect(() => {
-    const controller = new AbortController()
-    const intervalId = window.setInterval(async () => {
-      if (document.visibilityState === "hidden" || mutationPendingRef.current) {
-        return
-      }
+    const intervalId = window.setInterval(
+      () => void refreshTicket(),
+      POLL_INTERVAL_MS
+    )
 
-      try {
-        setTicket(await getAdminSupportTicket(ticket.id, controller.signal))
-      } catch {
-        // Keep the last successful ticket snapshot during transient failures.
-      }
-    }, POLL_INTERVAL_MS)
+    function handleVisible() {
+      if (document.visibilityState === "visible") void refreshTicket()
+    }
+
+    function handleNotificationChange() {
+      void refreshTicket()
+    }
+
+    window.addEventListener("focus", handleVisible)
+    document.addEventListener("visibilitychange", handleVisible)
+    window.addEventListener(
+      NOTIFICATIONS_CHANGED_EVENT,
+      handleNotificationChange
+    )
 
     return () => {
-      controller.abort()
       window.clearInterval(intervalId)
+      window.removeEventListener("focus", handleVisible)
+      document.removeEventListener("visibilitychange", handleVisible)
+      window.removeEventListener(
+        NOTIFICATIONS_CHANGED_EVENT,
+        handleNotificationChange
+      )
+      cancelPendingRefresh()
     }
-  }, [ticket.id])
+  }, [cancelPendingRefresh, refreshTicket])
 
   async function submitMessage() {
     const value = message.trim()
-    if (value.length < 2 || pendingAction || publicReplyDisabled) return
+    if (
+      value.length < 2 ||
+      pendingAction ||
+      mutationPendingRef.current ||
+      publicReplyDisabled
+    ) {
+      return
+    }
 
     setMessageError(null)
     setPendingAction("message")
     mutationPendingRef.current = true
+    cancelPendingRefresh()
     try {
       setTicket(await addAdminSupportMessage(ticket.id, value, visibility))
       setMessage("")
@@ -146,14 +210,25 @@ export function AdminSupportTicketConversation({
     } finally {
       mutationPendingRef.current = false
       setPendingAction(null)
+      if (refreshQueuedRef.current) {
+        refreshQueuedRef.current = false
+        void refreshTicket()
+      }
     }
   }
 
   async function changeStatus(status: SupportTicketStatus) {
-    if (pendingAction || status === ticket.status) return
+    if (
+      pendingAction ||
+      mutationPendingRef.current ||
+      status === ticket.status
+    ) {
+      return
+    }
     setTicketError(null)
     setPendingAction("status")
     mutationPendingRef.current = true
+    cancelPendingRefresh()
     try {
       setTicket(await updateAdminSupportStatus(ticket.id, status))
     } catch (caughtError) {
@@ -165,14 +240,19 @@ export function AdminSupportTicketConversation({
     } finally {
       mutationPendingRef.current = false
       setPendingAction(null)
+      if (refreshQueuedRef.current) {
+        refreshQueuedRef.current = false
+        void refreshTicket()
+      }
     }
   }
 
   async function changeAssignee(assigneeUserId: string) {
-    if (pendingAction) return
+    if (pendingAction || mutationPendingRef.current) return
     setTicketError(null)
     setPendingAction("assignee")
     mutationPendingRef.current = true
+    cancelPendingRefresh()
     try {
       setTicket(
         await updateAdminSupportAssignee(
@@ -189,6 +269,10 @@ export function AdminSupportTicketConversation({
     } finally {
       mutationPendingRef.current = false
       setPendingAction(null)
+      if (refreshQueuedRef.current) {
+        refreshQueuedRef.current = false
+        void refreshTicket()
+      }
     }
   }
 

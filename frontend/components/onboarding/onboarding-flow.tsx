@@ -783,6 +783,12 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                       Plan ve faturalama
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={APP_ROUTES.dashboard.support}>
+                      Yardım ve destek
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="cursor-pointer gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"

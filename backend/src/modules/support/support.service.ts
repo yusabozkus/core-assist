@@ -12,6 +12,7 @@ import {
   SupportTicketStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { WorkspacesService } from '../workspaces/workspaces.service';
 import { CreateSupportMessageDto } from './dto/create-support-message.dto';
 import { CreateSupportTicketDto } from './dto/create-support-ticket.dto';
 import {
@@ -19,9 +20,11 @@ import {
   UpdateSupportTicketStatusDto,
 } from './dto/update-support-ticket-status.dto';
 import { SupportNotificationService } from './support-notification.service';
+import { lockSupportTicket } from './support-ticket-lock';
 
 const summaryInclude = {
   createdBy: { select: { id: true, name: true, image: true } },
+  store: { select: { id: true, name: true } },
   messages: {
     where: { isInternal: false },
     orderBy: { createdAt: 'desc' },
@@ -58,28 +61,34 @@ export class SupportService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly supportNotifications: SupportNotificationService,
+    private readonly workspaces: WorkspacesService,
   ) {}
 
-  async findAll(storeId: string, userId: string) {
-    await this.requireStoreMembership(storeId, userId);
+  async findAll(userId: string) {
+    const account = await this.findAccountMembership(userId, this.prisma);
+    if (!account) {
+      return {
+        items: [],
+        counts: emptySupportStatusCounts(),
+        total: 0,
+      };
+    }
 
     const [tickets, groupedStatuses] = await Promise.all([
       this.prisma.supportTicket.findMany({
-        where: { storeId },
+        where: { workspaceId: account.workspaceId },
         include: summaryInclude,
         orderBy: [{ lastMessageAt: 'desc' }, { id: 'desc' }],
         take: 100,
       }),
       this.prisma.supportTicket.groupBy({
         by: ['status'],
-        where: { storeId },
+        where: { workspaceId: account.workspaceId },
         _count: { _all: true },
       }),
     ]);
 
-    const counts = Object.fromEntries(
-      Object.values(SupportTicketStatus).map((status) => [status, 0]),
-    ) as Record<SupportTicketStatus, number>;
+    const counts = emptySupportStatusCounts();
     for (const group of groupedStatuses) {
       counts[group.status] = group._count._all;
     }
@@ -94,10 +103,10 @@ export class SupportService {
     };
   }
 
-  async findOne(storeId: string, ticketId: string, userId: string) {
-    await this.requireStoreMembership(storeId, userId);
+  async findOne(ticketId: string, userId: string) {
+    const account = await this.requireAccountMembership(userId);
     const ticket = await this.prisma.supportTicket.findFirst({
-      where: { id: ticketId, storeId },
+      where: { id: ticketId, workspaceId: account.workspaceId },
       include: detailInclude,
     });
     if (!ticket) throw new NotFoundException('Destek talebi bulunamadı.');
@@ -105,15 +114,10 @@ export class SupportService {
   }
 
   async create(
-    storeId: string,
     userId: string,
     body: CreateSupportTicketDto,
     userAgent?: string,
   ) {
-    const membership = await this.requireStoreMembership(storeId, userId);
-    const plan =
-      membership.store.workspace.billingSubscription?.plan ??
-      BillingPlan.STARTER;
     const now = new Date();
     const context = {
       ...(body.pagePath ? { pagePath: body.pagePath } : {}),
@@ -121,10 +125,33 @@ export class SupportService {
     } satisfies Prisma.InputJsonObject;
 
     const result = await this.prisma.$transaction(async (transaction) => {
+      let account = await this.findAccountMembership(userId, transaction);
+      if (!account) {
+        await this.workspaces.getOrCreateOwnedWorkspaceInTransaction(
+          transaction,
+          userId,
+        );
+        account = await this.requireAccountMembership(userId, transaction);
+      }
+      const store = body.storeId
+        ? await transaction.store.findFirst({
+            where: {
+              id: body.storeId,
+              workspaceId: account.workspaceId,
+              members: { some: { userId } },
+            },
+            select: { id: true },
+          })
+        : null;
+      if (body.storeId && !store) {
+        throw new NotFoundException('Mağaza bulunamadı veya erişiminiz yok.');
+      }
+      const plan =
+        account.workspace.billingSubscription?.plan ?? BillingPlan.STARTER;
       const ticket = await transaction.supportTicket.create({
         data: {
-          workspaceId: membership.store.workspaceId,
-          storeId,
+          workspaceId: account.workspaceId,
+          storeId: store?.id ?? null,
           createdByUserId: userId,
           category: body.category,
           impact: body.impact,
@@ -154,27 +181,23 @@ export class SupportService {
     return this.toDetail(result.ticket);
   }
 
-  async reply(
-    storeId: string,
-    ticketId: string,
-    userId: string,
-    body: CreateSupportMessageDto,
-  ) {
-    await this.requireStoreMembership(storeId, userId);
-    const ticket = await this.requireTicket(storeId, ticketId);
-    if (ticket.status === SupportTicketStatus.CLOSED) {
-      throw new BadRequestException(
-        'Kapatılmış talebi yanıtlamadan önce yeniden açmalısınız.',
-      );
-    }
-    if (ticket.status === SupportTicketStatus.RESOLVED) {
-      throw new BadRequestException(
-        'Çözülmüş talebi yanıtlamadan önce yeniden açmalısınız.',
-      );
-    }
-
-    const now = new Date();
+  async reply(ticketId: string, userId: string, body: CreateSupportMessageDto) {
     const recipients = await this.prisma.$transaction(async (transaction) => {
+      const account = await this.requireAccountMembership(userId, transaction);
+      const ticket = await lockSupportTicket(transaction, ticketId);
+      this.assertTicketAccount(ticket.workspaceId, account.workspaceId);
+      if (ticket.status === SupportTicketStatus.CLOSED) {
+        throw new BadRequestException(
+          'Kapatılmış talebi yanıtlamadan önce yeniden açmalısınız.',
+        );
+      }
+      if (ticket.status === SupportTicketStatus.RESOLVED) {
+        throw new BadRequestException(
+          'Çözülmüş talebi yanıtlamadan önce yeniden açmalısınız.',
+        );
+      }
+
+      const now = new Date();
       const message = await transaction.supportMessage.create({
         data: {
           ticketId,
@@ -202,130 +225,103 @@ export class SupportService {
 
     this.supportNotifications.emitCreated(recipients, null);
 
-    return this.findOne(storeId, ticketId, userId);
+    return this.findOne(ticketId, userId);
   }
 
   async updateStatus(
-    storeId: string,
     ticketId: string,
     userId: string,
     body: UpdateSupportTicketStatusDto,
   ) {
-    await this.requireStoreMembership(storeId, userId);
-    const ticket = await this.requireTicket(storeId, ticketId);
-    const now = new Date();
-
-    if (body.action === SupportTicketUserAction.RESOLVE) {
-      if (
-        ticket.status === SupportTicketStatus.RESOLVED ||
-        ticket.status === SupportTicketStatus.CLOSED
-      ) {
-        return this.findOne(storeId, ticketId, userId);
+    const result = await this.prisma.$transaction(async (transaction) => {
+      const account = await this.requireAccountMembership(userId, transaction);
+      const ticket = await lockSupportTicket(transaction, ticketId);
+      this.assertTicketAccount(ticket.workspaceId, account.workspaceId);
+      const resolving = body.action === SupportTicketUserAction.RESOLVE;
+      const alreadyInTargetState = resolving
+        ? ticket.status === SupportTicketStatus.RESOLVED ||
+          ticket.status === SupportTicketStatus.CLOSED
+        : ticket.status !== SupportTicketStatus.RESOLVED &&
+          ticket.status !== SupportTicketStatus.CLOSED;
+      if (alreadyInTargetState) {
+        return { changed: false, slaRecipients: [] as string[] };
       }
-      const slaRecipients = await this.updateStatusWithSystemMessage({
-        ticketId,
-        status: SupportTicketStatus.RESOLVED,
-        message: 'Talep kullanıcı tarafından çözüldü olarak işaretlendi.',
-        now,
-        resolvedAt: now,
-        resolveSla: true,
-      });
-      this.supportNotifications.emitRead(slaRecipients);
-    } else {
-      if (
-        ticket.status !== SupportTicketStatus.RESOLVED &&
-        ticket.status !== SupportTicketStatus.CLOSED
-      ) {
-        return this.findOne(storeId, ticketId, userId);
-      }
-      await this.updateStatusWithSystemMessage({
-        ticketId,
-        status: SupportTicketStatus.OPEN,
-        message: 'Talep kullanıcı tarafından yeniden açıldı.',
-        now,
-        resolvedAt: null,
-        resolveSla: false,
-      });
-    }
 
-    return this.findOne(storeId, ticketId, userId);
-  }
-
-  private async updateStatusWithSystemMessage(input: {
-    ticketId: string;
-    status: SupportTicketStatus;
-    message: string;
-    now: Date;
-    resolvedAt: Date | null;
-    resolveSla: boolean;
-  }) {
-    return this.prisma.$transaction(async (transaction) => {
+      const now = new Date();
+      const status = resolving
+        ? SupportTicketStatus.RESOLVED
+        : SupportTicketStatus.OPEN;
       await transaction.supportMessage.create({
         data: {
-          ticketId: input.ticketId,
+          ticketId,
           authorType: SupportMessageAuthorType.SYSTEM,
-          body: input.message,
+          body: resolving
+            ? 'Talep kullanıcı tarafından çözüldü olarak işaretlendi.'
+            : 'Talep kullanıcı tarafından yeniden açıldı.',
         },
       });
       await transaction.supportTicket.update({
-        where: { id: input.ticketId },
+        where: { id: ticketId },
         data: {
-          status: input.status,
-          resolvedAt: input.resolvedAt,
+          status,
+          resolvedAt: resolving ? now : null,
           closedAt: null,
-          lastMessageAt: input.now,
+          lastMessageAt: now,
         },
       });
-      return input.resolveSla
-        ? this.supportNotifications.resolveSlaNotification(
+      const slaRecipients = resolving
+        ? await this.supportNotifications.resolveSlaNotification(
             transaction,
-            input.ticketId,
+            ticketId,
           )
         : [];
+      return { changed: true, slaRecipients };
     });
+
+    if (result.changed) {
+      this.supportNotifications.emitRead(result.slaRecipients);
+    }
+
+    return this.findOne(ticketId, userId);
   }
 
-  private async requireStoreMembership(storeId: string, userId: string) {
-    const membership = await this.prisma.storeMember.findUnique({
-      where: { storeId_userId: { storeId, userId } },
-      select: {
-        role: true,
-        store: {
-          select: {
-            id: true,
-            name: true,
-            workspaceId: true,
-            workspace: {
-              select: {
-                billingSubscription: { select: { plan: true } },
-              },
-            },
-          },
-        },
-      },
-    });
+  private async requireAccountMembership(
+    userId: string,
+    client: Prisma.TransactionClient | PrismaService = this.prisma,
+  ) {
+    const membership = await this.findAccountMembership(userId, client);
     if (!membership) {
-      throw new NotFoundException('Mağaza bulunamadı veya erişiminiz yok.');
+      throw new NotFoundException(
+        'Müşteri hesabı bulunamadı veya erişiminiz yok.',
+      );
     }
     return membership;
   }
 
-  private async requireTicket(storeId: string, ticketId: string) {
-    const ticket = await this.prisma.supportTicket.findFirst({
-      where: { id: ticketId, storeId },
+  private findAccountMembership(
+    userId: string,
+    client: Prisma.TransactionClient | PrismaService,
+  ) {
+    return client.workspaceMember.findUnique({
+      where: { userId },
       select: {
-        id: true,
-        number: true,
-        subject: true,
-        createdAt: true,
-        storeId: true,
-        createdByUserId: true,
-        assignedAdminUserId: true,
-        status: true,
+        role: true,
+        workspaceId: true,
+        workspace: {
+          select: {
+            id: true,
+            name: true,
+            billingSubscription: { select: { plan: true } },
+          },
+        },
       },
     });
-    if (!ticket) throw new NotFoundException('Destek talebi bulunamadı.');
-    return ticket;
+  }
+
+  private assertTicketAccount(ticketWorkspaceId: string, workspaceId: string) {
+    if (ticketWorkspaceId !== workspaceId) {
+      throw new NotFoundException('Destek talebi bulunamadı.');
+    }
   }
 
   private toSummary(ticket: SummaryRecord) {
@@ -346,6 +342,7 @@ export class SupportService {
       createdAt: ticket.createdAt,
       updatedAt: ticket.updatedAt,
       resolvedAt: ticket.resolvedAt,
+      store: ticket.store,
       createdBy: ticket.createdBy,
       messageCount: ticket._count.messages,
       lastMessage: lastMessage
@@ -452,4 +449,10 @@ function istanbulDayOfWeek(value: Date) {
 
 function formatTicketCode(number: number, createdAt: Date) {
   return `CA-${createdAt.getUTCFullYear()}-${String(number).padStart(6, '0')}`;
+}
+
+function emptySupportStatusCounts() {
+  return Object.fromEntries(
+    Object.values(SupportTicketStatus).map((status) => [status, 0]),
+  ) as Record<SupportTicketStatus, number>;
 }

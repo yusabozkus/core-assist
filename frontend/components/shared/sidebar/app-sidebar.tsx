@@ -39,7 +39,7 @@ import { SidebarUsageAlert } from "./sidebar-usage-alert"
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   user: SidebarUserData
   shops: SidebarShop[]
-  activeShopId: string
+  activeShopId: string | null
   canManageBilling: boolean
 }
 
@@ -67,7 +67,7 @@ export function AppSidebar({
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <ShopSwitcher
-          key={activeShopId}
+          key={activeShopId ?? "no-active-store"}
           shops={shops}
           activeShopId={activeShopId}
         />

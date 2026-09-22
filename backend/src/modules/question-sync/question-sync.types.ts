@@ -2,6 +2,7 @@ export type QuestionSyncJobData = {
   storeId: string;
   connectionId: string;
   syncRunId: string;
+  recoverErroredConnection?: boolean;
 };
 
 export type QueuedQuestionSync = {
@@ -14,6 +15,7 @@ export type QueuedQuestionSync = {
 export type QuestionSyncEnqueueOptions = {
   trigger?: 'MANUAL' | 'SCHEDULED' | 'RETRY' | 'ONBOARDING';
   retryOfId?: string;
+  recoverErroredConnection?: boolean;
 };
 
 export interface QuestionSyncDispatcher {

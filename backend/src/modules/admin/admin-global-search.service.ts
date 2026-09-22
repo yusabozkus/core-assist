@@ -67,6 +67,7 @@ export class AdminGlobalSearchService {
       subscriptions,
       checkouts,
       planChanges,
+      transactionReferences,
     ] = await Promise.all([
       this.prisma.workspace.findMany({
         where: {
@@ -225,6 +226,34 @@ export class AdminGlobalSearchService {
           },
         },
       }),
+      this.prisma.billingTransactionReference.findMany({
+        where: {
+          OR: [
+            { paddleTransactionId: startsWith },
+            { paddleSubscriptionId: startsWith },
+            { paddleCustomerId: startsWith },
+          ],
+        },
+        orderBy: [{ updatedAt: 'desc' }, { id: 'asc' }],
+        take: limit,
+        select: {
+          id: true,
+          paddleTransactionId: true,
+          paddleSubscriptionId: true,
+          paddleCustomerId: true,
+          updatedAt: true,
+          workspace: {
+            select: {
+              id: true,
+              name: true,
+              owner: { select: { email: true } },
+              billingSubscription: {
+                select: { plan: true, status: true },
+              },
+            },
+          },
+        },
+      }),
     ]);
 
     const paddleRecords = new Map<string, PaddleSearchResult>();
@@ -271,6 +300,24 @@ export class AdminGlobalSearchService {
           { kind: 'PRICE', value: change.targetPriceId },
         ],
         change,
+      );
+    }
+    for (const reference of transactionReferences) {
+      addPaddleResult(
+        paddleRecords,
+        reference.id,
+        text,
+        [
+          { kind: 'TRANSACTION', value: reference.paddleTransactionId },
+          { kind: 'SUBSCRIPTION', value: reference.paddleSubscriptionId },
+          { kind: 'CUSTOMER', value: reference.paddleCustomerId },
+        ],
+        {
+          plan: reference.workspace.billingSubscription?.plan ?? null,
+          status: reference.workspace.billingSubscription?.status ?? 'UNKNOWN',
+          updatedAt: reference.updatedAt,
+          workspace: reference.workspace,
+        },
       );
     }
 
@@ -326,7 +373,7 @@ function addPaddleResult(
   query: string,
   candidates: PaddleReferenceCandidate[],
   record: {
-    plan: string;
+    plan: string | null;
     status: string;
     updatedAt: Date;
     workspace: { id: string; name: string; owner: { email: string } };

@@ -9,6 +9,16 @@ export type AdminSystemQueue = {
   backlogWarningThreshold: number
   backlogExceeded: boolean
   recentFailuresLast24Hours: number
+  workerCount: number | null
+  workerUnavailable: boolean
+  oldestWaitingAgeMs: number | null
+  longestActiveAgeMs: number | null
+  waitingAgeWarningMs: number
+  activeDurationWarningMs: number
+  activeStallWarningMs: number
+  waitingAgeExceeded: boolean
+  activeDurationExceeded: boolean
+  stalledActiveJobs: number
   errorCode: string | null
   counts: {
     waiting: number
@@ -41,6 +51,9 @@ export type AdminSystemHealth = {
     pausedQueues: number
     backloggedQueues: number
     queuesWithOverdueJobs: number
+    queuesWithoutWorkers: number
+    queuesWithStuckWaitingJobs: number
+    queuesWithLongRunningJobs: number
     queuesWithRecentFailures: number
     retainedQueueFailures: number
     recentQueueFailures: number

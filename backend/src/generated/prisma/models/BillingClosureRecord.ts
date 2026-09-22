@@ -347,10 +347,6 @@ export type BillingClosureRecordCreatepaddleCustomerIdsInput = {
   set: string[]
 }
 
-export type EnumPaddleEnvironmentFieldUpdateOperationsInput = {
-  set?: $Enums.PaddleEnvironment
-}
-
 export type BillingClosureRecordUpdatepaddleSubscriptionIdsInput = {
   set?: string[]
   push?: string | string[]

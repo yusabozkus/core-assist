@@ -15,7 +15,6 @@ export type AdminAiUsage = {
     readyForSend: number
     needsReview: number
     doNotReply: number
-    failedDrafts: number
     autoSendEligible: number
     autoSent: number
     autoFailed: number
@@ -23,7 +22,8 @@ export type AdminAiUsage = {
     billedAiQuestions: number
   }
   blockers: {
-    failed: number
+    generationFailures: number
+    deliveryFailures: number
     quota: number
     subscription: number
     missingInformation: number

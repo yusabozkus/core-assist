@@ -26,7 +26,7 @@ export function BillingUsageProvider({
   initialUsage,
   children,
 }: {
-  storeId: string
+  storeId: string | null
   initialUsage: StoreBillingUsageOverview | null
   children: React.ReactNode
 }) {
@@ -34,7 +34,7 @@ export function BillingUsageProvider({
   const requestRef = useRef<AbortController | null>(null)
 
   const refresh = useCallback(async () => {
-    if (requestRef.current) return
+    if (!storeId || requestRef.current) return
     const controller = new AbortController()
     requestRef.current = controller
 
@@ -52,6 +52,8 @@ export function BillingUsageProvider({
   }, [storeId])
 
   useEffect(() => {
+    if (!storeId) return
+
     const intervalId = window.setInterval(() => {
       if (document.visibilityState === "visible") void refresh()
     }, REFRESH_INTERVAL_MS)
@@ -65,7 +67,7 @@ export function BillingUsageProvider({
       document.removeEventListener("visibilitychange", handleVisibilityChange)
       requestRef.current?.abort()
     }
-  }, [refresh])
+  }, [refresh, storeId])
 
   const value = useMemo(() => ({ usage, refresh }), [refresh, usage])
 

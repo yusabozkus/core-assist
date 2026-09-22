@@ -67,6 +67,19 @@ const TRANSACTION_RECOVERY_EVENTS = new Set<string>([
   EventName.TransactionCompleted,
 ]);
 
+const TRANSACTION_EVENTS = new Set<string>([
+  EventName.TransactionBilled,
+  EventName.TransactionCanceled,
+  EventName.TransactionCompleted,
+  EventName.TransactionCreated,
+  EventName.TransactionPaid,
+  EventName.TransactionPastDue,
+  EventName.TransactionPaymentFailed,
+  EventName.TransactionReady,
+  EventName.TransactionRevised,
+  EventName.TransactionUpdated,
+]);
+
 const ADJUSTMENT_EVENTS = new Set<string>([
   EventName.AdjustmentCreated,
   EventName.AdjustmentUpdated,
@@ -420,10 +433,19 @@ export class PaddleBillingService {
           };
         }
 
-        if (TRANSACTION_RECOVERY_EVENTS.has(event.eventType)) {
-          const recovered = await this.checkoutBindings.recoverTransaction(
+        if (TRANSACTION_EVENTS.has(event.eventType)) {
+          const notification = event.data as TransactionNotification;
+          const recovered = TRANSACTION_RECOVERY_EVENTS.has(event.eventType)
+            ? await this.checkoutBindings.recoverTransaction(
+                transaction,
+                notification,
+              )
+            : null;
+          const referenced = await this.recordTransactionReference(
             transaction,
-            event.data as TransactionNotification,
+            notification,
+            occurredAt,
+            recovered?.workspaceId,
           );
           if (recovered) {
             if (recovered.recovered) {
@@ -439,8 +461,7 @@ export class PaddleBillingService {
                   metadata: {
                     eventId: event.eventId,
                     eventType: event.eventType,
-                    paddleTransactionId: (event.data as TransactionNotification)
-                      .id,
+                    paddleTransactionId: notification.id,
                   },
                 },
                 transaction,
@@ -448,16 +469,22 @@ export class PaddleBillingService {
             }
             return {
               received: true,
-              processed: recovered.recovered,
+              processed: recovered.recovered || referenced,
               recovered: recovered.recovered,
+            };
+          }
+          if (referenced) {
+            return {
+              received: true,
+              processed: true,
+              referenced: true,
             };
           }
         }
 
-        // Transaction notifications are recorded/deduplicated, but never grant
-        // or revoke subscription access. Created/ready/completed events only
-        // recover a transaction ID lost between Paddle's response and our DB
-        // write. Subscription events/snapshots remain authoritative for access.
+        // Transaction notifications never grant or revoke subscription access.
+        // They only recover a lost checkout binding and retain minimal searchable
+        // identifiers. Subscription events/snapshots remain authoritative.
 
         return { received: true, processed: false, ignored: true };
       });
@@ -498,6 +525,99 @@ export class PaddleBillingService {
         eventId: event.eventId,
       });
     }
+  }
+
+  private async recordTransactionReference(
+    transaction: Prisma.TransactionClient,
+    notification: TransactionNotification,
+    occurredAt: Date,
+    trustedWorkspaceId?: string,
+  ) {
+    const environment = paddleCheckoutEnvironment();
+    const workspaceIds = new Set<string>();
+    if (trustedWorkspaceId) workspaceIds.add(trustedWorkspaceId);
+
+    const existing = await transaction.billingTransactionReference.findUnique({
+      where: {
+        environment_paddleTransactionId: {
+          environment,
+          paddleTransactionId: notification.id,
+        },
+      },
+      select: {
+        workspaceId: true,
+        paddleSubscriptionId: true,
+        paddleCustomerId: true,
+      },
+    });
+    if (existing) workspaceIds.add(existing.workspaceId);
+
+    if (notification.subscriptionId) {
+      const subscription = await transaction.billingSubscription.findUnique({
+        where: { paddleSubscriptionId: notification.subscriptionId },
+        select: { workspaceId: true },
+      });
+      if (subscription) workspaceIds.add(subscription.workspaceId);
+    }
+    if (notification.customerId) {
+      const subscription = await transaction.billingSubscription.findUnique({
+        where: { paddleCustomerId: notification.customerId },
+        select: { workspaceId: true },
+      });
+      if (subscription) workspaceIds.add(subscription.workspaceId);
+    }
+
+    const checkout = await transaction.billingCheckout.findFirst({
+      where: { environment, paddleTransactionId: notification.id },
+      select: { workspaceId: true },
+    });
+    if (checkout) workspaceIds.add(checkout.workspaceId);
+
+    if (workspaceIds.size === 0) return false;
+    if (workspaceIds.size !== 1) throw transactionReferenceConflict();
+
+    if (
+      (existing?.paddleSubscriptionId &&
+        notification.subscriptionId &&
+        existing.paddleSubscriptionId !== notification.subscriptionId) ||
+      (existing?.paddleCustomerId &&
+        notification.customerId &&
+        existing.paddleCustomerId !== notification.customerId)
+    ) {
+      throw transactionReferenceConflict();
+    }
+
+    const workspaceId = [...workspaceIds][0];
+    const reference = await transaction.billingTransactionReference.upsert({
+      where: {
+        environment_paddleTransactionId: {
+          environment,
+          paddleTransactionId: notification.id,
+        },
+      },
+      create: {
+        workspaceId,
+        environment,
+        paddleTransactionId: notification.id,
+        paddleSubscriptionId: notification.subscriptionId,
+        paddleCustomerId: notification.customerId,
+        origin: notification.origin,
+        occurredAt,
+      },
+      update: {
+        paddleSubscriptionId: notification.subscriptionId ?? undefined,
+        paddleCustomerId: notification.customerId ?? undefined,
+        origin: notification.origin ?? undefined,
+      },
+      select: { workspaceId: true },
+    });
+    // The unique transaction key is environment-scoped. Never let a concurrent
+    // event silently move an existing transaction to another customer account.
+    if (reference.workspaceId !== workspaceId) {
+      throw transactionReferenceConflict();
+    }
+
+    return true;
   }
 
   // Uses only server-stored IDs. Read-only Paddle calls happen outside DB locks.
@@ -1200,6 +1320,14 @@ function parseDate(value: string | null | undefined) {
   if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function transactionReferenceConflict() {
+  return new ConflictException({
+    code: 'PADDLE_TRANSACTION_REFERENCE_MISMATCH',
+    message:
+      'Paddle iÅŸlem kimliÄŸi farklÄ± bir mÃ¼ÅŸteri hesabÄ±yla eÅŸleÅŸiyor.',
+  });
 }
 
 function webhookFailureDetails(error: unknown) {

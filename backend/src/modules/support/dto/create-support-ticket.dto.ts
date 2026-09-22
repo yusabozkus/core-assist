@@ -3,6 +3,7 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -16,6 +17,10 @@ function trimString({ value }: TransformFnParams): unknown {
 }
 
 export class CreateSupportTicketDto {
+  @IsOptional()
+  @IsUUID()
+  storeId?: string;
+
   @IsEnum(SupportTicketCategory)
   category!: SupportTicketCategory;
 

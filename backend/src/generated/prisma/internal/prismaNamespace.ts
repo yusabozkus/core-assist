@@ -408,6 +408,7 @@ export const ModelName = {
   WorkspaceInvitationStoreAccess: 'WorkspaceInvitationStoreAccess',
   BillingSubscription: 'BillingSubscription',
   BillingWebhookEvent: 'BillingWebhookEvent',
+  BillingTransactionReference: 'BillingTransactionReference',
   BillingClosureRecord: 'BillingClosureRecord',
   BillingCheckout: 'BillingCheckout',
   BillingPlanChange: 'BillingPlanChange',
@@ -455,7 +456,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "auditLog" | "workspace" | "workspaceMember" | "workspaceInvitation" | "workspaceInvitationStoreAccess" | "billingSubscription" | "billingWebhookEvent" | "billingClosureRecord" | "billingCheckout" | "billingPlanChange" | "billingUsagePeriod" | "billingUsageEvent" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productKnowledgeFact" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "supportTicket" | "supportMessage" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "webPushSubscription"
+    modelProps: "user" | "session" | "account" | "verification" | "auditLog" | "workspace" | "workspaceMember" | "workspaceInvitation" | "workspaceInvitationStoreAccess" | "billingSubscription" | "billingWebhookEvent" | "billingTransactionReference" | "billingClosureRecord" | "billingCheckout" | "billingPlanChange" | "billingUsagePeriod" | "billingUsageEvent" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productKnowledgeFact" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "supportTicket" | "supportMessage" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "webPushSubscription"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1270,6 +1271,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.BillingWebhookEventCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.BillingWebhookEventCountAggregateOutputType> | number
+        }
+      }
+    }
+    BillingTransactionReference: {
+      payload: Prisma.$BillingTransactionReferencePayload<ExtArgs>
+      fields: Prisma.BillingTransactionReferenceFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BillingTransactionReferenceFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingTransactionReferencePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BillingTransactionReferenceFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingTransactionReferencePayload>
+        }
+        findFirst: {
+          args: Prisma.BillingTransactionReferenceFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingTransactionReferencePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BillingTransactionReferenceFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingTransactionReferencePayload>
+        }
+        findMany: {
+          args: Prisma.BillingTransactionReferenceFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingTransactionReferencePayload>[]
+        }
+        create: {
+          args: Prisma.BillingTransactionReferenceCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingTransactionReferencePayload>
+        }
+        createMany: {
+          args: Prisma.BillingTransactionReferenceCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BillingTransactionReferenceCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingTransactionReferencePayload>[]
+        }
+        delete: {
+          args: Prisma.BillingTransactionReferenceDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingTransactionReferencePayload>
+        }
+        update: {
+          args: Prisma.BillingTransactionReferenceUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingTransactionReferencePayload>
+        }
+        deleteMany: {
+          args: Prisma.BillingTransactionReferenceDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BillingTransactionReferenceUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BillingTransactionReferenceUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingTransactionReferencePayload>[]
+        }
+        upsert: {
+          args: Prisma.BillingTransactionReferenceUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BillingTransactionReferencePayload>
+        }
+        aggregate: {
+          args: Prisma.BillingTransactionReferenceAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBillingTransactionReference>
+        }
+        groupBy: {
+          args: Prisma.BillingTransactionReferenceGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingTransactionReferenceGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BillingTransactionReferenceCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BillingTransactionReferenceCountAggregateOutputType> | number
         }
       }
     }
@@ -3857,6 +3932,22 @@ export const BillingWebhookEventScalarFieldEnum = {
 export type BillingWebhookEventScalarFieldEnum = (typeof BillingWebhookEventScalarFieldEnum)[keyof typeof BillingWebhookEventScalarFieldEnum]
 
 
+export const BillingTransactionReferenceScalarFieldEnum = {
+  id: 'id',
+  workspaceId: 'workspaceId',
+  environment: 'environment',
+  paddleTransactionId: 'paddleTransactionId',
+  paddleSubscriptionId: 'paddleSubscriptionId',
+  paddleCustomerId: 'paddleCustomerId',
+  origin: 'origin',
+  occurredAt: 'occurredAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingTransactionReferenceScalarFieldEnum = (typeof BillingTransactionReferenceScalarFieldEnum)[keyof typeof BillingTransactionReferenceScalarFieldEnum]
+
+
 export const BillingClosureRecordScalarFieldEnum = {
   id: 'id',
   workspaceReference: 'workspaceReference',
@@ -5477,6 +5568,7 @@ export type GlobalOmitConfig = {
   workspaceInvitationStoreAccess?: Prisma.WorkspaceInvitationStoreAccessOmit
   billingSubscription?: Prisma.BillingSubscriptionOmit
   billingWebhookEvent?: Prisma.BillingWebhookEventOmit
+  billingTransactionReference?: Prisma.BillingTransactionReferenceOmit
   billingClosureRecord?: Prisma.BillingClosureRecordOmit
   billingCheckout?: Prisma.BillingCheckoutOmit
   billingPlanChange?: Prisma.BillingPlanChangeOmit

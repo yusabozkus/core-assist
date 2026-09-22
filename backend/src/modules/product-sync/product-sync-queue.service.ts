@@ -49,11 +49,19 @@ export class ProductSyncQueueService implements ProductSyncDispatcher {
     const staleBefore = new Date(
       queuedAt.getTime() - PRODUCT_SYNC_LOCK_TIMEOUT_MS,
     );
+    const allowedConnectionStatus = options.recoverErroredConnection
+      ? {
+          in: [
+            ChannelConnectionStatus.CONNECTED,
+            ChannelConnectionStatus.ERROR,
+          ],
+        }
+      : ChannelConnectionStatus.CONNECTED;
     const lock = await this.prisma.channelConnection.updateMany({
       where: {
         id: connectionId,
         storeId,
-        status: ChannelConnectionStatus.CONNECTED,
+        status: allowedConnectionStatus,
         credentialsEncrypted: { not: null },
         store: { status: StoreStatus.ACTIVE },
         OR: [
@@ -63,7 +71,6 @@ export class ProductSyncQueueService implements ProductSyncDispatcher {
       },
       data: {
         processingStartedAt: queuedAt,
-        failureReason: null,
       },
     });
 
@@ -94,7 +101,14 @@ export class ProductSyncQueueService implements ProductSyncDispatcher {
         kind === 'INVENTORY'
           ? SYNC_STORE_INVENTORY_JOB
           : SYNC_STORE_PRODUCTS_JOB,
-        { storeId, connectionId, syncRunId, kind, checkpointBatch: 0 },
+        {
+          storeId,
+          connectionId,
+          syncRunId,
+          kind,
+          checkpointBatch: 0,
+          recoverErroredConnection: options.recoverErroredConnection,
+        },
         {
           jobId: `sync-${connectionId}-${syncRunId}`,
           attempts: 3,

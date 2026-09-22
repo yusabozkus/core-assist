@@ -56,6 +56,14 @@ export class BillingRetentionService {
         ),
       ),
     );
+    const transactionReferences = await this.prune(() =>
+      this.deleteTransactionReferenceBatch(
+        billingRetentionCutoff(
+          now,
+          BILLING_RETENTION_POLICY.transactionReferenceDays,
+        ),
+      ),
+    );
 
     const result = {
       webhookEvents,
@@ -63,6 +71,7 @@ export class BillingRetentionService {
       expiredPreviews,
       failedPlanChanges,
       completedPlanChanges,
+      transactionReferences,
     };
     const total = Object.values(result).reduce((sum, count) => sum + count, 0);
     if (total > 0) {
@@ -170,6 +179,25 @@ export class BillingRetentionService {
       where: {
         id: { in: records.map((record) => record.id) },
         status,
+        updatedAt: { lt: cutoff },
+      },
+    });
+    return { matched: records.length, deleted: deleted.count };
+  }
+
+  private async deleteTransactionReferenceBatch(
+    cutoff: Date,
+  ): Promise<BatchResult> {
+    const records = await this.prisma.billingTransactionReference.findMany({
+      where: { updatedAt: { lt: cutoff } },
+      orderBy: [{ updatedAt: 'asc' }, { id: 'asc' }],
+      take: BATCH_SIZE,
+      select: { id: true },
+    });
+    if (records.length === 0) return { matched: 0, deleted: 0 };
+    const deleted = await this.prisma.billingTransactionReference.deleteMany({
+      where: {
+        id: { in: records.map((record) => record.id) },
         updatedAt: { lt: cutoff },
       },
     });

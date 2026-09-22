@@ -284,23 +284,12 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
         },
       );
     } catch (error) {
-      await this.prisma.$transaction(async (transaction) => {
-        await transaction.questionAnswer.updateMany({
-          where: { id: answerId, status: QuestionAnswerStatus.QUEUED },
-          data: {
-            status: QuestionAnswerStatus.FAILED,
-            lastError: 'Cevap gönderim kuyruğuna eklenemedi.',
-          },
-        });
-        if (selectedDraftAttempt) {
-          await transaction.aiDraftAttempt.updateMany({
-            where: { id: selectedDraftAttempt.id },
-            data: {
-              outcome: AiDraftOutcome.FAILED,
-              finalizedAt: new Date(),
-            },
-          });
-        }
+      await this.prisma.questionAnswer.updateMany({
+        where: { id: answerId, status: QuestionAnswerStatus.QUEUED },
+        data: {
+          status: QuestionAnswerStatus.FAILED,
+          lastError: 'Cevap gönderim kuyruğuna eklenemedi.',
+        },
       });
       throw new ServiceUnavailableException(
         'Cevap gönderim kuyruğuna şu anda ulaşılamıyor.',

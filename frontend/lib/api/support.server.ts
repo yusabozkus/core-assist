@@ -9,21 +9,30 @@ const apiUrl = (
   "http://localhost:4001"
 ).replace(/\/$/, "")
 
-function supportPath(storeId: string) {
-  return `/stores/${encodeURIComponent(storeId)}/support/tickets`
+const supportPath = "/support/tickets"
+
+export class SupportTicketNotFoundError extends Error {
+  constructor() {
+    super("Support ticket was not found.")
+    this.name = "SupportTicketNotFoundError"
+  }
 }
 
-export function getServerSupportTickets(storeId: string) {
-  return supportServerFetch<SupportTicketList>(supportPath(storeId))
+export function getServerSupportTickets() {
+  return supportServerFetch<SupportTicketList>(supportPath)
 }
 
-export function getServerSupportTicket(storeId: string, ticketId: string) {
+export function getServerSupportTicket(ticketId: string) {
   return supportServerFetch<SupportTicketDetail>(
-    `${supportPath(storeId)}/${encodeURIComponent(ticketId)}`
+    `${supportPath}/${encodeURIComponent(ticketId)}`,
+    { ticketNotFound: true }
   )
 }
 
-async function supportServerFetch<T>(path: string) {
+async function supportServerFetch<T>(
+  path: string,
+  options: { ticketNotFound?: boolean } = {}
+) {
   const cookie = (await headers()).get("cookie")
   if (!cookie) throw new Error("Support requires an authenticated session.")
 
@@ -32,6 +41,9 @@ async function supportServerFetch<T>(path: string) {
     headers: { Accept: "application/json", cookie },
     signal: AbortSignal.timeout(10_000),
   })
+  if (response.status === 404 && options.ticketNotFound) {
+    throw new SupportTicketNotFoundError()
+  }
   if (!response.ok) {
     throw new Error(`Support request failed with status ${response.status}.`)
   }

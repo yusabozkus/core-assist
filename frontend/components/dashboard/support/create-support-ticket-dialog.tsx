@@ -44,8 +44,8 @@ export function CreateSupportTicketDialog({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  storeId: string
-  storeName: string
+  storeId: string | null
+  storeName: string | null
   onCreated: (ticket: SupportTicketDetail) => void
 }) {
   const [form, setForm] = useState(initialForm)
@@ -77,8 +77,9 @@ export function CreateSupportTicketDialog({
     setIsSubmitting(true)
     setError(null)
     try {
-      const ticket = await createSupportTicket(storeId, {
+      const ticket = await createSupportTicket({
         ...form,
+        ...(storeId ? { storeId } : {}),
         subject,
         message,
         pagePath: window.location.pathname,
@@ -105,7 +106,11 @@ export function CreateSupportTicketDialog({
       }}
       preventClose={isSubmitting}
       title="Yeni destek talebi"
-      description={`${storeName} mağazası için destek ekibine ulaşın.`}
+      description={
+        storeName
+          ? `${storeName} mağazası için destek ekibine ulaşın.`
+          : "Müşteri hesabınız için destek ekibine ulaşın."
+      }
       contentClassName="sm:max-w-2xl"
       footer={({ close: closeDialog }) => (
         <>
@@ -236,8 +241,8 @@ export function CreateSupportTicketDialog({
             className="min-h-36 resize-none rounded-xl border-border bg-card"
           />
           <p className="text-[11px] leading-5 text-muted-foreground">
-            Mağaza, plan ve bulunduğunuz sayfa bilgisi talebe otomatik eklenir.
-            Şifre veya API anahtarı paylaşmayın.
+            {storeName ? "Mağaza, " : ""}Plan ve bulunduğunuz sayfa bilgisi
+            talebe otomatik eklenir. Şifre veya API anahtarı paylaşmayın.
           </p>
         </div>
 

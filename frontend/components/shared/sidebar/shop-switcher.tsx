@@ -42,11 +42,13 @@ export function ShopSwitcher({
   activeShopId,
 }: {
   shops: SidebarShop[]
-  activeShopId: string
+  activeShopId: string | null
 }) {
   const router = useRouter()
   const { isMobile } = useSidebar()
-  const [selectedShopId, setSelectedShopId] = React.useState(activeShopId)
+  const [selectedShopId, setSelectedShopId] = React.useState(
+    activeShopId ?? ""
+  )
   const [selectionError, setSelectionError] = React.useState<string | null>(
     null
   )

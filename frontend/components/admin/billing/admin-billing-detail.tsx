@@ -44,13 +44,12 @@ export function AdminBillingDetailView({
     message: string
   } | null>(null)
   const status = ADMIN_BILLING_STATUS[billing.status]
-  const usage = billing.usagePeriods[0]
+  const usage = billing.usage
   const usagePercentage = usage
     ? Math.min(
         100,
         Math.round(
-          (usage.aiQuestionUnits / billing.entitlements.monthlyAiQuestions) *
-            100
+          (usage.aiQuestions / usage.limit) * 100
         )
       )
     : 0
@@ -166,7 +165,7 @@ export function AdminBillingDetailView({
         />
         <OverviewValue
           label="AI soru kullanımı"
-          value={`${formatAdminBillingNumber(usage?.aiQuestionUnits ?? 0)} / ${formatAdminBillingNumber(billing.entitlements.monthlyAiQuestions)}`}
+          value={`${formatAdminBillingNumber(usage?.aiQuestions ?? 0)} / ${formatAdminBillingNumber(usage?.limit ?? billing.entitlements.monthlyAiQuestions)}`}
           helper={`Kota kullanımı %${usagePercentage}`}
         />
         <OverviewValue

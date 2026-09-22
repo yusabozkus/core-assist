@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/tooltip"
 import { getAdminNavigationItem } from "@/constants/admin"
 import { APP_ROUTES } from "@/constants/site"
+import { unavailableAdminHeaderSummary } from "@/lib/admin-header-summary"
 import { getAdminHeaderSummary } from "@/lib/api/admin"
 import { cn } from "@/lib/utils"
 import type { AdminHeaderSummary } from "@/types/admin"
@@ -54,7 +55,8 @@ export function AdminHeader({
     try {
       setSummary(await getAdminHeaderSummary())
     } catch {
-      // Keep the last successful snapshot during transient network failures.
+      // Do not present a stale healthy snapshot as if it were current.
+      setSummary(unavailableAdminHeaderSummary())
     }
   }, [])
 
@@ -79,9 +81,12 @@ export function AdminHeader({
 
     const healthWorsened =
       healthSeverity(summary.systemStatus) > healthSeverity(previous.status)
-    const issueCountIncreased = summary.systemIssues > previous.issues
+    const issueCountIncreased =
+      (summary.systemIssues ?? 0) > (previous.issues ?? 0)
     const alertStatus =
-      summary.systemStatus === "HEALTHY" ? null : summary.systemStatus
+      summary.systemStatus === "HEALTHY" || summary.systemStatus === "UNKNOWN"
+        ? null
+        : summary.systemStatus
 
     previousHealthRef.current = {
       status: summary.systemStatus,
@@ -94,7 +99,7 @@ export function AdminHeader({
         (id) => (
           <AdminSystemAlert
             status={alertStatus}
-            issueCount={summary.systemIssues}
+            issueCount={summary.systemIssues ?? 0}
             onDismiss={() => toast.dismiss(id)}
           />
         ),
@@ -107,7 +112,9 @@ export function AdminHeader({
     }
   }, [summary])
 
-  if (isSupportTicketDetail) return null
+  if (isSupportTicketDetail) {
+    return <NotificationCenter scope="admin" headless />
+  }
 
   return (
     <header className="relative z-30 grid h-16 shrink-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 bg-background/92 px-3 backdrop-blur-xl sm:px-4">
@@ -140,7 +147,7 @@ export function AdminHeader({
             tooltip="Yanıt veya işlem bekleyen destek talepleri"
             count={summary.openSupportTickets}
             icon={CustomerSupportIcon}
-            tone={summary.openSupportTickets > 0 ? "primary" : "neutral"}
+            tone={(summary.openSupportTickets ?? 0) > 0 ? "primary" : "neutral"}
           />
           <AdminHeaderMetric
             href={APP_ROUTES.admin.billing}
@@ -148,7 +155,7 @@ export function AdminHeader({
             tooltip="Ödemesi gecikmiş abonelikler"
             count={summary.paymentIssues}
             icon={CreditCardIcon}
-            tone={summary.paymentIssues > 0 ? "danger" : "neutral"}
+            tone={(summary.paymentIssues ?? 0) > 0 ? "danger" : "neutral"}
           />
           <AdminHeaderMetric
             href={APP_ROUTES.admin.operations}
@@ -156,8 +163,8 @@ export function AdminHeader({
             tooltip="Şu anda çalışan veya kuyrukta olan senkronizasyonlar"
             count={summary.activeSyncs}
             icon={RefreshIcon}
-            tone={summary.activeSyncs > 0 ? "primary" : "neutral"}
-            animateIcon={summary.activeSyncs > 0}
+            tone={(summary.activeSyncs ?? 0) > 0 ? "primary" : "neutral"}
+            animateIcon={(summary.activeSyncs ?? 0) > 0}
           />
           <AdminSystemHealthMetric
             status={summary.systemStatus}
@@ -179,7 +186,7 @@ function AdminSystemHealthMetric({
   issueCount,
 }: {
   status: AdminHeaderSummary["systemStatus"]
-  issueCount: number
+  issueCount: number | null
 }) {
   const details = systemHealthDetails(status)
 
@@ -188,14 +195,20 @@ function AdminSystemHealthMetric({
       <TooltipTrigger asChild>
         <Link
           href={APP_ROUTES.admin.system}
-          aria-label={`${details.label}: ${issueCount} aktif sorun`}
+          aria-label={
+            issueCount === null
+              ? details.label
+              : `${details.label}: ${issueCount} aktif sorun`
+          }
           className={cn(
             "group flex h-9 items-center gap-1.5 px-3 text-xs font-medium transition-colors focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
             status === "HEALTHY" &&
               "text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300",
             status === "DEGRADED" &&
               "text-amber-700 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300",
-            status === "DOWN" && "text-destructive hover:text-destructive/80"
+            status === "DOWN" && "text-destructive hover:text-destructive/80",
+            status === "UNKNOWN" &&
+              "text-muted-foreground hover:text-foreground"
           )}
         >
           <HugeiconsIcon
@@ -206,7 +219,7 @@ function AdminSystemHealthMetric({
           <span className="hidden whitespace-nowrap xl:inline">Sistem</span>
           {status !== "HEALTHY" ? (
             <span className="min-w-3 text-center font-semibold tabular-nums">
-              {issueCount}
+              {issueCount ?? "—"}
             </span>
           ) : null}
         </Link>
@@ -297,10 +310,17 @@ function AdminSystemAlert({
 }
 
 function healthSeverity(status: AdminHeaderSummary["systemStatus"]) {
-  return { HEALTHY: 0, DEGRADED: 1, DOWN: 2 }[status]
+  return { HEALTHY: 0, DEGRADED: 1, DOWN: 2, UNKNOWN: 3 }[status]
 }
 
 function systemHealthDetails(status: AdminHeaderSummary["systemStatus"]) {
+  if (status === "UNKNOWN") {
+    return {
+      label: "Sistem durumu alınamadı",
+      description: "Header özeti geçici olarak alınamıyor",
+      icon: Alert02Icon,
+    }
+  }
   if (status === "DOWN") {
     return {
       label: "Sistem erişilemiyor",
@@ -334,7 +354,7 @@ function AdminHeaderMetric({
   href: string
   label: string
   tooltip: string
-  count: number
+  count: number | null
   icon: IconSvgElement
   tone: "neutral" | "primary" | "danger"
   animateIcon?: boolean
@@ -344,7 +364,7 @@ function AdminHeaderMetric({
       <TooltipTrigger asChild>
         <Link
           href={href}
-          aria-label={`${label}: ${count}`}
+          aria-label={`${label}: ${count ?? "bilgi alınamadı"}`}
           className={cn(
             "group flex h-9 items-center gap-1.5 px-3 text-xs font-medium transition-colors focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
             tone === "neutral" && "text-muted-foreground hover:text-foreground",
@@ -359,12 +379,14 @@ function AdminHeaderMetric({
           />
           <span className="hidden whitespace-nowrap xl:inline">{label}</span>
           <span className="min-w-3 text-center font-semibold tabular-nums">
-            {count}
+            {count ?? "—"}
           </span>
         </Link>
       </TooltipTrigger>
       <TooltipContent side="bottom" sideOffset={7}>
-        {tooltip}: {count}
+        {count === null
+          ? "Bilgi geçici olarak alınamıyor"
+          : `${tooltip}: ${count}`}
       </TooltipContent>
     </Tooltip>
   )

@@ -100,24 +100,30 @@ export function AdminAiUsageDashboard({ data }: { data: AdminAiUsage }) {
           <DecisionDistribution data={data} />
         </Panel>
         <Panel
-          title="İşlem engelleri"
-          description="Taslak üretimini veya otomasyonu durduran durumlar"
+          title="Güncel işlem engelleri"
+          description="Şu anda müdahale bekleyen AI ve cevap gönderim durumları"
         >
           <div className="grid grid-cols-2 gap-px bg-border">
             <CompactMetric
-              label="Üretim hatası"
-              value={data.blockers.failed + summary.failedDrafts}
+              label="AI üretim hatası"
+              value={data.blockers.generationFailures}
               icon={AlertCircleIcon}
-              alert={data.blockers.failed + summary.failedDrafts > 0}
+              alert={data.blockers.generationFailures > 0}
             />
             <CompactMetric
-              label="Kota engeli"
+              label="Cevap gönderim hatası"
+              value={data.blockers.deliveryFailures}
+              icon={ArrowRight01Icon}
+              alert={data.blockers.deliveryFailures > 0}
+            />
+            <CompactMetric
+              label="Kota nedeniyle bekleyen"
               value={data.blockers.quota}
               icon={CreditCardIcon}
               alert={data.blockers.quota > 0}
             />
             <CompactMetric
-              label="Abonelik engeli"
+              label="Abonelik nedeniyle bekleyen"
               value={data.blockers.subscription}
               icon={Clock01Icon}
               alert={data.blockers.subscription > 0}
@@ -127,6 +133,12 @@ export function AdminAiUsageDashboard({ data }: { data: AdminAiUsage }) {
               value={data.blockers.missingInformation}
               icon={AiSparklesIcon}
               alert={data.blockers.missingInformation > 0}
+            />
+            <CompactMetric
+              label="Bilgi çakışması"
+              value={data.blockers.knowledgeConflicts}
+              icon={AlertCircleIcon}
+              alert={data.blockers.knowledgeConflicts > 0}
             />
           </div>
         </Panel>

@@ -4,6 +4,7 @@ export type ProductSyncJobData = {
   syncRunId: string;
   kind: ProductSyncKind;
   checkpointBatch?: number;
+  recoverErroredConnection?: boolean;
 };
 
 export type ProductSyncRunResult = {
@@ -17,6 +18,7 @@ export type ProductSyncTrigger =
 export type ProductSyncEnqueueOptions = {
   trigger?: ProductSyncTrigger;
   retryOfId?: string;
+  recoverErroredConnection?: boolean;
 };
 
 export type QueuedProductSync = {

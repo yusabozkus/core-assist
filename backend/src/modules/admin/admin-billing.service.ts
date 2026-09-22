@@ -17,6 +17,10 @@ import {
 } from '../billing/billing-access.policy';
 import { paddleCheckoutEnvironment } from '../billing/paddle-billing.config';
 import { entitlementsFor } from '../billing/billing-plan.config';
+import {
+  findBillingUsagePeriodForWindow,
+  resolveBillingUsageWindow,
+} from '../billing/billing-usage-window';
 import { PaddleBillingService } from '../billing/paddle-billing.service';
 import { AuditAction } from '../audit/audit-actions';
 import {
@@ -184,6 +188,7 @@ export class AdminBillingService {
 
   async findAll(query: AdminBillingQueryDto) {
     const where = this.buildWhere(query);
+    const now = new Date();
     const [
       subscriptions,
       total,
@@ -205,7 +210,7 @@ export class AdminBillingService {
       this.prisma.billingSubscription.count({
         where: {
           AND: [
-            activeBillingSubscriptionWhere(new Date()),
+            activeBillingSubscriptionWhere(now),
             { status: BillingSubscriptionStatus.ACTIVE },
           ],
         },
@@ -244,7 +249,9 @@ export class AdminBillingService {
     ]);
 
     return {
-      items: subscriptions.map((subscription) => this.toSummary(subscription)),
+      items: subscriptions.map((subscription) =>
+        this.toSummary(subscription, now),
+      ),
       pagination: {
         page: query.page,
         pageSize: query.pageSize,
@@ -262,6 +269,7 @@ export class AdminBillingService {
   }
 
   async findOne(workspaceId: string) {
+    const now = new Date();
     const subscription = await this.prisma.billingSubscription.findUnique({
       where: { workspaceId },
       include: billingDetailInclude,
@@ -269,7 +277,7 @@ export class AdminBillingService {
     if (!subscription) {
       throw new NotFoundException('Çalışma alanına ait abonelik bulunamadı.');
     }
-    return this.toDetail(subscription);
+    return this.toDetail(subscription, now);
   }
 
   async reconcile(workspaceId: string, adminUserId: string) {
@@ -465,6 +473,32 @@ export class AdminBillingService {
                     },
                   },
                 },
+                {
+                  billingTransactionReferences: {
+                    some: {
+                      OR: [
+                        {
+                          paddleTransactionId: {
+                            contains: query.q,
+                            mode: 'insensitive',
+                          },
+                        },
+                        {
+                          paddleSubscriptionId: {
+                            contains: query.q,
+                            mode: 'insensitive',
+                          },
+                        },
+                        {
+                          paddleCustomerId: {
+                            contains: query.q,
+                            mode: 'insensitive',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
               ],
             },
           },
@@ -516,8 +550,12 @@ export class AdminBillingService {
     return [{ updatedAt: 'desc' }, { id: 'desc' }];
   }
 
-  private toSummary(subscription: BillingListRecord) {
-    const usage = subscription.usagePeriods[0] ?? null;
+  private toSummary(subscription: BillingListRecord, now: Date) {
+    const usageWindow = resolveBillingUsageWindow(subscription, now);
+    const usage = findBillingUsagePeriodForWindow(
+      subscription.usagePeriods,
+      usageWindow,
+    );
     const checkout =
       subscription.workspace.billingCheckouts.find((item) =>
         OPEN_CHECKOUT_STATUSES.includes(item.status),
@@ -537,7 +575,7 @@ export class AdminBillingService {
       plan: subscription.plan,
       cycle: subscription.cycle,
       status: subscription.status,
-      hasAccess: hasBillingAccess(subscription),
+      hasAccess: hasBillingAccess(subscription, now),
       currentPeriodStart: subscription.currentPeriodStart,
       currentPeriodEnd: subscription.currentPeriodEnd,
       cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
@@ -548,14 +586,12 @@ export class AdminBillingService {
       reconcileAfter: subscription.reconcileAfter,
       reconcileFailures: subscription.reconcileFailures,
       reconcileErrorCode: subscription.reconcileErrorCode,
-      usage: usage
-        ? {
-            aiQuestions: usage.aiQuestionUnits,
-            limit: entitlements.monthlyAiQuestions,
-            periodStart: usage.periodStart,
-            periodEnd: usage.periodEnd,
-          }
-        : null,
+      usage: {
+        aiQuestions: usage?.aiQuestionUnits ?? 0,
+        limit: entitlements.monthlyAiQuestions,
+        periodStart: usageWindow.start,
+        periodEnd: usageWindow.end,
+      },
       pendingCheckout: checkout,
       pendingPlanChange: planChange,
       createdAt: subscription.createdAt,
@@ -563,13 +599,13 @@ export class AdminBillingService {
     };
   }
 
-  private toDetail(subscription: BillingDetailRecord) {
+  private toDetail(subscription: BillingDetailRecord, now: Date) {
     const entitlements = entitlementsFor(
       subscription.plan,
       subscription.status,
     );
     return {
-      ...this.toSummary(subscription),
+      ...this.toSummary(subscription, now),
       workspace: {
         id: subscription.workspace.id,
         name: subscription.workspace.name,

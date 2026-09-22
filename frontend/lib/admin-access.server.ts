@@ -3,6 +3,7 @@ import "server-only"
 import { headers } from "next/headers"
 import { cache } from "react"
 
+import { unavailableAdminHeaderSummary } from "@/lib/admin-header-summary"
 import type { AdminHeaderSummary } from "@/types/admin"
 
 type AdminSession = {
@@ -109,6 +110,14 @@ export async function getAdminHeaderSummary(): Promise<AdminHeaderSummary> {
   return value
 }
 
+export async function getAdminHeaderSummaryOrUnavailable() {
+  try {
+    return await getAdminHeaderSummary()
+  } catch {
+    return unavailableAdminHeaderSummary()
+  }
+}
+
 function isAdminSession(value: unknown): value is AdminSession {
   if (!value || typeof value !== "object") return false
 
@@ -132,6 +141,7 @@ function isAdminHeaderSummary(value: unknown): value is AdminHeaderSummary {
 
   const summary = value as Record<string, unknown>
   return (
+    summary.available === true &&
     isNonNegativeInteger(summary.openSupportTickets) &&
     isNonNegativeInteger(summary.paymentIssues) &&
     isNonNegativeInteger(summary.activeSyncs) &&

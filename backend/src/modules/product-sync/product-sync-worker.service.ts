@@ -173,7 +173,14 @@ export class ProductSyncWorkerService {
       where: {
         id: data.connectionId,
         storeId: data.storeId,
-        status: ChannelConnectionStatus.CONNECTED,
+        status: data.recoverErroredConnection
+          ? {
+              in: [
+                ChannelConnectionStatus.CONNECTED,
+                ChannelConnectionStatus.ERROR,
+              ],
+            }
+          : ChannelConnectionStatus.CONNECTED,
         store: { status: StoreStatus.ACTIVE },
       },
       select: {
@@ -1729,10 +1736,10 @@ export class ProductSyncWorkerService {
     const connectionData = {
       processingStartedAt: null,
       failureReason: null,
-      ...(data.kind === 'FULL'
+      ...(data.kind === 'FULL' || data.recoverErroredConnection
         ? {
             status: ChannelConnectionStatus.CONNECTED,
-            lastSyncAt: completedAt,
+            ...(data.kind === 'FULL' ? { lastSyncAt: completedAt } : {}),
             lastInventorySyncAt: completedAt,
           }
         : { lastInventorySyncAt: completedAt }),

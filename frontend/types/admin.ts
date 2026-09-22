@@ -1,8 +1,9 @@
 export type AdminHeaderSummary = {
-  openSupportTickets: number
-  paymentIssues: number
-  activeSyncs: number
-  systemStatus: "HEALTHY" | "DEGRADED" | "DOWN"
-  systemIssues: number
+  available: boolean
+  openSupportTickets: number | null
+  paymentIssues: number | null
+  activeSyncs: number | null
+  systemStatus: "HEALTHY" | "DEGRADED" | "DOWN" | "UNKNOWN"
+  systemIssues: number | null
   checkedAt: string
 }

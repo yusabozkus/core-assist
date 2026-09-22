@@ -38,7 +38,7 @@ export default async function AdminOperationQueuePage({
     Number.isSafeInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1
   const queue = await getServerAdminOperationQueue(queueKey, page)
 
-  if (page > queue.pagination.totalPages) notFound()
+  if (queue.available && page > queue.pagination.totalPages) notFound()
   return <AdminQueueDetailView queue={queue} />
 }
 

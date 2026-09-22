@@ -17,6 +17,7 @@ import {
   AuditResult,
 } from '../audit/audit-log.service';
 import { SupportNotificationService } from '../support/support-notification.service';
+import { lockSupportTicket } from '../support/support-ticket-lock';
 import { AdminAccessService } from './admin-access.service';
 import { AdminSupportAssigneeDto } from './dto/admin-support-assignee.dto';
 import {
@@ -163,92 +164,94 @@ export class AdminSupportService {
     adminUserId: string,
     body: AdminSupportMessageDto,
   ) {
-    const ticket = await this.requireTicket(ticketId);
     const isInternal =
       body.visibility === AdminSupportMessageVisibility.INTERNAL;
 
-    if (
-      !isInternal &&
-      (ticket.status === SupportTicketStatus.RESOLVED ||
-        ticket.status === SupportTicketStatus.CLOSED)
-    ) {
-      throw new BadRequestException(
-        'Kullanıcıya yanıt vermeden önce talebi yeniden açmalısınız.',
+    const result = await this.prisma.$transaction(async (transaction) => {
+      const ticket = await lockSupportTicket(transaction, ticketId);
+      if (
+        !isInternal &&
+        (ticket.status === SupportTicketStatus.RESOLVED ||
+          ticket.status === SupportTicketStatus.CLOSED)
+      ) {
+        throw new BadRequestException(
+          'Kullanıcıya yanıt vermeden önce talebi yeniden açmalısınız.',
+        );
+      }
+
+      const now = new Date();
+      const message = await transaction.supportMessage.create({
+        data: {
+          ticketId,
+          authorUserId: adminUserId,
+          authorType: SupportMessageAuthorType.SUPPORT,
+          isInternal,
+          body: body.message,
+        },
+      });
+      await transaction.supportTicket.update({
+        where: { id: ticketId },
+        data: isInternal
+          ? { updatedAt: now }
+          : {
+              status: SupportTicketStatus.WAITING_CUSTOMER,
+              firstRespondedAt: ticket.firstRespondedAt ?? now,
+              lastMessageAt: now,
+              resolvedAt: null,
+              closedAt: null,
+            },
+      });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.ADMIN,
+          actorUserId: adminUserId,
+          origin: AuditOrigin.API,
+          action: isInternal
+            ? AuditAction.ADMIN_SUPPORT_INTERNAL_NOTE_ADDED
+            : AuditAction.ADMIN_SUPPORT_REPLY_ADDED,
+          result: AuditResult.SUCCESS,
+          workspaceId: ticket.workspaceId,
+          storeId: ticket.storeId,
+          targetType: 'SUPPORT_TICKET',
+          targetId: ticketId,
+          before: { status: ticket.status },
+          after: {
+            status: isInternal
+              ? ticket.status
+              : SupportTicketStatus.WAITING_CUSTOMER,
+          },
+          metadata: {
+            visibility: body.visibility,
+            messageLength: body.message.length,
+          },
+        },
+        transaction,
       );
-    }
-
-    const now = new Date();
-    const notificationRecipients = await this.prisma.$transaction(
-      async (transaction) => {
-        const message = await transaction.supportMessage.create({
-          data: {
-            ticketId,
-            authorUserId: adminUserId,
-            authorType: SupportMessageAuthorType.SUPPORT,
-            isInternal,
-            body: body.message,
-          },
-        });
-        await transaction.supportTicket.update({
-          where: { id: ticketId },
-          data: isInternal
-            ? { updatedAt: now }
-            : {
-                status: SupportTicketStatus.WAITING_CUSTOMER,
-                firstRespondedAt: ticket.firstRespondedAt ?? now,
-                lastMessageAt: now,
-                resolvedAt: null,
-                closedAt: null,
-              },
-        });
-        await this.audit.record(
-          {
-            actorType: AuditActorType.ADMIN,
-            actorUserId: adminUserId,
-            origin: AuditOrigin.API,
-            action: isInternal
-              ? AuditAction.ADMIN_SUPPORT_INTERNAL_NOTE_ADDED
-              : AuditAction.ADMIN_SUPPORT_REPLY_ADDED,
-            result: AuditResult.SUCCESS,
-            workspaceId: ticket.workspaceId,
-            storeId: ticket.storeId,
-            targetType: 'SUPPORT_TICKET',
-            targetId: ticketId,
-            before: { status: ticket.status },
-            after: {
-              status: isInternal
-                ? ticket.status
-                : SupportTicketStatus.WAITING_CUSTOMER,
-            },
-            metadata: {
-              visibility: body.visibility,
-              messageLength: body.message.length,
-            },
-          },
-          transaction,
-        );
-        if (isInternal) {
-          return { created: [] as string[], resolved: [] as string[] };
-        }
-
-        const created = await this.supportNotifications.notifyAdminReply(
-          transaction,
+      if (isInternal) {
+        return {
           ticket,
-          message.id,
-        );
-        const resolved = await this.supportNotifications.resolveSlaNotification(
-          transaction,
-          ticket.id,
-        );
-        return { created, resolved };
-      },
-    );
+          created: [] as string[],
+          resolved: [] as string[],
+        };
+      }
+
+      const created = await this.supportNotifications.notifyAdminReply(
+        transaction,
+        ticket,
+        message.id,
+      );
+      const resolved = await this.supportNotifications.resolveSlaNotification(
+        transaction,
+        ticket.id,
+      );
+      return { ticket, created, resolved };
+    });
 
     this.supportNotifications.emitCreated(
-      notificationRecipients.created,
-      ticket.storeId,
+      result.created,
+      result.ticket.storeId,
     );
-    this.supportNotifications.emitRead(notificationRecipients.resolved);
+    this.supportNotifications.emitRead(result.resolved);
 
     return this.findOne(ticketId);
   }
@@ -258,61 +261,65 @@ export class AdminSupportService {
     adminUserId: string,
     body: AdminSupportStatusDto,
   ) {
-    const ticket = await this.requireTicket(ticketId);
-    if (ticket.status === body.status) return this.findOne(ticketId);
+    const result = await this.prisma.$transaction(async (transaction) => {
+      const ticket = await lockSupportTicket(transaction, ticketId);
+      if (ticket.status === body.status) {
+        return { changed: false, resolvedSlaRecipients: [] as string[] };
+      }
 
-    const now = new Date();
-    const resolvedSlaRecipients = await this.prisma.$transaction(
-      async (transaction) => {
-        await transaction.supportMessage.create({
-          data: {
-            ticketId,
-            authorUserId: adminUserId,
-            authorType: SupportMessageAuthorType.SYSTEM,
-            body: statusMessage(body.status),
-          },
-        });
-        await transaction.supportTicket.update({
-          where: { id: ticketId },
-          data: {
-            status: body.status,
-            lastMessageAt: now,
-            resolvedAt:
-              body.status === SupportTicketStatus.RESOLVED
-                ? now
-                : ACTIVE_STATUSES.includes(body.status)
-                  ? null
-                  : ticket.resolvedAt,
-            closedAt: body.status === SupportTicketStatus.CLOSED ? now : null,
-          },
-        });
-        await this.audit.record(
-          {
-            actorType: AuditActorType.ADMIN,
-            actorUserId: adminUserId,
-            origin: AuditOrigin.API,
-            action: AuditAction.ADMIN_SUPPORT_STATUS_CHANGED,
-            result: AuditResult.SUCCESS,
-            workspaceId: ticket.workspaceId,
-            storeId: ticket.storeId,
-            targetType: 'SUPPORT_TICKET',
-            targetId: ticketId,
-            before: { status: ticket.status },
-            after: { status: body.status },
-          },
-          transaction,
-        );
-        return body.status === SupportTicketStatus.RESOLVED ||
-          body.status === SupportTicketStatus.CLOSED
-          ? this.supportNotifications.resolveSlaNotification(
+      const now = new Date();
+      await transaction.supportMessage.create({
+        data: {
+          ticketId,
+          authorUserId: adminUserId,
+          authorType: SupportMessageAuthorType.SYSTEM,
+          body: statusMessage(body.status),
+        },
+      });
+      await transaction.supportTicket.update({
+        where: { id: ticketId },
+        data: {
+          status: body.status,
+          lastMessageAt: now,
+          resolvedAt:
+            body.status === SupportTicketStatus.RESOLVED
+              ? now
+              : ACTIVE_STATUSES.includes(body.status)
+                ? null
+                : ticket.resolvedAt,
+          closedAt: body.status === SupportTicketStatus.CLOSED ? now : null,
+        },
+      });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.ADMIN,
+          actorUserId: adminUserId,
+          origin: AuditOrigin.API,
+          action: AuditAction.ADMIN_SUPPORT_STATUS_CHANGED,
+          result: AuditResult.SUCCESS,
+          workspaceId: ticket.workspaceId,
+          storeId: ticket.storeId,
+          targetType: 'SUPPORT_TICKET',
+          targetId: ticketId,
+          before: { status: ticket.status },
+          after: { status: body.status },
+        },
+        transaction,
+      );
+      const resolvedSlaRecipients =
+        body.status === SupportTicketStatus.RESOLVED ||
+        body.status === SupportTicketStatus.CLOSED
+          ? await this.supportNotifications.resolveSlaNotification(
               transaction,
               ticket.id,
             )
           : [];
-      },
-    );
+      return { changed: true, resolvedSlaRecipients };
+    });
 
-    this.supportNotifications.emitRead(resolvedSlaRecipients);
+    if (result.changed) {
+      this.supportNotifications.emitRead(result.resolvedSlaRecipients);
+    }
 
     return this.findOne(ticketId);
   }
@@ -322,11 +329,6 @@ export class AdminSupportService {
     adminUserId: string,
     body: AdminSupportAssigneeDto,
   ) {
-    const ticket = await this.requireTicket(ticketId);
-    if (ticket.assignedAdminUserId === body.assigneeUserId) {
-      return this.findOne(ticketId);
-    }
-
     const assignee = body.assigneeUserId
       ? await this.prisma.user.findUnique({
           where: { id: body.assigneeUserId },
@@ -345,67 +347,73 @@ export class AdminSupportService {
       );
     }
 
-    const now = new Date();
     const message = assignee
       ? `Talep ${assignee.name} adlı yöneticiye atandı.`
       : 'Talebin yönetici ataması kaldırıldı.';
 
-    const nextStatus =
-      assignee && ticket.status === SupportTicketStatus.OPEN
-        ? SupportTicketStatus.IN_PROGRESS
-        : ticket.status;
+    const result = await this.prisma.$transaction(async (transaction) => {
+      const ticket = await lockSupportTicket(transaction, ticketId);
+      if (ticket.assignedAdminUserId === body.assigneeUserId) {
+        return { changed: false, assigneeRecipients: [] as string[] };
+      }
 
-    const assigneeRecipients = await this.prisma.$transaction(
-      async (transaction) => {
-        const assignmentMessage = await transaction.supportMessage.create({
-          data: {
-            ticketId,
-            authorUserId: adminUserId,
-            authorType: SupportMessageAuthorType.SYSTEM,
-            isInternal: true,
-            body: message,
+      const now = new Date();
+      const nextStatus =
+        assignee && ticket.status === SupportTicketStatus.OPEN
+          ? SupportTicketStatus.IN_PROGRESS
+          : ticket.status;
+      const assignmentMessage = await transaction.supportMessage.create({
+        data: {
+          ticketId,
+          authorUserId: adminUserId,
+          authorType: SupportMessageAuthorType.SYSTEM,
+          isInternal: true,
+          body: message,
+        },
+      });
+      await transaction.supportTicket.update({
+        where: { id: ticketId },
+        data: {
+          assignedAdminUserId: body.assigneeUserId,
+          status: nextStatus,
+          updatedAt: now,
+        },
+      });
+      await this.audit.record(
+        {
+          actorType: AuditActorType.ADMIN,
+          actorUserId: adminUserId,
+          origin: AuditOrigin.API,
+          action: AuditAction.ADMIN_SUPPORT_ASSIGNEE_CHANGED,
+          result: AuditResult.SUCCESS,
+          workspaceId: ticket.workspaceId,
+          storeId: ticket.storeId,
+          targetType: 'SUPPORT_TICKET',
+          targetId: ticketId,
+          before: {
+            assignedAdminUserId: ticket.assignedAdminUserId,
+            status: ticket.status,
           },
-        });
-        await transaction.supportTicket.update({
-          where: { id: ticketId },
-          data: {
+          after: {
             assignedAdminUserId: body.assigneeUserId,
             status: nextStatus,
-            updatedAt: now,
           },
-        });
-        await this.audit.record(
-          {
-            actorType: AuditActorType.ADMIN,
-            actorUserId: adminUserId,
-            origin: AuditOrigin.API,
-            action: AuditAction.ADMIN_SUPPORT_ASSIGNEE_CHANGED,
-            result: AuditResult.SUCCESS,
-            workspaceId: ticket.workspaceId,
-            storeId: ticket.storeId,
-            targetType: 'SUPPORT_TICKET',
-            targetId: ticketId,
-            before: {
-              assignedAdminUserId: ticket.assignedAdminUserId,
-              status: ticket.status,
-            },
-            after: {
-              assignedAdminUserId: body.assigneeUserId,
-              status: nextStatus,
-            },
-          },
-          transaction,
-        );
-        return this.supportNotifications.notifyAssigneeChanged(
+        },
+        transaction,
+      );
+      const assigneeRecipients =
+        await this.supportNotifications.notifyAssigneeChanged(
           transaction,
           ticket,
           body.assigneeUserId,
           assignmentMessage.id,
         );
-      },
-    );
+      return { changed: true, assigneeRecipients };
+    });
 
-    this.supportNotifications.emitCreated(assigneeRecipients, null);
+    if (result.changed) {
+      this.supportNotifications.emitCreated(result.assigneeRecipients, null);
+    }
 
     return this.findOne(ticketId);
   }
@@ -487,28 +495,6 @@ export class AdminSupportService {
       return [{ firstResponseDueAt: 'asc' }, { lastMessageAt: 'desc' }];
     }
     return [{ updatedAt: 'desc' }, { id: 'desc' }];
-  }
-
-  private async requireTicket(ticketId: string) {
-    const ticket = await this.prisma.supportTicket.findUnique({
-      where: { id: ticketId },
-      select: {
-        id: true,
-        number: true,
-        subject: true,
-        createdAt: true,
-        status: true,
-        firstRespondedAt: true,
-        resolvedAt: true,
-        closedAt: true,
-        assignedAdminUserId: true,
-        workspaceId: true,
-        storeId: true,
-        createdByUserId: true,
-      },
-    });
-    if (!ticket) throw new NotFoundException('Destek talebi bulunamadı.');
-    return ticket;
   }
 
   private toSummary(ticket: AdminTicketListRecord) {

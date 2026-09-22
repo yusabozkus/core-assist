@@ -15,6 +15,10 @@ import {
   hasBillingAccess,
 } from '../billing/billing-access.policy';
 import {
+  findBillingUsagePeriodForWindow,
+  resolveBillingUsageWindow,
+} from '../billing/billing-usage-window';
+import {
   AdminCustomerOnboardingFilter,
   AdminCustomerSort,
   AdminCustomersQueryDto,
@@ -252,7 +256,7 @@ export class AdminCustomersService {
 
     return {
       items: workspaces.map((workspace) =>
-        this.toSummary(workspace, productCounts.get(workspace.id) ?? 0),
+        this.toSummary(workspace, productCounts.get(workspace.id) ?? 0, now),
       ),
       pagination: {
         page: query.page,
@@ -265,6 +269,7 @@ export class AdminCustomersService {
   }
 
   async findOne(workspaceId: string) {
+    const now = new Date();
     const workspace = await this.prisma.workspace.findUnique({
       where: { id: workspaceId },
       include: customerDetailInclude,
@@ -292,7 +297,7 @@ export class AdminCustomersService {
       questionGroups.map((group) => [group.status, group._count._all]),
     );
 
-    return this.toDetail(workspace, activeProducts, questions, syncRuns);
+    return this.toDetail(workspace, activeProducts, questions, syncRuns, now);
   }
 
   private buildWhere(
@@ -403,9 +408,22 @@ export class AdminCustomersService {
     return result;
   }
 
-  private toSummary(workspace: CustomerListRecord, activeProducts: number) {
+  private toSummary(
+    workspace: CustomerListRecord,
+    activeProducts: number,
+    now: Date,
+  ) {
     const subscription = workspace.billingSubscription;
-    const usage = subscription?.usagePeriods[0] ?? null;
+    const usageWindow = subscription
+      ? resolveBillingUsageWindow(subscription, now)
+      : null;
+    const usage =
+      subscription && usageWindow
+        ? findBillingUsagePeriodForWindow(
+            subscription.usagePeriods,
+            usageWindow,
+          )
+        : null;
     const limits = subscription
       ? entitlementsFor(subscription.plan, subscription.status)
       : null;
@@ -428,16 +446,17 @@ export class AdminCustomersService {
             trialEndsAt: subscription.trialEndsAt,
             cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
             scheduledAccessEndsAt: subscription.scheduledAccessEndsAt,
-            hasAccess: hasBillingAccess(subscription),
+            hasAccess: hasBillingAccess(subscription, now),
           }
         : null,
-      usage: usage
-        ? {
-            aiQuestions: usage.aiQuestionUnits,
-            periodStart: usage.periodStart,
-            periodEnd: usage.periodEnd,
-          }
-        : null,
+      usage:
+        subscription && usageWindow
+          ? {
+              aiQuestions: usage?.aiQuestionUnits ?? 0,
+              periodStart: usageWindow.start,
+              periodEnd: usageWindow.end,
+            }
+          : null,
       limits: limits ? publicLimits(limits) : null,
       counts: {
         members: workspace._count.members,
@@ -456,6 +475,7 @@ export class AdminCustomersService {
     activeProducts: number,
     questions: Record<string, number>,
     syncRuns: RecentSyncRunRecord[],
+    now: Date,
   ) {
     const summary = this.toSummary(
       {
@@ -469,6 +489,7 @@ export class AdminCustomersService {
         },
       },
       activeProducts,
+      now,
     );
 
     return {

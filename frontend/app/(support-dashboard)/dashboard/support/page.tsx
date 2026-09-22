@@ -1,11 +1,8 @@
 import type { Metadata } from "next"
-import { redirect } from "next/navigation"
 
 import { SupportCenter } from "@/components/dashboard/support/support-center"
-import { APP_ROUTES } from "@/constants/site"
 import { getServerSupportTickets } from "@/lib/api/support.server"
 import { getActiveStoreContext } from "@/lib/stores/active-store"
-import type { SupportTicketList } from "@/types/support"
 
 export const metadata: Metadata = {
   title: "Yardım Merkezi | Core Asistan",
@@ -24,26 +21,13 @@ export default async function SupportPage({
     getActiveStoreContext(),
     searchParams,
   ])
-  if (!activeStore) redirect(APP_ROUTES.onboarding)
 
   const initialView = firstValue(params.view) === "tickets" ? "tickets" : "help"
-  const initialTickets = await getServerSupportTickets(activeStore.id).catch(
-    (): SupportTicketList => ({
-      items: [],
-      total: 0,
-      counts: {
-        OPEN: 0,
-        IN_PROGRESS: 0,
-        WAITING_CUSTOMER: 0,
-        RESOLVED: 0,
-        CLOSED: 0,
-      },
-    })
-  )
+  const initialTickets = await getServerSupportTickets()
   return (
     <SupportCenter
-      storeId={activeStore.id}
-      storeName={activeStore.name}
+      storeId={activeStore?.id ?? null}
+      storeName={activeStore?.name ?? null}
       initialView={initialView}
       initialTickets={initialTickets}
     />

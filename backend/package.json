@@ -17,6 +17,7 @@
     "smoke:question-sync": "npm run build && node dist/src/scripts/question-sync-smoke.js",
     "smoke:gemini": "npm run build && node dist/src/scripts/gemini-smoke.js",
     "simulate:questions": "npm run build && node dist/src/scripts/simulate-incoming-questions.js",
+    "seed:demo": "npm run build && node dist/src/scripts/seed-realistic-demo.js",
     "benchmark:catalog:seed": "npm run build && node dist/src/scripts/catalog-performance-benchmark.js seed",
     "benchmark:catalog:explain": "npm run build && node dist/src/scripts/catalog-performance-benchmark.js explain",
     "benchmark:catalog:clean": "npm run build && node dist/src/scripts/catalog-performance-benchmark.js clean",

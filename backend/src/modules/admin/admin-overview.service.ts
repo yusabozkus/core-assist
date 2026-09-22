@@ -46,6 +46,7 @@ export class AdminOverviewService {
       ]);
 
     return {
+      available: true,
       openSupportTickets,
       paymentIssues,
       activeSyncs,

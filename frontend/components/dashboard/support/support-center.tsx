@@ -175,8 +175,8 @@ export function SupportCenter({
   initialView,
   initialTickets,
 }: {
-  storeId: string
-  storeName: string
+  storeId: string | null
+  storeName: string | null
   initialView: "help" | "tickets"
   initialTickets: SupportTicketList
 }) {
@@ -457,7 +457,9 @@ export function SupportCenter({
                 </div>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
                   Sorununuzu ve karşılaştığınız adımları paylaşın. Destek ekibi
-                  mağaza bağlamınızla birlikte talebinizi inceleyecek.
+                  {storeName
+                    ? " mağaza bağlamınızla birlikte talebinizi inceleyecek."
+                    : " müşteri hesabınız üzerinden talebinizi inceleyecek."}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-2">

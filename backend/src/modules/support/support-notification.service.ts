@@ -19,11 +19,18 @@ type TicketNotificationContext = {
   assignedAdminUserId: string | null;
 };
 
+type OverdueTicketNotificationCandidate = Pick<
+  TicketNotificationContext,
+  'id' | 'number' | 'subject' | 'createdAt'
+>;
+
 const ACTIVE_SUPPORT_STATUSES: SupportTicketStatus[] = [
   SupportTicketStatus.OPEN,
   SupportTicketStatus.IN_PROGRESS,
   SupportTicketStatus.WAITING_CUSTOMER,
 ];
+
+const SLA_NOTIFICATION_BATCH_SIZE = 500;
 
 @Injectable()
 export class SupportNotificationService {
@@ -155,72 +162,107 @@ export class SupportNotificationService {
     const adminIds = await this.getSupportAdminIds(this.prisma);
     if (adminIds.length === 0) return 0;
 
-    const tickets = await this.prisma.supportTicket.findMany({
-      where: {
-        status: { in: ACTIVE_SUPPORT_STATUSES },
-        firstRespondedAt: null,
-        firstResponseDueAt: { lt: new Date() },
-      },
-      select: {
-        id: true,
-        number: true,
-        subject: true,
-        createdAt: true,
-      },
-      orderBy: { firstResponseDueAt: 'asc' },
-      take: 500,
-    });
-    if (tickets.length === 0) return 0;
-
-    const dedupeKeys = tickets.map(
-      (ticket) => `support-sla-breached:${ticket.id}`,
-    );
-    const existing = await this.prisma.notification.findMany({
-      where: {
-        recipientUserId: { in: adminIds },
-        dedupeKey: { in: dedupeKeys },
-      },
-      select: { recipientUserId: true, dedupeKey: true },
-    });
-    const existingPairs = new Set(
-      existing.map(
-        (notification) =>
-          `${notification.recipientUserId}:${notification.dedupeKey}`,
+    const now = new Date();
+    const activeStatuses = Prisma.join(
+      ACTIVE_SUPPORT_STATUSES.map(
+        (status) => Prisma.sql`${status}::"SupportTicketStatus"`,
       ),
     );
-    const notifications = tickets.flatMap((ticket) =>
-      adminIds
-        .filter(
-          (recipientUserId) =>
-            !existingPairs.has(
-              `${recipientUserId}:support-sla-breached:${ticket.id}`,
-            ),
-        )
-        .map((recipientUserId) => ({
-          recipientUserId,
-          storeId: null,
-          type: NotificationType.SUPPORT_SLA_BREACHED,
-          severity: NotificationSeverity.ERROR,
-          title: 'Destek yanıt hedefi aşıldı',
-          message: `${ticketCode(ticket)} · ${ticket.subject}`,
-          actionUrl: `/admin/support/${ticket.id}`,
-          entityType: 'SUPPORT_TICKET',
-          entityId: ticket.id,
-          dedupeKey: `support-sla-breached:${ticket.id}`,
-        })),
+    const adminRows = Prisma.join(
+      adminIds.map((adminId) => Prisma.sql`(${adminId})`),
     );
-    if (notifications.length === 0) return 0;
 
-    const result = await this.prisma.notification.createMany({
-      data: notifications,
-      skipDuplicates: true,
+    const result = await this.prisma.$transaction(async (transaction) => {
+      // Only select tickets for which at least one current support admin is
+      // still missing the SLA alert. Previously-notified rows therefore cannot
+      // permanently hide later overdue tickets behind the 500-row batch limit.
+      const tickets = await transaction.$queryRaw<
+        OverdueTicketNotificationCandidate[]
+      >(Prisma.sql`
+        SELECT
+          ticket."id",
+          ticket."number",
+          ticket."subject",
+          ticket."createdAt"
+        FROM "support_ticket" AS ticket
+        WHERE ticket."status" IN (${activeStatuses})
+          AND ticket."firstRespondedAt" IS NULL
+          AND ticket."firstResponseDueAt" < ${now}
+          AND EXISTS (
+            SELECT 1
+            FROM (VALUES ${adminRows}) AS admin("id")
+            WHERE NOT EXISTS (
+              SELECT 1
+              FROM "notification" AS notification
+              WHERE notification."recipientUserId" = admin."id"
+                AND notification."dedupeKey" =
+                  'support-sla-breached:' || ticket."id"
+            )
+          )
+        ORDER BY ticket."firstResponseDueAt" ASC, ticket."id" ASC
+        LIMIT ${SLA_NOTIFICATION_BATCH_SIZE}
+        FOR UPDATE OF ticket SKIP LOCKED
+      `);
+      if (tickets.length === 0) {
+        return { count: 0, recipientUserIds: [] as string[] };
+      }
+
+      const dedupeKeys = tickets.map(
+        (ticket) => `support-sla-breached:${ticket.id}`,
+      );
+      const existing = await transaction.notification.findMany({
+        where: {
+          recipientUserId: { in: adminIds },
+          dedupeKey: { in: dedupeKeys },
+        },
+        select: { recipientUserId: true, dedupeKey: true },
+      });
+      const existingPairs = new Set(
+        existing.map(
+          (notification) =>
+            `${notification.recipientUserId}:${notification.dedupeKey}`,
+        ),
+      );
+      const notifications = tickets.flatMap((ticket) =>
+        adminIds
+          .filter(
+            (recipientUserId) =>
+              !existingPairs.has(
+                `${recipientUserId}:support-sla-breached:${ticket.id}`,
+              ),
+          )
+          .map((recipientUserId) => ({
+            recipientUserId,
+            storeId: null,
+            type: NotificationType.SUPPORT_SLA_BREACHED,
+            severity: NotificationSeverity.ERROR,
+            title: 'Destek yanıt hedefi aşıldı',
+            message: `${ticketCode(ticket)} · ${ticket.subject}`,
+            actionUrl: `/admin/support/${ticket.id}`,
+            entityType: 'SUPPORT_TICKET',
+            entityId: ticket.id,
+            dedupeKey: `support-sla-breached:${ticket.id}`,
+          })),
+      );
+      if (notifications.length === 0) {
+        return { count: 0, recipientUserIds: [] as string[] };
+      }
+
+      const created = await transaction.notification.createManyAndReturn({
+        data: notifications,
+        skipDuplicates: true,
+        select: { recipientUserId: true },
+      });
+      return {
+        count: created.length,
+        recipientUserIds: [
+          ...new Set(created.map((item) => item.recipientUserId)),
+        ],
+      };
     });
 
     if (result.count > 0) {
-      this.emitCreated(
-        [...new Set(notifications.map((item) => item.recipientUserId))],
-        null,
-      );
+      this.emitCreated(result.recipientUserIds, null);
       this.logger.warn(
         `${result.count} gecikmiş destek bildirimi oluşturuldu.`,
       );

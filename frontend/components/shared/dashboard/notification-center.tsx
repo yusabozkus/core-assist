@@ -39,9 +39,11 @@ const FALLBACK_POLL_INTERVAL_MS = 60_000
 export function NotificationCenter({
   storeId,
   scope = "dashboard",
+  headless = false,
 }: {
   storeId?: string
   scope?: "dashboard" | "admin"
+  headless?: boolean
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -304,6 +306,8 @@ export function NotificationCenter({
       setMarkingAll(false)
     }
   }
+
+  if (headless) return null
 
   const countLabel = unreadCount > 99 ? "99+" : unreadCount.toString()
 

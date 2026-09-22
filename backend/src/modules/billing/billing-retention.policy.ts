@@ -6,6 +6,7 @@ export const BILLING_RETENTION_POLICY = {
   expiredPreviewGraceDays: 1,
   failedPlanChangeDays: 90,
   completedPlanChangeDays: 365,
+  transactionReferenceDays: 730,
 } as const;
 
 export function billingRetentionCutoff(now: Date, days: number) {

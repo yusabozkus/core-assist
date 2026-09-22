@@ -52,6 +52,7 @@ export function AdminQueueDetailView({
     queue.counts.failed - queue.recentFailuresLast24Hours
   )
   const status = resolveQueueStatus(queue)
+  const unavailableValue = queue.available ? undefined : "—"
 
   return (
     <main className="mx-auto w-full max-w-[1240px] px-5 py-8 sm:px-8 sm:py-10">
@@ -86,50 +87,57 @@ export function AdminQueueDetailView({
         </p>
       </div>
 
-      <section className="mt-7 grid overflow-hidden rounded-xl border border-border bg-card sm:grid-cols-2 xl:grid-cols-7">
+      <section className="mt-7 grid overflow-hidden rounded-xl border border-border bg-card sm:grid-cols-2 xl:grid-cols-8">
         <QueueMetric
           label="Aktif yük"
-          value={activeLoad}
+          value={unavailableValue ?? activeLoad}
           helper="Bekleyen ve çalışan"
           icon={RefreshIcon}
           tone={activeLoad > 0 ? "attention" : "neutral"}
         />
         <QueueMetric
           label="Bekleyen"
-          value={queue.counts.waiting}
+          value={unavailableValue ?? queue.counts.waiting}
           helper="İşlenmeyi bekliyor"
           icon={Clock01Icon}
         />
         <QueueMetric
           label="Çalışan"
-          value={queue.counts.active}
+          value={unavailableValue ?? queue.counts.active}
           helper="Şu anda işleniyor"
           icon={RefreshIcon}
           tone={queue.counts.active > 0 ? "positive" : "neutral"}
         />
         <QueueMetric
+          label="Worker"
+          value={unavailableValue ?? queue.workerCount ?? "—"}
+          helper="Bağlı işlemci"
+          icon={RefreshIcon}
+          tone={queue.workerUnavailable ? "danger" : "positive"}
+        />
+        <QueueMetric
           label="Zamanlanmış"
-          value={queue.counts.scheduled}
+          value={unavailableValue ?? queue.counts.scheduled}
           helper="Periyodik ve bekleyen"
           icon={Clock01Icon}
         />
         <QueueMetric
           label="Süresi aşan"
-          value={queue.counts.overdue}
+          value={unavailableValue ?? queue.counts.overdue}
           helper="1 dk toleransı geçti"
           icon={AlertCircleIcon}
           tone={queue.counts.overdue > 0 ? "danger" : "neutral"}
         />
         <QueueMetric
           label="Son 24 saat hata"
-          value={queue.recentFailuresLast24Hours}
+          value={unavailableValue ?? queue.recentFailuresLast24Hours}
           helper="Yeni terminal hatalar"
           icon={AlertCircleIcon}
           tone={queue.recentFailuresLast24Hours > 0 ? "danger" : "neutral"}
         />
         <QueueMetric
           label="Saklanan hata"
-          value={queue.counts.failed}
+          value={unavailableValue ?? queue.counts.failed}
           helper={`${retainedOldFailures} eski kayıt`}
           icon={AlertCircleIcon}
         />
@@ -147,116 +155,133 @@ export function AdminQueueDetailView({
           <p className="mt-1 text-[11px] leading-5 opacity-80">
             {status.description}
           </p>
+          {!queue.available && queue.errorCode ? (
+            <p className="mt-1.5 font-mono text-[10px] opacity-70">
+              Tanı kodu: {queue.errorCode}
+            </p>
+          ) : null}
         </div>
       </div>
 
-      <ScheduledJobsSection queue={queue} />
+      {queue.available ? <ScheduledJobsSection queue={queue} /> : null}
 
-      <section className="mt-6 overflow-hidden rounded-xl border border-border bg-card shadow-xs">
-        <div className="flex flex-col justify-between gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center">
-          <div>
-            <h2 className="text-sm font-semibold">Başarısız iş geçmişi</h2>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Tüm denemelerini tamamladığı halde sonuçlanamayan worker işleri.
-            </p>
-          </div>
-          <span className="text-[10px] text-muted-foreground">
-            {queue.pagination.total} kayıt
-          </span>
-        </div>
-
-        {queue.failures.length ? (
-          <div className="divide-y divide-border">
-            {queue.failures.map((failure) => (
-              <article key={failure.id} className="px-5 py-4 sm:px-6">
-                <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
-                  <div className="flex min-w-0 gap-3">
-                    <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
-                      <HugeiconsIcon
-                        icon={AlertCircleIcon}
-                        className="size-4"
-                      />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold">
-                        {formatQueueJobName(failure.name)}
-                      </p>
-                      <p className="mt-1 text-[10px] text-muted-foreground">
-                        {formatAdminOperationDate(failure.failedAt)} ·{" "}
-                        {failure.attemptsMade} deneme
-                      </p>
-                    </div>
-                  </div>
-                  <code className="max-w-full truncate rounded-md bg-muted px-2 py-1 text-[9px] text-muted-foreground lg:max-w-sm">
-                    {failure.id}
-                  </code>
-                </div>
-                <p className="mt-3 rounded-lg bg-muted/45 px-3 py-2.5 text-[11px] leading-5 break-words text-foreground/80 sm:ml-11">
-                  {failure.failedReason}
-                </p>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="flex min-h-64 flex-col items-center justify-center px-6 text-center">
-            <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-              <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-5" />
-            </span>
-            <p className="mt-4 text-sm font-semibold">
-              Başarısız iş bulunmuyor
-            </p>
-            <p className="mt-1.5 max-w-sm text-xs leading-5 text-muted-foreground">
-              Bu kuyrukta saklanan ve inceleme gerektiren terminal hata kaydı
-              yok.
-            </p>
-          </div>
-        )}
-
-        {queue.pagination.totalPages > 1 ? (
-          <div className="flex items-center justify-between border-t border-border px-5 py-3">
-            <p className="text-xs text-muted-foreground">
-              Sayfa {queue.pagination.page} / {queue.pagination.totalPages}
-            </p>
-            <div className="flex gap-2">
-              <Button
-                asChild
-                size="sm"
-                variant="outline"
-                aria-disabled={queue.pagination.page <= 1}
-                className={cn(
-                  queue.pagination.page <= 1 && "pointer-events-none opacity-50"
-                )}
-              >
-                <Link
-                  href={queuePageHref(queue.key, queue.pagination.page - 1)}
-                >
-                  <HugeiconsIcon icon={ArrowLeft01Icon} className="size-3.5" />
-                  Önceki
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="sm"
-                variant="outline"
-                aria-disabled={
-                  queue.pagination.page >= queue.pagination.totalPages
-                }
-                className={cn(
-                  queue.pagination.page >= queue.pagination.totalPages &&
-                    "pointer-events-none opacity-50"
-                )}
-              >
-                <Link
-                  href={queuePageHref(queue.key, queue.pagination.page + 1)}
-                >
-                  Sonraki
-                  <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
-                </Link>
-              </Button>
+      {queue.available ? (
+        <section className="mt-6 overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+          <div className="flex flex-col justify-between gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center">
+            <div>
+              <h2 className="text-sm font-semibold">Başarısız iş geçmişi</h2>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Tüm denemelerini tamamladığı halde sonuçlanamayan worker işleri.
+              </p>
             </div>
+            <span className="text-[10px] text-muted-foreground">
+              {queue.pagination.total} kayıt
+            </span>
           </div>
-        ) : null}
-      </section>
+
+          {queue.failures.length ? (
+            <div className="divide-y divide-border">
+              {queue.failures.map((failure) => (
+                <article key={failure.id} className="px-5 py-4 sm:px-6">
+                  <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
+                    <div className="flex min-w-0 gap-3">
+                      <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+                        <HugeiconsIcon
+                          icon={AlertCircleIcon}
+                          className="size-4"
+                        />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold">
+                          {formatQueueJobName(failure.name)}
+                        </p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          {formatAdminOperationDate(failure.failedAt)} ·{" "}
+                          {failure.attemptsMade} deneme
+                        </p>
+                      </div>
+                    </div>
+                    <code className="max-w-full truncate rounded-md bg-muted px-2 py-1 text-[9px] text-muted-foreground lg:max-w-sm">
+                      {failure.id}
+                    </code>
+                  </div>
+                  <p className="mt-3 rounded-lg bg-muted/45 px-3 py-2.5 text-[11px] leading-5 break-words text-foreground/80 sm:ml-11">
+                    {failure.failedReason}
+                  </p>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="flex min-h-64 flex-col items-center justify-center px-6 text-center">
+              <span className="flex size-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <HugeiconsIcon
+                  icon={CheckmarkCircle01Icon}
+                  className="size-5"
+                />
+              </span>
+              <p className="mt-4 text-sm font-semibold">
+                Başarısız iş bulunmuyor
+              </p>
+              <p className="mt-1.5 max-w-sm text-xs leading-5 text-muted-foreground">
+                Bu kuyrukta saklanan ve inceleme gerektiren terminal hata kaydı
+                yok.
+              </p>
+            </div>
+          )}
+
+          {queue.pagination.totalPages > 1 ? (
+            <div className="flex items-center justify-between border-t border-border px-5 py-3">
+              <p className="text-xs text-muted-foreground">
+                Sayfa {queue.pagination.page} / {queue.pagination.totalPages}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  asChild
+                  size="sm"
+                  variant="outline"
+                  aria-disabled={queue.pagination.page <= 1}
+                  className={cn(
+                    queue.pagination.page <= 1 &&
+                      "pointer-events-none opacity-50"
+                  )}
+                >
+                  <Link
+                    href={queuePageHref(queue.key, queue.pagination.page - 1)}
+                  >
+                    <HugeiconsIcon
+                      icon={ArrowLeft01Icon}
+                      className="size-3.5"
+                    />
+                    Önceki
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  size="sm"
+                  variant="outline"
+                  aria-disabled={
+                    queue.pagination.page >= queue.pagination.totalPages
+                  }
+                  className={cn(
+                    queue.pagination.page >= queue.pagination.totalPages &&
+                      "pointer-events-none opacity-50"
+                  )}
+                >
+                  <Link
+                    href={queuePageHref(queue.key, queue.pagination.page + 1)}
+                  >
+                    Sonraki
+                    <HugeiconsIcon
+                      icon={ArrowRight01Icon}
+                      className="size-3.5"
+                    />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       <p className="mt-4 text-[10px] leading-5 text-muted-foreground">
         Başarısız işler teşhis amacıyla en fazla 7 gün ve kuyruk için belirlenen
@@ -373,7 +398,7 @@ function QueueMetric({
   tone = "neutral",
 }: {
   label: string
-  value: number
+  value: number | string
   helper: string
   icon: IconSvgElement
   tone?: "neutral" | "positive" | "attention" | "danger"
@@ -464,6 +489,37 @@ function resolveQueueStatus(queue: AdminOperationQueueDetail) {
         "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300",
       panelClassName:
         "border-amber-500/20 bg-amber-500/5 text-amber-800 dark:text-amber-200",
+    }
+  }
+  if (queue.workerUnavailable) {
+    return {
+      label: "Worker yok",
+      title: "Kuyruğu işleyecek aktif worker bulunamadı",
+      description:
+        "Yeni işler kuyrukta kalacaktır. Worker sürecini ve Redis bağlantısını kontrol edin.",
+      icon: AlertCircleIcon,
+      className: "border-destructive/25 bg-destructive/8 text-destructive",
+      panelClassName: "border-destructive/20 bg-destructive/5 text-destructive",
+    }
+  }
+  if (queue.waitingAgeExceeded) {
+    return {
+      label: "Bekleme takıldı",
+      title: "Bir iş bekleme süresi eşiğini aştı",
+      description: `En eski iş ${formatAdminOperationDuration(queue.oldestWaitingAgeMs ?? 0)} bekliyor. Bu kuyruk için uyarı eşiği ${formatAdminOperationDuration(queue.waitingAgeWarningMs)}.`,
+      icon: AlertCircleIcon,
+      className: "border-destructive/25 bg-destructive/8 text-destructive",
+      panelClassName: "border-destructive/20 bg-destructive/5 text-destructive",
+    }
+  }
+  if (queue.activeDurationExceeded) {
+    return {
+      label: "İşlem takıldı",
+      title: "Bir iş beklenenden uzun süredir çalışıyor",
+      description: `En uzun aktif işlem ${formatAdminOperationDuration(queue.longestActiveAgeMs ?? 0)} ve en az ${formatAdminOperationDuration(queue.activeStallWarningMs)} boyunca ilerleme kaydetmedi.`,
+      icon: AlertCircleIcon,
+      className: "border-destructive/25 bg-destructive/8 text-destructive",
+      panelClassName: "border-destructive/20 bg-destructive/5 text-destructive",
     }
   }
   if (queue.counts.overdue > 0) {

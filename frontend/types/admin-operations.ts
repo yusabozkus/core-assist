@@ -13,8 +13,19 @@ export type AdminOperationQueue = {
   key: string
   label: string
   available: boolean
+  errorCode: string | null
   paused: boolean
   recentFailuresLast24Hours: number
+  workerCount: number | null
+  workerUnavailable: boolean
+  oldestWaitingAgeMs: number | null
+  longestActiveAgeMs: number | null
+  waitingAgeWarningMs: number
+  activeDurationWarningMs: number
+  activeStallWarningMs: number
+  waitingAgeExceeded: boolean
+  activeDurationExceeded: boolean
+  stalledActiveJobs: number
   counts: {
     waiting: number
     active: number
@@ -94,6 +105,7 @@ export type AdminOperation = {
   durationMs: number
   isStale: boolean
   canRetry: boolean
+  retryBlockedReason: string | null
   connection: {
     id: string
     providerKey: string
@@ -128,7 +140,8 @@ export type AdminOperationsPage = {
     staleRunning: number
     unhealthyConnections: number
     successRateLastDay: number | null
-    queueBacklog: number
+    queueBacklog: number | null
+    unavailableQueues: number
   }
   providers: string[]
   queues: AdminOperationQueue[]

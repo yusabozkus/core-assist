@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import {
   ArrowLeft01Icon,
@@ -18,9 +18,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import {
+  getSupportTicket,
   replyToSupportTicket,
   updateSupportTicketStatus,
 } from "@/lib/api/support"
+import { NOTIFICATIONS_CHANGED_EVENT } from "@/lib/api/notifications"
 import { cn, getInitials } from "@/lib/utils"
 import type { SupportMessage, SupportTicketDetail } from "@/types/support"
 import {
@@ -29,12 +31,11 @@ import {
 } from "./support-ticket-presentation"
 
 const MAX_COMPOSER_HEIGHT = 164
+const POLL_INTERVAL_MS = 20_000
 
 export function SupportTicketConversation({
-  storeId,
   initialTicket,
 }: {
-  storeId: string
   initialTicket: SupportTicketDetail
 }) {
   const [ticket, setTicket] = useState(initialTicket)
@@ -46,9 +47,49 @@ export function SupportTicketConversation({
   const messagesViewportRef = useRef<HTMLElement>(null)
   const messageInputRef = useRef<HTMLTextAreaElement>(null)
   const hasScrolledRef = useRef(false)
+  const mutationPendingRef = useRef(false)
+  const refreshQueuedRef = useRef(false)
+  const refreshRequestRef = useRef<AbortController | null>(null)
+  const refreshVersionRef = useRef(0)
   const isPending = pendingAction !== null
   const status = SUPPORT_STATUS[ticket.status]
   const isResolved = ticket.status === "RESOLVED" || ticket.status === "CLOSED"
+
+  const cancelPendingRefresh = useCallback(() => {
+    refreshVersionRef.current += 1
+    refreshRequestRef.current?.abort()
+    refreshRequestRef.current = null
+  }, [])
+
+  const refreshTicket = useCallback(async () => {
+    if (document.visibilityState === "hidden") return
+    if (mutationPendingRef.current) {
+      refreshQueuedRef.current = true
+      return
+    }
+
+    cancelPendingRefresh()
+    const requestVersion = refreshVersionRef.current
+    const controller = new AbortController()
+    refreshRequestRef.current = controller
+
+    try {
+      const nextTicket = await getSupportTicket(ticket.id, controller.signal)
+      if (
+        !controller.signal.aborted &&
+        !mutationPendingRef.current &&
+        refreshVersionRef.current === requestVersion
+      ) {
+        setTicket(nextTicket)
+      }
+    } catch {
+      // Geçici bağlantı hatalarında son başarılı konuşma korunur.
+    } finally {
+      if (refreshRequestRef.current === controller) {
+        refreshRequestRef.current = null
+      }
+    }
+  }, [cancelPendingRefresh, ticket.id])
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -76,14 +117,53 @@ export function SupportTicketConversation({
       input.scrollHeight > MAX_COMPOSER_HEIGHT ? "auto" : "hidden"
   }, [message])
 
+  useEffect(() => {
+    const intervalId = window.setInterval(
+      () => void refreshTicket(),
+      POLL_INTERVAL_MS
+    )
+
+    function handleVisible() {
+      if (document.visibilityState === "visible") void refreshTicket()
+    }
+
+    function handleNotificationChange(event: Event) {
+      const changedStoreId = (event as CustomEvent<{ storeId?: string }>).detail
+        ?.storeId
+      if (!changedStoreId || changedStoreId === ticket.store?.id) {
+        void refreshTicket()
+      }
+    }
+
+    window.addEventListener("focus", handleVisible)
+    document.addEventListener("visibilitychange", handleVisible)
+    window.addEventListener(
+      NOTIFICATIONS_CHANGED_EVENT,
+      handleNotificationChange
+    )
+
+    return () => {
+      window.clearInterval(intervalId)
+      window.removeEventListener("focus", handleVisible)
+      document.removeEventListener("visibilitychange", handleVisible)
+      window.removeEventListener(
+        NOTIFICATIONS_CHANGED_EVENT,
+        handleNotificationChange
+      )
+      cancelPendingRefresh()
+    }
+  }, [cancelPendingRefresh, refreshTicket, ticket.store?.id])
+
   async function submitReply() {
     const value = message.trim()
-    if (value.length < 2 || isPending) return
+    if (value.length < 2 || isPending || mutationPendingRef.current) return
 
     setError(null)
     setPendingAction("reply")
+    mutationPendingRef.current = true
+    cancelPendingRefresh()
     try {
-      const nextTicket = await replyToSupportTicket(storeId, ticket.id, value)
+      const nextTicket = await replyToSupportTicket(ticket.id, value)
       setTicket(nextTicket)
       setMessage("")
     } catch (caughtError) {
@@ -93,17 +173,24 @@ export function SupportTicketConversation({
           : "Mesaj gönderilemedi. Lütfen tekrar deneyin."
       )
     } finally {
+      mutationPendingRef.current = false
       setPendingAction(null)
+      if (refreshQueuedRef.current) {
+        refreshQueuedRef.current = false
+        void refreshTicket()
+      }
     }
   }
 
   async function changeStatus(action: "RESOLVE" | "REOPEN") {
-    if (isPending) return
+    if (isPending || mutationPendingRef.current) return
 
     setError(null)
     setPendingAction("status")
+    mutationPendingRef.current = true
+    cancelPendingRefresh()
     try {
-      setTicket(await updateSupportTicketStatus(storeId, ticket.id, action))
+      setTicket(await updateSupportTicketStatus(ticket.id, action))
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -111,7 +198,12 @@ export function SupportTicketConversation({
           : "Talep durumu güncellenemedi."
       )
     } finally {
+      mutationPendingRef.current = false
       setPendingAction(null)
+      if (refreshQueuedRef.current) {
+        refreshQueuedRef.current = false
+        void refreshTicket()
+      }
     }
   }
 
@@ -144,7 +236,7 @@ export function SupportTicketConversation({
                 <span className="font-semibold tracking-wide text-foreground/70">
                   {ticket.code}
                 </span>
-                <span>{ticket.store?.name ?? "Mağaza"}</span>
+                <span>{ticket.store?.name ?? "Genel hesap talebi"}</span>
                 <span>{formatFullDate(ticket.createdAt)} tarihinde açıldı</span>
                 <span className="flex items-center gap-1.5">
                   <HugeiconsIcon icon={Clock01Icon} className="size-3.5" />

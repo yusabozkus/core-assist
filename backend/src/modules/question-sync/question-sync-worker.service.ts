@@ -72,7 +72,14 @@ export class QuestionSyncWorkerService {
       where: {
         id: data.connectionId,
         storeId: data.storeId,
-        status: ChannelConnectionStatus.CONNECTED,
+        status: data.recoverErroredConnection
+          ? {
+              in: [
+                ChannelConnectionStatus.CONNECTED,
+                ChannelConnectionStatus.ERROR,
+              ],
+            }
+          : ChannelConnectionStatus.CONNECTED,
         credentialsEncrypted: { not: null },
         connectedAt: { not: null },
         store: { status: StoreStatus.ACTIVE },
@@ -202,6 +209,12 @@ export class QuestionSyncWorkerService {
           questionSyncStartedAt: null,
           lastQuestionSyncAt: completedAt,
           questionSyncFailureReason: null,
+          ...(data.recoverErroredConnection
+            ? {
+                status: ChannelConnectionStatus.CONNECTED,
+                failureReason: null,
+              }
+            : {}),
         },
       });
       await this.audit.record(

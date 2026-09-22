@@ -28,7 +28,7 @@ import {
 } from "@/lib/channels/sync-state"
 
 type DashboardHeaderProps = {
-  storeId: string
+  storeId?: string
   syncState: DashboardSyncState
   isStoreArchived?: boolean
 }
@@ -96,7 +96,8 @@ function DashboardHeaderContent({
   const [liveSyncState, setLiveSyncState] = useState(syncState)
 
   useEffect(() => {
-    if (isStoreArchived) return
+    if (isStoreArchived || !storeId) return
+    const activeStoreId = storeId
 
     let disposed = false
     let timeoutId: number | undefined
@@ -107,7 +108,7 @@ function DashboardHeaderContent({
 
       try {
         const connections = await getChannelConnections(
-          storeId,
+          activeStoreId,
           controller.signal
         )
         if (disposed) return
@@ -134,7 +135,7 @@ function DashboardHeaderContent({
   }, [isStoreArchived, pathname, storeId])
 
   useEffect(() => {
-    if (isStoreArchived) return
+    if (isStoreArchived || !storeId) return
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
@@ -145,7 +146,7 @@ function DashboardHeaderContent({
 
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [isStoreArchived])
+  }, [isStoreArchived, storeId])
 
   return (
     <>
@@ -212,7 +213,7 @@ function DashboardHeaderContent({
             <span className="size-1.5 rounded-full bg-current" />
             Arşivlenmiş mağaza
           </Badge>
-        ) : (
+        ) : storeId ? (
           <button
             type="button"
             onClick={() => setIsSearchOpen(true)}
@@ -225,7 +226,7 @@ function DashboardHeaderContent({
               Ctrl K
             </kbd>
           </button>
-        )}
+        ) : null}
 
         <div className="flex shrink-0 items-center gap-1.5 justify-self-end">
           {isStoreArchived ? (
@@ -234,18 +235,20 @@ function DashboardHeaderContent({
             </Badge>
           ) : (
             <>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon-sm"
-                className="bg-card shadow-xs lg:hidden"
-                onClick={() => setIsSearchOpen(true)}
-                aria-label="Genel aramayı aç"
-              >
-                <HugeiconsIcon icon={Search01Icon} className="size-4" />
-              </Button>
+              {storeId ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-sm"
+                  className="bg-card shadow-xs lg:hidden"
+                  onClick={() => setIsSearchOpen(true)}
+                  aria-label="Genel aramayı aç"
+                >
+                  <HugeiconsIcon icon={Search01Icon} className="size-4" />
+                </Button>
+              ) : null}
 
-              <SyncStatusLink state={liveSyncState} />
+              {storeId ? <SyncStatusLink state={liveSyncState} /> : null}
 
               <NotificationCenter storeId={storeId} />
             </>
@@ -253,7 +256,7 @@ function DashboardHeaderContent({
         </div>
       </header>
 
-      {!isStoreArchived ? (
+      {!isStoreArchived && storeId ? (
         <GlobalSearch
           storeId={storeId}
           open={isSearchOpen}

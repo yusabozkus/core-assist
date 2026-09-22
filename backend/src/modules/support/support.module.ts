@@ -2,6 +2,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { NotificationCoreModule } from '../notifications/notification-core.module';
+import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { SupportController } from './support.controller';
 import { SUPPORT_NOTIFICATION_QUEUE } from './support-notification.constants';
 import { SupportNotificationProcessor } from './support-notification.processor';
@@ -13,6 +14,7 @@ import { SupportService } from './support.service';
   imports: [
     AuthModule,
     NotificationCoreModule,
+    WorkspacesModule,
     BullModule.registerQueue({ name: SUPPORT_NOTIFICATION_QUEUE }),
   ],
   controllers: [SupportController],
