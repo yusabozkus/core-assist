@@ -22,6 +22,7 @@ import { TeamModule } from './modules/team/team.module';
 import { SupportModule } from './modules/support/support.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { DataRetentionModule } from './modules/data-retention/data-retention.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { AuditModule } from './modules/audit/audit.module';
     BillingModule,
     TeamModule,
     SupportModule,
+    DataRetentionModule,
     AdminModule,
   ],
   controllers: [AppController],

@@ -151,7 +151,7 @@ export function AdminBillingListView({
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Çalışma alanı, kullanıcı, e-posta veya Paddle kimliği ara..."
+                placeholder="Müşteri hesabı, kullanıcı, e-posta veya Paddle işlem kimliği ara..."
                 aria-label="Aboneliklerde ara"
                 icon={<HugeiconsIcon icon={Search01Icon} className="size-4" />}
                 endIcon={

@@ -64,7 +64,7 @@ export function AdminCustomerDetailView({
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                Çalışma alanı
+                Müşteri hesabı
               </p>
               {subscriptionStatus ? (
                 <Badge
@@ -116,7 +116,11 @@ export function AdminCustomerDetailView({
             label="Son etkinlik"
             value={formatAdminCustomerDate(customer.lastActiveAt)}
           />
-          <HeaderFact label="Workspace ID" value={shortId(customer.id)} mono />
+          <HeaderFact
+            label="Müşteri hesabı ID"
+            value={shortId(customer.id)}
+            mono
+          />
         </div>
       </div>
 

@@ -16,6 +16,7 @@ import { QUESTION_SYNC_QUEUE } from '../question-sync/question-sync.constants';
 import { QUESTION_DRAFT_QUEUE } from '../questions/question-draft.constants';
 import { SIZE_GUIDE_QUEUE } from '../size-guides/size-guide.constants';
 import { SUPPORT_NOTIFICATION_QUEUE } from '../support/support-notification.constants';
+import { DATA_RETENTION_QUEUE } from '../data-retention/data-retention.constants';
 import { inspectScheduledJobs } from './admin-queue-monitoring';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -69,6 +70,8 @@ export class AdminSystemHealthService {
     private readonly billingRecoveryQueue: Queue,
     @InjectQueue(SUPPORT_NOTIFICATION_QUEUE)
     private readonly supportNotificationQueue: Queue,
+    @InjectQueue(DATA_RETENTION_QUEUE)
+    private readonly dataRetentionQueue: Queue,
   ) {}
 
   async getHealth() {
@@ -627,6 +630,12 @@ export class AdminSystemHealthService {
         label: 'Destek bildirimleri',
         queue: this.supportNotificationQueue,
         backlogWarningThreshold: 50,
+      },
+      {
+        key: 'data-retention',
+        label: 'Veri saklama',
+        queue: this.dataRetentionQueue,
+        backlogWarningThreshold: 10,
       },
     ];
   }

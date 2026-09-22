@@ -380,6 +380,7 @@ export class AdminBillingService {
         OR: [
           { paddleCustomerId: { contains: query.q, mode: 'insensitive' } },
           { paddleSubscriptionId: { contains: query.q, mode: 'insensitive' } },
+          { paddlePriceId: { contains: query.q, mode: 'insensitive' } },
           {
             workspace: {
               OR: [
@@ -390,6 +391,76 @@ export class AdminBillingService {
                       OR: [
                         { name: { contains: query.q, mode: 'insensitive' } },
                         { email: { contains: query.q, mode: 'insensitive' } },
+                      ],
+                    },
+                  },
+                },
+                {
+                  billingCheckouts: {
+                    some: {
+                      OR: [
+                        {
+                          paddleTransactionId: {
+                            contains: query.q,
+                            mode: 'insensitive',
+                          },
+                        },
+                        {
+                          paddleSubscriptionId: {
+                            contains: query.q,
+                            mode: 'insensitive',
+                          },
+                        },
+                        {
+                          expectedPaddleCustomerId: {
+                            contains: query.q,
+                            mode: 'insensitive',
+                          },
+                        },
+                        {
+                          previousPaddleSubscriptionId: {
+                            contains: query.q,
+                            mode: 'insensitive',
+                          },
+                        },
+                        {
+                          paddlePriceId: {
+                            contains: query.q,
+                            mode: 'insensitive',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+                {
+                  billingPlanChanges: {
+                    some: {
+                      OR: [
+                        {
+                          paddleSubscriptionId: {
+                            contains: query.q,
+                            mode: 'insensitive',
+                          },
+                        },
+                        {
+                          paddleCustomerId: {
+                            contains: query.q,
+                            mode: 'insensitive',
+                          },
+                        },
+                        {
+                          sourcePriceId: {
+                            contains: query.q,
+                            mode: 'insensitive',
+                          },
+                        },
+                        {
+                          targetPriceId: {
+                            contains: query.q,
+                            mode: 'insensitive',
+                          },
+                        },
                       ],
                     },
                   },

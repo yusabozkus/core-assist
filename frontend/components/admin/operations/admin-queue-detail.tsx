@@ -37,6 +37,8 @@ const QUEUE_DESCRIPTIONS: Record<string, string> = {
     "Abonelikleri Paddle kayıtlarıyla karşılaştıran ve kaçırılan ödeme olaylarını onaran periyodik işlemler.",
   "support-notifications":
     "Destek taleplerinin yanıt hedeflerini izleyen ve gerekli bildirimleri oluşturan periyodik işlemler.",
+  "data-retention":
+    "Saklama süresi dolan audit, tamamlanmış senkronizasyon ve kapanmış destek kayıtlarını kontrollü partiler halinde temizleyen periyodik işlemler.",
 }
 
 export function AdminQueueDetailView({

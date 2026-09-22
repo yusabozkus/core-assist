@@ -433,6 +433,7 @@ model BillingUsageEvent {
 
   @@unique([workspaceId, idempotencyKey])
   @@index([usagePeriodId, metric, createdAt])
+  @@index([metric, createdAt])
   @@index([sourceType, sourceId])
   @@map("billing_usage_event")
 }
@@ -940,6 +941,8 @@ model CatalogSyncRun {
   connection ChannelConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
 
   @@index([connectionId, startedAt])
+  @@index([status, startedAt])
+  @@index([status, updatedAt])
   @@index([retryOfId])
   @@map("catalog_sync_run")
 }
@@ -1121,6 +1124,7 @@ model AiDraftAttempt {
   @@index([questionId, createdAt])
   @@index([storeId, outcome, createdAt])
   @@index([storeId, createdAt])
+  @@index([createdAt])
   @@map("ai_draft_attempt")
 }
 
@@ -1246,6 +1250,8 @@ model SupportTicket {
   @@index([createdByUserId, lastMessageAt])
   @@index([assignedAdminUserId, status, lastMessageAt])
   @@index([status, firstResponseDueAt])
+  @@index([status, resolvedAt])
+  @@index([status, closedAt])
   @@index([priority, status, lastMessageAt])
   @@map("support_ticket")
 }

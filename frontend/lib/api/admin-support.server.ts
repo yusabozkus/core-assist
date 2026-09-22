@@ -15,6 +15,13 @@ const apiUrl = (
   "http://localhost:4001"
 ).replace(/\/$/, "")
 
+export class AdminSupportTicketNotFoundError extends Error {
+  constructor() {
+    super("Admin support ticket was not found.")
+    this.name = "AdminSupportTicketNotFoundError"
+  }
+}
+
 export function getServerAdminSupportTickets(query: AdminSupportTicketQuery) {
   const search = new URLSearchParams()
   for (const [key, value] of Object.entries(query)) {
@@ -29,7 +36,8 @@ export function getServerAdminSupportTickets(query: AdminSupportTicketQuery) {
 
 export function getServerAdminSupportTicket(ticketId: string) {
   return adminSupportServerFetch<AdminSupportTicketDetail>(
-    `/admin/support/tickets/${encodeURIComponent(ticketId)}`
+    `/admin/support/tickets/${encodeURIComponent(ticketId)}`,
+    { ticketNotFound: true }
   )
 }
 
@@ -37,7 +45,10 @@ export function getServerAdminSupportAgents() {
   return adminSupportServerFetch<AdminSupportPerson[]>("/admin/support/agents")
 }
 
-async function adminSupportServerFetch<T>(path: string) {
+async function adminSupportServerFetch<T>(
+  path: string,
+  options: { ticketNotFound?: boolean } = {}
+) {
   const cookie = (await headers()).get("cookie")
   if (!cookie)
     throw new Error("Admin support requires an authenticated session.")
@@ -47,6 +58,9 @@ async function adminSupportServerFetch<T>(path: string) {
     headers: { Accept: "application/json", cookie },
     signal: AbortSignal.timeout(10_000),
   })
+  if (response.status === 404 && options.ticketNotFound) {
+    throw new AdminSupportTicketNotFoundError()
+  }
   if (!response.ok) {
     throw new Error(`Admin support request failed with ${response.status}.`)
   }

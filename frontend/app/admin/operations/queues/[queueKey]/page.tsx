@@ -19,6 +19,7 @@ const QUEUE_KEYS = new Set([
   "paddle-webhooks",
   "billing-recovery",
   "support-notifications",
+  "data-retention",
 ])
 
 export default async function AdminOperationQueuePage({

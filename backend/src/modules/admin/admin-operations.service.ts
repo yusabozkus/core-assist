@@ -31,6 +31,7 @@ import {
 import { QUESTION_DRAFT_QUEUE } from '../questions/question-draft.constants';
 import { SIZE_GUIDE_QUEUE } from '../size-guides/size-guide.constants';
 import { SUPPORT_NOTIFICATION_QUEUE } from '../support/support-notification.constants';
+import { DATA_RETENTION_QUEUE } from '../data-retention/data-retention.constants';
 import { inspectScheduledJobs } from './admin-queue-monitoring';
 import {
   AdminOperationIssueFilter,
@@ -124,6 +125,8 @@ export class AdminOperationsService {
     private readonly billingRecoveryQueue: Queue,
     @InjectQueue(SUPPORT_NOTIFICATION_QUEUE)
     private readonly supportNotificationQueue: Queue,
+    @InjectQueue(DATA_RETENTION_QUEUE)
+    private readonly dataRetentionQueue: Queue,
     private readonly audit: AuditLogService,
   ) {}
 
@@ -579,6 +582,11 @@ export class AdminOperationsService {
         key: 'support-notifications',
         label: 'Destek bildirimleri',
         queue: this.supportNotificationQueue,
+      },
+      {
+        key: 'data-retention',
+        label: 'Veri saklama',
+        queue: this.dataRetentionQueue,
       },
     ];
   }
