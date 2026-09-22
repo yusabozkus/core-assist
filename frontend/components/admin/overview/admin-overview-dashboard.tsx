@@ -640,6 +640,8 @@ function auditActionLabel(action: string) {
       ADMIN_SUPPORT_INTERNAL_NOTE_ADDED: "Destek iç notu eklendi",
       ADMIN_SUPPORT_STATUS_CHANGED: "Destek durumu değiştirildi",
       ADMIN_SUPPORT_ASSIGNEE_CHANGED: "Destek sorumlusu değiştirildi",
+      ADMIN_CONTACT_MESSAGE_STATUS_CHANGED:
+        "İletişim mesajı durumu değiştirildi",
       BILLING_PLAN_CHANGE_CONFIRMED: "Plan değişikliği onaylandı",
       BILLING_SUBSCRIPTION_SYNCHRONIZED: "Abonelik durumu eşitlendi",
       BILLING_TRANSACTION_RECOVERED: "Ödeme bağlantısı kurtarıldı",

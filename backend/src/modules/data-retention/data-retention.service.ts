@@ -52,6 +52,11 @@ export class DataRetentionService {
         dataRetentionCutoff(now, policy.closedSupportTicketDays),
       ),
     );
+    const archivedContactMessages = await this.prune(() =>
+      this.deleteArchivedContactMessageBatch(
+        dataRetentionCutoff(now, policy.archivedContactMessageDays),
+      ),
+    );
 
     const result = {
       auditLogs,
@@ -59,6 +64,7 @@ export class DataRetentionService {
       failedSyncRuns,
       resolvedSupportTickets,
       closedSupportTickets,
+      archivedContactMessages,
     };
     const total = Object.values(result).reduce((sum, count) => sum + count, 0);
 
@@ -143,6 +149,27 @@ export class DataRetentionService {
 
     const deleted = await this.prisma.supportTicket.deleteMany({
       where: { ...where, id: { in: records.map((record) => record.id) } },
+    });
+    return { matched: records.length, deleted: deleted.count };
+  }
+
+  private async deleteArchivedContactMessageBatch(
+    cutoff: Date,
+  ): Promise<BatchResult> {
+    const records = await this.prisma.contactMessage.findMany({
+      where: { status: 'ARCHIVED', archivedAt: { lt: cutoff } },
+      orderBy: [{ archivedAt: 'asc' }, { id: 'asc' }],
+      take: BATCH_SIZE,
+      select: { id: true },
+    });
+    if (records.length === 0) return { matched: 0, deleted: 0 };
+
+    const deleted = await this.prisma.contactMessage.deleteMany({
+      where: {
+        id: { in: records.map((record) => record.id) },
+        status: 'ARCHIVED',
+        archivedAt: { lt: cutoff },
+      },
     });
     return { matched: records.length, deleted: deleted.count };
   }

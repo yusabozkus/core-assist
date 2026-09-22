@@ -428,6 +428,25 @@ export const SupportTicketCategory = {
 export type SupportTicketCategory = (typeof SupportTicketCategory)[keyof typeof SupportTicketCategory]
 
 
+export const ContactMessageTopic = {
+  PRODUCT: 'PRODUCT',
+  PRICING: 'PRICING',
+  PARTNERSHIP: 'PARTNERSHIP',
+  OTHER: 'OTHER'
+} as const
+
+export type ContactMessageTopic = (typeof ContactMessageTopic)[keyof typeof ContactMessageTopic]
+
+
+export const ContactMessageStatus = {
+  NEW: 'NEW',
+  READ: 'READ',
+  ARCHIVED: 'ARCHIVED'
+} as const
+
+export type ContactMessageStatus = (typeof ContactMessageStatus)[keyof typeof ContactMessageStatus]
+
+
 export const SupportTicketImpact = {
   QUESTION: 'QUESTION',
   PARTIAL: 'PARTIAL',

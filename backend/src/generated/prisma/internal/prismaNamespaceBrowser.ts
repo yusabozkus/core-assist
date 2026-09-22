@@ -89,6 +89,7 @@ export const ModelName = {
   AiDraftAttempt: 'AiDraftAttempt',
   QuestionAnswer: 'QuestionAnswer',
   StoreMember: 'StoreMember',
+  ContactMessage: 'ContactMessage',
   SupportTicket: 'SupportTicket',
   SupportMessage: 'SupportMessage',
   Notification: 'Notification',
@@ -813,6 +814,27 @@ export const StoreMemberScalarFieldEnum = {
 } as const
 
 export type StoreMemberScalarFieldEnum = (typeof StoreMemberScalarFieldEnum)[keyof typeof StoreMemberScalarFieldEnum]
+
+
+export const ContactMessageScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  email: 'email',
+  emailNormalized: 'emailNormalized',
+  company: 'company',
+  topic: 'topic',
+  subject: 'subject',
+  message: 'message',
+  status: 'status',
+  requestFingerprint: 'requestFingerprint',
+  sourcePage: 'sourcePage',
+  readAt: 'readAt',
+  archivedAt: 'archivedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ContactMessageScalarFieldEnum = (typeof ContactMessageScalarFieldEnum)[keyof typeof ContactMessageScalarFieldEnum]
 
 
 export const SupportTicketScalarFieldEnum = {

@@ -230,6 +230,11 @@ export type QuestionAnswer = Prisma.QuestionAnswerModel
  */
 export type StoreMember = Prisma.StoreMemberModel
 /**
+ * Model ContactMessage
+ * 
+ */
+export type ContactMessage = Prisma.ContactMessageModel
+/**
  * Model SupportTicket
  * 
  */

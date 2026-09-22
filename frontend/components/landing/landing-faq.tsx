@@ -1,9 +1,11 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 
 import { cn } from "@/lib/utils"
+import { APP_ROUTES } from "@/constants/site"
 
 import { LandingReveal } from "./landing-reveal"
 import styles from "./landing.module.css"
@@ -64,6 +66,12 @@ export function LandingFaq() {
           <p className="mt-6 max-w-[270px] text-sm leading-7 text-[#7c8771]">
             Başlamadan önce bilmek isteyebileceğiniz birkaç detay.
           </p>
+          <Link
+            href={APP_ROUTES.contact}
+            className="mt-5 inline-flex border-b border-[#aeba9f] pb-1 text-xs font-medium text-[#245d46] transition-colors hover:border-[#245d46]"
+          >
+            Başka bir sorunuz mu var? Bize yazın.
+          </Link>
         </LandingReveal>
 
         <div className="border-t border-[#dce4d1]">

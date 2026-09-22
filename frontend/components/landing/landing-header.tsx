@@ -179,10 +179,10 @@ export function LandingHeader() {
               Giriş yap
             </Link>
             <Link
-              href={APP_ROUTES.login}
+              href={APP_ROUTES.contact}
               className="group hidden h-10 items-center gap-3 rounded-xl bg-[#17281f] px-4 text-[13px] font-semibold text-white transition-[background-color,transform] hover:bg-[#245d46] focus-visible:ring-2 focus-visible:ring-[#245d46] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbfcf9] focus-visible:outline-none active:scale-[0.97] min-[390px]:inline-flex"
             >
-              Ücretsiz dene
+              Bizimle iletişime geçin
               <HugeiconsIcon
                 icon={ArrowRight01Icon}
                 className="size-3.5 motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5"
@@ -262,11 +262,11 @@ export function LandingHeader() {
               Giriş yap
             </Link>
             <Link
-              href={APP_ROUTES.login}
+              href={APP_ROUTES.contact}
               onClick={() => setIsMenuOpen(false)}
               className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[#17281f] text-sm font-semibold text-white transition-[background-color,transform] hover:bg-[#245d46] focus-visible:ring-2 focus-visible:ring-[#245d46]/30 focus-visible:outline-none active:scale-[0.97]"
             >
-              Ücretsiz dene
+              İletişime geçin
               <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" />
             </Link>
           </div>

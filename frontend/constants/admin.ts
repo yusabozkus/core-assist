@@ -3,6 +3,7 @@ import {
   CreditCardIcon,
   CustomerSupportIcon,
   DashboardSquare01Icon,
+  Mail01Icon,
   RefreshIcon,
   Settings02Icon,
   ShieldCheckIcon,
@@ -44,6 +45,12 @@ export const ADMIN_NAVIGATION: ReadonlyArray<AdminNavigationItem> = [
     icon: CustomerSupportIcon,
   },
   {
+    title: "İletişim Mesajları",
+    description: "Landing üzerinden gelen mesajlar",
+    url: APP_ROUTES.admin.contactMessages,
+    icon: Mail01Icon,
+  },
+  {
     title: "Abonelikler",
     description: "Plan ve ödeme operasyonları",
     url: APP_ROUTES.admin.billing,
@@ -78,11 +85,11 @@ export const ADMIN_NAVIGATION: ReadonlyArray<AdminNavigationItem> = [
 export const ADMIN_NAVIGATION_GROUPS: ReadonlyArray<AdminNavigationGroup> = [
   {
     label: "Yönetim",
-    items: ADMIN_NAVIGATION.slice(0, 4),
+    items: ADMIN_NAVIGATION.slice(0, 5),
   },
   {
     label: "Sistem ve Operasyon",
-    items: ADMIN_NAVIGATION.slice(4),
+    items: ADMIN_NAVIGATION.slice(5),
   },
 ]
 

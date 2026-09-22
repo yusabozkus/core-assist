@@ -11,6 +11,7 @@ Bu politika, Core Asistan veritabanındaki operasyonel tabloların kontrolsüz b
 | Başarısız senkronizasyon çalışmaları | 180 gün | Durum `FAILED` ve `updatedAt` süresi dolmuşsa |
 | Çözülen destek talepleri | 365 gün | Durum `RESOLVED` ve `resolvedAt` süresi dolmuşsa |
 | Kapatılan destek talepleri | 365 gün | Durum `CLOSED` ve `closedAt` süresi dolmuşsa |
+| Arşivlenen iletişim mesajları | 730 gün | Durum `ARCHIVED` ve `archivedAt` süresi dolmuşsa |
 
 Destek talebi silindiğinde ona bağlı mesajlar ilişkisel olarak silinir. Açık, işlemde veya müşteri yanıtı bekleyen destek talepleri temizlenmez. Çalışan senkronizasyonlar temizlenmez.
 
@@ -44,6 +45,7 @@ Süreler production ihtiyacına göre aşağıdaki değişkenlerle gün cinsinde
 - `DATA_RETENTION_FAILED_SYNC_RUN_DAYS`
 - `DATA_RETENTION_RESOLVED_SUPPORT_TICKET_DAYS`
 - `DATA_RETENTION_CLOSED_SUPPORT_TICKET_DAYS`
+- `DATA_RETENTION_ARCHIVED_CONTACT_MESSAGE_DAYS`
 - `DATA_RETENTION_CLEANUP_INTERVAL_MS`
 
 Yasal veya sözleşmesel bir saklama zorunluluğu varsa production öncesinde bu değerler ve yedekleme politikası birlikte gözden geçirilmelidir.

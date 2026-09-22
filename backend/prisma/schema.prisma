@@ -1219,6 +1219,44 @@ enum SupportTicketCategory {
   OTHER
 }
 
+enum ContactMessageTopic {
+  PRODUCT
+  PRICING
+  PARTNERSHIP
+  OTHER
+}
+
+enum ContactMessageStatus {
+  NEW
+  READ
+  ARCHIVED
+}
+
+model ContactMessage {
+  id                 String               @id @default(uuid())
+  name               String
+  email              String
+  emailNormalized    String
+  company            String?
+  topic              ContactMessageTopic
+  subject            String
+  message            String
+  status             ContactMessageStatus @default(NEW)
+  requestFingerprint String
+  sourcePage         String?
+  readAt             DateTime?
+  archivedAt         DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@index([status, createdAt])
+  @@index([topic, createdAt])
+  @@index([emailNormalized, createdAt])
+  @@index([requestFingerprint, createdAt])
+  @@index([archivedAt])
+  @@map("contact_message")
+}
+
 enum SupportTicketImpact {
   QUESTION
   PARTIAL

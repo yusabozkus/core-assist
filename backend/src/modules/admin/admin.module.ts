@@ -33,6 +33,8 @@ import { AdminAiUsageService } from './admin-ai-usage.service';
 import { AdminInsightsController } from './admin-insights.controller';
 import { AdminSystemHealthService } from './admin-system-health.service';
 import { AdminGlobalSearchService } from './admin-global-search.service';
+import { AdminContactMessagesController } from './admin-contact-messages.controller';
+import { AdminContactMessagesService } from './admin-contact-messages.service';
 
 @Module({
   imports: [
@@ -61,6 +63,7 @@ import { AdminGlobalSearchService } from './admin-global-search.service';
     AdminCustomersController,
     AdminOperationsController,
     AdminSupportController,
+    AdminContactMessagesController,
   ],
   providers: [
     AdminAuditLogsService,
@@ -73,6 +76,7 @@ import { AdminGlobalSearchService } from './admin-global-search.service';
     AdminOverviewService,
     AdminOperationsService,
     AdminSupportService,
+    AdminContactMessagesService,
     AdminSystemHealthService,
     AdminGlobalSearchService,
   ],

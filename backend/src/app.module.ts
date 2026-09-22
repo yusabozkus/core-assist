@@ -23,6 +23,7 @@ import { SupportModule } from './modules/support/support.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { DataRetentionModule } from './modules/data-retention/data-retention.module';
+import { ContactModule } from './modules/contact/contact.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { DataRetentionModule } from './modules/data-retention/data-retention.mod
     TeamModule,
     SupportModule,
     DataRetentionModule,
+    ContactModule,
     AdminModule,
   ],
   controllers: [AppController],

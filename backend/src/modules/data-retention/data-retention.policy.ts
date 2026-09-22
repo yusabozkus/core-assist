@@ -6,6 +6,7 @@ const DEFAULT_POLICY = {
   failedSyncRunDays: 180,
   resolvedSupportTicketDays: 365,
   closedSupportTicketDays: 365,
+  archivedContactMessageDays: 730,
   cleanupIntervalMs: DAY_IN_MS,
 } as const;
 
@@ -32,6 +33,10 @@ export function resolveDataRetentionPolicy(
     closedSupportTicketDays: readPositiveInteger(
       environment.DATA_RETENTION_CLOSED_SUPPORT_TICKET_DAYS,
       DEFAULT_POLICY.closedSupportTicketDays,
+    ),
+    archivedContactMessageDays: readPositiveInteger(
+      environment.DATA_RETENTION_ARCHIVED_CONTACT_MESSAGE_DAYS,
+      DEFAULT_POLICY.archivedContactMessageDays,
     ),
     cleanupIntervalMs: readPositiveInteger(
       environment.DATA_RETENTION_CLEANUP_INTERVAL_MS,

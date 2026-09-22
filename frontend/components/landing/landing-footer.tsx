@@ -48,6 +48,12 @@ export function LandingFooter() {
                 {item.label}
               </a>
             ))}
+            <Link
+              href={APP_ROUTES.contact}
+              className="text-xs text-[#728462] transition-[color,transform] hover:text-[#253d20] active:translate-y-px active:text-[#245d46]"
+            >
+              İletişim
+            </Link>
           </nav>
           <p className="text-[11px] text-[#8c9c7d]">
             © {new Date().getFullYear()} Core Asistan
