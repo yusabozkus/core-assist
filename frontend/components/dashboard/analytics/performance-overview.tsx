@@ -124,7 +124,7 @@ export function PerformanceOverview({ data }: { data: AiPerformance }) {
             asChild
             variant="outline"
             size="sm"
-            className="shrink-0 bg-card"
+            className="w-full shrink-0 bg-card sm:w-auto"
           >
             <Link href={state.actionHref}>
               {state.actionLabel}
@@ -133,16 +133,18 @@ export function PerformanceOverview({ data }: { data: AiPerformance }) {
           </Button>
         </div>
 
-        <dl className="grid grid-cols-3 border-t border-border/70">
+        <dl className="grid grid-cols-2 border-t border-border/70 sm:grid-cols-3">
           {metrics.map((metric, index) => (
             <div
               key={metric.label}
-              className={`min-w-0 px-4 py-3.5 sm:px-5 ${index > 0 ? "border-l border-border/70" : ""}`}
+              className={`min-w-0 px-4 py-3.5 sm:px-5 ${index === 1 ? "border-l border-border/70" : ""} ${index === 2 ? "col-span-2 flex items-center justify-between gap-3 border-t border-border/70 sm:col-span-1 sm:block sm:border-t-0 sm:border-l" : ""}`}
             >
               <dt className="text-[10px] font-medium text-muted-foreground">
                 {metric.label}
               </dt>
-              <dd className="mt-1.5 truncate text-sm font-semibold tracking-tight tabular-nums sm:text-base">
+              <dd
+                className={`truncate text-sm font-semibold tracking-tight tabular-nums sm:text-base ${index === 2 ? "sm:mt-1.5" : "mt-1.5"}`}
+              >
                 {metric.value}
               </dd>
             </div>

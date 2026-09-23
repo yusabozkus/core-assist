@@ -255,7 +255,7 @@ export function NotificationPreferences({ storeId }: { storeId: string }) {
     <div className="space-y-4">
       <NotificationDeliverySettings storeId={storeId} />
 
-      <div className="flex min-h-5 items-center justify-between gap-3">
+      <div className="flex min-h-5 flex-wrap items-center justify-between gap-2">
         <p className="text-xs leading-5 text-muted-foreground">
           Olay tercihleri bundan sonra oluşacak bildirimleri ve seçtiğiniz tüm
           teslimat kanallarını etkiler.
@@ -278,7 +278,7 @@ export function NotificationPreferences({ storeId }: { storeId: string }) {
           key={group.title}
           className="overflow-hidden rounded-xl border border-border bg-card"
         >
-          <header className="flex items-start gap-3 border-b border-border px-5 py-4">
+          <header className="flex items-start gap-3 border-b border-border px-4 py-4 sm:px-5">
             <span
               className={cn(
                 "flex size-9 shrink-0 items-center justify-center rounded-lg",
@@ -305,7 +305,7 @@ export function NotificationPreferences({ storeId }: { storeId: string }) {
               return (
                 <div
                   key={definition.type}
-                  className="flex items-center justify-between gap-5 px-5 py-4"
+                  className="flex items-center justify-between gap-3 px-4 py-4 sm:gap-5 sm:px-5"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground">
@@ -315,7 +315,7 @@ export function NotificationPreferences({ storeId }: { storeId: string }) {
                       {definition.description}
                     </p>
                   </div>
-                  <div className="relative flex shrink-0 items-center">
+                  <div className="flex shrink-0 items-center gap-1.5">
                     <Switch
                       checked={preference?.enabled ?? true}
                       disabled={saving}
@@ -327,7 +327,7 @@ export function NotificationPreferences({ storeId }: { storeId: string }) {
                     {saving ? (
                       <HugeiconsIcon
                         icon={RefreshIcon}
-                        className="absolute -right-6 size-3.5 animate-spin text-muted-foreground"
+                        className="size-3.5 animate-spin text-muted-foreground"
                       />
                     ) : null}
                   </div>
@@ -349,7 +349,7 @@ function NotificationPreferencesSkeleton() {
           key={group.title}
           className="overflow-hidden rounded-xl border border-border bg-card"
         >
-          <div className="flex items-start gap-3 border-b border-border px-5 py-4">
+          <div className="flex items-start gap-3 border-b border-border px-4 py-4 sm:px-5">
             <Skeleton className="size-9 rounded-lg" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-3.5 w-36 rounded-md" />
@@ -360,7 +360,7 @@ function NotificationPreferencesSkeleton() {
             (_, itemIndex) => (
               <div
                 key={itemIndex}
-                className="flex items-center gap-5 border-b border-border px-5 py-4 last:border-0"
+                className="flex items-center gap-3 border-b border-border px-4 py-4 last:border-0 sm:gap-5 sm:px-5"
               >
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-3.5 w-48 max-w-full rounded-md" />

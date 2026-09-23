@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 
 import { DashboardHeader } from "@/components/shared/dashboard/dashboard-header"
+import { MobileBottomNavigation } from "@/components/shared/dashboard/mobile-bottom-navigation"
 import { BillingPaymentIssueShell } from "@/components/dashboard/billing/billing-payment-issue-banner"
 import { BillingUsageProvider } from "@/components/dashboard/billing/billing-usage-provider"
 import { AppSidebar } from "@/components/shared/sidebar/app-sidebar"
@@ -78,6 +79,9 @@ export default async function DashboardLayout({
             <div className="min-h-0 flex-1 overflow-y-auto bg-background">
               {children}
             </div>
+            {activeStore.status === "ACTIVE" ? (
+              <MobileBottomNavigation />
+            ) : null}
             <Toaster
               position="top-center"
               duration={3000}

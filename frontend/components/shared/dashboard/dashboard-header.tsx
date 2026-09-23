@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  ArrowLeft01Icon,
   ChevronRightIcon,
   RefreshIcon,
   Search01Icon,
@@ -18,7 +19,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { APP_ROUTES, getDashboardBreadcrumbs } from "@/constants/site"
+import {
+  APP_ROUTES,
+  MOBILE_DASHBOARD_TABS,
+  getDashboardBreadcrumbs,
+} from "@/constants/site"
 import { GlobalSearch } from "@/components/shared/dashboard/global-search"
 import { NotificationCenter } from "@/components/shared/dashboard/notification-center"
 import { getChannelConnections } from "@/lib/api/channels"
@@ -26,6 +31,7 @@ import {
   getDashboardSyncState,
   type DashboardSyncState,
 } from "@/lib/channels/sync-state"
+import { cn } from "@/lib/utils"
 
 type DashboardHeaderProps = {
   storeId?: string
@@ -92,6 +98,13 @@ function DashboardHeaderContent({
   const pathname = usePathname()
   const breadcrumbs = getDashboardBreadcrumbs(pathname)
   const currentPage = breadcrumbs.at(-1)
+  const mobileBackHref =
+    isStoreArchived ||
+    MOBILE_DASHBOARD_TABS.some((tab) => tab.href === pathname)
+      ? null
+      : pathname === APP_ROUTES.dashboard.channels.sync
+        ? APP_ROUTES.dashboard.channels.root
+        : (breadcrumbs.at(-2)?.url ?? APP_ROUTES.dashboard.root)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [liveSyncState, setLiveSyncState] = useState(syncState)
 
@@ -163,7 +176,26 @@ function DashboardHeaderContent({
               Menüyü aç veya daralt
             </TooltipContent>
           </Tooltip>
-          <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
+          <span
+            className={cn(
+              "h-4 w-px shrink-0 bg-border",
+              mobileBackHref && "hidden md:block"
+            )}
+            aria-hidden="true"
+          />
+          {mobileBackHref ? (
+            <Link
+              href={mobileBackHref}
+              aria-label={
+                mobileBackHref === APP_ROUTES.dashboard.root
+                  ? "Genel Bakış'a dön"
+                  : "Üst bölüme dön"
+              }
+              className="flex size-8.5 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+            >
+              <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
+            </Link>
+          ) : null}
 
           <nav
             aria-label="Sayfa yolu"

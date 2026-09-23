@@ -53,7 +53,8 @@ export function NotificationDeliverySettings({ storeId }: { storeId: string }) {
     return () => {
       window.clearTimeout(timeoutId)
       requestRef.current?.abort()
-      if (statusTimeoutRef.current) window.clearTimeout(statusTimeoutRef.current)
+      if (statusTimeoutRef.current)
+        window.clearTimeout(statusTimeoutRef.current)
     }
   }, [load])
 
@@ -150,7 +151,7 @@ export function NotificationDeliverySettings({ storeId }: { storeId: string }) {
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card">
-      <header className="flex flex-col gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <header className="flex flex-col gap-2 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div>
           <h2 className="text-sm font-semibold">Teslimat kanalları</h2>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
@@ -199,8 +200,8 @@ export function NotificationDeliverySettings({ storeId }: { storeId: string }) {
           onCheckedChange={(checked) => void save("emailEnabled", checked)}
         />
 
-        <div className="px-5 py-4">
-          <div className="flex items-center justify-between gap-5">
+        <div className="px-4 py-4 sm:px-5">
+          <div className="flex items-center justify-between gap-3 sm:gap-5">
             <div className="flex min-w-0 items-start gap-3">
               <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
                 <HugeiconsIcon icon={Clock01Icon} className="size-4" />
@@ -224,7 +225,7 @@ export function NotificationDeliverySettings({ storeId }: { storeId: string }) {
           </div>
 
           {settings.quietHoursEnabled ? (
-            <div className="mt-4 grid max-w-sm grid-cols-2 gap-3 pl-12">
+            <div className="mt-4 grid max-w-sm grid-cols-2 gap-2 sm:gap-3 sm:pl-12">
               <TimeField
                 label="Başlangıç"
                 value={settings.quietHoursStart}
@@ -266,7 +267,7 @@ function DeliveryRow({
   onCheckedChange: (checked: boolean) => void
 }) {
   return (
-    <div className="flex items-center justify-between gap-5 px-5 py-4">
+    <div className="flex items-center justify-between gap-3 px-4 py-4 sm:gap-5 sm:px-5">
       <div className="flex min-w-0 items-start gap-3">
         <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <HugeiconsIcon icon={icon} className="size-4" />
@@ -278,7 +279,7 @@ function DeliveryRow({
           </p>
         </div>
       </div>
-      <div className="relative flex shrink-0 items-center">
+      <div className="flex shrink-0 items-center gap-1.5">
         <Switch
           checked={checked}
           disabled={disabled}
@@ -288,7 +289,7 @@ function DeliveryRow({
         {loading ? (
           <HugeiconsIcon
             icon={RefreshIcon}
-            className="absolute -right-6 size-3.5 animate-spin text-muted-foreground"
+            className="size-3.5 animate-spin text-muted-foreground"
           />
         ) : null}
       </div>

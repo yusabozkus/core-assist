@@ -11,8 +11,11 @@ import {
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
+  AlertCircleIcon,
   ArrowUpDownIcon,
+  CheckmarkCircle01Icon,
   Clock01Icon,
+  FilterHorizontalIcon,
   Package01Icon,
   RefreshIcon,
   Search01Icon,
@@ -106,6 +109,7 @@ export function InventoryManagement({
   const [page, setPage] = useState(initialPage)
   const [isLoadingPage, setIsLoadingPage] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [expandAll, setExpandAll] = useState(false)
   const [selectedProductId, setSelectedProductId] = useState<string | null>(
     null
@@ -376,31 +380,34 @@ export function InventoryManagement({
   const completedSyncRuns = activeSyncRuns.filter(
     (run) => run.status !== "RUNNING"
   ).length
-  const activeFilterCount = [
-    Boolean(query.trim()),
+  const advancedFilterCount = [
     status !== "ALL",
     provider !== "ALL",
     lowStockThreshold !== DEFAULT_LOW_STOCK_THRESHOLD,
     sort !== "CRITICAL_FIRST",
   ].filter(Boolean).length
+  const activeFilterCount = advancedFilterCount + Number(Boolean(query.trim()))
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-5 py-10 sm:px-8 lg:px-10">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-3xl font-semibold tracking-[-0.04em] text-foreground">
-            Stok Takibi
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            {storeName} mağazasındaki ürün varyantlarının pazaryerlerinden gelen
-            güncel stok durumunu takip edin.
+          <p className="mb-1.5 truncate text-xs font-medium text-muted-foreground">
+            {storeName}
           </p>
-          <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Stok takibi
+          </h1>
+          <p className="mt-1.5 max-w-2xl text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">
+            Pazaryerlerindeki stokları ve güncelleme gerektiren ürünleri takip
+            edin.
+          </p>
+          <div className="mt-3 inline-flex max-w-full items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5 text-[11px] text-muted-foreground">
             <HugeiconsIcon icon={Clock01Icon} className="size-3.5" />
-            <span>
+            <span className="min-w-0 truncate">
               {lastSyncedAt
-                ? `Son stok kontrolü ${lastSyncedAt}`
-                : "Henüz tamamlanmış bir stok kontrolü bulunmuyor."}
+                ? `Son kontrol: ${lastSyncedAt}`
+                : "Henüz stok kontrolü yapılmadı"}
             </span>
           </div>
         </div>
@@ -409,6 +416,7 @@ export function InventoryManagement({
           type="button"
           onClick={handleInventorySync}
           disabled={connectedChannels.length === 0 || isSyncing}
+          className="w-full sm:w-auto"
           title={
             connectedChannels.length === 0
               ? "Önce bir pazaryeri bağlantısı kurun"
@@ -421,7 +429,7 @@ export function InventoryManagement({
           />
           {isSyncing ? "Stoklar kontrol ediliyor" : "Stokları güncelle"}
         </Button>
-      </div>
+      </header>
 
       {isSyncing || syncError || message ? (
         <SyncStatusNotice
@@ -433,7 +441,18 @@ export function InventoryManagement({
         />
       ) : null}
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-3">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold">Stok özeti</h2>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              Mağazanın tüm aktif varyantları
+            </p>
+          </div>
+          <span className="text-[11px] text-muted-foreground tabular-nums">
+            {page.summary.variants.toLocaleString("tr-TR")} varyant
+          </span>
+        </div>
         <InventorySummary summary={page.summary} />
       </div>
 
@@ -441,114 +460,172 @@ export function InventoryManagement({
         <EmptyInventory hasConnectedChannel={connectedChannels.length > 0} />
       ) : (
         <>
-          <div className="mt-6 space-y-3">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-              <div className="relative w-full lg:max-w-sm">
-                <HugeiconsIcon
-                  icon={Search01Icon}
-                  className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground"
-                />
+          <div className="mt-8 space-y-4">
+            <div className="border-t border-border pt-6">
+              <h2 className="text-base font-semibold tracking-tight">
+                Ürün stokları
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Varyantları, kanal durumunu ve stok miktarını inceleyin.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+              <div className="w-full xl:max-w-sm">
                 <Input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Ürün, SKU, barkod, renk veya beden ara"
-                  className="h-9! border-border bg-card pl-9"
+                  icon={
+                    <HugeiconsIcon icon={Search01Icon} className="size-4" />
+                  }
+                  className="h-10! rounded-lg border-border bg-card shadow-none"
                   aria-label="Stoklarda ara"
+                  maxLength={100}
                 />
               </div>
 
-              <div className="flex flex-1 flex-wrap gap-2 lg:justify-end">
-                <Select
-                  value={status}
-                  onValueChange={(value) =>
-                    setStatus(value as InventoryStockFilter)
-                  }
-                >
-                  <SelectTrigger
-                    size="sm"
-                    className="h-9! border-border bg-card"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STOCK_FILTERS.map((filter) => (
-                      <SelectItem key={filter.value} value={filter.value}>
-                        {filter.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 self-start border-border bg-card lg:hidden"
+                aria-expanded={showMobileFilters}
+                aria-controls="inventory-filters"
+                onClick={() => setShowMobileFilters((current) => !current)}
+              >
+                <HugeiconsIcon icon={FilterHorizontalIcon} className="size-4" />
+                Filtreler
+                {advancedFilterCount > 0 ? (
+                  <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+                    {advancedFilterCount}
+                  </span>
+                ) : null}
+              </Button>
 
-                <Select value={provider} onValueChange={setProvider}>
-                  <SelectTrigger
-                    size="sm"
-                    className="h-9! border-border bg-card"
+              <div
+                id="inventory-filters"
+                aria-label="Stok filtreleri"
+                className={cn(
+                  "grid gap-3 rounded-xl border border-border bg-card p-3 min-[480px]:grid-cols-2 lg:flex lg:flex-wrap lg:items-end lg:justify-end lg:gap-2 lg:border-0 lg:bg-transparent lg:p-0",
+                  !showMobileFilters && "hidden lg:flex"
+                )}
+              >
+                <div className="min-w-0 lg:w-36">
+                  <span className="mb-1.5 block text-[11px] font-medium text-muted-foreground lg:sr-only">
+                    Durum
+                  </span>
+                  <Select
+                    value={status}
+                    onValueChange={(value) =>
+                      setStatus(value as InventoryStockFilter)
+                    }
                   >
-                    <SelectValue placeholder="Tüm kanallar" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Tüm kanallar</SelectItem>
-                    {initialPage.providers.map((providerKey) => (
-                      <SelectItem key={providerKey} value={providerKey}>
-                        {getProviderName(providerKey)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    <SelectTrigger
+                      aria-label="Stok durumu"
+                      className="h-10! w-full rounded-lg border-border bg-background lg:bg-card"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STOCK_FILTERS.map((filter) => (
+                        <SelectItem key={filter.value} value={filter.value}>
+                          {filter.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <Select
-                  value={String(lowStockThreshold)}
-                  onValueChange={(value) => setLowStockThreshold(Number(value))}
-                >
-                  <SelectTrigger
-                    size="sm"
-                    className="h-9! border-border bg-card"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[3, 5, 10, 20].map((value) => (
-                      <SelectItem key={value} value={String(value)}>
-                        Az stok ≤ {value}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="min-w-0 lg:w-40">
+                  <span className="mb-1.5 block text-[11px] font-medium text-muted-foreground lg:sr-only">
+                    Pazaryeri
+                  </span>
+                  <Select value={provider} onValueChange={setProvider}>
+                    <SelectTrigger
+                      aria-label="Pazaryeri"
+                      className="h-10! w-full rounded-lg border-border bg-background lg:bg-card"
+                    >
+                      <SelectValue placeholder="Tüm kanallar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">Tüm kanallar</SelectItem>
+                      {initialPage.providers.map((providerKey) => (
+                        <SelectItem key={providerKey} value={providerKey}>
+                          {getProviderName(providerKey)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <Select
-                  value={sort}
-                  onValueChange={(value) => setSort(value as InventorySort)}
-                >
-                  <SelectTrigger
-                    size="sm"
-                    className="h-9! min-w-40 border-border bg-card"
-                    aria-label="Stokları sırala"
+                <div className="min-w-0 lg:w-36">
+                  <span className="mb-1.5 block text-[11px] font-medium text-muted-foreground lg:sr-only">
+                    Az stok eşiği
+                  </span>
+                  <Select
+                    value={String(lowStockThreshold)}
+                    onValueChange={(value) =>
+                      setLowStockThreshold(Number(value))
+                    }
                   >
-                    <HugeiconsIcon
-                      icon={ArrowUpDownIcon}
-                      className="size-3.5 text-muted-foreground"
-                    />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent align="end">
-                    {SORT_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    <SelectTrigger
+                      aria-label="Az stok eşiği"
+                      className="h-10! w-full rounded-lg border-border bg-background lg:bg-card"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[3, 5, 10, 20].map((value) => (
+                        <SelectItem key={value} value={String(value)}>
+                          Az stok ≤ {value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="min-w-0 lg:w-48">
+                  <span className="mb-1.5 block text-[11px] font-medium text-muted-foreground lg:sr-only">
+                    Sıralama
+                  </span>
+                  <Select
+                    value={sort}
+                    onValueChange={(value) => setSort(value as InventorySort)}
+                  >
+                    <SelectTrigger
+                      aria-label="Stokları sırala"
+                      className="h-10! w-full rounded-lg border-border bg-background lg:bg-card"
+                    >
+                      <HugeiconsIcon
+                        icon={ArrowUpDownIcon}
+                        className="size-3.5 text-muted-foreground"
+                      />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent align="end">
+                      {SORT_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-xs text-muted-foreground tabular-nums">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
+              <p
+                aria-live="polite"
+                className="text-xs text-muted-foreground tabular-nums"
+              >
                 {products.length.toLocaleString("tr-TR")} /{" "}
                 {page.total.toLocaleString("tr-TR")} ürün ·{" "}
                 {page.items.length.toLocaleString("tr-TR")} /{" "}
                 {page.variantTotal.toLocaleString("tr-TR")} varyant
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {activeFilterCount > 0 ? (
                   <Button
                     type="button"
@@ -581,7 +658,7 @@ export function InventoryManagement({
             ) : page.items.length === 0 ? (
               <NoInventoryResults onReset={resetFilters} />
             ) : (
-              <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+              <div className="space-y-3 sm:space-y-0 sm:overflow-hidden sm:rounded-xl sm:border sm:border-border sm:bg-card sm:shadow-xs">
                 <div className="hidden grid-cols-[minmax(0,1fr)_8.5rem_5rem] gap-3 border-b border-border bg-muted/30 px-5 py-2.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase sm:grid">
                   <span className="pl-23">Ürün</span>
                   <span>Durum</span>
@@ -670,7 +747,7 @@ function EmptyInventory({
           ? "Bağlı pazaryerindeki ürünleri senkronize ederek stok kayıtlarını oluşturun."
           : "Stokları takip etmek için önce Trendyol veya Hepsiburada bağlantısı kurun."}
       </p>
-      <Button asChild variant="outline" className="mt-5">
+      <Button asChild variant="outline" className="mt-5 w-full sm:w-auto">
         <Link href={APP_ROUTES.dashboard.channels.root}>
           Satış kanallarına git
         </Link>
@@ -695,7 +772,7 @@ function NoInventoryResults({ onReset }: { onReset: () => void }) {
         type="button"
         variant="outline"
         size="sm"
-        className="mt-4"
+        className="mt-4 w-full sm:w-auto"
         onClick={onReset}
       >
         Filtreleri temizle
@@ -825,13 +902,7 @@ function createInventoryFilterKey(
   provider: string,
   lowStockThreshold: number
 ) {
-  return [
-    storeId,
-    query.trim(),
-    status,
-    provider,
-    lowStockThreshold,
-  ].join("|")
+  return [storeId, query.trim(), status, provider, lowStockThreshold].join("|")
 }
 
 function updateUrl(filters: InventoryFilters, pathname: string) {
@@ -871,19 +942,20 @@ function SyncStatusNotice({
   error: string | null
   message: string | null
 }) {
-  const progress = total > 0 ? Math.round((completed / total) * 100) : 8
+  const progress =
+    total > 0 ? Math.min(Math.round((completed / total) * 100), 100) : 8
 
   return (
     <div
       className={cn(
-        "mt-5 overflow-hidden rounded-lg border px-4 py-3",
+        "mt-5 overflow-hidden rounded-xl border px-4 py-3.5",
         error
           ? "border-destructive/25 bg-destructive/5"
           : "border-primary/15 bg-primary/5"
       )}
       aria-live="polite"
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <span
           className={cn(
             "flex size-8 shrink-0 items-center justify-center rounded-md",
@@ -893,7 +965,13 @@ function SyncStatusNotice({
           )}
         >
           <HugeiconsIcon
-            icon={isSyncing ? RefreshIcon : error ? Clock01Icon : Package01Icon}
+            icon={
+              isSyncing
+                ? RefreshIcon
+                : error
+                  ? AlertCircleIcon
+                  : CheckmarkCircle01Icon
+            }
             className={cn("size-4", isSyncing && "animate-spin")}
           />
         </span>

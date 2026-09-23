@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
   AiSparklesIcon,
   AlertCircleIcon,
+  ArrowDown01Icon,
   ArrowRight01Icon,
   RefreshIcon,
   Settings02Icon,
@@ -124,7 +125,7 @@ export function AnalyticsClient({
 
   return (
     <div className="mx-auto w-full max-w-[1440px] space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-      <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
+      <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
         <div className="min-w-0">
           <p className="mb-1.5 truncate text-xs font-medium text-muted-foreground">
             {activeStore.name}
@@ -132,19 +133,30 @@ export function AnalyticsClient({
           <h1 className="text-2xl font-semibold tracking-tight">
             AI Performansı
           </h1>
-          <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
+          <p className="mt-1.5 max-w-2xl text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">
             AI yanıtlarının ne kadar kullanıldığını, nerede insan kontrolü
             gerektiğini ve otomasyonun sonucunu görün.
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="grid grid-cols-[minmax(0,1fr)_2.5rem] gap-2 sm:flex sm:shrink-0 sm:items-center">
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="h-10 w-full bg-card sm:h-9 sm:w-auto"
+          >
+            <Link href={APP_ROUTES.dashboard.automations.root}>
+              <HugeiconsIcon icon={Settings02Icon} className="size-4" />
+              Yanıt ayarları
+            </Link>
+          </Button>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 type="button"
                 variant="outline"
                 size="icon-sm"
-                className="size-9 bg-card"
+                className="size-10 bg-card sm:size-9"
                 aria-label="Performans verilerini güncelle"
                 disabled={pending}
                 onClick={refreshPerformance}
@@ -160,17 +172,66 @@ export function AnalyticsClient({
             </TooltipTrigger>
             <TooltipContent>Verileri güncelle</TooltipContent>
           </Tooltip>
-          <Button asChild size="sm" variant="outline" className="bg-card">
-            <Link href={APP_ROUTES.dashboard.automations.root}>
-              <HugeiconsIcon icon={Settings02Icon} className="size-3.5" />
-              Yanıt ayarları
-            </Link>
-          </Button>
         </div>
       </header>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-5">
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="space-y-3 border-b border-border pb-5 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:space-y-0">
+        <div className="grid grid-cols-2 gap-2 sm:hidden">
+          <label className="min-w-0">
+            <span className="block text-[11px] font-medium text-muted-foreground">
+              Dönem
+            </span>
+            <span className="relative mt-1 block">
+              <select
+                value={range}
+                disabled={pending}
+                onChange={(event) =>
+                  changeFilters({
+                    range: event.target.value as AiPerformanceRange,
+                  })
+                }
+                className="h-10 w-full min-w-0 appearance-none rounded-lg border border-border bg-card py-2 pr-8 pl-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+              >
+                {ranges.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <HugeiconsIcon
+                icon={ArrowDown01Icon}
+                className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+              />
+            </span>
+          </label>
+          <label className="min-w-0">
+            <span className="block text-[11px] font-medium text-muted-foreground">
+              Pazaryeri
+            </span>
+            <span className="relative mt-1 block">
+              <select
+                value={provider}
+                disabled={pending}
+                onChange={(event) =>
+                  changeFilters({ provider: event.target.value })
+                }
+                className="h-10 w-full min-w-0 appearance-none rounded-lg border border-border bg-card py-2 pr-8 pl-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+              >
+                <option value="ALL">Tüm pazaryerleri</option>
+                {providers.map((key) => (
+                  <option key={key} value={key}>
+                    {getProviderName(key)}
+                  </option>
+                ))}
+              </select>
+              <HugeiconsIcon
+                icon={ArrowDown01Icon}
+                className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+              />
+            </span>
+          </label>
+        </div>
+        <div className="hidden flex-wrap items-center gap-3 sm:flex">
           <div
             role="group"
             aria-label="Performans dönemi"
@@ -221,7 +282,7 @@ export function AnalyticsClient({
           </Select>
         </div>
         {performance ? (
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-[11px] leading-5 text-muted-foreground sm:ml-auto">
             {performance.from
               ? `${dateFormatter.format(new Date(performance.from))} – ${dateFormatter.format(new Date(performance.generatedAt))}`
               : "Tüm kayıtlar"}{" "}
@@ -269,10 +330,10 @@ export function AnalyticsClient({
             <PerformanceOverview data={performance} />
             <AiQuotaIndicator className="h-full" />
           </div>
-          <section className="space-y-4">
+          <section className="space-y-3 sm:space-y-4">
             <SectionHeading
               title="Öne çıkan metrikler"
-              description="AI üretim hacmini, müşteriye ulaşan yanıtları ve kullanıcı kontrolü ihtiyacını birlikte değerlendirin."
+              description="AI üretimi, gönderim ve inceleme sonuçları."
             />
             <AnalyticsSummary data={performance} />
           </section>

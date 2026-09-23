@@ -64,40 +64,40 @@ export function DashboardMetrics({ data }: { data: DashboardOverview }) {
   return (
     <section
       aria-label="Mağaza istatistikleri"
-      className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+      className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4"
     >
       {items.map((item) => (
         <Link
           key={item.label}
           href={item.href}
-          className="group min-w-0 rounded-xl border border-border bg-card p-5 transition-colors outline-none hover:border-primary/35 focus-visible:ring-2 focus-visible:ring-ring"
+          className="group flex min-w-0 flex-col rounded-xl border border-border bg-card p-3 transition-colors outline-none hover:border-primary/35 focus-visible:ring-2 focus-visible:ring-ring sm:p-5"
         >
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium text-muted-foreground">
+          <div className="flex items-start justify-between gap-2 sm:items-center sm:gap-3">
+            <span className="min-w-0 text-[11px] leading-4 font-medium text-muted-foreground sm:text-sm sm:leading-5">
               {item.label}
             </span>
             <HugeiconsIcon
               icon={item.icon}
-              className={`size-4.5 shrink-0 ${item.tone}`}
+              className={`size-4 shrink-0 sm:size-4.5 ${item.tone}`}
             />
           </div>
-          <div className="mt-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 pb-3 sm:mt-4 sm:gap-x-3 sm:gap-y-1 sm:pb-4">
             <span
-              className={`text-3xl font-semibold tracking-tight tabular-nums ${item.tone}`}
+              className={`text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl ${item.tone}`}
             >
               {number.format(item.value)}
             </span>
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-[10px] text-muted-foreground sm:text-[11px]">
               {item.scope}
             </span>
           </div>
-          <div className="mt-4 flex items-center justify-between gap-2 border-t border-border/70 pt-3">
-            <p className="text-[11px] leading-5 text-muted-foreground">
+          <div className="mt-auto flex items-start justify-between gap-1.5 border-t border-border/70 pt-2.5 sm:items-center sm:gap-2 sm:pt-3">
+            <p className="line-clamp-2 text-[10px] leading-4 text-muted-foreground sm:line-clamp-none sm:text-[11px] sm:leading-5">
               {item.detail}
             </p>
             <HugeiconsIcon
               icon={ArrowRight01Icon}
-              className="size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+              className="hidden size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 sm:block"
             />
           </div>
         </Link>

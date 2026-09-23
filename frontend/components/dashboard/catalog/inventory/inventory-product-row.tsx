@@ -58,16 +58,20 @@ export function InventoryProductRow({
   )
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-3 py-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_8.5rem_5rem] sm:px-4 lg:px-5">
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className="overflow-hidden rounded-xl border border-border bg-card shadow-xs sm:rounded-none sm:border-0 sm:border-b sm:shadow-none sm:last:border-b-0"
+    >
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 px-4 py-3.5 sm:grid-cols-[minmax(0,1fr)_8.5rem_5rem] sm:py-3 lg:px-5">
+        <div className="col-span-2 flex min-w-0 items-center gap-2 sm:col-span-1 sm:gap-3">
           <CollapsibleTrigger asChild>
             <Button
               type="button"
               variant="ghost"
               size="icon-sm"
               aria-label={open ? "Varyantları kapat" : "Varyantları göster"}
-              className="shrink-0 text-muted-foreground"
+              className="size-10 shrink-0 text-muted-foreground sm:size-8.5"
             >
               <HugeiconsIcon
                 icon={ChevronRightIcon}
@@ -97,7 +101,7 @@ export function InventoryProductRow({
                 .filter(Boolean)
                 .join(" · ") || "Kategori bilgisi bulunmuyor"}
             </span>
-            <span className="mt-1 flex min-w-0 items-center gap-2 text-[10px] text-muted-foreground">
+            <span className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
               <span className="flex min-w-0 items-center gap-1.5">
                 <ProviderLogoStack
                   providers={product.providers}
@@ -122,20 +126,26 @@ export function InventoryProductRow({
           </button>
         </div>
 
-        <div className="justify-self-end sm:justify-self-start">
+        <div
+          className="col-span-2 h-px bg-border/70 sm:hidden"
+          aria-hidden="true"
+        />
+
+        <div className="sm:justify-self-start">
           <StockStatusBadge availability={availability} />
         </div>
 
-        <div className="col-span-2 flex items-center justify-between pl-11 text-xs sm:col-span-1 sm:block sm:pl-0 sm:text-sm">
-          <span className="text-muted-foreground sm:hidden">Toplam stok</span>
+        <div className="flex items-baseline justify-end gap-1 text-xs sm:block sm:text-sm">
+          <span className="text-muted-foreground sm:hidden">Stok</span>
           <span className="font-semibold text-foreground tabular-nums">
             {totalStock.toLocaleString("tr-TR")}
           </span>
+          <span className="text-muted-foreground sm:hidden">adet</span>
         </div>
       </div>
 
       <CollapsibleContent>
-        <div className="border-b border-border bg-muted/20 px-3 py-1.5 sm:px-4 lg:px-5">
+        <div className="border-t border-border bg-muted/20 px-4 py-1 sm:px-4 lg:px-5">
           {product.variants.map((variant, index) => {
             const variantAvailability = getVariantAvailability(
               variant,
@@ -152,9 +162,9 @@ export function InventoryProductRow({
             return (
               <div
                 key={variant.id}
-                className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 py-2.5 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_8.5rem_5rem]"
+                className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 border-b border-border/70 py-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_8.5rem_5rem] sm:py-2.5"
               >
-                <div className="flex min-w-0 items-center gap-3 pl-11 sm:pl-12">
+                <div className="col-span-2 flex min-w-0 items-center gap-2 pl-3 sm:col-span-1 sm:gap-3 sm:pl-12">
                   <span
                     className="h-px w-3 shrink-0 bg-border"
                     aria-hidden="true"
@@ -166,7 +176,7 @@ export function InventoryProductRow({
                     <span className="mt-0.5 block truncate font-mono text-[10px] text-muted-foreground">
                       {variant.sku}
                     </span>
-                    <span className="mt-0.5 block truncate text-[10px] text-muted-foreground">
+                    <span className="mt-0.5 block text-[10px] text-muted-foreground sm:truncate">
                       {variant.providers.map(getProviderName).join(", ") ||
                         "Kanal bilgisi yok"}
                       {variant.freshness !== "FRESH"
@@ -176,7 +186,7 @@ export function InventoryProductRow({
                     {variant.channelStocks.length > 1 ? (
                       <span
                         className={cn(
-                          "mt-1 block truncate text-[10px]",
+                          "mt-1 block text-[10px] sm:truncate",
                           variant.hasStockConflict
                             ? "font-medium text-amber-600 dark:text-amber-400"
                             : "text-muted-foreground"
@@ -194,15 +204,16 @@ export function InventoryProductRow({
                   </span>
                 </div>
 
-                <div className="justify-self-end sm:justify-self-start">
+                <div className="pl-3 sm:pl-0">
                   <StockStatusBadge availability={variantAvailability} />
                 </div>
 
-                <div className="col-span-2 flex items-center justify-between pl-11 text-xs sm:col-span-1 sm:block sm:pl-0 sm:text-sm">
+                <div className="flex items-baseline justify-end gap-1 text-xs sm:block sm:text-sm">
                   <span className="text-muted-foreground sm:hidden">Stok</span>
                   <span className="font-medium text-foreground tabular-nums">
                     {Math.max(variant.stock, 0).toLocaleString("tr-TR")}
                   </span>
+                  <span className="text-muted-foreground sm:hidden">adet</span>
                 </div>
               </div>
             )
@@ -288,7 +299,7 @@ function InventoryThumbnail({
     imageUrl?.startsWith("/") || imageUrl?.startsWith("https://")
 
   return (
-    <span className="relative flex size-11 shrink-0 overflow-hidden rounded-lg border border-border bg-muted sm:size-12">
+    <span className="relative flex size-10 shrink-0 overflow-hidden rounded-lg border border-border bg-muted sm:size-12">
       {imageUrl && supportedImageUrl && !failed ? (
         <Image
           src={imageUrl}

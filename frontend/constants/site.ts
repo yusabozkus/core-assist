@@ -1,4 +1,5 @@
 import {
+  AiBookIcon,
   Analytics01Icon,
   Clock01Icon,
   BoxesIcon,
@@ -23,6 +24,7 @@ export const APP_ROUTES = {
   checkout: "/checkout",
   admin: {
     root: "/admin",
+    notifications: "/admin/notifications",
     customers: "/admin/customers",
     customer: (workspaceId: string) => `/admin/customers/${workspaceId}`,
     support: "/admin/support",
@@ -76,9 +78,38 @@ export const APP_ROUTES = {
   },
 } as const
 
+export const MOBILE_DASHBOARD_TABS = [
+  {
+    label: "Genel",
+    href: APP_ROUTES.dashboard.root,
+    icon: DashboardSquare01Icon,
+  },
+  {
+    label: "Gelen",
+    href: APP_ROUTES.dashboard.inbox,
+    icon: InboxIcon,
+  },
+  {
+    label: "Ürünler",
+    href: APP_ROUTES.dashboard.catalog.products,
+    icon: Package01Icon,
+  },
+  {
+    label: "Stok",
+    href: APP_ROUTES.dashboard.catalog.inventory,
+    icon: BoxesIcon,
+  },
+  {
+    label: "Analiz",
+    href: APP_ROUTES.dashboard.analytics,
+    icon: Analytics01Icon,
+  },
+] as const
+
 export type DashboardNavigationSubItem = Readonly<{
   title: string
   url: string
+  icon?: IconSvgElement
   exact?: boolean
 }>
 
@@ -169,11 +200,13 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
             {
               title: "Yanıt Ayarları",
               url: APP_ROUTES.dashboard.automations.root,
+              icon: WorkflowSquare01Icon,
               exact: true,
             },
             {
               title: "Bilgi Tabanı",
               url: APP_ROUTES.dashboard.automations.knowledge,
+              icon: AiBookIcon,
             },
           ],
         },

@@ -4,12 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import {
-  ArrowRight01Icon,
-  CheckmarkCircle01Icon,
-  Notification01Icon,
-  RefreshIcon,
-} from "@hugeicons/core-free-icons"
+import { Notification01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { NotificationListItem } from "@/components/dashboard/notifications/notification-list-item"
@@ -27,7 +22,6 @@ import {
   getNotifications,
   getNotificationStreamUrl,
   getUnreadNotificationCount,
-  markAllNotificationsAsRead,
   markNotificationAsRead,
   NOTIFICATIONS_CHANGED_EVENT,
 } from "@/lib/api/notifications"
@@ -48,16 +42,15 @@ export function NotificationCenter({
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<AppNotification[]>([])
-  const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(false)
-  const [markingAll, setMarkingAll] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [unreadCount, setUnreadCount] = useState(0)
   const listRequestRef = useRef<AbortController | null>(null)
+  const openRef = useRef(false)
   const toastRequestsRef = useRef(new Set<AbortController>())
   const shownToastKeysRef = useRef(new Set<string>())
   const activeToastIdsRef = useRef(new Set<string | number>())
   const streamConnectedAtRef = useRef<number | null>(null)
-  const openRef = useRef(false)
 
   const refreshCount = useCallback(
     async (signal?: AbortSignal) => {
@@ -65,7 +58,7 @@ export function NotificationCenter({
         const result = await getUnreadNotificationCount(storeId, signal)
         if (!signal?.aborted) setUnreadCount(result.count)
       } catch {
-        // Header sayacı geçici API hatalarında son bilinen değeri korur.
+        return
       }
     },
     [storeId]
@@ -84,8 +77,7 @@ export function NotificationCenter({
         limit: 8,
         signal: controller.signal,
       })
-      if (controller.signal.aborted) return
-      setItems(result.items)
+      if (!controller.signal.aborted) setItems(result.items)
     } catch {
       if (!controller.signal.aborted) {
         setError("Bildirimler şu anda alınamıyor.")
@@ -98,22 +90,32 @@ export function NotificationCenter({
     }
   }, [storeId])
 
+  function handleOpenChange(nextOpen: boolean) {
+    openRef.current = nextOpen
+    setOpen(nextOpen)
+    if (nextOpen) void refreshList()
+    else listRequestRef.current?.abort()
+  }
+
   const handleSelect = useCallback(
     (notification: AppNotification) => {
       if (!notification.readAt) {
-        const readAt = new Date().toISOString()
+        setUnreadCount((count) => Math.max(0, count - 1))
         setItems((current) =>
           current.map((item) =>
-            item.id === notification.id ? { ...item, readAt } : item
+            item.id === notification.id
+              ? { ...item, readAt: new Date().toISOString() }
+              : item
           )
         )
-        setUnreadCount((count) => Math.max(0, count - 1))
         void markNotificationAsRead(notification.id)
           .then(() => announceNotificationsChanged(storeId))
           .catch(() => void refreshCount())
       }
 
+      openRef.current = false
       setOpen(false)
+      listRequestRef.current?.abort()
       router.push(getSafeActionUrl(notification.actionUrl, scope))
     },
     [refreshCount, router, scope, storeId]
@@ -194,7 +196,7 @@ export function NotificationCenter({
           )
         }
       } catch {
-        // Toast alÄ±namasa bile sayaÃ§ ve bildirim merkezi Ã§alÄ±ÅŸmaya devam eder.
+        return
       } finally {
         toastRequestsRef.current.delete(controller)
       }
@@ -222,7 +224,7 @@ export function NotificationCenter({
     function handleNotificationsChanged(event: Event) {
       const changedStoreId = (event as CustomEvent<{ storeId?: string }>).detail
         ?.storeId
-      if (!changedStoreId || changedStoreId === storeId) {
+      if (!storeId || !changedStoreId || changedStoreId === storeId) {
         void refreshCount()
         if (openRef.current) void refreshList()
       }
@@ -252,7 +254,7 @@ export function NotificationCenter({
           }
         }
       } catch {
-        // Geçersiz bir akış mesajı mevcut listeyi etkilemez.
+        return
       }
     }
 
@@ -281,177 +283,106 @@ export function NotificationCenter({
     }
   }, [refreshCount, refreshList, showCreatedNotifications, storeId])
 
-  function handleOpenChange(nextOpen: boolean) {
-    openRef.current = nextOpen
-    setOpen(nextOpen)
-    if (nextOpen) void refreshList()
-  }
-
-  async function handleMarkAllAsRead() {
-    if (markingAll || unreadCount === 0) return
-    setMarkingAll(true)
-    setError(null)
-
-    try {
-      await markAllNotificationsAsRead(storeId)
-      const readAt = new Date().toISOString()
-      setItems((current) =>
-        current.map((notification) => ({ ...notification, readAt }))
-      )
-      setUnreadCount(0)
-      announceNotificationsChanged(storeId)
-    } catch {
-      setError("Bildirimler okundu olarak işaretlenemedi.")
-    } finally {
-      setMarkingAll(false)
-    }
-  }
-
   if (headless) return null
 
   const countLabel = unreadCount > 99 ? "99+" : unreadCount.toString()
+  const href =
+    scope === "admin"
+      ? APP_ROUTES.admin.notifications
+      : APP_ROUTES.dashboard.settings.notifications
+  const triggerClassName = cn(
+    "relative flex size-10 shrink-0 items-center justify-center rounded-lg border text-muted-foreground transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:size-9",
+    scope === "admin"
+      ? "border-transparent hover:bg-muted/80 hover:text-foreground"
+      : "border-border bg-card shadow-xs hover:bg-muted/70 hover:text-foreground"
+  )
+  const triggerLabel = unreadCount
+    ? `Bildirimler, ${unreadCount} okunmamış bildirim`
+    : "Bildirimler"
+  const badge =
+    unreadCount > 0 ? (
+      <span className="absolute -top-1.5 -right-1.5 flex min-w-4.5 items-center justify-center rounded-full bg-destructive px-1 text-[9px] leading-4.5 font-bold text-white ring-2 ring-background">
+        {countLabel}
+      </span>
+    ) : null
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-sm"
-          className={cn(
-            "relative",
-            scope === "admin"
-              ? "border-0 bg-transparent text-muted-foreground shadow-none hover:bg-muted/80 hover:text-foreground"
-              : "bg-card shadow-xs"
-          )}
-          aria-label={
-            unreadCount
-              ? `Bildirimler, ${unreadCount} okunmamış bildirim`
-              : "Bildirimler"
-          }
-        >
-          <HugeiconsIcon icon={Notification01Icon} className="size-4" />
-          {unreadCount > 0 ? (
-            <span className="absolute -top-1.5 -right-1.5 flex min-w-4.5 items-center justify-center rounded-full bg-destructive px-1 text-[9px] leading-4.5 font-bold text-white ring-2 ring-background">
-              {countLabel}
-            </span>
-          ) : null}
-        </Button>
-      </PopoverTrigger>
-
-      <PopoverContent
-        align="end"
-        sideOffset={8}
-        className="w-[calc(100vw-1.5rem)] max-w-[25rem] gap-0 overflow-hidden rounded-2xl p-0"
+    <>
+      <Link
+        href={href}
+        className={cn(triggerClassName, "lg:hidden")}
+        aria-label={triggerLabel}
+        title="Bildirimler"
       >
-        <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3.5">
-          <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-foreground">
-              Bildirimler
-            </h2>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">
-              {unreadCount
-                ? `${unreadCount} okunmamış bildiriminiz var`
-                : "Yeni bildiriminiz yok"}
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2.5 text-[11px]"
-            disabled={markingAll || unreadCount === 0}
-            onClick={() => void handleMarkAllAsRead()}
-          >
-            <HugeiconsIcon
-              icon={markingAll ? RefreshIcon : CheckmarkCircle01Icon}
-              className={cn("size-3.5", markingAll && "animate-spin")}
-            />
-            Tümünü okundu yap
-          </Button>
-        </div>
-
-        <div className="themed-scrollbar max-h-[min(28rem,calc(100vh-10rem))] overflow-y-auto">
-          {loading && items.length === 0 ? (
-            <NotificationListSkeleton compact count={4} />
-          ) : error && items.length === 0 ? (
-            <div className="flex min-h-52 flex-col items-center justify-center px-6 text-center">
-              <span className="flex size-10 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-                <HugeiconsIcon icon={Notification01Icon} className="size-4.5" />
-              </span>
-              <p className="mt-3 text-sm font-medium">Bildirimler alınamadı</p>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Bağlantınızı kontrol edip tekrar deneyin.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-4"
-                onClick={() => void refreshList()}
-              >
-                Tekrar dene
-              </Button>
-            </div>
-          ) : items.length === 0 ? (
-            <div className="flex min-h-52 flex-col items-center justify-center px-6 text-center">
-              <span className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <HugeiconsIcon icon={Notification01Icon} className="size-4.5" />
-              </span>
-              <p className="mt-3 text-sm font-medium">Her şey yolunda</p>
-              <p className="mt-1 max-w-64 text-xs leading-5 text-muted-foreground">
-                {scope === "admin"
-                  ? "İncelemeniz gereken yeni bir yönetim olayı bulunmuyor."
-                  : "İncelemeniz gereken yeni bir mağaza olayı bulunmuyor."}
-              </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-border/70">
-              {items.map((notification) => (
-                <NotificationListItem
-                  key={notification.id}
-                  notification={notification}
-                  compact
-                  onSelect={handleSelect}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="border-t border-border bg-muted/25 p-2">
-          <Button
-            asChild
-            variant="ghost"
-            size="sm"
-            className="w-full justify-between"
-          >
-            <Link
-              href={
-                scope === "admin"
-                  ? APP_ROUTES.admin.support
-                  : APP_ROUTES.dashboard.settings.notifications
-              }
-              onClick={() => setOpen(false)}
+        <HugeiconsIcon icon={Notification01Icon} className="size-4" />
+        {badge}
+      </Link>
+      <div className="hidden lg:block">
+        <Popover open={open} onOpenChange={handleOpenChange}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={triggerClassName}
+              aria-label={triggerLabel}
             >
-              {scope === "admin"
-                ? "Destek taleplerine git"
-                : "Tüm bildirimleri görüntüle"}
-              <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
-            </Link>
-          </Button>
-        </div>
-
-        {error && items.length > 0 ? (
-          <p
-            className="border-t border-border px-4 py-2 text-[11px] text-destructive"
-            aria-live="polite"
+              <HugeiconsIcon icon={Notification01Icon} className="size-4" />
+              {badge}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="end"
+            sideOffset={8}
+            className="w-[25rem] gap-0 overflow-hidden rounded-2xl p-0"
           >
-            {error}
-          </p>
-        ) : null}
-      </PopoverContent>
-    </Popover>
+            <div className="border-b border-border px-4 py-3.5">
+              <h2 className="text-sm font-semibold">Bildirimler</h2>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                {unreadCount
+                  ? `${unreadCount} okunmamış bildiriminiz var`
+                  : "Yeni bildiriminiz yok"}
+              </p>
+            </div>
+            <div className="themed-scrollbar max-h-[min(28rem,calc(100vh-10rem))] divide-y divide-border overflow-y-auto">
+              {loading && items.length === 0 ? (
+                <NotificationListSkeleton count={4} />
+              ) : error && items.length === 0 ? (
+                <div className="flex min-h-40 flex-col items-center justify-center gap-3 px-5 text-center">
+                  <p className="text-xs text-muted-foreground">{error}</p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void refreshList()}
+                  >
+                    Tekrar dene
+                  </Button>
+                </div>
+              ) : items.length === 0 ? (
+                <div className="flex min-h-40 items-center justify-center px-5 text-center text-xs text-muted-foreground">
+                  Henüz bildiriminiz yok.
+                </div>
+              ) : (
+                items.map((notification) => (
+                  <NotificationListItem
+                    key={notification.id}
+                    notification={notification}
+                    list
+                    showStore={scope === "admin"}
+                    onSelect={handleSelect}
+                  />
+                ))
+              )}
+            </div>
+            <Link
+              href={href}
+              onClick={() => handleOpenChange(false)}
+              className="flex h-11 items-center justify-center border-t border-border text-xs font-medium text-primary transition-colors hover:bg-muted/50"
+            >
+              Tüm bildirimleri görüntüle
+            </Link>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </>
   )
 }
 
@@ -459,27 +390,18 @@ function getSafeActionUrl(
   actionUrl: string | null,
   scope: "dashboard" | "admin"
 ) {
-  return isInternalNotificationUrl(actionUrl, scope)
-    ? actionUrl
-    : scope === "admin"
-      ? APP_ROUTES.admin.support
-      : APP_ROUTES.dashboard.settings.notifications
-}
-
-function isInternalNotificationUrl(
-  actionUrl: string | null,
-  scope: "dashboard" | "admin"
-): actionUrl is string {
   if (scope === "admin") {
-    return Boolean(
-      actionUrl && (actionUrl === "/admin" || actionUrl.startsWith("/admin/"))
-    )
+    return actionUrl &&
+      (actionUrl === "/admin" || actionUrl.startsWith("/admin/"))
+      ? actionUrl
+      : APP_ROUTES.admin.notifications
   }
-  return Boolean(
-    actionUrl &&
+
+  return actionUrl &&
     (actionUrl === "/dashboard" ||
       actionUrl.startsWith("/dashboard/") ||
       actionUrl === "/billing" ||
       actionUrl.startsWith("/billing/"))
-  )
+    ? actionUrl
+    : APP_ROUTES.dashboard.settings.notifications
 }

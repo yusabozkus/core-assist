@@ -118,6 +118,14 @@ export class NotificationsController {
     return this.notifications.markAllAsRead(user.id, body);
   }
 
+  @Delete('all')
+  removeAll(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: MarkAllNotificationsReadDto,
+  ) {
+    return this.notifications.removeAll(user.id, body);
+  }
+
   @Patch(':notificationId/read')
   markAsRead(
     @CurrentUser() user: AuthenticatedUser,

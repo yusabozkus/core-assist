@@ -13,13 +13,15 @@ import type { AppNotification } from "@/types/notification"
 
 export function NotificationListItem({
   notification,
-  compact = false,
+  list = false,
+  showStore = false,
   deleting = false,
   onSelect,
   onDelete,
 }: {
   notification: AppNotification
-  compact?: boolean
+  list?: boolean
+  showStore?: boolean
   deleting?: boolean
   onSelect: (notification: AppNotification) => void
   onDelete?: (notification: AppNotification) => void
@@ -32,10 +34,13 @@ export function NotificationListItem({
     <article
       className={cn(
         "group relative flex min-w-0 items-start gap-3 transition-colors",
-        compact ? "px-4 py-3.5" : "rounded-xl border border-border px-4 py-4",
+        list
+          ? "px-4 py-4 sm:px-5"
+          : "rounded-xl border border-border px-4 py-4",
         unread ? "bg-primary/[0.045]" : "bg-card",
-        compact && "hover:bg-muted/55",
-        !compact && "hover:border-foreground/15 hover:bg-muted/25"
+        list
+          ? "hover:bg-muted/45"
+          : "hover:border-foreground/15 hover:bg-muted/25"
       )}
     >
       <button
@@ -48,7 +53,7 @@ export function NotificationListItem({
       <span
         className={cn(
           "pointer-events-none relative mt-0.5 flex shrink-0 items-center justify-center rounded-lg",
-          compact ? "size-8" : "size-9",
+          list ? "size-10 sm:size-9" : "size-9",
           severity.icon
         )}
       >
@@ -78,12 +83,20 @@ export function NotificationListItem({
         <p
           className={cn(
             "mt-1 text-xs leading-5 text-muted-foreground",
-            compact ? "line-clamp-2" : "line-clamp-3"
+            list ? "line-clamp-2 sm:line-clamp-3" : "line-clamp-3"
           )}
         >
           {notification.message}
         </p>
         <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+          {showStore && notification.store ? (
+            <>
+              <span className="font-medium text-foreground/75">
+                {notification.store.name}
+              </span>
+              <span aria-hidden="true">·</span>
+            </>
+          ) : null}
           <span>{details.label}</span>
           <span aria-hidden="true">·</span>
           <time dateTime={notification.lastOccurredAt}>
@@ -105,7 +118,7 @@ export function NotificationListItem({
           size="icon-sm"
           disabled={deleting}
           onClick={() => onDelete(notification)}
-          className="relative -mr-1 size-8 shrink-0 text-muted-foreground opacity-100 hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
+          className="relative -mr-1 size-9 shrink-0 text-muted-foreground opacity-100 hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
           aria-label="Bildirimi sil"
         >
           <HugeiconsIcon

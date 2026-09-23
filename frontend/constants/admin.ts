@@ -4,6 +4,7 @@ import {
   CustomerSupportIcon,
   DashboardSquare01Icon,
   Mail01Icon,
+  Notification01Icon,
   RefreshIcon,
   Settings02Icon,
   ShieldCheckIcon,
@@ -85,11 +86,7 @@ export const ADMIN_NAVIGATION: ReadonlyArray<AdminNavigationItem> = [
 export const ADMIN_NAVIGATION_GROUPS: ReadonlyArray<AdminNavigationGroup> = [
   {
     label: "Yönetim",
-    items: [
-      ADMIN_NAVIGATION[0],
-      ADMIN_NAVIGATION[1],
-      ADMIN_NAVIGATION[4],
-    ],
+    items: [ADMIN_NAVIGATION[0], ADMIN_NAVIGATION[1], ADMIN_NAVIGATION[4]],
   },
   {
     label: "Destek ve İletişim",
@@ -108,12 +105,24 @@ export const ADMIN_ACCOUNT_NAVIGATION_ITEM: AdminNavigationItem = {
   icon: ShieldCheckIcon,
 }
 
+export const ADMIN_NOTIFICATIONS_NAVIGATION_ITEM: AdminNavigationItem = {
+  title: "Bildirimler",
+  description: "Yönetim uyarıları ve destek gelişmeleri",
+  url: APP_ROUTES.admin.notifications,
+  icon: Notification01Icon,
+}
+
 export const ADMIN_SEARCH_NAVIGATION = [
   ...ADMIN_NAVIGATION,
+  ADMIN_NOTIFICATIONS_NAVIGATION_ITEM,
   ADMIN_ACCOUNT_NAVIGATION_ITEM,
 ] as const
 
 export function getAdminNavigationItem(pathname: string) {
+  if (pathname === APP_ROUTES.admin.notifications) {
+    return ADMIN_NOTIFICATIONS_NAVIGATION_ITEM
+  }
+
   if (pathname === APP_ROUTES.admin.account) {
     return ADMIN_ACCOUNT_NAVIGATION_ITEM
   }

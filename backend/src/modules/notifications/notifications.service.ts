@@ -382,6 +382,23 @@ export class NotificationsService {
     return { updated: updated.count };
   }
 
+  async removeAll(userId: string, body: MarkAllNotificationsReadDto) {
+    const deleted = await this.prisma.notification.deleteMany({
+      where: {
+        recipientUserId: userId,
+        ...(body.storeId
+          ? { OR: [{ storeId: body.storeId }, { storeId: null }] }
+          : {}),
+      },
+    });
+
+    if (deleted.count > 0) {
+      this.streamEvents.emit([userId], body.storeId ?? null, 'DELETED');
+    }
+
+    return { deleted: deleted.count };
+  }
+
   async remove(userId: string, notificationId: string) {
     const notification = await this.prisma.notification.findFirst({
       where: { id: notificationId, recipientUserId: userId },

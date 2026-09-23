@@ -76,6 +76,13 @@ export function deleteNotification(notificationId: string) {
   })
 }
 
+export function deleteAllNotifications(storeId?: string) {
+  return apiFetch<{ deleted: number }>("/notifications/all", {
+    method: "DELETE",
+    body: JSON.stringify({ storeId }),
+  })
+}
+
 export function getNotificationPreferences(
   storeId: string,
   signal?: AbortSignal

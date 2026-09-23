@@ -25,10 +25,12 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import {
   APP_ROUTES,
   DASHBOARD_NAVIGATION,
+  MOBILE_DASHBOARD_TABS,
   type DashboardNavigationItem,
 } from "@/constants/site"
 import { isPathActive } from "@/lib/utils"
@@ -43,6 +45,14 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   canManageBilling: boolean
 }
 
+const mobileTabRoutes = new Set<string>(
+  MOBILE_DASHBOARD_TABS.map((tab) => tab.href)
+)
+
+function isMobileOnlyTab(url: string) {
+  return url !== APP_ROUTES.dashboard.root && mobileTabRoutes.has(url)
+}
+
 export function AppSidebar({
   user,
   shops,
@@ -51,6 +61,8 @@ export function AppSidebar({
   ...props
 }: AppSidebarProps) {
   const pathname = usePathname()
+  const { setOpenMobile } = useSidebar()
+  const closeMobileMenu = () => setOpenMobile(false)
   const overview = DASHBOARD_NAVIGATION.overview
   const primaryItems = [overview, ...DASHBOARD_NAVIGATION.primaryItems]
   const activeShop = shops.find((shop) => shop.id === activeShopId)
@@ -87,6 +99,7 @@ export function AppSidebar({
                   >
                     <Link
                       href={settingsItem.url}
+                      onClick={closeMobileMenu}
                       aria-current={
                         pathname === settingsItem.url ? "page" : undefined
                       }
@@ -101,7 +114,13 @@ export function AppSidebar({
           </SidebarGroup>
         ) : (
           <>
-            <SidebarGroup>
+            <SidebarGroup
+              className={
+                primaryItems.every((item) => isMobileOnlyTab(item.url))
+                  ? "hidden md:flex"
+                  : undefined
+              }
+            >
               <SidebarMenu>
                 {primaryItems.map((item) => {
                   const isActive =
@@ -110,7 +129,14 @@ export function AppSidebar({
                       : isPathActive(pathname, item.url)
 
                   return (
-                    <SidebarMenuItem key={item.url}>
+                    <SidebarMenuItem
+                      key={item.url}
+                      className={
+                        isMobileOnlyTab(item.url)
+                          ? "hidden md:block"
+                          : undefined
+                      }
+                    >
                       <SidebarMenuButton
                         asChild
                         tooltip={item.title}
@@ -118,6 +144,7 @@ export function AppSidebar({
                       >
                         <Link
                           href={item.url}
+                          onClick={closeMobileMenu}
                           aria-current={isActive ? "page" : undefined}
                         >
                           <HugeiconsIcon strokeWidth={2} icon={item.icon} />
@@ -131,7 +158,14 @@ export function AppSidebar({
             </SidebarGroup>
 
             {DASHBOARD_NAVIGATION.navGroups.map((group) => (
-              <SidebarGroup key={group.label}>
+              <SidebarGroup
+                key={group.label}
+                className={
+                  group.items.every((item) => isMobileOnlyTab(item.url))
+                    ? "hidden md:flex"
+                    : undefined
+                }
+              >
                 <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
                 <SidebarMenu>
                   {group.items.map((item) => {
@@ -145,17 +179,60 @@ export function AppSidebar({
 
                     if (item.items) {
                       return (
-                        <CollapsibleNavigationItem
-                          key={`${item.title}-${pathname}`}
-                          item={item}
-                          pathname={pathname}
-                          isActive={isActive}
-                        />
+                        <React.Fragment key={`${item.title}-${pathname}`}>
+                          {item.items.map((subItem) => {
+                            const isSubItemActive = isPathActive(
+                              pathname,
+                              subItem.url,
+                              subItem.exact
+                            )
+
+                            return (
+                              <SidebarMenuItem
+                                key={subItem.url}
+                                className="md:hidden"
+                              >
+                                <SidebarMenuButton
+                                  asChild
+                                  tooltip={subItem.title}
+                                  isActive={isSubItemActive}
+                                >
+                                  <Link
+                                    href={subItem.url}
+                                    onClick={closeMobileMenu}
+                                    aria-current={
+                                      isSubItemActive ? "page" : undefined
+                                    }
+                                  >
+                                    <HugeiconsIcon
+                                      strokeWidth={2}
+                                      icon={subItem.icon ?? item.icon}
+                                    />
+                                    <span>{subItem.title}</span>
+                                  </Link>
+                                </SidebarMenuButton>
+                              </SidebarMenuItem>
+                            )
+                          })}
+                          <CollapsibleNavigationItem
+                            item={item}
+                            pathname={pathname}
+                            isActive={isActive}
+                            onNavigate={closeMobileMenu}
+                          />
+                        </React.Fragment>
                       )
                     }
 
                     return (
-                      <SidebarMenuItem key={item.title}>
+                      <SidebarMenuItem
+                        key={item.title}
+                        className={
+                          isMobileOnlyTab(item.url)
+                            ? "hidden md:block"
+                            : undefined
+                        }
+                      >
                         <SidebarMenuButton
                           asChild
                           tooltip={item.title}
@@ -163,6 +240,7 @@ export function AppSidebar({
                         >
                           <Link
                             href={item.url}
+                            onClick={closeMobileMenu}
                             aria-current={isActive ? "page" : undefined}
                           >
                             <HugeiconsIcon strokeWidth={2} icon={item.icon} />
@@ -195,6 +273,7 @@ export function AppSidebar({
                   >
                     <Link
                       href={item.url}
+                      onClick={closeMobileMenu}
                       aria-current={isActive ? "page" : undefined}
                     >
                       <HugeiconsIcon icon={item.icon} />
@@ -217,14 +296,16 @@ function CollapsibleNavigationItem({
   item,
   pathname,
   isActive,
+  onNavigate,
 }: {
   item: DashboardNavigationItem
   pathname: string
   isActive: boolean
+  onNavigate: () => void
 }) {
   return (
     <Collapsible asChild defaultOpen={isActive} className="group/collapsible">
-      <SidebarMenuItem>
+      <SidebarMenuItem className="hidden md:block">
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip={item.title} isActive={isActive}>
             <HugeiconsIcon strokeWidth={2} icon={item.icon} />
@@ -251,6 +332,7 @@ function CollapsibleNavigationItem({
                   <SidebarMenuSubButton asChild isActive={isSubItemActive}>
                     <Link
                       href={subItem.url}
+                      onClick={onNavigate}
                       aria-current={isSubItemActive ? "page" : undefined}
                     >
                       <span>{subItem.title}</span>

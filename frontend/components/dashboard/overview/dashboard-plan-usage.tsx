@@ -78,7 +78,7 @@ export function DashboardPlanUsage() {
             ) : null}
           </div>
 
-          <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-center">
+          <div className="mt-5 flex items-center gap-3 sm:mt-6 sm:gap-5">
             <UsageRadialChart
               value={percentage}
               label="AI soru kotası"
@@ -88,13 +88,13 @@ export function DashboardPlanUsage() {
               <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
                 Bu dönem kullanılan
               </p>
-              <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">
-                {numberFormatter.format(questions.used)}
-                <span className="ml-2 text-sm font-normal text-muted-foreground">
+              <p className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5 text-2xl font-semibold tracking-tight tabular-nums sm:mt-2 sm:gap-x-2 sm:text-3xl">
+                <span>{numberFormatter.format(questions.used)}</span>
+                <span className="text-xs font-normal text-muted-foreground sm:text-sm">
                   / {numberFormatter.format(questions.limit)} soru
                 </span>
               </p>
-              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+              <div className="mt-2 flex flex-col gap-0.5 text-[11px] sm:mt-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1 sm:text-xs">
                 <span
                   className={cn(
                     "font-semibold tabular-nums",
@@ -105,7 +105,9 @@ export function DashboardPlanUsage() {
                     ? "Kota doldu"
                     : `${numberFormatter.format(questions.remaining)} soru kaldı`}
                 </span>
-                <span className="text-muted-foreground">•</span>
+                <span className="hidden text-muted-foreground sm:inline">
+                  •
+                </span>
                 <span className="text-muted-foreground">
                   {formatUsagePeriod(usage)}
                 </span>
