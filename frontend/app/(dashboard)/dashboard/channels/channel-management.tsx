@@ -4,14 +4,18 @@ import { useEffect, useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
+  AlertCircleIcon,
+  ArrowRight01Icon,
   CheckmarkCircle01Icon,
+  Clock01Icon,
   Delete02Icon,
   Package01Icon,
+  PlugSocketIcon,
   PlusSignIcon,
+  RefreshIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
-import { ChannelBadge } from "@/components/dashboard/channels/channel-badge"
 import { ChannelCard } from "@/components/dashboard/channels/channel-card"
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import { Button } from "@/components/ui/button"
@@ -83,6 +87,9 @@ export function ChannelManagement({
   const connectedProviderKeys = new Set(
     connections.map((connection) => connection.providerKey)
   )
+  const availableProviders = providers.filter(
+    (provider) => !connectedProviderKeys.has(provider.key)
+  )
   const selectedProvider = providers.find(
     (provider) =>
       provider.key ===
@@ -94,11 +101,19 @@ export function ChannelManagement({
   const connectedCount = connections.filter(
     (connection) => connection.status === "CONNECTED"
   ).length
-  const syncedCount = connections.filter(
-    (connection) => connection.lastSyncAt
+  const attentionCount = connections.filter(
+    (connection) =>
+      connection.status !== "CONNECTED" ||
+      connection.failureReason ||
+      connection.questionSyncFailureReason
+  ).length
+  const syncingCount = connections.filter(
+    (connection) =>
+      connection.processingStartedAt || connection.questionSyncStartedAt
   ).length
   const hasRunningSync = connections.some(
-    (connection) => connection.processingStartedAt
+    (connection) =>
+      connection.processingStartedAt || connection.questionSyncStartedAt
   )
 
   useEffect(() => {
@@ -113,6 +128,12 @@ export function ChannelManagement({
     setCredentials({})
     setEnvironment(provider.environments[0] ?? "SANDBOX")
     setDialogError(null)
+  }
+
+  function openProviderDialog(provider: IntegrationProvider) {
+    setConfiguringConnection(null)
+    selectProvider(provider)
+    setIsConnectionDialogOpen(true)
   }
 
   function openConfiguration(connection: ChannelConnection) {
@@ -267,28 +288,25 @@ export function ChannelManagement({
   }
 
   return (
-    <div>
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="space-y-7">
+      <header className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-3xl font-semibold tracking-[-0.04em] text-foreground">
-            Satış kanalları
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-            {storeName} mağazasının pazaryeri bağlantılarını ve ürün
-            senkronizasyonlarını yönetin.
+          <p className="mb-1.5 truncate text-xs font-medium text-muted-foreground">
+            {storeName}
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <ChannelBadge label="Pazaryeri" value={connections.length} />
-            <ChannelBadge label="Bağlı" value={connectedCount} />
-            <ChannelBadge label="Senkronize" value={syncedCount} />
-          </div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Bağlı Kanallar
+          </h1>
+          <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
+            Pazaryeri bağlantılarınızı ve veri akışını tek yerden yönetin.
+          </p>
         </div>
 
-        <div className="flex flex-wrap gap-2 sm:self-center">
-          <Button asChild type="button" variant="outline">
-            <Link href={APP_ROUTES.dashboard.catalog.products}>
-              <HugeiconsIcon icon={Package01Icon} className="size-4" />
-              Ürün kataloğu
+        <div className="flex flex-wrap items-center gap-2">
+          <Button asChild size="sm" variant="outline" className="bg-card">
+            <Link href={APP_ROUTES.dashboard.channels.sync}>
+              <HugeiconsIcon icon={Clock01Icon} className="size-3.5" />
+              Senkron geçmişi
             </Link>
           </Button>
           <ResponsiveDialog
@@ -299,13 +317,15 @@ export function ChannelManagement({
                 ? `${selectedProvider?.name ?? "Pazaryeri"} bağlantısını yapılandır`
                 : "Pazaryeri bağla"
             }
-            description="Mağaza erişim bilgileri şifrelenerek saklanır ve hiçbir API cevabında geri gönderilmez."
+            description="Pazaryeri erişim bilgileri şifrelenerek saklanır."
             contentClassName="sm:max-w-2xl"
             trigger={
-              <Button type="button">
-                <HugeiconsIcon icon={PlusSignIcon} className="size-4" />
-                Pazaryeri bağla
-              </Button>
+              availableProviders.length > 0 ? (
+                <Button type="button" size="sm">
+                  <HugeiconsIcon icon={PlusSignIcon} className="size-3.5" />
+                  Kanal bağla
+                </Button>
+              ) : undefined
             }
             footer={({ close }) => (
               <>
@@ -333,8 +353,7 @@ export function ChannelManagement({
           >
             {!configuringConnection ? (
               <div className="grid gap-3 sm:grid-cols-2">
-                {providers.map((provider) => {
-                  const isAlreadyAdded = connectedProviderKeys.has(provider.key)
+                {availableProviders.map((provider) => {
                   const isSelected = selectedProviderKey === provider.key
 
                   return (
@@ -342,11 +361,11 @@ export function ChannelManagement({
                       key={provider.key}
                       type="button"
                       onClick={() => selectProvider(provider)}
-                      disabled={isAlreadyAdded || isSavingConnection}
+                      disabled={isSavingConnection}
                       aria-pressed={isSelected}
-                      className={`flex min-h-28 items-start gap-4 rounded-xl border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-55 ${
+                      className={`flex min-h-24 items-start gap-3 rounded-xl border p-4 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-55 ${
                         isSelected
-                          ? "border-primary bg-primary/5 ring-1 ring-primary"
+                          ? "border-primary bg-primary/5 ring-1 ring-primary/30"
                           : "border-border bg-background hover:border-primary/35 hover:bg-muted/40"
                       }`}
                     >
@@ -363,10 +382,8 @@ export function ChannelManagement({
                             />
                           ) : null}
                         </span>
-                        <span className="mt-2 line-clamp-2 block text-xs leading-5 text-muted-foreground">
-                          {isAlreadyAdded
-                            ? "Bu pazaryeri zaten mağazaya bağlı."
-                            : provider.description}
+                        <span className="mt-1 line-clamp-2 block text-xs leading-5 text-muted-foreground">
+                          {provider.description}
                         </span>
                       </span>
                     </button>
@@ -377,17 +394,19 @@ export function ChannelManagement({
 
             {selectedProvider ? (
               <div className={configuringConnection ? "" : "mt-6"}>
-                <div className="mb-5 flex items-center gap-3 rounded-xl border border-border bg-muted/35 p-3">
-                  <ProviderLogo provider={selectedProvider} />
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      {selectedProvider.name}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      Güvenli API bağlantısı
-                    </p>
+                {configuringConnection ? (
+                  <div className="mb-5 flex items-center gap-3 rounded-xl border border-border bg-muted/35 p-3">
+                    <ProviderLogo provider={selectedProvider} />
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {selectedProvider.name}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Güvenli API bağlantısı
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ) : null}
 
                 <div className="grid gap-5">
                   <div className="grid gap-2">
@@ -451,33 +470,87 @@ export function ChannelManagement({
             </div>
           </ResponsiveDialog>
         </div>
-      </div>
+      </header>
+
+      <section
+        aria-label="Bağlantı özeti"
+        className="grid gap-4 rounded-xl border border-border bg-card p-4 shadow-xs sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-border sm:p-5"
+      >
+        <div className="flex items-center gap-3 sm:px-4 sm:first:pl-0 sm:last:pr-0">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <HugeiconsIcon icon={PlugSocketIcon} className="size-4" />
+          </span>
+          <div>
+            <p className="text-xl leading-none font-semibold tabular-nums">
+              {connectedCount}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Bağlı kanal</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 sm:px-4 sm:first:pl-0 sm:last:pr-0">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <HugeiconsIcon icon={AlertCircleIcon} className="size-4" />
+          </span>
+          <div>
+            <p className="text-xl leading-none font-semibold tabular-nums">
+              {attentionCount}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              İşlem gerektiren
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 sm:px-4 sm:first:pl-0 sm:last:pr-0">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
+            <HugeiconsIcon icon={RefreshIcon} className="size-4" />
+          </span>
+          <div>
+            <p className="text-xl leading-none font-semibold tabular-nums">
+              {syncingCount}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Süren senkronizasyon
+            </p>
+          </div>
+        </div>
+      </section>
 
       <section>
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold tracking-[-0.02em] text-foreground">
-            Bağlantılar
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Ürün kataloğunu besleyen pazaryeri bağlantıları
-          </p>
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">
+              Pazaryerleri
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Ürün, stok ve soru güncellemelerini kanal bazında takip edin.
+            </p>
+          </div>
+          {connections.length > 0 ? (
+            <Button asChild size="sm" variant="ghost">
+              <Link href={APP_ROUTES.dashboard.catalog.products}>
+                <HugeiconsIcon icon={Package01Icon} className="size-3.5" />
+                Ürünlere git
+                <HugeiconsIcon icon={ArrowRight01Icon} className="size-3" />
+              </Link>
+            </Button>
+          ) : null}
         </div>
 
         {connections.length === 0 ? (
-          <div className="flex min-h-64 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 text-center shadow-xs">
-            <span className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <HugeiconsIcon icon={PlusSignIcon} className="size-5" />
+          <div className="flex min-h-48 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 py-8 text-center">
+            <span className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <HugeiconsIcon icon={PlugSocketIcon} className="size-5" />
             </span>
-            <h3 className="mt-5 font-semibold text-foreground">
-              Henüz pazaryeri bağlanmadı
+            <h3 className="mt-4 text-sm font-semibold text-foreground">
+              Henüz bağlı kanal yok
             </h3>
-            <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
-              Trendyol veya Hepsiburada bağlantısı kurarak ürün kataloğunuzu
-              içeri aktarabilirsiniz.
+            <p className="mt-1.5 max-w-sm text-xs leading-5 text-muted-foreground">
+              İlk pazaryerinizi aşağıdan seçerek ürünlerinizi ve sorularınızı
+              içeri aktarın.
             </p>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 xl:grid-cols-2">
             {connections.map((connection) => (
               <ChannelCard
                 key={connection.id}
@@ -497,18 +570,60 @@ export function ChannelManagement({
           </div>
         )}
 
-        <div className="mt-4 min-h-6 text-sm" aria-live="polite">
+        <div className="mt-4 text-sm" aria-live="polite">
           {actionError ? (
-            <p className="text-destructive">{actionError}</p>
+            <p role="alert" className="text-destructive">
+              {actionError}
+            </p>
           ) : null}
           {message ? (
-            <p className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+            <p className="inline-flex items-center gap-2 text-primary">
               <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-4" />
               {message}
             </p>
           ) : null}
         </div>
       </section>
+
+      {availableProviders.length > 0 ? (
+        <section>
+          <div className="mb-4">
+            <h2 className="text-base font-semibold tracking-tight text-foreground">
+              Yeni kanal ekle
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Mağazanızda henüz kullanılmayan pazaryerleri
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {availableProviders.map((provider) => (
+              <button
+                key={provider.key}
+                type="button"
+                onClick={() => openProviderDialog(provider)}
+                className="group flex min-w-0 items-center gap-3.5 rounded-xl border border-border bg-card p-4 text-left shadow-xs transition-colors outline-none hover:border-primary/40 hover:bg-primary/[0.02] focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <ProviderLogo
+                  provider={provider}
+                  className="size-11 rounded-lg"
+                  sizes="44px"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-foreground">
+                    {provider.name}
+                  </span>
+                  <span className="mt-1 line-clamp-1 block text-xs text-muted-foreground">
+                    {provider.description}
+                  </span>
+                </span>
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
+                  <HugeiconsIcon icon={PlusSignIcon} className="size-3.5" />
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <ResponsiveDialog
         open={Boolean(connectionToRemove)}
