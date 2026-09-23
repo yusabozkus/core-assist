@@ -441,6 +441,7 @@ export const ModelName = {
   Notification: 'Notification',
   NotificationPreference: 'NotificationPreference',
   NotificationDeliverySetting: 'NotificationDeliverySetting',
+  NotificationEmailDigestState: 'NotificationEmailDigestState',
   WebPushSubscription: 'WebPushSubscription'
 } as const
 
@@ -457,7 +458,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "auditLog" | "workspace" | "workspaceMember" | "workspaceInvitation" | "workspaceInvitationStoreAccess" | "billingSubscription" | "billingWebhookEvent" | "billingTransactionReference" | "billingClosureRecord" | "billingCheckout" | "billingPlanChange" | "billingUsagePeriod" | "billingUsageEvent" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productKnowledgeFact" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "contactMessage" | "supportTicket" | "supportMessage" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "webPushSubscription"
+    modelProps: "user" | "session" | "account" | "verification" | "auditLog" | "workspace" | "workspaceMember" | "workspaceInvitation" | "workspaceInvitationStoreAccess" | "billingSubscription" | "billingWebhookEvent" | "billingTransactionReference" | "billingClosureRecord" | "billingCheckout" | "billingPlanChange" | "billingUsagePeriod" | "billingUsageEvent" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productKnowledgeFact" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "contactMessage" | "supportTicket" | "supportMessage" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "notificationEmailDigestState" | "webPushSubscription"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3717,6 +3718,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    NotificationEmailDigestState: {
+      payload: Prisma.$NotificationEmailDigestStatePayload<ExtArgs>
+      fields: Prisma.NotificationEmailDigestStateFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.NotificationEmailDigestStateFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationEmailDigestStatePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.NotificationEmailDigestStateFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationEmailDigestStatePayload>
+        }
+        findFirst: {
+          args: Prisma.NotificationEmailDigestStateFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationEmailDigestStatePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.NotificationEmailDigestStateFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationEmailDigestStatePayload>
+        }
+        findMany: {
+          args: Prisma.NotificationEmailDigestStateFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationEmailDigestStatePayload>[]
+        }
+        create: {
+          args: Prisma.NotificationEmailDigestStateCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationEmailDigestStatePayload>
+        }
+        createMany: {
+          args: Prisma.NotificationEmailDigestStateCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.NotificationEmailDigestStateCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationEmailDigestStatePayload>[]
+        }
+        delete: {
+          args: Prisma.NotificationEmailDigestStateDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationEmailDigestStatePayload>
+        }
+        update: {
+          args: Prisma.NotificationEmailDigestStateUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationEmailDigestStatePayload>
+        }
+        deleteMany: {
+          args: Prisma.NotificationEmailDigestStateDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.NotificationEmailDigestStateUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.NotificationEmailDigestStateUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationEmailDigestStatePayload>[]
+        }
+        upsert: {
+          args: Prisma.NotificationEmailDigestStateUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NotificationEmailDigestStatePayload>
+        }
+        aggregate: {
+          args: Prisma.NotificationEmailDigestStateAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNotificationEmailDigestState>
+        }
+        groupBy: {
+          args: Prisma.NotificationEmailDigestStateGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NotificationEmailDigestStateGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.NotificationEmailDigestStateCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NotificationEmailDigestStateCountAggregateOutputType> | number
+        }
+      }
+    }
     WebPushSubscription: {
       payload: Prisma.$WebPushSubscriptionPayload<ExtArgs>
       fields: Prisma.WebPushSubscriptionFieldRefs
@@ -4362,6 +4437,8 @@ export const ExternalProductVariantScalarFieldEnum = {
   price: 'price',
   currency: 'currency',
   stock: 'stock',
+  stockEmailAlertLevel: 'stockEmailAlertLevel',
+  stockEmailAlertStartedAt: 'stockEmailAlertStartedAt',
   status: 'status',
   lastSeenSyncId: 'lastSeenSyncId',
   sourceUpdatedAt: 'sourceUpdatedAt',
@@ -4642,6 +4719,24 @@ export const NotificationDeliverySettingScalarFieldEnum = {
 } as const
 
 export type NotificationDeliverySettingScalarFieldEnum = (typeof NotificationDeliverySettingScalarFieldEnum)[keyof typeof NotificationDeliverySettingScalarFieldEnum]
+
+
+export const NotificationEmailDigestStateScalarFieldEnum = {
+  id: 'id',
+  recipientUserId: 'recipientUserId',
+  storeId: 'storeId',
+  type: 'type',
+  lastIncludedAt: 'lastIncludedAt',
+  lastSentAt: 'lastSentAt',
+  pendingUntil: 'pendingUntil',
+  idempotencyKey: 'idempotencyKey',
+  claimToken: 'claimToken',
+  claimUntil: 'claimUntil',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type NotificationEmailDigestStateScalarFieldEnum = (typeof NotificationEmailDigestStateScalarFieldEnum)[keyof typeof NotificationEmailDigestStateScalarFieldEnum]
 
 
 export const WebPushSubscriptionScalarFieldEnum = {
@@ -5210,6 +5305,20 @@ export type ListEnumExternalEntityStatusFieldRefInput<$PrismaModel> = FieldRefIn
 
 
 /**
+ * Reference to a field of type 'StockEmailAlertLevel'
+ */
+export type EnumStockEmailAlertLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StockEmailAlertLevel'>
+
+
+
+/**
+ * Reference to a field of type 'StockEmailAlertLevel[]'
+ */
+export type ListEnumStockEmailAlertLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StockEmailAlertLevel[]'>
+
+
+
+/**
  * Reference to a field of type 'CatalogSyncKind'
  */
 export type EnumCatalogSyncKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CatalogSyncKind'>
@@ -5725,6 +5834,7 @@ export type GlobalOmitConfig = {
   notification?: Prisma.NotificationOmit
   notificationPreference?: Prisma.NotificationPreferenceOmit
   notificationDeliverySetting?: Prisma.NotificationDeliverySettingOmit
+  notificationEmailDigestState?: Prisma.NotificationEmailDigestStateOmit
   webPushSubscription?: Prisma.WebPushSubscriptionOmit
 }
 
@@ -5788,4 +5898,3 @@ export type PrismaAction =
  * `PrismaClient` proxy available in interactive transactions.
  */
 export type TransactionClient = Omit<DefaultPrismaClient, runtime.ITXClientDenyList>
-

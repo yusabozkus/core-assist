@@ -53,6 +53,10 @@ import type {
   ProductSyncRunResult,
 } from './product-sync.types';
 import { recalculateStoreVariantInventory } from './inventory-policy';
+import {
+  stockEmailAlertLevel,
+  stockEmailAlertUpdate,
+} from './stock-email-alert.policy';
 
 type SyncConnection = {
   id: string;
@@ -1057,6 +1061,8 @@ export class ProductSyncWorkerService {
           id: true,
           productVariantId: true,
           sourceUpdatedAt: true,
+          stock: true,
+          stockEmailAlertLevel: true,
         },
       },
     );
@@ -1113,6 +1119,12 @@ export class ProductSyncWorkerService {
                 price: normalized.price,
                 currency: normalized.currency,
                 stock: normalized.stock,
+                ...stockEmailAlertUpdate(
+                  externalVariant.stockEmailAlertLevel,
+                  externalVariant.stock,
+                  normalized.stock,
+                  syncedAt,
+                ),
               }
             : {}),
           status: ExternalEntityStatus.ACTIVE,
@@ -1153,6 +1165,7 @@ export class ProductSyncWorkerService {
         price: normalized.price,
         currency: normalized.currency,
         stock: normalized.stock,
+        stockEmailAlertLevel: stockEmailAlertLevel(normalized.stock),
         status: ExternalEntityStatus.ACTIVE,
         lastSeenSyncId: syncRunId,
         sourceUpdatedAt: normalized.sourceUpdatedAt,
@@ -1426,6 +1439,7 @@ export class ProductSyncWorkerService {
               price: true,
               currency: true,
               stock: true,
+              stockEmailAlertLevel: true,
               productVariant: {
                 select: {
                   sku: true,
@@ -1458,6 +1472,7 @@ export class ProductSyncWorkerService {
           price: true,
           currency: true,
           stock: true,
+          stockEmailAlertLevel: true,
           productVariant: {
             select: {
               sku: true,
@@ -1512,7 +1527,15 @@ export class ProductSyncWorkerService {
           ...(normalized.currency ? { currency: normalized.currency } : {}),
           ...(normalized.stock === undefined
             ? {}
-            : { stock: normalized.stock }),
+            : {
+                stock: normalized.stock,
+                ...stockEmailAlertUpdate(
+                  externalVariant.stockEmailAlertLevel,
+                  externalVariant.stock,
+                  normalized.stock,
+                  syncedAt,
+                ),
+              }),
           status: ExternalEntityStatus.ACTIVE,
           sourceUpdatedAt: normalized.sourceUpdatedAt,
           lastSyncedAt: syncedAt,

@@ -216,6 +216,7 @@ export type UserWhereInput = {
   notifications?: Prisma.NotificationListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingListRelationFilter
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateListRelationFilter
   webPushSubscriptions?: Prisma.WebPushSubscriptionListRelationFilter
   billingCheckouts?: Prisma.BillingCheckoutListRelationFilter
   billingPlanChanges?: Prisma.BillingPlanChangeListRelationFilter
@@ -245,6 +246,7 @@ export type UserOrderByWithRelationInput = {
   notifications?: Prisma.NotificationOrderByRelationAggregateInput
   notificationPreferences?: Prisma.NotificationPreferenceOrderByRelationAggregateInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingOrderByRelationAggregateInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateOrderByRelationAggregateInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionOrderByRelationAggregateInput
   billingCheckouts?: Prisma.BillingCheckoutOrderByRelationAggregateInput
   billingPlanChanges?: Prisma.BillingPlanChangeOrderByRelationAggregateInput
@@ -277,6 +279,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   notifications?: Prisma.NotificationListRelationFilter
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingListRelationFilter
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateListRelationFilter
   webPushSubscriptions?: Prisma.WebPushSubscriptionListRelationFilter
   billingCheckouts?: Prisma.BillingCheckoutListRelationFilter
   billingPlanChanges?: Prisma.BillingPlanChangeListRelationFilter
@@ -334,6 +337,7 @@ export type UserCreateInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -363,6 +367,7 @@ export type UserUncheckedCreateInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -392,6 +397,7 @@ export type UserUpdateInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -421,6 +427,7 @@ export type UserUncheckedUpdateInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -783,6 +790,20 @@ export type UserUpdateOneRequiredWithoutNotificationDeliverySettingsNestedInput 
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotificationDeliverySettingsInput, Prisma.UserUpdateWithoutNotificationDeliverySettingsInput>, Prisma.UserUncheckedUpdateWithoutNotificationDeliverySettingsInput>
 }
 
+export type UserCreateNestedOneWithoutNotificationEmailDigestStatesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotificationEmailDigestStatesInput, Prisma.UserUncheckedCreateWithoutNotificationEmailDigestStatesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotificationEmailDigestStatesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutNotificationEmailDigestStatesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotificationEmailDigestStatesInput, Prisma.UserUncheckedCreateWithoutNotificationEmailDigestStatesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotificationEmailDigestStatesInput
+  upsert?: Prisma.UserUpsertWithoutNotificationEmailDigestStatesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotificationEmailDigestStatesInput, Prisma.UserUpdateWithoutNotificationEmailDigestStatesInput>, Prisma.UserUncheckedUpdateWithoutNotificationEmailDigestStatesInput>
+}
+
 export type UserCreateNestedOneWithoutWebPushSubscriptionsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutWebPushSubscriptionsInput, Prisma.UserUncheckedCreateWithoutWebPushSubscriptionsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutWebPushSubscriptionsInput
@@ -815,6 +836,7 @@ export type UserCreateWithoutSessionsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -843,6 +865,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -887,6 +910,7 @@ export type UserUpdateWithoutSessionsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -915,6 +939,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -943,6 +968,7 @@ export type UserCreateWithoutAccountsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -971,6 +997,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -1015,6 +1042,7 @@ export type UserUpdateWithoutAccountsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -1043,6 +1071,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -1071,6 +1100,7 @@ export type UserCreateWithoutOwnedWorkspaceInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -1099,6 +1129,7 @@ export type UserUncheckedCreateWithoutOwnedWorkspaceInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -1143,6 +1174,7 @@ export type UserUpdateWithoutOwnedWorkspaceInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -1171,6 +1203,7 @@ export type UserUncheckedUpdateWithoutOwnedWorkspaceInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -1199,6 +1232,7 @@ export type UserCreateWithoutWorkspaceMembersInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -1227,6 +1261,7 @@ export type UserUncheckedCreateWithoutWorkspaceMembersInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -1271,6 +1306,7 @@ export type UserUpdateWithoutWorkspaceMembersInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -1299,6 +1335,7 @@ export type UserUncheckedUpdateWithoutWorkspaceMembersInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -1328,6 +1365,7 @@ export type UserCreateWithoutSentWorkspaceInvitationsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -1356,6 +1394,7 @@ export type UserUncheckedCreateWithoutSentWorkspaceInvitationsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -1400,6 +1439,7 @@ export type UserUpdateWithoutSentWorkspaceInvitationsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -1428,6 +1468,7 @@ export type UserUncheckedUpdateWithoutSentWorkspaceInvitationsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -1456,6 +1497,7 @@ export type UserCreateWithoutBillingCheckoutsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
@@ -1484,6 +1526,7 @@ export type UserUncheckedCreateWithoutBillingCheckoutsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
@@ -1528,6 +1571,7 @@ export type UserUpdateWithoutBillingCheckoutsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
@@ -1556,6 +1600,7 @@ export type UserUncheckedUpdateWithoutBillingCheckoutsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
@@ -1584,6 +1629,7 @@ export type UserCreateWithoutBillingPlanChangesInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
@@ -1612,6 +1658,7 @@ export type UserUncheckedCreateWithoutBillingPlanChangesInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
@@ -1656,6 +1703,7 @@ export type UserUpdateWithoutBillingPlanChangesInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
@@ -1684,6 +1732,7 @@ export type UserUncheckedUpdateWithoutBillingPlanChangesInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
@@ -1712,6 +1761,7 @@ export type UserCreateWithoutVerifiedProductKnowledgeFactsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -1740,6 +1790,7 @@ export type UserUncheckedCreateWithoutVerifiedProductKnowledgeFactsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -1784,6 +1835,7 @@ export type UserUpdateWithoutVerifiedProductKnowledgeFactsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -1812,6 +1864,7 @@ export type UserUncheckedUpdateWithoutVerifiedProductKnowledgeFactsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -1839,6 +1892,7 @@ export type UserCreateWithoutRequestedAiDraftsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -1867,6 +1921,7 @@ export type UserUncheckedCreateWithoutRequestedAiDraftsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -1911,6 +1966,7 @@ export type UserUpdateWithoutRequestedAiDraftsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -1939,6 +1995,7 @@ export type UserUncheckedUpdateWithoutRequestedAiDraftsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -1967,6 +2024,7 @@ export type UserCreateWithoutRequestedQuestionAnswersInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -1995,6 +2053,7 @@ export type UserUncheckedCreateWithoutRequestedQuestionAnswersInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -2039,6 +2098,7 @@ export type UserUpdateWithoutRequestedQuestionAnswersInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -2067,6 +2127,7 @@ export type UserUncheckedUpdateWithoutRequestedQuestionAnswersInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -2095,6 +2156,7 @@ export type UserCreateWithoutStoreMembersInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -2123,6 +2185,7 @@ export type UserUncheckedCreateWithoutStoreMembersInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -2167,6 +2230,7 @@ export type UserUpdateWithoutStoreMembersInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -2195,6 +2259,7 @@ export type UserUncheckedUpdateWithoutStoreMembersInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -2224,6 +2289,7 @@ export type UserCreateWithoutCreatedSupportTicketsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -2252,6 +2318,7 @@ export type UserUncheckedCreateWithoutCreatedSupportTicketsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -2285,6 +2352,7 @@ export type UserCreateWithoutAssignedSupportTicketsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -2313,6 +2381,7 @@ export type UserUncheckedCreateWithoutAssignedSupportTicketsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -2357,6 +2426,7 @@ export type UserUpdateWithoutCreatedSupportTicketsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -2385,6 +2455,7 @@ export type UserUncheckedUpdateWithoutCreatedSupportTicketsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -2424,6 +2495,7 @@ export type UserUpdateWithoutAssignedSupportTicketsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -2452,6 +2524,7 @@ export type UserUncheckedUpdateWithoutAssignedSupportTicketsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -2480,6 +2553,7 @@ export type UserCreateWithoutSupportMessagesInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -2508,6 +2582,7 @@ export type UserUncheckedCreateWithoutSupportMessagesInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -2552,6 +2627,7 @@ export type UserUpdateWithoutSupportMessagesInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -2580,6 +2656,7 @@ export type UserUncheckedUpdateWithoutSupportMessagesInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -2607,6 +2684,7 @@ export type UserCreateWithoutNotificationsInput = {
   requestedAiDrafts?: Prisma.AiDraftAttemptCreateNestedManyWithoutRequestedByInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -2635,6 +2713,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutRequestedByInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -2679,6 +2758,7 @@ export type UserUpdateWithoutNotificationsInput = {
   requestedAiDrafts?: Prisma.AiDraftAttemptUpdateManyWithoutRequestedByNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -2707,6 +2787,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutRequestedByNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -2735,6 +2816,7 @@ export type UserCreateWithoutNotificationPreferencesInput = {
   requestedAiDrafts?: Prisma.AiDraftAttemptCreateNestedManyWithoutRequestedByInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -2763,6 +2845,7 @@ export type UserUncheckedCreateWithoutNotificationPreferencesInput = {
   requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutRequestedByInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -2807,6 +2890,7 @@ export type UserUpdateWithoutNotificationPreferencesInput = {
   requestedAiDrafts?: Prisma.AiDraftAttemptUpdateManyWithoutRequestedByNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -2835,6 +2919,7 @@ export type UserUncheckedUpdateWithoutNotificationPreferencesInput = {
   requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutRequestedByNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -2863,6 +2948,7 @@ export type UserCreateWithoutNotificationDeliverySettingsInput = {
   requestedAiDrafts?: Prisma.AiDraftAttemptCreateNestedManyWithoutRequestedByInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
@@ -2891,6 +2977,7 @@ export type UserUncheckedCreateWithoutNotificationDeliverySettingsInput = {
   requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutRequestedByInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
@@ -2935,6 +3022,7 @@ export type UserUpdateWithoutNotificationDeliverySettingsInput = {
   requestedAiDrafts?: Prisma.AiDraftAttemptUpdateManyWithoutRequestedByNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
@@ -2963,6 +3051,139 @@ export type UserUncheckedUpdateWithoutNotificationDeliverySettingsInput = {
   requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutRequestedByNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
+  billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
+  sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutVerifiedByNestedInput
+  createdSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssignedAdminNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserCreateWithoutNotificationEmailDigestStatesInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  onboardingCompletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  ownedWorkspace?: Prisma.WorkspaceCreateNestedOneWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberCreateNestedManyWithoutUserInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptCreateNestedManyWithoutRequestedByInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionCreateNestedManyWithoutUserInput
+  billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
+  billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
+  sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutVerifiedByInput
+  createdSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssignedAdminInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutAuthorInput
+}
+
+export type UserUncheckedCreateWithoutNotificationEmailDigestStatesInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  onboardingCompletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  ownedWorkspace?: Prisma.WorkspaceUncheckedCreateNestedOneWithoutOwnerInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutUserInput
+  storeMembers?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutUserInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutRequestedByInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutRequestedByInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
+  billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
+  sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutVerifiedByInput
+  createdSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedSupportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssignedAdminInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutAuthorInput
+}
+
+export type UserCreateOrConnectWithoutNotificationEmailDigestStatesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotificationEmailDigestStatesInput, Prisma.UserUncheckedCreateWithoutNotificationEmailDigestStatesInput>
+}
+
+export type UserUpsertWithoutNotificationEmailDigestStatesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutNotificationEmailDigestStatesInput, Prisma.UserUncheckedUpdateWithoutNotificationEmailDigestStatesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotificationEmailDigestStatesInput, Prisma.UserUncheckedCreateWithoutNotificationEmailDigestStatesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutNotificationEmailDigestStatesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutNotificationEmailDigestStatesInput, Prisma.UserUncheckedUpdateWithoutNotificationEmailDigestStatesInput>
+}
+
+export type UserUpdateWithoutNotificationEmailDigestStatesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  ownedWorkspace?: Prisma.WorkspaceUpdateOneWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUpdateManyWithoutUserNestedInput
+  storeMembers?: Prisma.StoreMemberUpdateManyWithoutUserNestedInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUpdateManyWithoutRequestedByNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  webPushSubscriptions?: Prisma.WebPushSubscriptionUpdateManyWithoutUserNestedInput
+  billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
+  billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
+  sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
+  verifiedProductKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutVerifiedByNestedInput
+  createdSupportTickets?: Prisma.SupportTicketUpdateManyWithoutCreatedByNestedInput
+  assignedSupportTickets?: Prisma.SupportTicketUpdateManyWithoutAssignedAdminNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserUncheckedUpdateWithoutNotificationEmailDigestStatesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  onboardingCompletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  ownedWorkspace?: Prisma.WorkspaceUncheckedUpdateOneWithoutOwnerNestedInput
+  workspaceMembers?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutUserNestedInput
+  storeMembers?: Prisma.StoreMemberUncheckedUpdateManyWithoutUserNestedInput
+  requestedQuestionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutRequestedByNestedInput
+  requestedAiDrafts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutRequestedByNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
   webPushSubscriptions?: Prisma.WebPushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
@@ -2992,6 +3213,7 @@ export type UserCreateWithoutWebPushSubscriptionsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutRecipientInput
   billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutInvitedByInput
@@ -3020,6 +3242,7 @@ export type UserUncheckedCreateWithoutWebPushSubscriptionsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutUserInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutUserInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutRecipientInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutRequestedByUserInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutRequestedByUserInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutInvitedByInput
@@ -3064,6 +3287,7 @@ export type UserUpdateWithoutWebPushSubscriptionsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutRecipientNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUpdateManyWithoutInvitedByNestedInput
@@ -3092,6 +3316,7 @@ export type UserUncheckedUpdateWithoutWebPushSubscriptionsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutUserNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutUserNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutRecipientNestedInput
   billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutRequestedByUserNestedInput
   billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutRequestedByUserNestedInput
   sentWorkspaceInvitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutInvitedByNestedInput
@@ -3116,6 +3341,7 @@ export type UserCountOutputType = {
   notifications: number
   notificationPreferences: number
   notificationDeliverySettings: number
+  notificationEmailDigestStates: number
   webPushSubscriptions: number
   billingCheckouts: number
   billingPlanChanges: number
@@ -3136,6 +3362,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   notifications?: boolean | UserCountOutputTypeCountNotificationsArgs
   notificationPreferences?: boolean | UserCountOutputTypeCountNotificationPreferencesArgs
   notificationDeliverySettings?: boolean | UserCountOutputTypeCountNotificationDeliverySettingsArgs
+  notificationEmailDigestStates?: boolean | UserCountOutputTypeCountNotificationEmailDigestStatesArgs
   webPushSubscriptions?: boolean | UserCountOutputTypeCountWebPushSubscriptionsArgs
   billingCheckouts?: boolean | UserCountOutputTypeCountBillingCheckoutsArgs
   billingPlanChanges?: boolean | UserCountOutputTypeCountBillingPlanChangesArgs
@@ -3222,6 +3449,13 @@ export type UserCountOutputTypeCountNotificationDeliverySettingsArgs<ExtArgs ext
 /**
  * UserCountOutputType without action
  */
+export type UserCountOutputTypeCountNotificationEmailDigestStatesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NotificationEmailDigestStateWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
 export type UserCountOutputTypeCountWebPushSubscriptionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.WebPushSubscriptionWhereInput
 }
@@ -3295,6 +3529,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   notificationPreferences?: boolean | Prisma.User$notificationPreferencesArgs<ExtArgs>
   notificationDeliverySettings?: boolean | Prisma.User$notificationDeliverySettingsArgs<ExtArgs>
+  notificationEmailDigestStates?: boolean | Prisma.User$notificationEmailDigestStatesArgs<ExtArgs>
   webPushSubscriptions?: boolean | Prisma.User$webPushSubscriptionsArgs<ExtArgs>
   billingCheckouts?: boolean | Prisma.User$billingCheckoutsArgs<ExtArgs>
   billingPlanChanges?: boolean | Prisma.User$billingPlanChangesArgs<ExtArgs>
@@ -3351,6 +3586,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   notificationPreferences?: boolean | Prisma.User$notificationPreferencesArgs<ExtArgs>
   notificationDeliverySettings?: boolean | Prisma.User$notificationDeliverySettingsArgs<ExtArgs>
+  notificationEmailDigestStates?: boolean | Prisma.User$notificationEmailDigestStatesArgs<ExtArgs>
   webPushSubscriptions?: boolean | Prisma.User$webPushSubscriptionsArgs<ExtArgs>
   billingCheckouts?: boolean | Prisma.User$billingCheckoutsArgs<ExtArgs>
   billingPlanChanges?: boolean | Prisma.User$billingPlanChangesArgs<ExtArgs>
@@ -3377,6 +3613,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     notifications: Prisma.$NotificationPayload<ExtArgs>[]
     notificationPreferences: Prisma.$NotificationPreferencePayload<ExtArgs>[]
     notificationDeliverySettings: Prisma.$NotificationDeliverySettingPayload<ExtArgs>[]
+    notificationEmailDigestStates: Prisma.$NotificationEmailDigestStatePayload<ExtArgs>[]
     webPushSubscriptions: Prisma.$WebPushSubscriptionPayload<ExtArgs>[]
     billingCheckouts: Prisma.$BillingCheckoutPayload<ExtArgs>[]
     billingPlanChanges: Prisma.$BillingPlanChangePayload<ExtArgs>[]
@@ -3799,6 +4036,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notificationPreferences<T extends Prisma.User$notificationPreferencesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationPreferencesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notificationDeliverySettings<T extends Prisma.User$notificationDeliverySettingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationDeliverySettingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationDeliverySettingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notificationEmailDigestStates<T extends Prisma.User$notificationEmailDigestStatesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationEmailDigestStatesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationEmailDigestStatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   webPushSubscriptions<T extends Prisma.User$webPushSubscriptionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$webPushSubscriptionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WebPushSubscriptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   billingCheckouts<T extends Prisma.User$billingCheckoutsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$billingCheckoutsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BillingCheckoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   billingPlanChanges<T extends Prisma.User$billingPlanChangesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$billingPlanChangesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BillingPlanChangePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -4469,6 +4707,30 @@ export type User$notificationDeliverySettingsArgs<ExtArgs extends runtime.Types.
   take?: number
   skip?: number
   distinct?: Prisma.NotificationDeliverySettingScalarFieldEnum | Prisma.NotificationDeliverySettingScalarFieldEnum[]
+}
+
+/**
+ * User.notificationEmailDigestStates
+ */
+export type User$notificationEmailDigestStatesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the NotificationEmailDigestState
+   */
+  select?: Prisma.NotificationEmailDigestStateSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the NotificationEmailDigestState
+   */
+  omit?: Prisma.NotificationEmailDigestStateOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NotificationEmailDigestStateInclude<ExtArgs> | null
+  where?: Prisma.NotificationEmailDigestStateWhereInput
+  orderBy?: Prisma.NotificationEmailDigestStateOrderByWithRelationInput | Prisma.NotificationEmailDigestStateOrderByWithRelationInput[]
+  cursor?: Prisma.NotificationEmailDigestStateWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NotificationEmailDigestStateScalarFieldEnum | Prisma.NotificationEmailDigestStateScalarFieldEnum[]
 }
 
 /**

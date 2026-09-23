@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import webPush from 'web-push';
-import type {
-  NotificationSeverity,
+import {
   NotificationType,
+  type NotificationSeverity,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 
@@ -102,7 +102,13 @@ export class NotificationDeliveryService {
             ),
           );
         }
-        if (settings.emailEnabled && this.emailConfigured) {
+        if (
+          settings.emailEnabled &&
+          this.emailConfigured &&
+          input.type !== NotificationType.AI_REVIEW_REQUIRED &&
+          input.type !== NotificationType.LOW_STOCK &&
+          input.type !== NotificationType.OUT_OF_STOCK
+        ) {
           deliveries.push(
             this.sendEmail(recipient.email, recipient.name, input),
           );
@@ -110,6 +116,108 @@ export class NotificationDeliveryService {
         await Promise.allSettled(deliveries);
       }),
     );
+  }
+
+  async sendAiReviewDigest(
+    recipientUserId: string,
+    storeId: string,
+    storeName: string,
+    pendingCount: number,
+    newCount: number,
+    idempotencyKey: string,
+  ) {
+    if (!this.emailConfigured) return false;
+
+    const recipient = await this.prisma.user.findUnique({
+      where: { id: recipientUserId },
+      select: {
+        name: true,
+        email: true,
+        notificationDeliverySettings: {
+          where: { storeId, emailEnabled: true },
+          take: 1,
+          select: {
+            browserEnabled: true,
+            emailEnabled: true,
+            quietHoursEnabled: true,
+            quietHoursStart: true,
+            quietHoursEnd: true,
+            timezone: true,
+          },
+        },
+      },
+    });
+    const settings = recipient?.notificationDeliverySettings[0];
+    if (!recipient || !settings || this.isQuietTime(settings)) return false;
+
+    await this.sendEmail(
+      recipient.email,
+      recipient.name,
+      {
+        storeId,
+        type: NotificationType.AI_REVIEW_REQUIRED,
+        severity: 'WARNING',
+        title: `${storeName.slice(0, 80)}: ${pendingCount} soru incelemenizi bekliyor`,
+        message: `${newCount} yeni soruyla birlikte ${pendingCount} soru incelemenizi bekliyor. Taslakları gelen kutunuzdan kontrol edebilirsiniz.`,
+        actionUrl: '/dashboard/inbox',
+      },
+      idempotencyKey,
+    );
+    return true;
+  }
+
+  async sendStockDigest(
+    recipientUserId: string,
+    storeId: string,
+    storeName: string,
+    type: 'LOW_STOCK' | 'OUT_OF_STOCK',
+    currentCount: number,
+    newCount: number,
+    idempotencyKey: string,
+  ) {
+    if (!this.emailConfigured) return false;
+
+    const recipient = await this.prisma.user.findUnique({
+      where: { id: recipientUserId },
+      select: {
+        name: true,
+        email: true,
+        notificationDeliverySettings: {
+          where: { storeId, emailEnabled: true },
+          take: 1,
+          select: {
+            browserEnabled: true,
+            emailEnabled: true,
+            quietHoursEnabled: true,
+            quietHoursStart: true,
+            quietHoursEnd: true,
+            timezone: true,
+          },
+        },
+      },
+    });
+    const settings = recipient?.notificationDeliverySettings[0];
+    if (!recipient || !settings || this.isQuietTime(settings)) return false;
+
+    const depleted = type === NotificationType.OUT_OF_STOCK;
+    await this.sendEmail(
+      recipient.email,
+      recipient.name,
+      {
+        storeId,
+        type,
+        severity: depleted ? 'ERROR' : 'WARNING',
+        title: `${storeName.slice(0, 80)}: ${newCount} varyant ${depleted ? 'tükendi' : 'kritik stokta'}`,
+        message: depleted
+          ? `${newCount} varyantın stoğu tükendi. Mağazanızda şu anda toplam ${currentCount} varyantın stoğu sıfır. Stok takibi sayfasından kontrol edebilirsiniz.`
+          : `${newCount} varyant kritik stok seviyesine düştü. Mağazanızda şu anda toplam ${currentCount} varyantın stoğu 5 adet veya altında. Stok takibi sayfasından kontrol edebilirsiniz.`,
+        actionUrl: depleted
+          ? '/dashboard/catalog/inventory?status=out_of_stock'
+          : '/dashboard/catalog/inventory?status=low_stock',
+      },
+      idempotencyKey,
+    );
+    return true;
   }
 
   private async sendBrowserNotifications(
@@ -160,6 +268,7 @@ export class NotificationDeliveryService {
     email: string,
     name: string,
     input: ExternalNotificationInput,
+    idempotencyKey?: string,
   ) {
     const actionUrl = this.toAbsoluteUrl(input.actionUrl);
     const response = await fetch('https://api.resend.com/emails', {
@@ -167,6 +276,7 @@ export class NotificationDeliveryService {
       headers: {
         Authorization: `Bearer ${this.resendApiKey}`,
         'Content-Type': 'application/json',
+        ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
       },
       body: JSON.stringify({
         from: this.emailFrom,
@@ -178,7 +288,7 @@ export class NotificationDeliveryService {
     });
 
     if (!response.ok) {
-      this.logger.warn(
+      throw new Error(
         `E-posta bildirimi gönderilemedi (${response.status}): ${(await response.text()).slice(0, 300)}`,
       );
     }

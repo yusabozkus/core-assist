@@ -27,6 +27,7 @@ model User {
   notifications                 Notification[]
   notificationPreferences       NotificationPreference[]
   notificationDeliverySettings  NotificationDeliverySetting[]
+  notificationEmailDigestStates NotificationEmailDigestState[]
   webPushSubscriptions          WebPushSubscription[]
   billingCheckouts              BillingCheckout[]
   billingPlanChanges            BillingPlanChange[]
@@ -491,6 +492,7 @@ model Store {
   notifications                Notification[]
   notificationPreferences      NotificationPreference[]
   notificationDeliverySettings NotificationDeliverySetting[]
+  notificationEmailDigestStates NotificationEmailDigestState[]
   productKnowledgeFacts        ProductKnowledgeFact[]
   supportTickets               SupportTicket[]
 
@@ -878,28 +880,36 @@ enum ExternalEntityStatus {
   UNAVAILABLE
 }
 
+enum StockEmailAlertLevel {
+  LOW_STOCK
+  OUT_OF_STOCK
+}
+
 model ExternalProductVariant {
-  id                String               @id @default(uuid())
-  externalProductId String
-  productVariantId  String
-  externalId        String
-  sku               String
-  barcode           String?
-  price             Decimal              @db.Decimal(12, 2)
-  currency          String               @default("TRY")
-  stock             Int                  @default(0)
-  status            ExternalEntityStatus @default(ACTIVE)
-  lastSeenSyncId    String?
-  sourceUpdatedAt   DateTime?
-  lastSyncedAt      DateTime             @default(now())
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
+  id                       String               @id @default(uuid())
+  externalProductId        String
+  productVariantId         String
+  externalId               String
+  sku                      String
+  barcode                  String?
+  price                    Decimal              @db.Decimal(12, 2)
+  currency                 String               @default("TRY")
+  stock                    Int                  @default(0)
+  stockEmailAlertLevel     StockEmailAlertLevel?
+  stockEmailAlertStartedAt DateTime?
+  status                   ExternalEntityStatus @default(ACTIVE)
+  lastSeenSyncId           String?
+  sourceUpdatedAt          DateTime?
+  lastSyncedAt             DateTime             @default(now())
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
 
   externalProduct ExternalProduct @relation(fields: [externalProductId], references: [id], onDelete: Cascade)
   productVariant  ProductVariant  @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
 
   @@unique([externalProductId, externalId])
   @@index([productVariantId])
+  @@index([stockEmailAlertLevel, stockEmailAlertStartedAt])
   @@index([barcode])
   @@index([sku])
   @@map("external_product_variant")
@@ -1436,6 +1446,28 @@ model NotificationDeliverySetting {
   @@unique([userId, storeId])
   @@index([storeId])
   @@map("notification_delivery_setting")
+}
+
+model NotificationEmailDigestState {
+  id                 String           @id @default(uuid())
+  recipientUserId    String
+  storeId            String
+  type               NotificationType
+  lastIncludedAt     DateTime?
+  lastSentAt         DateTime?
+  pendingUntil       DateTime?
+  idempotencyKey     String?
+  claimToken         String?
+  claimUntil         DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  recipient User  @relation(fields: [recipientUserId], references: [id], onDelete: Cascade)
+  store     Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([recipientUserId, storeId, type])
+  @@index([storeId, type])
+  @@map("notification_email_digest_state")
 }
 
 model WebPushSubscription {

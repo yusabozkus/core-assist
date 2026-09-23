@@ -273,6 +273,14 @@ export const ExternalEntityStatus = {
 export type ExternalEntityStatus = (typeof ExternalEntityStatus)[keyof typeof ExternalEntityStatus]
 
 
+export const StockEmailAlertLevel = {
+  LOW_STOCK: 'LOW_STOCK',
+  OUT_OF_STOCK: 'OUT_OF_STOCK'
+} as const
+
+export type StockEmailAlertLevel = (typeof StockEmailAlertLevel)[keyof typeof StockEmailAlertLevel]
+
+
 export const CatalogSyncStatus = {
   RUNNING: 'RUNNING',
   COMPLETED: 'COMPLETED',

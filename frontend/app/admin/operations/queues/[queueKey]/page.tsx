@@ -19,6 +19,7 @@ const QUEUE_KEYS = new Set([
   "paddle-webhooks",
   "billing-recovery",
   "support-notifications",
+  "notification-email-digest",
   "data-retention",
 ])
 

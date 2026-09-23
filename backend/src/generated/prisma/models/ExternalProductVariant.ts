@@ -46,6 +46,8 @@ export type ExternalProductVariantMinAggregateOutputType = {
   price: runtime.Decimal | null
   currency: string | null
   stock: number | null
+  stockEmailAlertLevel: $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt: Date | null
   status: $Enums.ExternalEntityStatus | null
   lastSeenSyncId: string | null
   sourceUpdatedAt: Date | null
@@ -64,6 +66,8 @@ export type ExternalProductVariantMaxAggregateOutputType = {
   price: runtime.Decimal | null
   currency: string | null
   stock: number | null
+  stockEmailAlertLevel: $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt: Date | null
   status: $Enums.ExternalEntityStatus | null
   lastSeenSyncId: string | null
   sourceUpdatedAt: Date | null
@@ -82,6 +86,8 @@ export type ExternalProductVariantCountAggregateOutputType = {
   price: number
   currency: number
   stock: number
+  stockEmailAlertLevel: number
+  stockEmailAlertStartedAt: number
   status: number
   lastSeenSyncId: number
   sourceUpdatedAt: number
@@ -112,6 +118,8 @@ export type ExternalProductVariantMinAggregateInputType = {
   price?: true
   currency?: true
   stock?: true
+  stockEmailAlertLevel?: true
+  stockEmailAlertStartedAt?: true
   status?: true
   lastSeenSyncId?: true
   sourceUpdatedAt?: true
@@ -130,6 +138,8 @@ export type ExternalProductVariantMaxAggregateInputType = {
   price?: true
   currency?: true
   stock?: true
+  stockEmailAlertLevel?: true
+  stockEmailAlertStartedAt?: true
   status?: true
   lastSeenSyncId?: true
   sourceUpdatedAt?: true
@@ -148,6 +158,8 @@ export type ExternalProductVariantCountAggregateInputType = {
   price?: true
   currency?: true
   stock?: true
+  stockEmailAlertLevel?: true
+  stockEmailAlertStartedAt?: true
   status?: true
   lastSeenSyncId?: true
   sourceUpdatedAt?: true
@@ -253,6 +265,8 @@ export type ExternalProductVariantGroupByOutputType = {
   price: runtime.Decimal
   currency: string
   stock: number
+  stockEmailAlertLevel: $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt: Date | null
   status: $Enums.ExternalEntityStatus
   lastSeenSyncId: string | null
   sourceUpdatedAt: Date | null
@@ -294,6 +308,8 @@ export type ExternalProductVariantWhereInput = {
   price?: Prisma.DecimalFilter<"ExternalProductVariant"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: Prisma.StringFilter<"ExternalProductVariant"> | string
   stock?: Prisma.IntFilter<"ExternalProductVariant"> | number
+  stockEmailAlertLevel?: Prisma.EnumStockEmailAlertLevelNullableFilter<"ExternalProductVariant"> | $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Prisma.DateTimeNullableFilter<"ExternalProductVariant"> | Date | string | null
   status?: Prisma.EnumExternalEntityStatusFilter<"ExternalProductVariant"> | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.StringNullableFilter<"ExternalProductVariant"> | string | null
   sourceUpdatedAt?: Prisma.DateTimeNullableFilter<"ExternalProductVariant"> | Date | string | null
@@ -314,6 +330,8 @@ export type ExternalProductVariantOrderByWithRelationInput = {
   price?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   stock?: Prisma.SortOrder
+  stockEmailAlertLevel?: Prisma.SortOrderInput | Prisma.SortOrder
+  stockEmailAlertStartedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   lastSeenSyncId?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceUpdatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -338,6 +356,8 @@ export type ExternalProductVariantWhereUniqueInput = Prisma.AtLeast<{
   price?: Prisma.DecimalFilter<"ExternalProductVariant"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: Prisma.StringFilter<"ExternalProductVariant"> | string
   stock?: Prisma.IntFilter<"ExternalProductVariant"> | number
+  stockEmailAlertLevel?: Prisma.EnumStockEmailAlertLevelNullableFilter<"ExternalProductVariant"> | $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Prisma.DateTimeNullableFilter<"ExternalProductVariant"> | Date | string | null
   status?: Prisma.EnumExternalEntityStatusFilter<"ExternalProductVariant"> | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.StringNullableFilter<"ExternalProductVariant"> | string | null
   sourceUpdatedAt?: Prisma.DateTimeNullableFilter<"ExternalProductVariant"> | Date | string | null
@@ -358,6 +378,8 @@ export type ExternalProductVariantOrderByWithAggregationInput = {
   price?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   stock?: Prisma.SortOrder
+  stockEmailAlertLevel?: Prisma.SortOrderInput | Prisma.SortOrder
+  stockEmailAlertStartedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   lastSeenSyncId?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceUpdatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -384,6 +406,8 @@ export type ExternalProductVariantScalarWhereWithAggregatesInput = {
   price?: Prisma.DecimalWithAggregatesFilter<"ExternalProductVariant"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: Prisma.StringWithAggregatesFilter<"ExternalProductVariant"> | string
   stock?: Prisma.IntWithAggregatesFilter<"ExternalProductVariant"> | number
+  stockEmailAlertLevel?: Prisma.EnumStockEmailAlertLevelNullableWithAggregatesFilter<"ExternalProductVariant"> | $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ExternalProductVariant"> | Date | string | null
   status?: Prisma.EnumExternalEntityStatusWithAggregatesFilter<"ExternalProductVariant"> | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.StringNullableWithAggregatesFilter<"ExternalProductVariant"> | string | null
   sourceUpdatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ExternalProductVariant"> | Date | string | null
@@ -400,6 +424,8 @@ export type ExternalProductVariantCreateInput = {
   price: runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: string
   stock?: number
+  stockEmailAlertLevel?: $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Date | string | null
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -420,6 +446,8 @@ export type ExternalProductVariantUncheckedCreateInput = {
   price: runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: string
   stock?: number
+  stockEmailAlertLevel?: $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Date | string | null
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -436,6 +464,8 @@ export type ExternalProductVariantUpdateInput = {
   price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
+  stockEmailAlertLevel?: Prisma.NullableEnumStockEmailAlertLevelFieldUpdateOperationsInput | $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -456,6 +486,8 @@ export type ExternalProductVariantUncheckedUpdateInput = {
   price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
+  stockEmailAlertLevel?: Prisma.NullableEnumStockEmailAlertLevelFieldUpdateOperationsInput | $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -474,6 +506,8 @@ export type ExternalProductVariantCreateManyInput = {
   price: runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: string
   stock?: number
+  stockEmailAlertLevel?: $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Date | string | null
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -490,6 +524,8 @@ export type ExternalProductVariantUpdateManyMutationInput = {
   price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
+  stockEmailAlertLevel?: Prisma.NullableEnumStockEmailAlertLevelFieldUpdateOperationsInput | $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -508,6 +544,8 @@ export type ExternalProductVariantUncheckedUpdateManyInput = {
   price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
+  stockEmailAlertLevel?: Prisma.NullableEnumStockEmailAlertLevelFieldUpdateOperationsInput | $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -541,6 +579,8 @@ export type ExternalProductVariantCountOrderByAggregateInput = {
   price?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   stock?: Prisma.SortOrder
+  stockEmailAlertLevel?: Prisma.SortOrder
+  stockEmailAlertStartedAt?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastSeenSyncId?: Prisma.SortOrder
   sourceUpdatedAt?: Prisma.SortOrder
@@ -564,6 +604,8 @@ export type ExternalProductVariantMaxOrderByAggregateInput = {
   price?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   stock?: Prisma.SortOrder
+  stockEmailAlertLevel?: Prisma.SortOrder
+  stockEmailAlertStartedAt?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastSeenSyncId?: Prisma.SortOrder
   sourceUpdatedAt?: Prisma.SortOrder
@@ -582,6 +624,8 @@ export type ExternalProductVariantMinOrderByAggregateInput = {
   price?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   stock?: Prisma.SortOrder
+  stockEmailAlertLevel?: Prisma.SortOrder
+  stockEmailAlertStartedAt?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastSeenSyncId?: Prisma.SortOrder
   sourceUpdatedAt?: Prisma.SortOrder
@@ -679,6 +723,10 @@ export type ExternalProductVariantUncheckedUpdateManyWithoutExternalProductNeste
   deleteMany?: Prisma.ExternalProductVariantScalarWhereInput | Prisma.ExternalProductVariantScalarWhereInput[]
 }
 
+export type NullableEnumStockEmailAlertLevelFieldUpdateOperationsInput = {
+  set?: $Enums.StockEmailAlertLevel | null
+}
+
 export type ExternalProductVariantCreateWithoutProductVariantInput = {
   id?: string
   externalId: string
@@ -687,6 +735,8 @@ export type ExternalProductVariantCreateWithoutProductVariantInput = {
   price: runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: string
   stock?: number
+  stockEmailAlertLevel?: $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Date | string | null
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -705,6 +755,8 @@ export type ExternalProductVariantUncheckedCreateWithoutProductVariantInput = {
   price: runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: string
   stock?: number
+  stockEmailAlertLevel?: $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Date | string | null
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -752,6 +804,8 @@ export type ExternalProductVariantScalarWhereInput = {
   price?: Prisma.DecimalFilter<"ExternalProductVariant"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: Prisma.StringFilter<"ExternalProductVariant"> | string
   stock?: Prisma.IntFilter<"ExternalProductVariant"> | number
+  stockEmailAlertLevel?: Prisma.EnumStockEmailAlertLevelNullableFilter<"ExternalProductVariant"> | $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Prisma.DateTimeNullableFilter<"ExternalProductVariant"> | Date | string | null
   status?: Prisma.EnumExternalEntityStatusFilter<"ExternalProductVariant"> | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.StringNullableFilter<"ExternalProductVariant"> | string | null
   sourceUpdatedAt?: Prisma.DateTimeNullableFilter<"ExternalProductVariant"> | Date | string | null
@@ -768,6 +822,8 @@ export type ExternalProductVariantCreateWithoutExternalProductInput = {
   price: runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: string
   stock?: number
+  stockEmailAlertLevel?: $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Date | string | null
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -786,6 +842,8 @@ export type ExternalProductVariantUncheckedCreateWithoutExternalProductInput = {
   price: runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: string
   stock?: number
+  stockEmailAlertLevel?: $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Date | string | null
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -829,6 +887,8 @@ export type ExternalProductVariantCreateManyProductVariantInput = {
   price: runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: string
   stock?: number
+  stockEmailAlertLevel?: $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Date | string | null
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -845,6 +905,8 @@ export type ExternalProductVariantUpdateWithoutProductVariantInput = {
   price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
+  stockEmailAlertLevel?: Prisma.NullableEnumStockEmailAlertLevelFieldUpdateOperationsInput | $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -863,6 +925,8 @@ export type ExternalProductVariantUncheckedUpdateWithoutProductVariantInput = {
   price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
+  stockEmailAlertLevel?: Prisma.NullableEnumStockEmailAlertLevelFieldUpdateOperationsInput | $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -880,6 +944,8 @@ export type ExternalProductVariantUncheckedUpdateManyWithoutProductVariantInput 
   price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
+  stockEmailAlertLevel?: Prisma.NullableEnumStockEmailAlertLevelFieldUpdateOperationsInput | $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -897,6 +963,8 @@ export type ExternalProductVariantCreateManyExternalProductInput = {
   price: runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: string
   stock?: number
+  stockEmailAlertLevel?: $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Date | string | null
   status?: $Enums.ExternalEntityStatus
   lastSeenSyncId?: string | null
   sourceUpdatedAt?: Date | string | null
@@ -913,6 +981,8 @@ export type ExternalProductVariantUpdateWithoutExternalProductInput = {
   price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
+  stockEmailAlertLevel?: Prisma.NullableEnumStockEmailAlertLevelFieldUpdateOperationsInput | $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -931,6 +1001,8 @@ export type ExternalProductVariantUncheckedUpdateWithoutExternalProductInput = {
   price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
+  stockEmailAlertLevel?: Prisma.NullableEnumStockEmailAlertLevelFieldUpdateOperationsInput | $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -948,6 +1020,8 @@ export type ExternalProductVariantUncheckedUpdateManyWithoutExternalProductInput
   price?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   stock?: Prisma.IntFieldUpdateOperationsInput | number
+  stockEmailAlertLevel?: Prisma.NullableEnumStockEmailAlertLevelFieldUpdateOperationsInput | $Enums.StockEmailAlertLevel | null
+  stockEmailAlertStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumExternalEntityStatusFieldUpdateOperationsInput | $Enums.ExternalEntityStatus
   lastSeenSyncId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -968,6 +1042,8 @@ export type ExternalProductVariantSelect<ExtArgs extends runtime.Types.Extension
   price?: boolean
   currency?: boolean
   stock?: boolean
+  stockEmailAlertLevel?: boolean
+  stockEmailAlertStartedAt?: boolean
   status?: boolean
   lastSeenSyncId?: boolean
   sourceUpdatedAt?: boolean
@@ -988,6 +1064,8 @@ export type ExternalProductVariantSelectCreateManyAndReturn<ExtArgs extends runt
   price?: boolean
   currency?: boolean
   stock?: boolean
+  stockEmailAlertLevel?: boolean
+  stockEmailAlertStartedAt?: boolean
   status?: boolean
   lastSeenSyncId?: boolean
   sourceUpdatedAt?: boolean
@@ -1008,6 +1086,8 @@ export type ExternalProductVariantSelectUpdateManyAndReturn<ExtArgs extends runt
   price?: boolean
   currency?: boolean
   stock?: boolean
+  stockEmailAlertLevel?: boolean
+  stockEmailAlertStartedAt?: boolean
   status?: boolean
   lastSeenSyncId?: boolean
   sourceUpdatedAt?: boolean
@@ -1028,6 +1108,8 @@ export type ExternalProductVariantSelectScalar = {
   price?: boolean
   currency?: boolean
   stock?: boolean
+  stockEmailAlertLevel?: boolean
+  stockEmailAlertStartedAt?: boolean
   status?: boolean
   lastSeenSyncId?: boolean
   sourceUpdatedAt?: boolean
@@ -1036,7 +1118,7 @@ export type ExternalProductVariantSelectScalar = {
   updatedAt?: boolean
 }
 
-export type ExternalProductVariantOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "externalProductId" | "productVariantId" | "externalId" | "sku" | "barcode" | "price" | "currency" | "stock" | "status" | "lastSeenSyncId" | "sourceUpdatedAt" | "lastSyncedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["externalProductVariant"]>
+export type ExternalProductVariantOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "externalProductId" | "productVariantId" | "externalId" | "sku" | "barcode" | "price" | "currency" | "stock" | "stockEmailAlertLevel" | "stockEmailAlertStartedAt" | "status" | "lastSeenSyncId" | "sourceUpdatedAt" | "lastSyncedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["externalProductVariant"]>
 export type ExternalProductVariantInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   externalProduct?: boolean | Prisma.ExternalProductDefaultArgs<ExtArgs>
   productVariant?: boolean | Prisma.ProductVariantDefaultArgs<ExtArgs>
@@ -1066,6 +1148,8 @@ export type $ExternalProductVariantPayload<ExtArgs extends runtime.Types.Extensi
     price: runtime.Decimal
     currency: string
     stock: number
+    stockEmailAlertLevel: $Enums.StockEmailAlertLevel | null
+    stockEmailAlertStartedAt: Date | null
     status: $Enums.ExternalEntityStatus
     lastSeenSyncId: string | null
     sourceUpdatedAt: Date | null
@@ -1506,6 +1590,8 @@ export interface ExternalProductVariantFieldRefs {
   readonly price: Prisma.FieldRef<"ExternalProductVariant", 'Decimal'>
   readonly currency: Prisma.FieldRef<"ExternalProductVariant", 'String'>
   readonly stock: Prisma.FieldRef<"ExternalProductVariant", 'Int'>
+  readonly stockEmailAlertLevel: Prisma.FieldRef<"ExternalProductVariant", 'StockEmailAlertLevel'>
+  readonly stockEmailAlertStartedAt: Prisma.FieldRef<"ExternalProductVariant", 'DateTime'>
   readonly status: Prisma.FieldRef<"ExternalProductVariant", 'ExternalEntityStatus'>
   readonly lastSeenSyncId: Prisma.FieldRef<"ExternalProductVariant", 'String'>
   readonly sourceUpdatedAt: Prisma.FieldRef<"ExternalProductVariant", 'DateTime'>

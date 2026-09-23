@@ -260,6 +260,11 @@ export type NotificationPreference = Prisma.NotificationPreferenceModel
  */
 export type NotificationDeliverySetting = Prisma.NotificationDeliverySettingModel
 /**
+ * Model NotificationEmailDigestState
+ *
+ */
+export type NotificationEmailDigestState = Prisma.NotificationEmailDigestStateModel
+/**
  * Model WebPushSubscription
  * 
  */

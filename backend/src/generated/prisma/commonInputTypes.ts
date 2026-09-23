@@ -878,6 +878,23 @@ export type EnumExternalEntityStatusWithAggregatesFilter<$PrismaModel = never> =
   _max?: Prisma.NestedEnumExternalEntityStatusFilter<$PrismaModel>
 }
 
+export type EnumStockEmailAlertLevelNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.StockEmailAlertLevel | Prisma.EnumStockEmailAlertLevelFieldRefInput<$PrismaModel> | null
+  in?: $Enums.StockEmailAlertLevel[] | Prisma.ListEnumStockEmailAlertLevelFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.StockEmailAlertLevel[] | Prisma.ListEnumStockEmailAlertLevelFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumStockEmailAlertLevelNullableFilter<$PrismaModel> | $Enums.StockEmailAlertLevel | null
+}
+
+export type EnumStockEmailAlertLevelNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.StockEmailAlertLevel | Prisma.EnumStockEmailAlertLevelFieldRefInput<$PrismaModel> | null
+  in?: $Enums.StockEmailAlertLevel[] | Prisma.ListEnumStockEmailAlertLevelFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.StockEmailAlertLevel[] | Prisma.ListEnumStockEmailAlertLevelFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumStockEmailAlertLevelNullableWithAggregatesFilter<$PrismaModel> | $Enums.StockEmailAlertLevel | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumStockEmailAlertLevelNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumStockEmailAlertLevelNullableFilter<$PrismaModel>
+}
+
 export type EnumCatalogSyncKindFilter<$PrismaModel = never> = {
   equals?: $Enums.CatalogSyncKind | Prisma.EnumCatalogSyncKindFieldRefInput<$PrismaModel>
   in?: $Enums.CatalogSyncKind[] | Prisma.ListEnumCatalogSyncKindFieldRefInput<$PrismaModel>
@@ -2085,6 +2102,23 @@ export type NestedEnumExternalEntityStatusWithAggregatesFilter<$PrismaModel = ne
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumExternalEntityStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumExternalEntityStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumStockEmailAlertLevelNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.StockEmailAlertLevel | Prisma.EnumStockEmailAlertLevelFieldRefInput<$PrismaModel> | null
+  in?: $Enums.StockEmailAlertLevel[] | Prisma.ListEnumStockEmailAlertLevelFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.StockEmailAlertLevel[] | Prisma.ListEnumStockEmailAlertLevelFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumStockEmailAlertLevelNullableFilter<$PrismaModel> | $Enums.StockEmailAlertLevel | null
+}
+
+export type NestedEnumStockEmailAlertLevelNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.StockEmailAlertLevel | Prisma.EnumStockEmailAlertLevelFieldRefInput<$PrismaModel> | null
+  in?: $Enums.StockEmailAlertLevel[] | Prisma.ListEnumStockEmailAlertLevelFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.StockEmailAlertLevel[] | Prisma.ListEnumStockEmailAlertLevelFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumStockEmailAlertLevelNullableWithAggregatesFilter<$PrismaModel> | $Enums.StockEmailAlertLevel | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumStockEmailAlertLevelNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumStockEmailAlertLevelNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumCatalogSyncKindFilter<$PrismaModel = never> = {

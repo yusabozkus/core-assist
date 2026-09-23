@@ -58,6 +58,11 @@ const QUEUE_RUNTIME_THRESHOLDS: Record<string, QueueRuntimeThresholds> = {
     activeDurationWarningMs: 5 * 60_000,
     activeStallWarningMs: 60_000,
   },
+  'notification-email-digest': {
+    waitingAgeWarningMs: 5 * 60_000,
+    activeDurationWarningMs: 15 * 60_000,
+    activeStallWarningMs: 3 * 60_000,
+  },
   'data-retention': {
     waitingAgeWarningMs: 60 * 60_000,
     activeDurationWarningMs: 60 * 60_000,

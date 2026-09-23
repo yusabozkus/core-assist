@@ -17,6 +17,7 @@ import { QUESTION_DRAFT_QUEUE } from '../questions/question-draft.constants';
 import { SIZE_GUIDE_QUEUE } from '../size-guides/size-guide.constants';
 import { SUPPORT_NOTIFICATION_QUEUE } from '../support/support-notification.constants';
 import { DATA_RETENTION_QUEUE } from '../data-retention/data-retention.constants';
+import { NOTIFICATION_EMAIL_DIGEST_QUEUE } from '../notifications/notification-email-digest.constants';
 import {
   countRecentQueueFailures,
   getQueueRuntimeThresholds,
@@ -73,6 +74,8 @@ export class AdminSystemHealthService {
     private readonly billingRecoveryQueue: Queue,
     @InjectQueue(SUPPORT_NOTIFICATION_QUEUE)
     private readonly supportNotificationQueue: Queue,
+    @InjectQueue(NOTIFICATION_EMAIL_DIGEST_QUEUE)
+    private readonly notificationEmailDigestQueue: Queue,
     @InjectQueue(DATA_RETENTION_QUEUE)
     private readonly dataRetentionQueue: Queue,
   ) {}
@@ -658,6 +661,12 @@ export class AdminSystemHealthService {
         key: 'support-notifications',
         label: 'Destek bildirimleri',
         queue: this.supportNotificationQueue,
+        backlogWarningThreshold: 50,
+      },
+      {
+        key: 'notification-email-digest',
+        label: 'E-posta özetleri',
+        queue: this.notificationEmailDigestQueue,
         backlogWarningThreshold: 50,
       },
       {

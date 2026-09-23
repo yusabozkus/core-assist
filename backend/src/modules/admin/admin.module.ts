@@ -14,6 +14,7 @@ import { SIZE_GUIDE_QUEUE } from '../size-guides/size-guide.constants';
 import { SupportModule } from '../support/support.module';
 import { SUPPORT_NOTIFICATION_QUEUE } from '../support/support-notification.constants';
 import { DATA_RETENTION_QUEUE } from '../data-retention/data-retention.constants';
+import { NOTIFICATION_EMAIL_DIGEST_QUEUE } from '../notifications/notification-email-digest.constants';
 import { AdminAccessService } from './admin-access.service';
 import { AdminActionOriginGuard } from './admin-action-origin.guard';
 import { AdminBillingController } from './admin-billing.controller';
@@ -52,6 +53,7 @@ import { AdminContactMessagesService } from './admin-contact-messages.service';
       { name: PADDLE_WEBHOOK_QUEUE },
       { name: BILLING_RECOVERY_QUEUE },
       { name: SUPPORT_NOTIFICATION_QUEUE },
+      { name: NOTIFICATION_EMAIL_DIGEST_QUEUE },
       { name: DATA_RETENTION_QUEUE },
     ),
   ],

@@ -33,6 +33,7 @@ import {
 import { QUESTION_DRAFT_QUEUE } from '../questions/question-draft.constants';
 import { SIZE_GUIDE_QUEUE } from '../size-guides/size-guide.constants';
 import { SUPPORT_NOTIFICATION_QUEUE } from '../support/support-notification.constants';
+import { NOTIFICATION_EMAIL_DIGEST_QUEUE } from '../notifications/notification-email-digest.constants';
 import { DATA_RETENTION_QUEUE } from '../data-retention/data-retention.constants';
 import {
   countRecentQueueFailures,
@@ -147,6 +148,8 @@ export class AdminOperationsService {
     private readonly billingRecoveryQueue: Queue,
     @InjectQueue(SUPPORT_NOTIFICATION_QUEUE)
     private readonly supportNotificationQueue: Queue,
+    @InjectQueue(NOTIFICATION_EMAIL_DIGEST_QUEUE)
+    private readonly notificationEmailDigestQueue: Queue,
     @InjectQueue(DATA_RETENTION_QUEUE)
     private readonly dataRetentionQueue: Queue,
     private readonly audit: AuditLogService,
@@ -658,6 +661,11 @@ export class AdminOperationsService {
         key: 'support-notifications',
         label: 'Destek bildirimleri',
         queue: this.supportNotificationQueue,
+      },
+      {
+        key: 'notification-email-digest',
+        label: 'E-posta özetleri',
+        queue: this.notificationEmailDigestQueue,
       },
       {
         key: 'data-retention',
