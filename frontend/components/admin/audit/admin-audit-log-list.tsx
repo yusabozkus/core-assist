@@ -699,6 +699,12 @@ const ACTION_LABELS: Record<string, string> = {
   CATALOG_SYNC_FAILED: "Katalog senkronizasyonu başarısız",
   QUESTION_SYNC_COMPLETED: "Soru senkronizasyonu tamamlandı",
   QUESTION_SYNC_FAILED: "Soru senkronizasyonu başarısız",
+  RESPONSE_SETTINGS_UPDATED: "Yanıt ayarları güncellendi",
+  PRODUCT_KNOWLEDGE_VERIFIED: "Ürün bilgisi doğrulandı",
+  PRODUCT_KNOWLEDGE_UPDATED: "Ürün bilgisi güncellendi",
+  PRODUCT_KNOWLEDGE_ARCHIVED: "Ürün bilgisi arşivlendi",
+  QUESTION_ANSWER_SENT: "Yanıt pazaryerine gönderildi",
+  QUESTION_ANSWER_FAILED: "Yanıt gönderimi başarısız",
   ACCOUNT_BILLING_CLOSED: "Hesap ödemeleri kapatıldı",
   ACCOUNT_DELETED: "Kullanıcı hesabı silindi",
 }

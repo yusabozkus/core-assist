@@ -16,6 +16,13 @@ import {
 } from '../../generated/prisma/enums';
 import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
+import {
+  AuditLogService,
+  AuditActorType,
+  AuditOrigin,
+  AuditResult,
+} from '../audit/audit-log.service';
+import { AuditAction } from '../audit/audit-actions';
 import { QUESTION_DRAFT_DISPATCHER } from './question-draft.constants';
 import type { QuestionDraftDispatcher } from './question-draft.types';
 import type { ResolveProductKnowledgeDto } from './dto/resolve-product-knowledge.dto';
@@ -42,6 +49,7 @@ const KNOWLEDGE_CANDIDATE_SELECT = {
 export class ProductKnowledgeService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly audit: AuditLogService,
     @Inject(QUESTION_DRAFT_DISPATCHER)
     private readonly draftQueue: QuestionDraftDispatcher,
   ) {}
@@ -303,6 +311,13 @@ export class ProductKnowledgeService {
       return { fact, resetCount: reset.count };
     });
 
+    await this.recordFactActivity(
+      storeId,
+      userId,
+      result.fact.id,
+      AuditAction.PRODUCT_KNOWLEDGE_VERIFIED,
+    );
+
     const queueResults = await Promise.allSettled(
       matchingQuestionIds.map((candidateQuestionId) =>
         this.draftQueue.enqueue(storeId, candidateQuestionId, {
@@ -373,6 +388,12 @@ export class ProductKnowledgeService {
         verifiedAt: true,
       },
     });
+    await this.recordFactActivity(
+      storeId,
+      userId,
+      fact.id,
+      AuditAction.PRODUCT_KNOWLEDGE_UPDATED,
+    );
     const reprocessed = await this.reprocessDraftsUsingFact(
       storeId,
       fact.productId,
@@ -405,6 +426,12 @@ export class ProductKnowledgeService {
         archivedAt: new Date(),
       },
     });
+    await this.recordFactActivity(
+      storeId,
+      userId,
+      fact.id,
+      AuditAction.PRODUCT_KNOWLEDGE_ARCHIVED,
+    );
     const reprocessed = await this.reprocessDraftsUsingFact(
       storeId,
       fact.productId,
@@ -432,6 +459,30 @@ export class ProductKnowledgeService {
       },
       orderBy: [{ externalCreatedAt: 'asc' }, { id: 'asc' }],
       select: KNOWLEDGE_CANDIDATE_SELECT,
+    });
+  }
+
+  private async recordFactActivity(
+    storeId: string,
+    userId: string,
+    factId: string,
+    action: string,
+  ) {
+    const store = await this.prisma.store.findUnique({
+      where: { id: storeId },
+      select: { workspaceId: true },
+    });
+    if (!store) return;
+    await this.audit.recordSafely({
+      actorType: AuditActorType.USER,
+      actorUserId: userId,
+      origin: AuditOrigin.API,
+      action,
+      result: AuditResult.SUCCESS,
+      workspaceId: store.workspaceId,
+      storeId,
+      targetType: 'PRODUCT_KNOWLEDGE_FACT',
+      targetId: factId,
     });
   }
 

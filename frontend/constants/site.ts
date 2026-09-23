@@ -1,5 +1,6 @@
 import {
   Analytics01Icon,
+  Clock01Icon,
   BoxesIcon,
   DashboardSquare01Icon,
   InboxIcon,
@@ -61,6 +62,7 @@ export const APP_ROUTES = {
       knowledge: "/dashboard/automations/knowledge",
     },
     analytics: "/dashboard/analytics",
+    activity: "/dashboard/activity",
     team: "/dashboard/team",
     support: "/dashboard/support",
     settings: {
@@ -184,6 +186,11 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
           title: "AI Performansı",
           url: APP_ROUTES.dashboard.analytics,
           icon: Analytics01Icon,
+        },
+        {
+          title: "İşlem Geçmişi",
+          url: APP_ROUTES.dashboard.activity,
+          icon: Clock01Icon,
         },
       ],
     },

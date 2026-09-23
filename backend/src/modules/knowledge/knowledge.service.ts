@@ -14,6 +14,13 @@ import {
   StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import {
+  AuditLogService,
+  AuditActorType,
+  AuditOrigin,
+  AuditResult,
+} from '../audit/audit-log.service';
+import { AuditAction } from '../audit/audit-actions';
 import { QUESTION_DRAFT_DISPATCHER } from '../questions/question-draft.constants';
 import type { QuestionDraftDispatcher } from '../questions/question-draft.types';
 import type { UpdateStoreKnowledgeDto } from './dto/update-store-knowledge.dto';
@@ -41,6 +48,7 @@ const profileSelect = {
 export class KnowledgeService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly audit: AuditLogService,
     @Inject(QUESTION_DRAFT_DISPATCHER)
     private readonly questionDrafts: QuestionDraftDispatcher,
   ) {}
@@ -85,7 +93,11 @@ export class KnowledgeService {
     }
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.storeKnowledgeProfile.upsert({
+      const previous = await tx.storeKnowledgeProfile.findUnique({
+        where: { storeId },
+        select: profileSelect,
+      });
+      const profile = await tx.storeKnowledgeProfile.upsert({
         where: { storeId },
         create: {
           storeId,
@@ -147,6 +159,7 @@ export class KnowledgeService {
             ? { emojiEnabled: dto.emojiPolicy !== AiEmojiPolicy.NEVER }
             : {}),
         },
+        select: profileSelect,
       });
 
       if (dto.faqs) {
@@ -193,6 +206,47 @@ export class KnowledgeService {
             })),
           });
         }
+      }
+
+      const changedFields = Object.keys(profileSelect).filter(
+        (field) =>
+          field !== 'emojiEnabled' &&
+          previous?.[field as keyof typeof profile] !==
+            profile[field as keyof typeof profile],
+      );
+      if (dto.faqs) changedFields.push('faqs');
+      if (dto.instructions) changedFields.push('instructions');
+      if (dto.channelOverrides) changedFields.push('channelOverrides');
+      if (changedFields.length > 0) {
+        const store = await tx.store.findUniqueOrThrow({
+          where: { id: storeId },
+          select: { workspaceId: true },
+        });
+        await this.audit.record(
+          {
+            actorType: AuditActorType.USER,
+            actorUserId: userId,
+            origin: AuditOrigin.API,
+            action: AuditAction.RESPONSE_SETTINGS_UPDATED,
+            result: AuditResult.SUCCESS,
+            workspaceId: store.workspaceId,
+            storeId,
+            targetType: 'STORE_KNOWLEDGE_PROFILE',
+            targetId: storeId,
+            metadata: { changedFields },
+            before: previous
+              ? {
+                  automationMode: previous.automationMode,
+                  minimumAutoSendConfidence: previous.minimumAutoSendConfidence,
+                }
+              : undefined,
+            after: {
+              automationMode: profile.automationMode,
+              minimumAutoSendConfidence: profile.minimumAutoSendConfidence,
+            },
+          },
+          tx,
+        );
       }
     });
 

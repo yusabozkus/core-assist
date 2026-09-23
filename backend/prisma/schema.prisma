@@ -130,6 +130,7 @@ model AuditLog {
 
   @@index([createdAt])
   @@index([workspaceId, createdAt])
+  @@index([storeId, createdAt])
   @@index([actorUserId, createdAt])
   @@index([action, createdAt])
   @@index([targetType, targetId, createdAt])

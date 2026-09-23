@@ -1,3 +1,16 @@
+## Güncel açık doğrulama işleri
+
+- [ ] `seed:demo` tarafından oluşturulan `DEMO_AI_BATCH` kullanım olaylarının
+  `BillingUsagePeriod` tarih aralığında kalmasını sağla. Mevcut dağıtımda bazı
+  güncel ve önceki dönem olayları bağlı oldukları dönemin dışına taşabildiği
+  için tarih bazlı AI grafikleri ile dönem kotası karşılaştırması yanıltıcı
+  olabiliyor.
+- [ ] Demo Paddle kimliklerinin yalnızca arayüz ve sorgu testi sağladığını
+  açıkça koru; checkout, yenileme ve reconciliation senaryolarını gerçek Paddle
+  sandbox kayıtlarıyla ayrıca doğrula.
+
+---
+
 Evet. **Next.js + NestJS + PostgreSQL + Prisma** bu proje için gayet doğru bir stack. Hatta ben olsam başlangıçta çok fazla teknoloji eklemeden tam olarak bununla başlardım.
 
 Küçük bir düzeltme: Prisma veritabanı değil, ORM katmanı. Yapı şöyle olur:

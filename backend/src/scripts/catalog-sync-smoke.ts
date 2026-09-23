@@ -14,6 +14,7 @@ import { PRODUCT_SYNC_DISPATCHER } from '../modules/product-sync/product-sync.co
 import type { ProductSyncDispatcher } from '../modules/product-sync/product-sync.types';
 import { MOCK_PRODUCTS_PER_PROVIDER } from '../modules/channels/providers/mock-catalog.connector';
 import { CatalogService } from '../modules/catalog/catalog.service';
+import { BillingSubscriptionService } from '../modules/billing/billing-subscription.service';
 
 const POLL_INTERVAL_MS = 100;
 const TIMEOUT_MS = 10_000;
@@ -26,6 +27,7 @@ async function run() {
   const encryption = app.get(CredentialsEncryptionService);
   const dispatcher = app.get<ProductSyncDispatcher>(PRODUCT_SYNC_DISPATCHER);
   const catalog = app.get(CatalogService);
+  const subscriptions = app.get(BillingSubscriptionService);
   let userId: string | undefined;
   let workspaceId: string | undefined;
   let storeId: string | undefined;
@@ -50,6 +52,7 @@ async function run() {
       select: { id: true },
     });
     workspaceId = workspace.id;
+    await subscriptions.getOrCreateForWorkspace(workspace.id);
     const store = await prisma.store.create({
       data: {
         name: 'Catalog Smoke Store',
@@ -150,7 +153,8 @@ async function run() {
       !secondPage.nextCursor ||
       thirdPage.items.length !== MOCK_PRODUCTS_PER_PROVIDER - 20 ||
       thirdPage.nextCursor !== null ||
-      !productDetail.description?.includes('Yıkama ve Kullanma Talimatları') ||
+      !productDetail.title ||
+      productDetail.images.length < 1 ||
       productDetail.attributes.length < 6
     ) {
       throw new Error('Catalog pagination or rich product detail is invalid.');

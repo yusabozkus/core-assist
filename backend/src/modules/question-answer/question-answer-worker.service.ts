@@ -12,6 +12,13 @@ import {
   StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import {
+  AuditLogService,
+  AuditActorType,
+  AuditOrigin,
+  AuditResult,
+} from '../audit/audit-log.service';
+import { AuditAction } from '../audit/audit-actions';
 import { BillingSubscriptionService } from '../billing/billing-subscription.service';
 import { BillingAccessRequiredException } from '../billing/billing.errors';
 import { BILLING_AUTOMATION_STOPPED_MESSAGE } from '../billing/billing-access.policy';
@@ -32,6 +39,7 @@ export class QuestionAnswerWorkerService {
     private readonly inventoryVerification: InventoryVerificationService,
     private readonly notifications: NotificationsService,
     private readonly billing: BillingSubscriptionService,
+    private readonly audit: AuditLogService,
   ) {}
 
   async run(data: QuestionAnswerJobData) {
@@ -41,6 +49,7 @@ export class QuestionAnswerWorkerService {
         id: true,
         answer: true,
         origin: true,
+        requestedByUserId: true,
         status: true,
         questionId: true,
         draftAttemptId: true,
@@ -70,6 +79,7 @@ export class QuestionAnswerWorkerService {
             },
             store: {
               select: {
+                workspaceId: true,
                 knowledgeProfile: { select: { automationMode: true } },
               },
             },
@@ -109,7 +119,6 @@ export class QuestionAnswerWorkerService {
       );
       return true;
     };
-    // Re-check an already queued answer; do not consult/consume AI quota here.
     if (await stopIfSubscriptionInactive()) return;
 
     const claimed = await this.prisma.$transaction(async (transaction) => {
@@ -234,7 +243,6 @@ export class QuestionAnswerWorkerService {
         }
       }
 
-      // Settings, product mapping or the selected draft may change while the API check is running.
       const currentQuestion = await this.prisma.productQuestion.findFirst({
         where: {
           id: delivery.questionId,
@@ -278,8 +286,6 @@ export class QuestionAnswerWorkerService {
       }
     }
 
-    // Stock verification may take seconds. Check again immediately before the
-    // provider side effect. A request already accepted remotely cannot be recalled.
     if (await stopIfSubscriptionInactive()) return;
     const credentials = this.encryption.decrypt(
       delivery.connection.credentialsEncrypted,
@@ -323,6 +329,23 @@ export class QuestionAnswerWorkerService {
         });
       }
     });
+    await this.audit.recordSafely({
+      actorType: delivery.requestedByUserId
+        ? AuditActorType.USER
+        : AuditActorType.SYSTEM,
+      actorUserId: delivery.requestedByUserId,
+      origin: AuditOrigin.WORKER,
+      action: AuditAction.QUESTION_ANSWER_SENT,
+      result: AuditResult.SUCCESS,
+      workspaceId: delivery.question.store.workspaceId,
+      storeId: data.storeId,
+      targetType: 'PRODUCT_QUESTION',
+      targetId: delivery.questionId,
+      metadata: {
+        providerKey: delivery.connection.providerKey,
+        answerOrigin: delivery.origin,
+      },
+    });
   }
 
   async markFinalFailure(data: QuestionAnswerJobData, error: unknown) {
@@ -331,14 +354,22 @@ export class QuestionAnswerWorkerService {
 
     const delivery = await this.prisma.questionAnswer.findFirst({
       where: { id: data.answerId, storeId: data.storeId },
-      select: { questionId: true, connectionId: true },
+      select: {
+        questionId: true,
+        connectionId: true,
+        requestedByUserId: true,
+        origin: true,
+        question: { select: { store: { select: { workspaceId: true } } } },
+      },
     });
 
     const updated = await this.prisma.questionAnswer.updateMany({
       where: {
         id: data.answerId,
         storeId: data.storeId,
-        status: { not: QuestionAnswerStatus.SENT },
+        status: {
+          notIn: [QuestionAnswerStatus.SENT, QuestionAnswerStatus.FAILED],
+        },
       },
       data: {
         status: QuestionAnswerStatus.FAILED,
@@ -348,6 +379,20 @@ export class QuestionAnswerWorkerService {
     });
 
     if (updated.count > 0 && delivery) {
+      await this.audit.recordSafely({
+        actorType: delivery.requestedByUserId
+          ? AuditActorType.USER
+          : AuditActorType.SYSTEM,
+        actorUserId: delivery.requestedByUserId,
+        origin: AuditOrigin.WORKER,
+        action: AuditAction.QUESTION_ANSWER_FAILED,
+        result: AuditResult.FAILURE,
+        workspaceId: delivery.question.store.workspaceId,
+        storeId: data.storeId,
+        targetType: 'PRODUCT_QUESTION',
+        targetId: delivery.questionId,
+        metadata: { answerOrigin: delivery.origin },
+      });
       await this.notifications.createForStoreMembers({
         storeId: data.storeId,
         type: NotificationType.ANSWER_DELIVERY_FAILED,

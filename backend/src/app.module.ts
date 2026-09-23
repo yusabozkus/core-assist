@@ -24,12 +24,14 @@ import { AdminModule } from './modules/admin/admin.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { DataRetentionModule } from './modules/data-retention/data-retention.module';
 import { ContactModule } from './modules/contact/contact.module';
+import { ActivityModule } from './modules/activity/activity.module';
 
 @Module({
   imports: [
     BullModule.forRoot({ connection: getRedisConnection() }),
     PrismaModule,
     AuditModule,
+    ActivityModule,
     AuthModule,
     WorkspacesModule,
     StoresModule,
