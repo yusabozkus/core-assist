@@ -180,7 +180,7 @@ export function LandingHeader() {
             </Link>
             <Link
               href={APP_ROUTES.contact}
-              className="group hidden h-10 items-center gap-3 rounded-xl bg-[#17281f] px-4 text-[13px] font-semibold text-white transition-[background-color,transform] hover:bg-[#245d46] focus-visible:ring-2 focus-visible:ring-[#245d46] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbfcf9] focus-visible:outline-none active:scale-[0.97] min-[390px]:inline-flex"
+              className="group hidden h-10 items-center gap-3 rounded-xl bg-[#17281f] px-4 text-[13px] font-semibold text-white transition-[background-color,transform] hover:bg-[#245d46] focus-visible:ring-2 focus-visible:ring-[#245d46] focus-visible:ring-offset-2 focus-visible:ring-offset-[#fbfcf9] focus-visible:outline-none active:scale-[0.97] sm:inline-flex"
             >
               Bizimle iletişime geçin
               <HugeiconsIcon
