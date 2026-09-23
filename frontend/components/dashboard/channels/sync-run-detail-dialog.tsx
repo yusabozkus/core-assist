@@ -58,11 +58,16 @@ export function SyncRunDetailDialog({
       contentClassName="sm:max-w-2xl"
       footer={
         run.status === "FAILED" && onRetry ? (
-          <div className="flex w-full items-center justify-between gap-3">
+          <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">
               Yeni deneme ayrı bir geçmiş kaydı oluşturur.
             </p>
-            <Button type="button" onClick={onRetry} disabled={isRetrying}>
+            <Button
+              type="button"
+              className="w-full sm:w-auto"
+              onClick={onRetry}
+              disabled={isRetrying}
+            >
               <HugeiconsIcon
                 icon={RefreshIcon}
                 className={`size-4 ${isRetrying ? "animate-spin" : ""}`}
@@ -134,7 +139,7 @@ export function SyncRunDetailDialog({
             <p className="text-xs font-semibold tracking-wide text-rose-600 uppercase dark:text-rose-400">
               Hata ayrıntısı
             </p>
-            <p className="mt-1.5 text-sm leading-6 text-foreground">
+            <p className="mt-1.5 text-sm leading-6 [overflow-wrap:anywhere] break-words text-foreground">
               {run.errorMessage}
             </p>
           </section>
@@ -212,9 +217,9 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-6 py-2.5 text-sm">
+    <div className="flex flex-col items-start gap-1 py-2.5 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-6">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className="text-right font-medium text-foreground">{value}</dd>
+      <dd className="font-medium text-foreground sm:text-right">{value}</dd>
     </div>
   )
 }

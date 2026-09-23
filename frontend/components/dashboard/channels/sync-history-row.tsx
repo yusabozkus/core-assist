@@ -7,6 +7,7 @@ import { getProviderName } from "@/components/dashboard/catalog/products/product
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import type {
   SyncHistoryItem,
   SyncHistoryStage,
@@ -50,10 +51,13 @@ export function SyncHistoryRow({
           onSelect()
         }
       }}
-      className="group border-b border-border px-4 py-3.5 transition-colors outline-none last:border-b-0 hover:bg-muted/25 focus-visible:bg-muted/35 lg:px-5"
+      className="group rounded-xl border border-border bg-card px-4 py-4 shadow-xs transition-colors outline-none hover:bg-muted/25 focus-visible:bg-muted/35 lg:rounded-none lg:border-0 lg:border-b lg:bg-transparent lg:py-3.5 lg:shadow-none lg:last:border-b-0"
     >
-      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(11rem,1.1fr)_minmax(9rem,0.75fr)_minmax(12rem,1.1fr)_minmax(10rem,0.85fr)_5rem_7rem] lg:items-center">
-        <HistoryCell label="İşlem">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-3 lg:grid-cols-[minmax(11rem,1.1fr)_minmax(9rem,0.75fr)_minmax(12rem,1.1fr)_minmax(10rem,0.85fr)_5rem_7rem] lg:items-center lg:gap-3">
+        <HistoryCell
+          label="İşlem"
+          className="order-2 col-span-2 lg:order-none lg:col-span-1"
+        >
           <span className="block text-sm font-semibold text-foreground">
             {getSyncKindLabel(run.kind)}
           </span>
@@ -62,7 +66,7 @@ export function SyncHistoryRow({
           </span>
         </HistoryCell>
 
-        <HistoryCell label="Kanal">
+        <HistoryCell label="Kanal" className="order-1 lg:order-none">
           <span className="flex min-w-0 items-center gap-2">
             <ProviderLogo
               provider={run.providerKey}
@@ -80,7 +84,11 @@ export function SyncHistoryRow({
           </span>
         </HistoryCell>
 
-        <HistoryCell label="Sonuç">
+        <HistoryCell
+          label="Sonuç"
+          className="order-3 col-span-2 border-t border-border pt-3 lg:order-none lg:col-span-1 lg:border-0 lg:pt-0"
+          showMobileLabel
+        >
           {run.status === "RUNNING" ? (
             <RunningProgress run={run} />
           ) : (
@@ -88,32 +96,43 @@ export function SyncHistoryRow({
           )}
         </HistoryCell>
 
-        <HistoryCell label="Başlangıç">
+        <HistoryCell
+          label="Başlangıç"
+          className="order-4 lg:order-none"
+          showMobileLabel
+        >
           <span className="text-xs leading-5 text-muted-foreground">
             {dateFormatter.format(new Date(run.startedAt))}
           </span>
         </HistoryCell>
 
-        <HistoryCell label="Süre">
+        <HistoryCell
+          label="Süre"
+          className="order-5 text-right lg:order-none lg:text-left"
+          showMobileLabel
+        >
           <span className="text-xs font-medium text-foreground tabular-nums">
             {formatDuration(durationMs)}
           </span>
         </HistoryCell>
 
-        <HistoryCell label="Durum">
+        <HistoryCell
+          label="Durum"
+          className="order-1 justify-self-end lg:order-none lg:justify-self-start"
+        >
           <SyncStatusBadge status={run.status} />
         </HistoryCell>
       </div>
 
       {run.errorMessage ? (
         <div className="mt-3 flex flex-col gap-2 rounded-lg border border-rose-500/20 bg-rose-500/5 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="min-w-0 text-xs leading-5 text-rose-600 dark:text-rose-400">
+          <p className="min-w-0 text-xs leading-5 [overflow-wrap:anywhere] break-words text-rose-600 dark:text-rose-400">
             {run.errorMessage}
           </p>
           <Button
             type="button"
             size="sm"
-            className="h-7 shrink-0 border-rose-500/25 px-2.5 text-xs text-rose-600 hover:bg-rose-500/10 dark:text-rose-400"
+            className="h-8 w-full shrink-0 border-rose-500/25 px-2.5 text-xs text-rose-600 hover:bg-rose-500/10 sm:h-7 sm:w-auto dark:text-rose-400"
             variant="outline"
             disabled={isRetrying}
             onClick={(event) => {
@@ -136,7 +155,7 @@ export function SyncHistoryRow({
 
 function RunningProgress({ run }: { run: SyncHistoryItem }) {
   return (
-    <div className="max-w-52">
+    <div className="w-full lg:max-w-52">
       <span className="flex items-center justify-between gap-3 text-[11px] font-medium text-foreground">
         <span>{getStageLabel(run.stage)}</span>
         <span className="tabular-nums">%{run.progress}</span>
@@ -215,15 +234,21 @@ function getStageLabel(stage: SyncHistoryStage) {
 function HistoryCell({
   label,
   children,
+  className,
+  showMobileLabel = false,
 }: {
   label: string
   children: React.ReactNode
+  className?: string
+  showMobileLabel?: boolean
 }) {
   return (
-    <div className="grid min-w-0 grid-cols-[6rem_minmax(0,1fr)] items-center gap-3 sm:block">
-      <span className="text-xs font-medium text-muted-foreground lg:hidden">
-        {label}
-      </span>
+    <div className={cn("min-w-0", className)}>
+      {showMobileLabel ? (
+        <span className="mb-1 block text-[11px] font-medium text-muted-foreground lg:hidden">
+          {label}
+        </span>
+      ) : null}
       <div className="min-w-0">{children}</div>
     </div>
   )

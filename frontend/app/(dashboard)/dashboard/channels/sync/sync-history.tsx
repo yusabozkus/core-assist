@@ -64,6 +64,11 @@ const PERIOD_FILTERS: Array<{ value: SyncHistoryPeriod; label: string }> = [
   { value: "90D", label: "Son 90 gün" },
 ]
 
+const ORDER_FILTERS: Array<{ value: SyncHistoryOrder; label: string }> = [
+  { value: "NEWEST", label: "En yeni önce" },
+  { value: "OLDEST", label: "En eski önce" },
+]
+
 export function SyncHistory({
   storeId,
   storeName,
@@ -245,10 +250,10 @@ export function SyncHistory({
   const hasAnyHistory = initialPage.providers.length > 0
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-5 py-10 sm:px-8 lg:px-10">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <div className="flex items-start justify-between gap-3 sm:items-end">
         <div className="min-w-0">
-          <h1 className="text-3xl font-semibold tracking-[-0.04em] text-foreground">
+          <h1 className="text-2xl font-semibold tracking-[-0.04em] text-foreground sm:text-3xl">
             Senkron Geçmişi
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -261,6 +266,8 @@ export function SyncHistory({
           type="button"
           size="sm"
           variant="outline"
+          className="size-9 shrink-0 bg-card p-0 sm:w-auto sm:px-3"
+          aria-label="Senkron geçmişini yenile"
           onClick={() => void loadFirstPage()}
           disabled={isLoading}
         >
@@ -268,7 +275,7 @@ export function SyncHistory({
             icon={RefreshIcon}
             className={`size-3.5 ${isLoading ? "animate-spin" : ""}`}
           />
-          Yenile
+          <span className="hidden sm:inline">Yenile</span>
         </Button>
       </div>
 
@@ -282,7 +289,52 @@ export function SyncHistory({
         <EmptyHistory />
       ) : (
         <>
-          <div className="mt-6 flex flex-wrap items-center gap-2">
+          <div className="mt-6 grid grid-cols-2 gap-2 lg:hidden">
+            <NativeFilterSelect
+              label="Durum"
+              value={status}
+              onValueChange={(value) =>
+                setStatus(value as SyncHistoryStatusFilter)
+              }
+              items={STATUS_FILTERS}
+            />
+            <NativeFilterSelect
+              label="İşlem"
+              value={kind}
+              onValueChange={(value) => setKind(value as SyncHistoryKindFilter)}
+              items={KIND_FILTERS}
+            />
+            <NativeFilterSelect
+              label="Kanal"
+              value={provider}
+              onValueChange={setProvider}
+              items={[
+                { value: "ALL", label: "Tüm kanallar" },
+                ...initialPage.providers.map((providerKey) => ({
+                  value: providerKey,
+                  label: getProviderName(providerKey),
+                })),
+              ]}
+            />
+            <NativeFilterSelect
+              label="Dönem"
+              value={period}
+              onValueChange={(value) => setPeriod(value as SyncHistoryPeriod)}
+              items={PERIOD_FILTERS}
+            />
+            <NativeFilterSelect
+              label="Sıralama"
+              value={order}
+              onValueChange={(value) => setOrder(value as SyncHistoryOrder)}
+              items={ORDER_FILTERS}
+            />
+            <span className="self-end pb-2 text-right text-xs text-muted-foreground tabular-nums">
+              {page.items.length.toLocaleString("tr-TR")} /{" "}
+              {page.total.toLocaleString("tr-TR")} kayıt
+            </span>
+          </div>
+
+          <div className="mt-6 hidden flex-wrap items-center gap-2 lg:flex">
             <FilterSelect
               value={status}
               onValueChange={(value) =>
@@ -341,7 +393,7 @@ export function SyncHistory({
             ) : page.items.length === 0 ? (
               <NoHistoryResults onReset={resetFilters} />
             ) : (
-              <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+              <div className="grid gap-3 lg:block lg:overflow-hidden lg:rounded-xl lg:border lg:border-border lg:bg-card lg:shadow-xs">
                 <div className="hidden grid-cols-[minmax(11rem,1.1fr)_minmax(9rem,0.75fr)_minmax(12rem,1.1fr)_minmax(10rem,0.85fr)_5rem_7rem] gap-3 border-b border-border bg-muted/30 px-5 py-2.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase lg:grid">
                   <span>İşlem</span>
                   <span>Kanal</span>
@@ -430,6 +482,37 @@ function FilterSelect({
         ))}
       </SelectContent>
     </Select>
+  )
+}
+
+function NativeFilterSelect({
+  label,
+  value,
+  onValueChange,
+  items,
+}: {
+  label: string
+  value: string
+  onValueChange: (value: string) => void
+  items: Array<{ value: string; label: string }>
+}) {
+  return (
+    <label className="min-w-0">
+      <span className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
+        {label}
+      </span>
+      <select
+        value={value}
+        onChange={(event) => onValueChange(event.target.value)}
+        className="h-10 w-full min-w-0 rounded-lg border border-border bg-card px-2.5 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {items.map((item) => (
+          <option key={item.value} value={item.value}>
+            {item.label}
+          </option>
+        ))}
+      </select>
+    </label>
   )
 }
 

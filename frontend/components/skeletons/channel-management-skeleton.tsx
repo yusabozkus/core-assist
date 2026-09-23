@@ -16,17 +16,17 @@ export function ChannelManagementSkeleton() {
           <Skeleton className="h-3 w-80 max-w-full rounded" />
         </div>
 
-        <div className="flex gap-2">
-          <Skeleton className="h-9 w-36 rounded-lg" />
-          <Skeleton className="h-9 w-28 rounded-lg" />
+        <div className="grid grid-cols-2 gap-2 sm:flex">
+          <Skeleton className="h-9 w-full rounded-lg sm:w-36" />
+          <Skeleton className="h-9 w-full rounded-lg sm:w-28" />
         </div>
       </div>
 
-      <div className="mt-7 grid gap-4 rounded-xl border border-border bg-card p-4 sm:grid-cols-3 sm:gap-0 sm:p-5">
+      <div className="mt-7 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-0 sm:rounded-xl sm:border sm:border-border sm:bg-card sm:p-5">
         {[0, 1, 2].map((item) => (
           <div
             key={item}
-            className="flex items-center gap-3 sm:px-4 sm:first:pl-0"
+            className={`flex items-center gap-2.5 rounded-xl border border-border bg-card p-3 sm:gap-3 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:px-4 sm:first:pl-0 ${item === 2 ? "col-span-2 sm:col-span-1" : ""}`}
           >
             <Skeleton className="size-9 shrink-0 rounded-lg" />
             <div className="space-y-2">
@@ -38,7 +38,7 @@ export function ChannelManagementSkeleton() {
       </div>
 
       <section className="mt-7">
-        <div className="mb-4 flex items-end justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div className="space-y-2">
             <Skeleton className="h-5 w-28 rounded" />
             <Skeleton className="h-3 w-72 max-w-full rounded" />
@@ -58,10 +58,10 @@ export function ChannelManagementSkeleton() {
 
 function ChannelCardSkeleton() {
   return (
-    <div className="flex min-h-80 flex-col rounded-2xl border border-border bg-card p-5 shadow-xs sm:p-6">
+    <div className="flex min-h-80 flex-col rounded-2xl border border-border bg-card p-4 shadow-xs sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Skeleton className="size-12 rounded-xl" />
+          <Skeleton className="size-10 rounded-xl sm:size-12" />
           <div className="space-y-2">
             <Skeleton className="h-4 w-36 rounded" />
             <Skeleton className="h-3 w-20 rounded" />
@@ -82,9 +82,9 @@ function ChannelCardSkeleton() {
           </div>
         ))}
       </div>
-      <div className="mt-auto flex flex-wrap gap-2 pt-5">
-        <Skeleton className="h-9 w-36 rounded-lg" />
-        <Skeleton className="h-9 w-32 rounded-lg" />
+      <div className="mt-auto grid gap-2 pt-5 sm:flex sm:flex-wrap">
+        <Skeleton className="h-9 w-full rounded-lg sm:w-36" />
+        <Skeleton className="h-9 w-full rounded-lg sm:w-32" />
       </div>
     </div>
   )

@@ -46,11 +46,11 @@ export function SyncHistorySummary({
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px bg-border lg:grid-cols-4">
         {items.map((item) => (
           <div
             key={item.label}
-            className="border-b border-border px-4 py-4 last:border-b-0 lg:border-r lg:border-b-0 lg:last:border-r-0 sm:[&:nth-child(odd)]:border-r"
+            className="min-w-0 bg-card px-3 py-3.5 sm:px-4 sm:py-4"
           >
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span
@@ -58,10 +58,10 @@ export function SyncHistorySummary({
               />
               {item.label}
             </div>
-            <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground tabular-nums">
+            <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-foreground tabular-nums sm:text-2xl">
               {item.value}
             </p>
-            <p className="mt-1 text-[11px] text-muted-foreground">
+            <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
               {item.detail}
             </p>
           </div>

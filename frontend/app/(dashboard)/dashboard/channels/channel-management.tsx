@@ -302,11 +302,19 @@ export function ChannelManagement({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button asChild size="sm" variant="outline" className="bg-card">
+        <div
+          className={`grid gap-2 sm:flex sm:flex-wrap sm:items-center ${availableProviders.length > 0 ? "grid-cols-2" : "grid-cols-1"}`}
+        >
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="w-full bg-card sm:w-auto"
+          >
             <Link href={APP_ROUTES.dashboard.channels.sync}>
               <HugeiconsIcon icon={Clock01Icon} className="size-3.5" />
-              Senkron geçmişi
+              <span className="sm:hidden">Geçmiş</span>
+              <span className="hidden sm:inline">Senkron geçmişi</span>
             </Link>
           </Button>
           <ResponsiveDialog
@@ -321,7 +329,7 @@ export function ChannelManagement({
             contentClassName="sm:max-w-2xl"
             trigger={
               availableProviders.length > 0 ? (
-                <Button type="button" size="sm">
+                <Button type="button" size="sm" className="w-full sm:w-auto">
                   <HugeiconsIcon icon={PlusSignIcon} className="size-3.5" />
                   Kanal bağla
                 </Button>
@@ -474,24 +482,24 @@ export function ChannelManagement({
 
       <section
         aria-label="Bağlantı özeti"
-        className="grid gap-4 rounded-xl border border-border bg-card p-4 shadow-xs sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-border sm:p-5"
+        className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-border sm:rounded-xl sm:border sm:border-border sm:bg-card sm:p-5 sm:shadow-xs"
       >
-        <div className="flex items-center gap-3 sm:px-4 sm:first:pl-0 sm:last:pr-0">
+        <div className="flex min-w-0 items-center gap-2.5 rounded-xl border border-border bg-card p-3 shadow-xs sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:px-4 sm:shadow-none sm:first:pl-0 sm:last:pr-0">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <HugeiconsIcon icon={PlugSocketIcon} className="size-4" />
           </span>
-          <div>
+          <div className="min-w-0">
             <p className="text-xl leading-none font-semibold tabular-nums">
               {connectedCount}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">Bağlı kanal</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 sm:px-4 sm:first:pl-0 sm:last:pr-0">
+        <div className="flex min-w-0 items-center gap-2.5 rounded-xl border border-border bg-card p-3 shadow-xs sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:px-4 sm:shadow-none sm:first:pl-0 sm:last:pr-0">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
             <HugeiconsIcon icon={AlertCircleIcon} className="size-4" />
           </span>
-          <div>
+          <div className="min-w-0">
             <p className="text-xl leading-none font-semibold tabular-nums">
               {attentionCount}
             </p>
@@ -500,11 +508,11 @@ export function ChannelManagement({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 sm:px-4 sm:first:pl-0 sm:last:pr-0">
+        <div className="col-span-2 flex min-w-0 items-center gap-2.5 rounded-xl border border-border bg-card p-3 shadow-xs sm:col-span-1 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:px-4 sm:shadow-none sm:first:pl-0 sm:last:pr-0">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
             <HugeiconsIcon icon={RefreshIcon} className="size-4" />
           </span>
-          <div>
+          <div className="min-w-0">
             <p className="text-xl leading-none font-semibold tabular-nums">
               {syncingCount}
             </p>

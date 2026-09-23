@@ -1,6 +1,7 @@
 import { getProviderName } from "@/components/dashboard/catalog/products/product-catalog-utils"
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 import type { SyncProviderHealth as SyncProviderHealthData } from "@/types/sync-history"
 
 const dateFormatter = new Intl.DateTimeFormat("tr-TR", {
@@ -32,9 +33,9 @@ export function SyncProviderHealth({
           return (
             <div
               key={provider.providerKey}
-              className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+              className="flex items-center justify-between gap-3 px-4 py-3"
             >
-              <div className="flex min-w-0 items-center gap-3">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
                 <ProviderLogo
                   provider={provider.providerKey}
                   className="size-9 rounded-lg shadow-none"
@@ -49,7 +50,10 @@ export function SyncProviderHealth({
                   </p>
                 </div>
               </div>
-              <Badge variant={state.variant} className={state.className}>
+              <Badge
+                variant={state.variant}
+                className={cn("shrink-0", state.className)}
+              >
                 {state.label}
               </Badge>
             </div>

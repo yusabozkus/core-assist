@@ -65,8 +65,12 @@ export function ChannelCard({
 
   return (
     <article className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
-      <div className="flex items-start gap-3.5 px-5 pt-5 sm:px-6 sm:pt-6">
-        <ProviderLogo provider={provider} className="size-12 rounded-xl" />
+      <div className="flex items-start gap-3 px-4 pt-4 sm:gap-3.5 sm:px-6 sm:pt-6">
+        <ProviderLogo
+          provider={provider}
+          className="size-10 rounded-xl sm:size-12"
+          sizes="(max-width: 639px) 40px, 48px"
+        />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-base font-semibold tracking-tight text-foreground">
@@ -123,11 +127,11 @@ export function ChannelCard({
         </DropdownMenu>
       </div>
 
-      <p className="min-h-11 line-clamp-2 px-5 pt-4 text-xs leading-5 text-muted-foreground sm:px-6">
+      <p className="line-clamp-2 px-4 pt-3 text-xs leading-5 text-muted-foreground sm:min-h-11 sm:px-6 sm:pt-4">
         {provider.description}
       </p>
 
-      <dl className="mx-5 mt-5 grid grid-cols-3 gap-2 border-y border-border/80 py-4 sm:mx-6">
+      <dl className="mx-4 mt-4 grid grid-cols-3 gap-2 border-y border-border/80 py-3 sm:mx-6 sm:mt-5 sm:py-4">
         {[
           { label: "Ürünler", value: connection.lastSyncAt },
           { label: "Stok", value: connection.lastInventorySyncAt },
@@ -154,7 +158,7 @@ export function ChannelCard({
       </dl>
 
       {hasFailure ? (
-        <div className="mx-5 mt-4 flex gap-2.5 rounded-xl border border-destructive/20 bg-destructive/5 px-3.5 py-3 text-xs leading-5 text-destructive sm:mx-6">
+        <div className="mx-4 mt-4 flex gap-2.5 rounded-xl border border-destructive/20 bg-destructive/5 px-3.5 py-3 text-xs leading-5 text-destructive sm:mx-6">
           <HugeiconsIcon
             icon={AlertCircleIcon}
             className="mt-0.5 size-4 shrink-0"
@@ -174,12 +178,13 @@ export function ChannelCard({
         </div>
       ) : null}
 
-      <div className="mt-auto flex flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-5 sm:px-6 sm:pb-6">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="mt-auto flex flex-col gap-3 px-4 pt-4 pb-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-6 sm:pt-5 sm:pb-6">
+        <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
           {connection.status === "PENDING" ? (
             <Button
               type="button"
               size="sm"
+              className="w-full sm:w-auto"
               onClick={() => onConfigure(connection)}
               disabled={actionsDisabled}
             >
@@ -192,6 +197,7 @@ export function ChannelCard({
               <Button
                 type="button"
                 size="sm"
+                className="w-full sm:w-auto"
                 disabled={
                   actionsDisabled || Boolean(connection.processingStartedAt)
                 }
@@ -206,6 +212,7 @@ export function ChannelCard({
                 type="button"
                 size="sm"
                 variant="outline"
+                className="w-full sm:w-auto"
                 disabled={
                   actionsDisabled || Boolean(connection.processingStartedAt)
                 }
@@ -221,6 +228,7 @@ export function ChannelCard({
             <Button
               type="button"
               size="sm"
+              className="w-full sm:w-auto"
               onClick={() => onAction(connection, "reconnect")}
               disabled={actionsDisabled}
             >
@@ -233,7 +241,7 @@ export function ChannelCard({
         </div>
         <Link
           href={`${APP_ROUTES.dashboard.channels.sync}?provider=${encodeURIComponent(connection.providerKey)}`}
-          className="inline-flex items-center gap-1 text-xs font-medium text-primary outline-none hover:underline focus-visible:rounded focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex min-h-8 items-center justify-end gap-1 self-end text-xs font-medium text-primary outline-none hover:underline focus-visible:rounded focus-visible:ring-2 focus-visible:ring-ring sm:self-auto"
         >
           Geçmiş
           <HugeiconsIcon icon={ArrowRight01Icon} className="size-3" />

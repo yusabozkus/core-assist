@@ -25,7 +25,6 @@ import type {
   BillingPlanId,
   BillingSummary,
 } from "@/types/billing"
-import Image from "next/image"
 
 export function PlansClient({
   initialBillingSummary,
@@ -57,9 +56,9 @@ export function PlansClient({
   const pendingChange = initialBillingSummary?.pendingPlanChange
   const currentPlan = managed
     ? SUBSCRIPTION_PLANS.find(
-      (plan) =>
-        plan.id === initialBillingSummary?.subscription.plan.toLowerCase()
-    )
+        (plan) =>
+          plan.id === initialBillingSummary?.subscription.plan.toLowerCase()
+      )
     : null
   const currentPlanLabel =
     currentPlan?.name ??
@@ -183,40 +182,44 @@ export function PlansClient({
         ) : null}
         <section
           aria-label="Abonelik planları"
-          className="grid items-stretch gap-4 lg:grid-cols-3"
+          className="themed-scrollbar -mx-5 flex snap-x snap-mandatory scroll-px-5 items-stretch gap-4 overflow-x-auto overscroll-x-contain px-5 pb-2 sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0 lg:pb-0"
         >
           {SUBSCRIPTION_PLANS.map((plan) => (
-            <PlanCard
+            <div
               key={plan.id}
-              plan={plan}
-              billingCycle={billingCycle}
-              price={pricing.prices?.[plan.id][billingCycle] ?? null}
-              priceLoading={pricing.loading}
-              checkoutHref={`${APP_ROUTES.checkout}?workspaceId=${encodeURIComponent(workspaceId)}&plan=${plan.id}&cycle=${billingCycle}`}
-              disabled={
-                !initialBillingSummary ||
-                !pricing.prices ||
-                Boolean(pendingChange) ||
-                (managed && !canChange)
-              }
-              onSelect={
-                managed
-                  ? () => {
-                    setSelection({
-                      plan: plan.id,
-                      cycle: billingCycle,
-                      key: Date.now(),
-                    })
-                    setChangeOpen(true)
-                  }
-                  : undefined
-              }
-              current={
-                currentPlan?.id === plan.id &&
-                initialBillingSummary?.subscription.cycle.toLowerCase() ===
-                billingCycle
-              }
-            />
+              className="w-[85vw] max-w-[22rem] shrink-0 snap-start sm:w-[22rem] lg:w-auto lg:max-w-none lg:shrink"
+            >
+              <PlanCard
+                plan={plan}
+                billingCycle={billingCycle}
+                price={pricing.prices?.[plan.id][billingCycle] ?? null}
+                priceLoading={pricing.loading}
+                checkoutHref={`${APP_ROUTES.checkout}?workspaceId=${encodeURIComponent(workspaceId)}&plan=${plan.id}&cycle=${billingCycle}`}
+                disabled={
+                  !initialBillingSummary ||
+                  !pricing.prices ||
+                  Boolean(pendingChange) ||
+                  (managed && !canChange)
+                }
+                onSelect={
+                  managed
+                    ? () => {
+                        setSelection({
+                          plan: plan.id,
+                          cycle: billingCycle,
+                          key: Date.now(),
+                        })
+                        setChangeOpen(true)
+                      }
+                    : undefined
+                }
+                current={
+                  currentPlan?.id === plan.id &&
+                  initialBillingSummary?.subscription.cycle.toLowerCase() ===
+                    billingCycle
+                }
+              />
+            </div>
           ))}
         </section>
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 text-xs text-muted-foreground">
@@ -239,11 +242,8 @@ export function PlansClient({
         </div>
         <PlanQuestions />
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 text-xs text-muted-foreground">
-          <div className="flex flex-row gap-0 items-center">
-            <AppLogo
-              textWidth={80}
-              className="-ml-1 -mt-1"
-            />
+          <div className="flex flex-row items-center gap-0">
+            <AppLogo textWidth={80} className="-mt-1 -ml-1" />
             <span className="mt-1">· Planlar ve fiyatlandırma</span>
           </div>
           <span>Ödemeler Paddle güvencesiyle işlenir.</span>
