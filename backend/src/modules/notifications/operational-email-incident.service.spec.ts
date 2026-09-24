@@ -6,6 +6,7 @@ import {
   BillingCycle,
   BillingPlan,
   BillingSubscriptionStatus,
+  CatalogSyncStatus,
   NotificationType,
   OperationalEmailIncidentKind,
   OperationalEmailIncidentStatus,
@@ -17,6 +18,8 @@ import { NotificationDeliveryService } from './notification-delivery.service';
 import { entitlementsFor } from '../billing/billing-plan.config';
 import { OPERATIONAL_EMAIL_SUMMARY_INTERVAL_MS } from './operational-email-incident.policy';
 import { OperationalEmailIncidentService } from './operational-email-incident.service';
+import type { AiEmailEvent } from './email-templates/ai-email.template';
+import type { ProductCapacityEmailEvent } from './email-templates/product-capacity-email.template';
 
 function createHarness() {
   const incidents = new Map<
@@ -60,6 +63,8 @@ function createHarness() {
     message: string;
     type: string;
     url: string;
+    aiEmail?: AiEmailEvent;
+    productCapacityEmail?: ProductCapacityEmailEvent;
   }> = [];
   const subscription = {
     plan: BillingPlan.STARTER as BillingPlan,
@@ -78,10 +83,15 @@ function createHarness() {
       .monthlyAiQuestions,
   };
   const store = {
+    workspaceId: 'workspace-1',
     name: 'Test mağazası',
     status: StoreStatus.ACTIVE,
     members: [],
     workspace: { ownerId: 'owner-1', members: [] },
+  };
+  const catalogRun = {
+    status: CatalogSyncStatus.COMPLETED as CatalogSyncStatus,
+    productsSkipped: 12,
   };
   const incidentModel = {
     findFirst: (query: {
@@ -250,6 +260,11 @@ function createHarness() {
     channelConnection: {
       findUnique: () => Promise.resolve({ providerKey: 'trendyol' }),
     },
+    billingSubscription: {
+      findUnique: () => Promise.resolve(subscription),
+    },
+    product: { count: () => Promise.resolve(5_000) },
+    catalogSyncRun: { findFirst: () => Promise.resolve(catalogRun) },
   };
   const delivery = {
     emailConfigured: true,
@@ -261,8 +276,19 @@ function createHarness() {
       message: string,
       url: string,
       key: string,
+      templates?: {
+        ai?: AiEmailEvent;
+        productCapacity?: ProductCapacityEmailEvent;
+      },
     ) => {
-      emails.push({ key, message, type, url });
+      emails.push({
+        key,
+        message,
+        type,
+        url,
+        aiEmail: templates?.ai,
+        productCapacityEmail: templates?.productCapacity,
+      });
       return Promise.resolve('SENT');
     },
   };
@@ -272,7 +298,7 @@ function createHarness() {
     delivery as unknown as NotificationDeliveryService,
     queue as unknown as Queue,
   );
-  return { service, incidents, emails, subscription, quota };
+  return { service, incidents, emails, subscription, quota, catalogRun };
 }
 
 function applyUpdate(target: object, data: Record<string, unknown>) {
@@ -309,6 +335,12 @@ void test('ilk hata tek mail, yeni hatalar sekiz saat sonra tek özet üretir', 
   await service.processIncident(incident.id);
   assert.equal(emails.length, 2);
   assert.match(emails[1].message, /2 soruda daha/);
+  assert.deepEqual(emails[1].aiEmail, {
+    kind: 'OPERATION_FAILURE',
+    process: 'draft',
+    phase: 'summary',
+    affectedCount: 2,
+  });
   assert.notEqual(emails[0].key, emails[1].key);
 });
 
@@ -329,6 +361,10 @@ void test('başarılı işlem sonrası sessiz dönemde bir kapanış maili gönd
   assert.equal(incident.status, OperationalEmailIncidentStatus.RESOLVED);
   assert.equal(emails.length, 2);
   assert.match(emails[1].message, /yeniden başarıyla/);
+  assert.deepEqual(emails[1].aiEmail, {
+    kind: 'OPERATION_RECOVERED',
+    process: 'draft',
+  });
 });
 
 void test('cevap hatalarını kanal bazında ayrı olaylarda toplar', async () => {
@@ -393,6 +429,10 @@ void test('quota warning sends once until usage drops and then allows a new inci
   await service.processIncident(first.id);
   assert.equal(emails.length, 1);
   assert.equal(emails[0].type, NotificationType.AI_AUTOMATION_PAUSED);
+  assert.deepEqual(emails[0].aiEmail, {
+    kind: 'AUTOMATION_PAUSED',
+    reason: 'quota',
+  });
   assert.equal(emails[0].url, '/billing');
 
   await service.recordFailure(input);
@@ -467,6 +507,15 @@ void test('product capacity warning is scoped to the channel and resets after a 
   await service.processIncident(first.id);
   assert.equal(emails.length, 1);
   assert.equal(emails[0].type, NotificationType.BILLING_PLAN_LIMIT);
+  assert.deepEqual(emails[0].productCapacityEmail, {
+    planName: 'Starter',
+    used: 5_000,
+    limit: entitlementsFor(
+      BillingPlan.STARTER,
+      BillingSubscriptionStatus.ACTIVE,
+    ).activeProducts,
+    skippedCount: 12,
+  });
 
   subscription.plan = BillingPlan.GROWTH;
   await service.recordFailure(input);
@@ -480,4 +529,17 @@ void test('product capacity warning is scoped to the channel and resets after a 
   const second = [...incidents.values()][1];
   await service.processIncident(second.id);
   assert.equal(emails.length, 2);
+});
+
+void test('product capacity email omits the skipped count when the latest run does not prove it', async () => {
+  const { service, incidents, emails, catalogRun } = createHarness();
+  catalogRun.status = CatalogSyncStatus.FAILED;
+  await service.recordFailure({
+    storeId: 'store-1',
+    connectionId: 'trendyol-1',
+    kind: OperationalEmailIncidentKind.PRODUCT_CAPACITY,
+  });
+
+  await service.processIncident([...incidents.values()][0].id);
+  assert.equal(emails[0].productCapacityEmail?.skippedCount, null);
 });

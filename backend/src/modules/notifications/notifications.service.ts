@@ -32,6 +32,9 @@ import {
   FINANCE_TRANSACTIONAL_EMAIL_TYPES,
   SECURITY_TRANSACTIONAL_EMAIL_TYPES,
 } from './critical-email.policy';
+import type { SecurityEmailEvent } from './email-templates/security-email.template';
+import type { BillingEmailEvent } from './email-templates/billing-email.template';
+import type { AiEmailEvent } from './email-templates/ai-email.template';
 import {
   RemoveWebPushSubscriptionDto,
   SaveWebPushSubscriptionDto,
@@ -47,6 +50,8 @@ export type StoreNotificationInput = {
   entityType?: string;
   entityId?: string;
   dedupeKey: string;
+  billingEmail?: BillingEmailEvent;
+  aiEmail?: AiEmailEvent;
 };
 
 type DirectNotificationInput = Omit<StoreNotificationInput, 'storeId'> & {
@@ -60,6 +65,7 @@ type WorkspaceNotificationInput = Omit<StoreNotificationInput, 'storeId'>;
 type UserNotificationInput = Omit<StoreNotificationInput, 'storeId'> & {
   recipientUserId: string;
   storeId?: string | null;
+  securityEmail?: SecurityEmailEvent;
 };
 
 const STORE_NOTIFICATION_ROLES: Partial<
@@ -521,6 +527,7 @@ export class NotificationsService {
       message: string;
       dedupeKey: string;
       confirmedFailure?: boolean;
+      billingEmail?: BillingEmailEvent;
     },
   ) {
     const workspace = await transaction.workspace.findUnique({
@@ -551,6 +558,7 @@ export class NotificationsService {
       entityType: 'BILLING_WORKSPACE',
       entityId: workspaceId,
       criticalEmail: input.confirmedFailure === true,
+      billingEmail: input.billingEmail,
     });
   }
 
@@ -613,6 +621,7 @@ export class NotificationsService {
           title: input.title.slice(0, 160),
           message: input.message.slice(0, 1_000),
           actionUrl: input.actionUrl,
+          billingEmail: input.billingEmail,
         });
       }
     }
@@ -665,6 +674,7 @@ export class NotificationsService {
               title: input.title.slice(0, 160),
               message: input.message.slice(0, 1_000),
               actionUrl: input.actionUrl,
+              securityEmail: input.securityEmail,
             },
           );
         }
@@ -850,6 +860,7 @@ export class NotificationsService {
               title,
               message,
               actionUrl: input.actionUrl,
+              aiEmail: input.aiEmail,
             });
             saved.push(notification);
           }
@@ -870,6 +881,7 @@ export class NotificationsService {
           title,
           message,
           actionUrl: input.actionUrl,
+          aiEmail: input.aiEmail,
           emailDeliveryKeys: Object.fromEntries(
             notifications.map((notification) => [
               notification.recipientUserId,

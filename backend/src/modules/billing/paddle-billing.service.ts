@@ -910,7 +910,23 @@ export class PaddleBillingService {
               ? 'Aboneliğiniz etkinleştirildi'
               : 'Abonelik planınız değiştirildi',
             message: `${billingPlanLabel(selection.plan)} planı ${billingCycleLabel(selection.cycle)} ödeme dönemiyle etkinleştirildi.`,
-            actionUrl: `/billing/${existing.workspaceId}`,
+            actionUrl: subscriptionActivated
+              ? `/billing/${existing.workspaceId}/invoices`
+              : `/billing/${existing.workspaceId}`,
+            billingEmail: subscriptionActivated
+              ? {
+                  kind: 'SUBSCRIPTION_ACTIVATED',
+                  plan: billingPlanLabel(selection.plan),
+                  cycle: billingCycleLabel(selection.cycle),
+                  nextBilledAt: parseDate(currentPeriod?.endsAt),
+                }
+              : {
+                  kind: 'PLAN_CHANGED',
+                  previousPlan: billingPlanLabel(existing.plan),
+                  plan: billingPlanLabel(selection.plan),
+                  cycle: billingCycleLabel(selection.cycle),
+                  nextBilledAt: parseDate(currentPeriod?.endsAt),
+                },
             entityType: 'BILLING_SUBSCRIPTION',
             entityId: existing.id,
             dedupeKey: subscriptionActivated
@@ -935,6 +951,11 @@ export class PaddleBillingService {
             message: accessEndsAt
               ? `Aboneliğiniz ${formatBillingNotificationDate(accessEndsAt)} tarihinde sona erecek. Bu tarihe kadar plan haklarınızı kullanabilirsiniz.`
               : 'Aboneliğiniz mevcut faturalandırma döneminin sonunda sona erecek.',
+            billingEmail: {
+              kind: 'CANCELLATION_SCHEDULED',
+              plan: billingPlanLabel(selection.plan),
+              accessEndsAt,
+            },
             actionUrl: `/billing/${existing.workspaceId}`,
             entityType: 'BILLING_SUBSCRIPTION',
             entityId: existing.id,
@@ -956,7 +977,12 @@ export class PaddleBillingService {
             title: 'Aboneliğiniz sona erdi',
             message:
               'Ücretli planınız sona erdi. Kayıtlı verilerinize erişebilir ve mevcut soruları manuel yanıtlayabilirsiniz.',
-            actionUrl: `/billing/${existing.workspaceId}`,
+            actionUrl: `/billing/${existing.workspaceId}/plans`,
+            billingEmail: {
+              kind: 'SUBSCRIPTION_ENDED',
+              plan: billingPlanLabel(selection.plan),
+              endedAt: parseDate(data.canceledAt) ?? snapshotAt,
+            },
             entityType: 'BILLING_SUBSCRIPTION',
             entityId: existing.id,
             dedupeKey: `billing-cancellation-completed:${data.id}`,
@@ -1011,6 +1037,11 @@ export class PaddleBillingService {
             'Paddle yenileme ödemesinde sorun bildirdi. Ödeme yönteminizi Plan ve faturalar bölümünden güncelleyin. AI ve senkronizasyon durduruldu; mevcut soruları manuel yanıtlayabilirsiniz.',
           dedupeKey: `billing-payment:${data.id}:${currentPeriod?.startsAt ?? existing.currentPeriodStart.toISOString()}`,
           confirmedFailure: true,
+          billingEmail: {
+            kind: 'PAYMENT_FAILED',
+            plan: billingPlanLabel(selection.plan),
+            updatedAt: snapshotAt,
+          },
         },
       );
       recipientUserIds.forEach((userId) =>
@@ -1080,7 +1111,8 @@ export class PaddleBillingService {
           severity: NotificationSeverity.INFO,
           title: 'Ödeme iadeniz tamamlandı',
           message: `${amount} tutarındaki iade Paddle tarafından onaylandı. İşlemi faturalar bölümünden inceleyebilirsiniz.`,
-          actionUrl: `/billing/${subscription.workspaceId}?tab=invoices`,
+          actionUrl: `/billing/${subscription.workspaceId}/invoices`,
+          billingEmail: { kind: 'REFUND_APPROVED', amount },
           entityType: 'PADDLE_ADJUSTMENT',
           entityId: data.id,
           dedupeKey: `billing-refund:${data.id}`,

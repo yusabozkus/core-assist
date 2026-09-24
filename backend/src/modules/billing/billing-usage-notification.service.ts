@@ -48,6 +48,12 @@ export class BillingUsageNotificationService {
       entityType: 'BILLING_USAGE_PERIOD',
       entityId: usage.periodId,
       dedupeKey: `ai-usage:${usage.periodId}:${threshold}`,
+      aiEmail: {
+        kind: 'USAGE',
+        used: usage.used,
+        limit: usage.limit,
+        remaining: usage.remaining,
+      },
     });
   }
 }

@@ -391,6 +391,14 @@ export class SyncEmailIncidentService {
                 ? '/dashboard/channels'
                 : '/dashboard/channels/sync',
               `sync-incident:${incident.id}:${phase}:${userId}`,
+              {
+                channel: {
+                  providerKey,
+                  storeName,
+                  kind: incident.kind,
+                  phase,
+                },
+              },
             );
       if (outcome === 'DEFERRED') return false;
       await this.prisma.syncEmailIncidentDelivery.updateMany({

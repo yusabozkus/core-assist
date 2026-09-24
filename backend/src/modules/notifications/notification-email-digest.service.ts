@@ -288,6 +288,53 @@ export class NotificationEmailDigestService {
         return;
       }
 
+      const featuredVariants =
+        await this.prisma.externalProductVariant.findMany({
+          where: {
+            ...activeVariants,
+            stockEmailAlertLevel: level,
+            stockEmailAlertStartedAt: {
+              ...(digest.lastIncludedAt
+                ? { gt: digest.lastIncludedAt }
+                : { not: null }),
+              lte: windowEnd,
+            },
+          },
+          orderBy: [{ stockEmailAlertStartedAt: 'desc' }, { id: 'asc' }],
+          take: 3,
+          select: {
+            stock: true,
+            productVariant: {
+              select: { title: true, color: true, size: true, sku: true },
+            },
+            externalProduct: {
+              select: {
+                product: {
+                  select: {
+                    title: true,
+                    images: {
+                      orderBy: [{ position: 'asc' }, { id: 'asc' }],
+                      take: 1,
+                      select: { url: true },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        });
+      const products = featuredVariants.map((variant) => ({
+        name: variant.externalProduct.product.title,
+        variant:
+          [variant.productVariant.color, variant.productVariant.size]
+            .filter(Boolean)
+            .join(' · ') ||
+          variant.productVariant.title?.trim() ||
+          variant.productVariant.sku,
+        stock: variant.stock,
+        imageUrl: variant.externalProduct.product.images[0]?.url ?? null,
+      }));
+
       const idempotencyKey =
         digest.idempotencyKey ??
         `stock:${type}:${digest.id}:${windowEnd.getTime()}`;
@@ -306,6 +353,7 @@ export class NotificationEmailDigestService {
         currentCount,
         newCount,
         idempotencyKey,
+        products,
       );
       if (!sent) {
         if (!digest.pendingUntil) {

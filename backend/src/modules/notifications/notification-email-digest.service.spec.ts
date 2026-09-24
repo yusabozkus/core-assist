@@ -4,6 +4,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { NotificationDeliveryService } from './notification-delivery.service';
 import { NotificationEmailDigestService } from './notification-email-digest.service';
 import { StockEmailAlertLevel } from '../../generated/prisma/enums';
+import type { StockEmailProduct } from './email-templates/stock-email.template';
 
 function createHarness(
   pendingCount: number,
@@ -24,6 +25,7 @@ function createHarness(
   const sends: Array<{ pending: number; added: number }> = [];
   const stockSends: Array<{ current: number; added: number; type: string }> =
     [];
+  const stockProducts: StockEmailProduct[][] = [];
   const attemptKeys: string[] = [];
   const prisma = {
     notificationDeliverySetting: {
@@ -55,6 +57,24 @@ function createHarness(
               : newCount
             : pendingCount,
         ),
+      findMany: (query: { where: { stock: unknown } }) =>
+        Promise.resolve([
+          {
+            stock: query.where.stock === 0 ? 0 : 2,
+            productVariant: {
+              title: null,
+              color: 'Siyah',
+              size: 'M',
+              sku: 'SKU-1',
+            },
+            externalProduct: {
+              product: {
+                title: 'Pamuklu Tişört',
+                images: [{ url: 'https://cdn.dsmcdn.com/product-1.jpg' }],
+              },
+            },
+          },
+        ]),
     },
     $queryRaw: () =>
       Promise.resolve([
@@ -89,12 +109,14 @@ function createHarness(
       current: number,
       added: number,
       key: string,
+      products: StockEmailProduct[],
     ) => {
       attemptKeys.push(key);
       if (failFirst && attemptKeys.length === 1)
         return Promise.reject(new Error('Temporary'));
       if (!deliveryAllowed) return Promise.resolve(false);
       stockSends.push({ current, added, type });
+      stockProducts.push(products);
       return Promise.resolve(true);
     },
   };
@@ -102,7 +124,7 @@ function createHarness(
     prisma as unknown as PrismaService,
     delivery as unknown as NotificationDeliveryService,
   );
-  return { service, state, sends, stockSends, attemptKeys };
+  return { service, state, sends, stockSends, stockProducts, attemptKeys };
 }
 
 void test('AI inceleme sorularını tek e-postada toplar ve gönderim imlecini kaydeder', async () => {
@@ -152,12 +174,20 @@ void test('sessiz saatlerde özet penceresini tüketmez', async () => {
 });
 
 void test('tükenen stokları tek e-postada toplar ve eski olayları tekrarlamaz', async () => {
-  const { service, state, stockSends } = createHarness(10, 3);
+  const { service, state, stockSends, stockProducts } = createHarness(10, 3);
   await service.sendStockDigests(StockEmailAlertLevel.OUT_OF_STOCK);
   assert.deepEqual(stockSends, [
     { current: 10, added: 3, type: 'OUT_OF_STOCK' },
   ]);
   assert.ok(state.lastIncludedAt);
+  assert.deepEqual(stockProducts[0], [
+    {
+      name: 'Pamuklu Tişört',
+      variant: 'Siyah · M',
+      stock: 0,
+      imageUrl: 'https://cdn.dsmcdn.com/product-1.jpg',
+    },
+  ]);
 
   await service.sendStockDigests(StockEmailAlertLevel.OUT_OF_STOCK);
   assert.equal(stockSends.length, 1);

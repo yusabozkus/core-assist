@@ -145,6 +145,10 @@ function createAppAuth(
                 entityType: 'AUTH_ACCOUNT',
                 entityId: account.id,
                 dedupeKey: `security-account-linked:${account.id}`,
+                securityEmail: {
+                  kind: 'PROVIDER_LINKED',
+                  provider: authProviderLabel(account.providerId),
+                },
               }),
               isAdmin && user
                 ? audit.recordSafely({
@@ -180,6 +184,10 @@ function createAppAuth(
                 entityType: 'AUTH_ACCOUNT',
                 entityId: account.id,
                 dedupeKey: `security-account-unlinked:${account.id}`,
+                securityEmail: {
+                  kind: 'PROVIDER_REMOVED',
+                  provider: authProviderLabel(account.providerId),
+                },
               }),
               isAdmin && user
                 ? audit.recordSafely({
@@ -250,6 +258,7 @@ function createAppAuth(
                   entityType: 'AUTH_USER',
                   entityId: session.userId,
                   dedupeKey: `security-sessions-revoked:${session.userId}:${minuteBucket}`,
+                  securityEmail: { kind: 'OTHER_SESSIONS_REVOKED' },
                 })
               : Promise.resolve(null);
             const auditEntry =

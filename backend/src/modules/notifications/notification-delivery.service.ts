@@ -11,6 +11,31 @@ import {
   FINANCE_TRANSACTIONAL_EMAIL_TYPES,
   SECURITY_TRANSACTIONAL_EMAIL_TYPES,
 } from './critical-email.policy';
+import {
+  renderSecurityEmail,
+  type SecurityEmailEvent,
+} from './email-templates/security-email.template';
+import {
+  renderBillingEmail,
+  type BillingEmailEvent,
+} from './email-templates/billing-email.template';
+import {
+  renderAiEmail,
+  type AiEmailEvent,
+} from './email-templates/ai-email.template';
+import {
+  renderStockEmail,
+  type StockEmailEvent,
+  type StockEmailProduct,
+} from './email-templates/stock-email.template';
+import {
+  renderChannelEmail,
+  type ChannelEmailEvent,
+} from './email-templates/channel-email.template';
+import {
+  renderProductCapacityEmail,
+  type ProductCapacityEmailEvent,
+} from './email-templates/product-capacity-email.template';
 
 type ExternalNotificationInput = {
   storeId: string;
@@ -20,6 +45,10 @@ type ExternalNotificationInput = {
   message: string;
   actionUrl?: string;
   emailDeliveryKeys?: Record<string, string>;
+  aiEmail?: AiEmailEvent;
+  stockEmail?: StockEmailEvent;
+  channelEmail?: ChannelEmailEvent;
+  productCapacityEmail?: ProductCapacityEmailEvent;
 };
 
 type EssentialNotificationInput = {
@@ -29,6 +58,8 @@ type EssentialNotificationInput = {
   title: string;
   message: string;
   actionUrl?: string;
+  securityEmail?: SecurityEmailEvent;
+  billingEmail?: BillingEmailEvent;
 };
 
 type DeliverySettings = {
@@ -109,6 +140,26 @@ export class NotificationDeliveryService {
     if (!recipient || !settings || this.isQuietTime(settings)) return;
     const actionUrl = this.toAbsoluteUrl(input.actionUrl);
     const deliveryKey = `notification:${notification.id}:${notification.occurrenceCount}`;
+    const rendered = input.aiEmail
+      ? renderAiEmail({
+          recipientName: recipient.name,
+          title: input.title,
+          message: input.message,
+          actionUrl,
+          preferencesUrl: this.toAbsoluteUrl(
+            '/dashboard/settings/notifications?view=preferences',
+          ),
+          event: input.aiEmail,
+        })
+      : {
+          subject: input.title,
+          html: buildEmailHtml(
+            recipient.name,
+            input.title,
+            input.message,
+            actionUrl,
+          ),
+        };
     await transaction.emailDeliveryRecord.upsert({
       where: { deliveryKey },
       create: {
@@ -117,13 +168,8 @@ export class NotificationDeliveryService {
         storeId: input.storeId,
         recipientEmail: recipient.email,
         senderEmail: this.emailFrom!,
-        subject: input.title,
-        html: buildEmailHtml(
-          recipient.name,
-          input.title,
-          input.message,
-          actionUrl,
-        ),
+        subject: rendered.subject,
+        html: rendered.html,
       },
       update: {},
     });
@@ -147,6 +193,35 @@ export class NotificationDeliveryService {
     });
     if (!recipient?.emailVerified) return;
     const deliveryKey = `critical:${notificationId}`;
+    const rendered =
+      SECURITY_TRANSACTIONAL_EMAIL_TYPES.has(input.type) && input.securityEmail
+        ? renderSecurityEmail({
+            recipientName: recipient.name,
+            event: input.securityEmail,
+            actionUrl: this.toAbsoluteUrl(
+              input.actionUrl === '/admin/account'
+                ? '/admin/account'
+                : '/dashboard/settings/profile',
+            ),
+          })
+        : FINANCE_TRANSACTIONAL_EMAIL_TYPES.has(input.type) &&
+            input.billingEmail
+          ? renderBillingEmail({
+              recipientName: recipient.name,
+              title: input.title,
+              message: input.message,
+              event: input.billingEmail,
+              actionUrl: this.toAbsoluteUrl(input.actionUrl),
+            })
+          : {
+              subject: input.title,
+              html: buildEmailHtml(
+                recipient.name,
+                input.title,
+                input.message,
+                this.toAbsoluteUrl(input.actionUrl),
+              ),
+            };
     await transaction.emailDeliveryRecord.upsert({
       where: { deliveryKey },
       create: {
@@ -155,13 +230,8 @@ export class NotificationDeliveryService {
         storeId: input.storeId ?? null,
         recipientEmail: recipient.email,
         senderEmail: this.emailFrom!,
-        subject: input.title,
-        html: buildEmailHtml(
-          recipient.name,
-          input.title,
-          input.message,
-          this.toAbsoluteUrl(input.actionUrl),
-        ),
+        subject: rendered.subject,
+        html: rendered.html,
       },
       update: {},
     });
@@ -278,6 +348,7 @@ export class NotificationDeliveryService {
         actionUrl: '/dashboard/inbox',
       },
       idempotencyKey,
+      { kind: 'REVIEW_DIGEST', pendingCount, newCount },
     );
     if (result === 'DEFERRED')
       throw new Error('AI review email is queued for retry.');
@@ -292,6 +363,7 @@ export class NotificationDeliveryService {
     currentCount: number,
     newCount: number,
     idempotencyKey: string,
+    products: StockEmailProduct[],
   ) {
     if (!this.emailConfigured) return false;
 
@@ -333,6 +405,7 @@ export class NotificationDeliveryService {
         actionUrl: depleted
           ? '/dashboard/catalog/inventory?status=out_of_stock'
           : '/dashboard/catalog/inventory?status=low_stock',
+        stockEmail: { kind: type, currentCount, newCount, products },
       },
       idempotencyKey,
     );
@@ -349,6 +422,11 @@ export class NotificationDeliveryService {
     message: string,
     actionUrl: string,
     idempotencyKey: string,
+    templates?: {
+      ai?: AiEmailEvent;
+      channel?: ChannelEmailEvent;
+      productCapacity?: ProductCapacityEmailEvent;
+    },
   ): Promise<'SENT' | 'DEFERRED' | 'SKIPPED'> {
     if (!this.emailConfigured) return 'DEFERRED';
 
@@ -396,8 +474,11 @@ export class NotificationDeliveryService {
         title,
         message,
         actionUrl,
+        channelEmail: templates?.channel,
+        productCapacityEmail: templates?.productCapacity,
       },
       idempotencyKey,
+      templates?.ai,
     );
     return result === 'SENT'
       ? 'SENT'
@@ -456,16 +537,71 @@ export class NotificationDeliveryService {
     name: string,
     input: ExternalNotificationInput,
     idempotencyKey: string,
+    aiEmail?: AiEmailEvent,
   ) {
     const actionUrl = this.toAbsoluteUrl(input.actionUrl);
+    const event = aiEmail ?? input.aiEmail;
+    const rendered = event
+      ? renderAiEmail({
+          recipientName: name,
+          title: input.title,
+          message: input.message,
+          actionUrl,
+          preferencesUrl: this.toAbsoluteUrl(
+            '/dashboard/settings/notifications?view=preferences',
+          ),
+          event,
+        })
+      : input.stockEmail
+        ? renderStockEmail({
+            recipientName: name,
+            title: input.title,
+            message: input.message,
+            actionUrl,
+            preferencesUrl: this.toAbsoluteUrl(
+              '/dashboard/settings/notifications?view=preferences',
+            ),
+            event: input.stockEmail,
+          })
+        : input.channelEmail
+          ? renderChannelEmail({
+              recipientName: name,
+              title: input.title,
+              message: input.message,
+              actionUrl,
+              preferencesUrl: this.toAbsoluteUrl(
+                '/dashboard/settings/notifications?view=preferences',
+              ),
+              event: input.channelEmail,
+            })
+          : input.productCapacityEmail
+            ? renderProductCapacityEmail({
+                recipientName: name,
+                title: input.title,
+                message: input.message,
+                actionUrl,
+                preferencesUrl: this.toAbsoluteUrl(
+                  '/dashboard/settings/notifications?view=preferences',
+                ),
+                event: input.productCapacityEmail,
+              })
+            : {
+                subject: input.title,
+                html: buildEmailHtml(
+                  name,
+                  input.title,
+                  input.message,
+                  actionUrl,
+                ),
+              };
     return this.resend.send({
       deliveryKey: idempotencyKey,
       recipientUserId,
       storeId: input.storeId,
       recipientEmail: email,
       senderEmail: this.emailFrom!,
-      subject: input.title,
-      html: buildEmailHtml(name, input.title, input.message, actionUrl),
+      subject: rendered.subject,
+      html: rendered.html,
     });
   }
 

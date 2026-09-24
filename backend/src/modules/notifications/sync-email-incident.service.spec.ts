@@ -11,6 +11,7 @@ import {
   SyncEmailIncidentStatus,
 } from '../../generated/prisma/enums';
 import { NotificationDeliveryService } from './notification-delivery.service';
+import type { ChannelEmailEvent } from './email-templates/channel-email.template';
 import { SyncEmailIncidentService } from './sync-email-incident.service';
 
 function createHarness(
@@ -63,6 +64,7 @@ function createHarness(
     key: string;
     url: string;
     message: string;
+    event: ChannelEmailEvent | undefined;
   }> = [];
   const prisma = {
     syncEmailIncident: {
@@ -135,12 +137,13 @@ function createHarness(
       message: string,
       url: string,
       key: string,
+      templates: { channel?: ChannelEmailEvent } | undefined,
     ) => {
       const phase =
         incident.status === SyncEmailIncidentStatus.OPEN
           ? SyncEmailDeliveryPhase.OPEN
           : SyncEmailDeliveryPhase.RESOLVED;
-      emails.push({ phase, key, url, message });
+      emails.push({ phase, key, url, message, event: templates?.channel });
       return Promise.resolve(
         phase === SyncEmailDeliveryPhase.OPEN ? openOutcome : 'SENT',
       );
@@ -164,6 +167,12 @@ void test('cevap gönderiminden kaynaklanan kanal yetkilendirme olayı hemen mai
   assert.equal(emails[0].phase, SyncEmailDeliveryPhase.OPEN);
   assert.equal(emails[0].url, '/dashboard/channels');
   assert.match(emails[0].message, /cevap gönderimi/i);
+  assert.deepEqual(emails[0].event, {
+    providerKey: 'trendyol',
+    storeName: 'Test mağaza',
+    kind: SyncEmailIncidentKind.AUTH,
+    phase: SyncEmailDeliveryPhase.OPEN,
+  });
 });
 
 void test('aynı arıza için tek açılış ve düzelince tek kapanış e-postası gönderir', async () => {
@@ -183,6 +192,7 @@ void test('aynı arıza için tek açılış ve düzelince tek kapanış e-posta
     [SyncEmailDeliveryPhase.OPEN, SyncEmailDeliveryPhase.RESOLVED],
   );
   assert.notEqual(emails[0].key, emails[1].key);
+  assert.equal(emails[1].event?.phase, SyncEmailDeliveryPhase.RESOLVED);
 });
 
 void test('açılış e-postası gönderilmediyse düzelme e-postası da göndermez', async () => {

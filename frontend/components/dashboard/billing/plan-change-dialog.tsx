@@ -6,6 +6,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Loading03Icon,
   CheckmarkCircle01Icon,
+  CreditCardIcon,
 } from "@hugeicons/core-free-icons"
 import {
   Dialog,
@@ -18,9 +19,11 @@ import {
 import { Button } from "@/components/ui/button"
 import {
   confirmBillingPlanChange,
+  createBillingPortalSession,
   getBillingPlanChange,
   previewBillingPlanChange,
 } from "@/lib/api/billing"
+import { markBillingPortalVisit } from "@/lib/billing-portal-return"
 import {
   formatBillingAmount,
   formatBillingDate,
@@ -56,6 +59,7 @@ export function PlanChangeDialog({
   const [submitting, setSubmitting] = useState(false)
   const [revision, setRevision] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
+  const [openingPaymentSettings, setOpeningPaymentSettings] = useState(false)
   const submittingRef = useRef(false)
   const changeId = result?.id ?? pendingId
   const pending = Boolean(
@@ -160,8 +164,26 @@ export function PlanChangeDialog({
     }
   }
 
+  async function openPaymentSettings() {
+    if (openingPaymentSettings) return
+    setOpeningPaymentSettings(true)
+    setError(null)
+    try {
+      const session = await createBillingPortalSession(workspaceId)
+      markBillingPortalVisit(workspaceId)
+      window.location.assign(
+        session.updatePaymentMethodUrl ?? session.overviewUrl
+      )
+    } catch (cause) {
+      setError(message(cause))
+      setOpeningPaymentSettings(false)
+    }
+  }
+
   const completed = result?.status === "COMPLETED"
   const failed = result?.status === "FAILED"
+  const canManagePaymentMethod =
+    failed && result.failureCode === "PADDLE_REJECTED"
   const loading = !preview && !result && !pendingId && !error
   const showPreview = preview && !pending && !completed && !failed
   const amounts = preview?.amounts
@@ -358,11 +380,37 @@ export function PlanChangeDialog({
           </div>
         )}
         {failed && (
-          <p role="alert" className="text-sm leading-6 text-destructive">
-            {result.failureCode === "PRECHECK_FAILED"
-              ? "Ön kontrol tamamlanamadı. Değişiklik gönderilmedi; güncel önizlemeyi tekrar alın."
-              : "Plan değişikliği uygulanmadı. Abonelik ve ödeme yöntemini kontrol edip yeni bir önizleme alın."}
-          </p>
+          <div
+            role="alert"
+            className="space-y-3 rounded-xl border border-amber-500/25 bg-amber-500/5 p-4"
+          >
+            <p className="text-sm font-medium">Plan değişikliği uygulanmadı</p>
+            <p className="text-sm leading-6 text-muted-foreground">
+              {result.failureCode === "PRECHECK_FAILED"
+                ? "Ön kontrol tamamlanamadı. Güncel önizlemeyi tekrar alın."
+                : canManagePaymentMethod
+                  ? "Ödeme yönteminiz kaynaklı olabilir. Kayıtlı yöntemi güncelleyip güncel tutarla yeniden deneyin."
+                  : "İşlem tamamlanamadı. Güncel önizlemeyi tekrar alın; sorun sürerse destek ekibiyle iletişime geçin."}
+            </p>
+            {canManagePaymentMethod && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={openingPaymentSettings}
+                onClick={() => void openPaymentSettings()}
+              >
+                {openingPaymentSettings ? (
+                  <Loader />
+                ) : (
+                  <HugeiconsIcon icon={CreditCardIcon} className="size-4" />
+                )}
+                {openingPaymentSettings
+                  ? "Ödeme ayarları açılıyor"
+                  : "Ödeme yöntemini güncelle"}
+              </Button>
+            )}
+          </div>
         )}
         <DialogFooter className="border-t border-border pt-4">
           <Button

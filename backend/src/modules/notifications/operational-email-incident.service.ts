@@ -4,10 +4,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { Queue } from 'bullmq';
 import { Prisma } from '../../generated/prisma/client';
 import {
+  CatalogSyncKind,
+  CatalogSyncStatus,
   NotificationType,
   OperationalEmailIncidentKind,
   OperationalEmailIncidentStatus,
   OperationalEmailPhase,
+  ProductStatus,
   StoreRole,
   StoreStatus,
   SyncEmailDeliveryStatus,
@@ -17,6 +20,8 @@ import { PrismaService } from '../../database/prisma.service';
 import { hasBillingAccess } from '../billing/billing-access.policy';
 import { entitlementsFor } from '../billing/billing-plan.config';
 import { resolveBillingUsageWindow } from '../billing/billing-usage-window';
+import type { AiEmailEvent } from './email-templates/ai-email.template';
+import type { ProductCapacityEmailEvent } from './email-templates/product-capacity-email.template';
 import {
   NOTIFICATION_EMAIL_DIGEST_QUEUE,
   SEND_OPERATIONAL_INCIDENT_EMAIL_JOB,
@@ -270,6 +275,7 @@ export class OperationalEmailIncidentService {
           store: {
             select: {
               name: true,
+              workspaceId: true,
               status: true,
               members: { select: { userId: true, role: true } },
               workspace: {
@@ -318,6 +324,14 @@ export class OperationalEmailIncidentService {
 
       const phase = this.phaseFor(incident, now);
       if (!phase) return;
+      const productCapacityEmail =
+        incident.kind === OperationalEmailIncidentKind.PRODUCT_CAPACITY
+          ? await this.productCapacityEmailEvent(
+              incident.store.workspaceId,
+              incident.connectionId,
+              incident.lastFailureAt,
+            )
+          : undefined;
       const sequence =
         phase === OperationalEmailPhase.SUMMARY ? incident.failureCount : 0;
       const eligible = new Set([
@@ -371,6 +385,7 @@ export class OperationalEmailIncidentService {
           userId,
           eligible: eligible.has(userId),
           newFailures: incident.failureCount - incident.lastEmailedFailureCount,
+          productCapacityEmail,
         });
         if (!completed) deferred = true;
       }
@@ -594,6 +609,55 @@ export class OperationalEmailIncidentService {
     };
   }
 
+  private async productCapacityEmailEvent(
+    workspaceId: string,
+    connectionId: string | null,
+    lastFailureAt: Date,
+  ): Promise<ProductCapacityEmailEvent | undefined> {
+    const [subscription, used, latestRun] = await Promise.all([
+      this.prisma.billingSubscription.findUnique({
+        where: { workspaceId },
+        select: { plan: true, status: true },
+      }),
+      this.prisma.product.count({
+        where: { store: { workspaceId }, status: ProductStatus.ACTIVE },
+      }),
+      connectionId
+        ? this.prisma.catalogSyncRun.findFirst({
+            where: {
+              connectionId,
+              kind: CatalogSyncKind.FULL,
+              updatedAt: {
+                gte: new Date(lastFailureAt.getTime() - 60_000),
+                lte: lastFailureAt,
+              },
+            },
+            orderBy: { startedAt: 'desc' },
+            select: { status: true, productsSkipped: true },
+          })
+        : Promise.resolve(null),
+    ]);
+    if (!subscription) return undefined;
+
+    const planName =
+      subscription.plan === 'STARTER'
+        ? 'Starter'
+        : subscription.plan === 'GROWTH'
+          ? 'Growth'
+          : 'Business';
+    return {
+      planName,
+      used,
+      limit: entitlementsFor(subscription.plan, subscription.status)
+        .activeProducts,
+      skippedCount:
+        latestRun?.status === CatalogSyncStatus.COMPLETED &&
+        latestRun.productsSkipped > 0
+          ? latestRun.productsSkipped
+          : null,
+    };
+  }
+
   private async sendToRecipient(input: {
     incidentId: string;
     storeId: string;
@@ -605,6 +669,7 @@ export class OperationalEmailIncidentService {
     userId: string;
     eligible: boolean;
     newFailures: number;
+    productCapacityEmail?: ProductCapacityEmailEvent;
   }) {
     const delivery = await this.prisma.operationalEmailDelivery.upsert({
       where: {
@@ -669,6 +734,10 @@ export class OperationalEmailIncidentService {
               emailMessage(input.kind, input.phase, input.newFailures),
               isWarningKind(input.kind) ? '/billing' : '/dashboard/inbox',
               `operational:${input.incidentId}:${input.phase}:${input.sequence}:${input.userId}`,
+              {
+                ai: aiEmailEvent(input.kind, input.phase, input.newFailures),
+                productCapacity: input.productCapacityEmail,
+              },
             );
       if (outcome === 'DEFERRED') return false;
       await this.prisma.operationalEmailDelivery.updateMany({
@@ -714,6 +783,32 @@ function notificationType(kind: OperationalEmailIncidentKind) {
   if (kind === OperationalEmailIncidentKind.PRODUCT_CAPACITY)
     return NotificationType.BILLING_PLAN_LIMIT;
   return NotificationType.AI_AUTOMATION_PAUSED;
+}
+
+function aiEmailEvent(
+  kind: OperationalEmailIncidentKind,
+  phase: OperationalEmailPhase,
+  newFailures: number,
+): AiEmailEvent | undefined {
+  if (kind === OperationalEmailIncidentKind.AI_QUOTA_PAUSED)
+    return { kind: 'AUTOMATION_PAUSED', reason: 'quota' };
+  if (kind === OperationalEmailIncidentKind.AI_BILLING_PAUSED)
+    return { kind: 'AUTOMATION_PAUSED', reason: 'subscription' };
+  if (
+    kind !== OperationalEmailIncidentKind.AI_DRAFT &&
+    kind !== OperationalEmailIncidentKind.ANSWER_DELIVERY
+  )
+    return undefined;
+  const process =
+    kind === OperationalEmailIncidentKind.AI_DRAFT ? 'draft' : 'answer';
+  if (phase === OperationalEmailPhase.RESOLVED)
+    return { kind: 'OPERATION_RECOVERED', process };
+  return {
+    kind: 'OPERATION_FAILURE',
+    process,
+    phase: phase === OperationalEmailPhase.SUMMARY ? 'summary' : 'initial',
+    affectedCount: Math.max(1, newFailures),
+  };
 }
 
 function isWarningKind(kind: OperationalEmailIncidentKind) {
