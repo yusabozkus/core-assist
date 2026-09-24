@@ -224,6 +224,8 @@ export type StoreWhereInput = {
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingListRelationFilter
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateListRelationFilter
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordListRelationFilter
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentListRelationFilter
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactListRelationFilter
   supportTickets?: Prisma.SupportTicketListRelationFilter
 }
@@ -255,6 +257,8 @@ export type StoreOrderByWithRelationInput = {
   notificationPreferences?: Prisma.NotificationPreferenceOrderByRelationAggregateInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingOrderByRelationAggregateInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateOrderByRelationAggregateInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordOrderByRelationAggregateInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentOrderByRelationAggregateInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactOrderByRelationAggregateInput
   supportTickets?: Prisma.SupportTicketOrderByRelationAggregateInput
 }
@@ -289,6 +293,8 @@ export type StoreWhereUniqueInput = Prisma.AtLeast<{
   notificationPreferences?: Prisma.NotificationPreferenceListRelationFilter
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingListRelationFilter
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateListRelationFilter
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordListRelationFilter
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentListRelationFilter
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactListRelationFilter
   supportTickets?: Prisma.SupportTicketListRelationFilter
 }, "id">
@@ -347,6 +353,8 @@ export type StoreCreateInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -377,6 +385,8 @@ export type StoreUncheckedCreateInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -407,6 +417,8 @@ export type StoreUpdateInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -437,6 +449,8 @@ export type StoreUncheckedUpdateInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -702,6 +716,20 @@ export type StoreUpdateOneRequiredWithoutProductKnowledgeFactsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutProductKnowledgeFactsInput, Prisma.StoreUpdateWithoutProductKnowledgeFactsInput>, Prisma.StoreUncheckedUpdateWithoutProductKnowledgeFactsInput>
 }
 
+export type StoreCreateNestedOneWithoutOperationalEmailIncidentsInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutOperationalEmailIncidentsInput, Prisma.StoreUncheckedCreateWithoutOperationalEmailIncidentsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutOperationalEmailIncidentsInput
+  connect?: Prisma.StoreWhereUniqueInput
+}
+
+export type StoreUpdateOneRequiredWithoutOperationalEmailIncidentsNestedInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutOperationalEmailIncidentsInput, Prisma.StoreUncheckedCreateWithoutOperationalEmailIncidentsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutOperationalEmailIncidentsInput
+  upsert?: Prisma.StoreUpsertWithoutOperationalEmailIncidentsInput
+  connect?: Prisma.StoreWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutOperationalEmailIncidentsInput, Prisma.StoreUpdateWithoutOperationalEmailIncidentsInput>, Prisma.StoreUncheckedUpdateWithoutOperationalEmailIncidentsInput>
+}
+
 export type StoreCreateNestedOneWithoutIncomingEventsInput = {
   create?: Prisma.XOR<Prisma.StoreCreateWithoutIncomingEventsInput, Prisma.StoreUncheckedCreateWithoutIncomingEventsInput>
   connectOrCreate?: Prisma.StoreCreateOrConnectWithoutIncomingEventsInput
@@ -846,6 +874,22 @@ export type StoreUpdateOneRequiredWithoutNotificationEmailDigestStatesNestedInpu
   update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutNotificationEmailDigestStatesInput, Prisma.StoreUpdateWithoutNotificationEmailDigestStatesInput>, Prisma.StoreUncheckedUpdateWithoutNotificationEmailDigestStatesInput>
 }
 
+export type StoreCreateNestedOneWithoutEmailDeliveryRecordsInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutEmailDeliveryRecordsInput, Prisma.StoreUncheckedCreateWithoutEmailDeliveryRecordsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutEmailDeliveryRecordsInput
+  connect?: Prisma.StoreWhereUniqueInput
+}
+
+export type StoreUpdateOneWithoutEmailDeliveryRecordsNestedInput = {
+  create?: Prisma.XOR<Prisma.StoreCreateWithoutEmailDeliveryRecordsInput, Prisma.StoreUncheckedCreateWithoutEmailDeliveryRecordsInput>
+  connectOrCreate?: Prisma.StoreCreateOrConnectWithoutEmailDeliveryRecordsInput
+  upsert?: Prisma.StoreUpsertWithoutEmailDeliveryRecordsInput
+  disconnect?: Prisma.StoreWhereInput | boolean
+  delete?: Prisma.StoreWhereInput | boolean
+  connect?: Prisma.StoreWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StoreUpdateToOneWithWhereWithoutEmailDeliveryRecordsInput, Prisma.StoreUpdateWithoutEmailDeliveryRecordsInput>, Prisma.StoreUncheckedUpdateWithoutEmailDeliveryRecordsInput>
+}
+
 export type StoreCreateWithoutWorkspaceInput = {
   id?: string
   name: string
@@ -871,6 +915,8 @@ export type StoreCreateWithoutWorkspaceInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -900,6 +946,8 @@ export type StoreUncheckedCreateWithoutWorkspaceInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -969,6 +1017,8 @@ export type StoreCreateWithoutInvitationAccessesInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -998,6 +1048,8 @@ export type StoreUncheckedCreateWithoutInvitationAccessesInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -1043,6 +1095,8 @@ export type StoreUpdateWithoutInvitationAccessesInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -1072,6 +1126,8 @@ export type StoreUncheckedUpdateWithoutInvitationAccessesInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -1101,6 +1157,8 @@ export type StoreCreateWithoutKnowledgeProfileInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -1130,6 +1188,8 @@ export type StoreUncheckedCreateWithoutKnowledgeProfileInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -1175,6 +1235,8 @@ export type StoreUpdateWithoutKnowledgeProfileInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -1204,6 +1266,8 @@ export type StoreUncheckedUpdateWithoutKnowledgeProfileInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -1233,6 +1297,8 @@ export type StoreCreateWithoutKnowledgeFaqsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -1262,6 +1328,8 @@ export type StoreUncheckedCreateWithoutKnowledgeFaqsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -1307,6 +1375,8 @@ export type StoreUpdateWithoutKnowledgeFaqsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -1336,6 +1406,8 @@ export type StoreUncheckedUpdateWithoutKnowledgeFaqsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -1365,6 +1437,8 @@ export type StoreCreateWithoutAiInstructionsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -1394,6 +1468,8 @@ export type StoreUncheckedCreateWithoutAiInstructionsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -1439,6 +1515,8 @@ export type StoreUpdateWithoutAiInstructionsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -1468,6 +1546,8 @@ export type StoreUncheckedUpdateWithoutAiInstructionsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -1497,6 +1577,8 @@ export type StoreCreateWithoutChannelKnowledgeInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -1526,6 +1608,8 @@ export type StoreUncheckedCreateWithoutChannelKnowledgeInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -1571,6 +1655,8 @@ export type StoreUpdateWithoutChannelKnowledgeInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -1600,6 +1686,8 @@ export type StoreUncheckedUpdateWithoutChannelKnowledgeInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -1629,6 +1717,8 @@ export type StoreCreateWithoutChannelConnectionsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -1658,6 +1748,8 @@ export type StoreUncheckedCreateWithoutChannelConnectionsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -1703,6 +1795,8 @@ export type StoreUpdateWithoutChannelConnectionsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -1732,6 +1826,8 @@ export type StoreUncheckedUpdateWithoutChannelConnectionsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -1761,6 +1857,8 @@ export type StoreCreateWithoutProductsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -1790,6 +1888,8 @@ export type StoreUncheckedCreateWithoutProductsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -1835,6 +1935,8 @@ export type StoreUpdateWithoutProductsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -1864,6 +1966,8 @@ export type StoreUncheckedUpdateWithoutProductsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -1893,6 +1997,8 @@ export type StoreCreateWithoutProductIdentitiesInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -1922,6 +2028,8 @@ export type StoreUncheckedCreateWithoutProductIdentitiesInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -1967,6 +2075,8 @@ export type StoreUpdateWithoutProductIdentitiesInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -1996,6 +2106,8 @@ export type StoreUncheckedUpdateWithoutProductIdentitiesInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -2026,6 +2138,8 @@ export type StoreCreateWithoutProductKnowledgeFactsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
 
@@ -2055,6 +2169,8 @@ export type StoreUncheckedCreateWithoutProductKnowledgeFactsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
 
@@ -2100,6 +2216,8 @@ export type StoreUpdateWithoutProductKnowledgeFactsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
 
@@ -2129,6 +2247,148 @@ export type StoreUncheckedUpdateWithoutProductKnowledgeFactsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreCreateWithoutOperationalEmailIncidentsInput = {
+  id?: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
+  members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
+}
+
+export type StoreUncheckedCreateWithoutOperationalEmailIncidentsInput = {
+  id?: string
+  workspaceId: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
+}
+
+export type StoreCreateOrConnectWithoutOperationalEmailIncidentsInput = {
+  where: Prisma.StoreWhereUniqueInput
+  create: Prisma.XOR<Prisma.StoreCreateWithoutOperationalEmailIncidentsInput, Prisma.StoreUncheckedCreateWithoutOperationalEmailIncidentsInput>
+}
+
+export type StoreUpsertWithoutOperationalEmailIncidentsInput = {
+  update: Prisma.XOR<Prisma.StoreUpdateWithoutOperationalEmailIncidentsInput, Prisma.StoreUncheckedUpdateWithoutOperationalEmailIncidentsInput>
+  create: Prisma.XOR<Prisma.StoreCreateWithoutOperationalEmailIncidentsInput, Prisma.StoreUncheckedCreateWithoutOperationalEmailIncidentsInput>
+  where?: Prisma.StoreWhereInput
+}
+
+export type StoreUpdateToOneWithWhereWithoutOperationalEmailIncidentsInput = {
+  where?: Prisma.StoreWhereInput
+  data: Prisma.XOR<Prisma.StoreUpdateWithoutOperationalEmailIncidentsInput, Prisma.StoreUncheckedUpdateWithoutOperationalEmailIncidentsInput>
+}
+
+export type StoreUpdateWithoutOperationalEmailIncidentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
+  members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreUncheckedUpdateWithoutOperationalEmailIncidentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
 
@@ -2157,6 +2417,8 @@ export type StoreCreateWithoutIncomingEventsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -2186,6 +2448,8 @@ export type StoreUncheckedCreateWithoutIncomingEventsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -2231,6 +2495,8 @@ export type StoreUpdateWithoutIncomingEventsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -2260,6 +2526,8 @@ export type StoreUncheckedUpdateWithoutIncomingEventsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -2289,6 +2557,8 @@ export type StoreCreateWithoutProductQuestionsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -2318,6 +2588,8 @@ export type StoreUncheckedCreateWithoutProductQuestionsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -2363,6 +2635,8 @@ export type StoreUpdateWithoutProductQuestionsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -2392,6 +2666,8 @@ export type StoreUncheckedUpdateWithoutProductQuestionsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -2421,6 +2697,8 @@ export type StoreCreateWithoutAiDraftAttemptsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -2450,6 +2728,8 @@ export type StoreUncheckedCreateWithoutAiDraftAttemptsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -2495,6 +2775,8 @@ export type StoreUpdateWithoutAiDraftAttemptsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -2524,6 +2806,8 @@ export type StoreUncheckedUpdateWithoutAiDraftAttemptsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -2553,6 +2837,8 @@ export type StoreCreateWithoutQuestionAnswersInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -2582,6 +2868,8 @@ export type StoreUncheckedCreateWithoutQuestionAnswersInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -2627,6 +2915,8 @@ export type StoreUpdateWithoutQuestionAnswersInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -2656,6 +2946,8 @@ export type StoreUncheckedUpdateWithoutQuestionAnswersInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -2685,6 +2977,8 @@ export type StoreCreateWithoutMembersInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -2714,6 +3008,8 @@ export type StoreUncheckedCreateWithoutMembersInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -2759,6 +3055,8 @@ export type StoreUpdateWithoutMembersInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -2788,6 +3086,8 @@ export type StoreUncheckedUpdateWithoutMembersInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -2818,6 +3118,8 @@ export type StoreCreateWithoutSupportTicketsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
 }
 
@@ -2847,6 +3149,8 @@ export type StoreUncheckedCreateWithoutSupportTicketsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
 }
 
@@ -2892,6 +3196,8 @@ export type StoreUpdateWithoutSupportTicketsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
 }
 
@@ -2921,6 +3227,8 @@ export type StoreUncheckedUpdateWithoutSupportTicketsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
 }
 
@@ -2949,6 +3257,8 @@ export type StoreCreateWithoutNotificationsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -2978,6 +3288,8 @@ export type StoreUncheckedCreateWithoutNotificationsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -3023,6 +3335,8 @@ export type StoreUpdateWithoutNotificationsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -3052,6 +3366,8 @@ export type StoreUncheckedUpdateWithoutNotificationsInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -3081,6 +3397,8 @@ export type StoreCreateWithoutNotificationPreferencesInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -3110,6 +3428,8 @@ export type StoreUncheckedCreateWithoutNotificationPreferencesInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -3155,6 +3475,8 @@ export type StoreUpdateWithoutNotificationPreferencesInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -3184,6 +3506,8 @@ export type StoreUncheckedUpdateWithoutNotificationPreferencesInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -3213,6 +3537,8 @@ export type StoreCreateWithoutNotificationDeliverySettingsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -3242,6 +3568,8 @@ export type StoreUncheckedCreateWithoutNotificationDeliverySettingsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -3287,6 +3615,8 @@ export type StoreUpdateWithoutNotificationDeliverySettingsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -3316,6 +3646,8 @@ export type StoreUncheckedUpdateWithoutNotificationDeliverySettingsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -3345,6 +3677,8 @@ export type StoreCreateWithoutNotificationEmailDigestStatesInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
 }
@@ -3374,6 +3708,8 @@ export type StoreUncheckedCreateWithoutNotificationEmailDigestStatesInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
 }
@@ -3419,6 +3755,8 @@ export type StoreUpdateWithoutNotificationEmailDigestStatesInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -3448,6 +3786,148 @@ export type StoreUncheckedUpdateWithoutNotificationEmailDigestStatesInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreCreateWithoutEmailDeliveryRecordsInput = {
+  id?: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  workspace: Prisma.WorkspaceCreateNestedOneWithoutStoresInput
+  members?: Prisma.StoreMemberCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductCreateNestedManyWithoutStoreInput
+  productIdentities?: Prisma.ProductIdentityCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideCreateNestedManyWithoutStoreInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutStoreInput
+  notificationPreferences?: Prisma.NotificationPreferenceCreateNestedManyWithoutStoreInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingCreateNestedManyWithoutStoreInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactCreateNestedManyWithoutStoreInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutStoreInput
+}
+
+export type StoreUncheckedCreateWithoutEmailDeliveryRecordsInput = {
+  id?: string
+  workspaceId: string
+  name: string
+  timezone?: string
+  status?: $Enums.StoreStatus
+  inventoryPolicy?: $Enums.InventoryPolicy | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.StoreMemberUncheckedCreateNestedManyWithoutStoreInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedCreateNestedManyWithoutStoreInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedCreateNestedManyWithoutStoreInput
+  products?: Prisma.ProductUncheckedCreateNestedManyWithoutStoreInput
+  productIdentities?: Prisma.ProductIdentityUncheckedCreateNestedManyWithoutStoreInput
+  incomingEvents?: Prisma.IncomingEventUncheckedCreateNestedManyWithoutStoreInput
+  productQuestions?: Prisma.ProductQuestionUncheckedCreateNestedManyWithoutStoreInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedCreateNestedManyWithoutStoreInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedCreateNestedManyWithoutStoreInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedCreateNestedOneWithoutStoreInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedCreateNestedManyWithoutStoreInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedCreateNestedManyWithoutStoreInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedCreateNestedManyWithoutStoreInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutStoreInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedCreateNestedManyWithoutStoreInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedCreateNestedManyWithoutStoreInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedCreateNestedManyWithoutStoreInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedCreateNestedManyWithoutStoreInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedCreateNestedManyWithoutStoreInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutStoreInput
+}
+
+export type StoreCreateOrConnectWithoutEmailDeliveryRecordsInput = {
+  where: Prisma.StoreWhereUniqueInput
+  create: Prisma.XOR<Prisma.StoreCreateWithoutEmailDeliveryRecordsInput, Prisma.StoreUncheckedCreateWithoutEmailDeliveryRecordsInput>
+}
+
+export type StoreUpsertWithoutEmailDeliveryRecordsInput = {
+  update: Prisma.XOR<Prisma.StoreUpdateWithoutEmailDeliveryRecordsInput, Prisma.StoreUncheckedUpdateWithoutEmailDeliveryRecordsInput>
+  create: Prisma.XOR<Prisma.StoreCreateWithoutEmailDeliveryRecordsInput, Prisma.StoreUncheckedCreateWithoutEmailDeliveryRecordsInput>
+  where?: Prisma.StoreWhereInput
+}
+
+export type StoreUpdateToOneWithWhereWithoutEmailDeliveryRecordsInput = {
+  where?: Prisma.StoreWhereInput
+  data: Prisma.XOR<Prisma.StoreUpdateWithoutEmailDeliveryRecordsInput, Prisma.StoreUncheckedUpdateWithoutEmailDeliveryRecordsInput>
+}
+
+export type StoreUpdateWithoutEmailDeliveryRecordsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workspace?: Prisma.WorkspaceUpdateOneRequiredWithoutStoresNestedInput
+  members?: Prisma.StoreMemberUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUpdateManyWithoutStoreNestedInput
+  productIdentities?: Prisma.ProductIdentityUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUpdateManyWithoutStoreNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutStoreNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
+  productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
+}
+
+export type StoreUncheckedUpdateWithoutEmailDeliveryRecordsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  workspaceId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumStoreStatusFieldUpdateOperationsInput | $Enums.StoreStatus
+  inventoryPolicy?: Prisma.NullableEnumInventoryPolicyFieldUpdateOperationsInput | $Enums.InventoryPolicy | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.StoreMemberUncheckedUpdateManyWithoutStoreNestedInput
+  invitationAccesses?: Prisma.WorkspaceInvitationStoreAccessUncheckedUpdateManyWithoutStoreNestedInput
+  channelConnections?: Prisma.ChannelConnectionUncheckedUpdateManyWithoutStoreNestedInput
+  products?: Prisma.ProductUncheckedUpdateManyWithoutStoreNestedInput
+  productIdentities?: Prisma.ProductIdentityUncheckedUpdateManyWithoutStoreNestedInput
+  incomingEvents?: Prisma.IncomingEventUncheckedUpdateManyWithoutStoreNestedInput
+  productQuestions?: Prisma.ProductQuestionUncheckedUpdateManyWithoutStoreNestedInput
+  questionAnswers?: Prisma.QuestionAnswerUncheckedUpdateManyWithoutStoreNestedInput
+  aiDraftAttempts?: Prisma.AiDraftAttemptUncheckedUpdateManyWithoutStoreNestedInput
+  knowledgeProfile?: Prisma.StoreKnowledgeProfileUncheckedUpdateOneWithoutStoreNestedInput
+  knowledgeFaqs?: Prisma.StoreKnowledgeFaqUncheckedUpdateManyWithoutStoreNestedInput
+  aiInstructions?: Prisma.StoreAiInstructionUncheckedUpdateManyWithoutStoreNestedInput
+  channelKnowledge?: Prisma.ChannelKnowledgeOverrideUncheckedUpdateManyWithoutStoreNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutStoreNestedInput
+  notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
+  notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
+  notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -3487,6 +3967,8 @@ export type StoreUpdateWithoutWorkspaceInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutStoreNestedInput
 }
@@ -3516,6 +3998,8 @@ export type StoreUncheckedUpdateWithoutWorkspaceInput = {
   notificationPreferences?: Prisma.NotificationPreferenceUncheckedUpdateManyWithoutStoreNestedInput
   notificationDeliverySettings?: Prisma.NotificationDeliverySettingUncheckedUpdateManyWithoutStoreNestedInput
   notificationEmailDigestStates?: Prisma.NotificationEmailDigestStateUncheckedUpdateManyWithoutStoreNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreNestedInput
+  operationalEmailIncidents?: Prisma.OperationalEmailIncidentUncheckedUpdateManyWithoutStoreNestedInput
   productKnowledgeFacts?: Prisma.ProductKnowledgeFactUncheckedUpdateManyWithoutStoreNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutStoreNestedInput
 }
@@ -3552,6 +4036,8 @@ export type StoreCountOutputType = {
   notificationPreferences: number
   notificationDeliverySettings: number
   notificationEmailDigestStates: number
+  emailDeliveryRecords: number
+  operationalEmailIncidents: number
   productKnowledgeFacts: number
   supportTickets: number
 }
@@ -3573,6 +4059,8 @@ export type StoreCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.
   notificationPreferences?: boolean | StoreCountOutputTypeCountNotificationPreferencesArgs
   notificationDeliverySettings?: boolean | StoreCountOutputTypeCountNotificationDeliverySettingsArgs
   notificationEmailDigestStates?: boolean | StoreCountOutputTypeCountNotificationEmailDigestStatesArgs
+  emailDeliveryRecords?: boolean | StoreCountOutputTypeCountEmailDeliveryRecordsArgs
+  operationalEmailIncidents?: boolean | StoreCountOutputTypeCountOperationalEmailIncidentsArgs
   productKnowledgeFacts?: boolean | StoreCountOutputTypeCountProductKnowledgeFactsArgs
   supportTickets?: boolean | StoreCountOutputTypeCountSupportTicketsArgs
 }
@@ -3702,6 +4190,20 @@ export type StoreCountOutputTypeCountNotificationEmailDigestStatesArgs<ExtArgs e
 /**
  * StoreCountOutputType without action
  */
+export type StoreCountOutputTypeCountEmailDeliveryRecordsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.EmailDeliveryRecordWhereInput
+}
+
+/**
+ * StoreCountOutputType without action
+ */
+export type StoreCountOutputTypeCountOperationalEmailIncidentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.OperationalEmailIncidentWhereInput
+}
+
+/**
+ * StoreCountOutputType without action
+ */
 export type StoreCountOutputTypeCountProductKnowledgeFactsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.ProductKnowledgeFactWhereInput
 }
@@ -3741,6 +4243,8 @@ export type StoreSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   notificationPreferences?: boolean | Prisma.Store$notificationPreferencesArgs<ExtArgs>
   notificationDeliverySettings?: boolean | Prisma.Store$notificationDeliverySettingsArgs<ExtArgs>
   notificationEmailDigestStates?: boolean | Prisma.Store$notificationEmailDigestStatesArgs<ExtArgs>
+  emailDeliveryRecords?: boolean | Prisma.Store$emailDeliveryRecordsArgs<ExtArgs>
+  operationalEmailIncidents?: boolean | Prisma.Store$operationalEmailIncidentsArgs<ExtArgs>
   productKnowledgeFacts?: boolean | Prisma.Store$productKnowledgeFactsArgs<ExtArgs>
   supportTickets?: boolean | Prisma.Store$supportTicketsArgs<ExtArgs>
   _count?: boolean | Prisma.StoreCountOutputTypeDefaultArgs<ExtArgs>
@@ -3801,6 +4305,8 @@ export type StoreInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   notificationPreferences?: boolean | Prisma.Store$notificationPreferencesArgs<ExtArgs>
   notificationDeliverySettings?: boolean | Prisma.Store$notificationDeliverySettingsArgs<ExtArgs>
   notificationEmailDigestStates?: boolean | Prisma.Store$notificationEmailDigestStatesArgs<ExtArgs>
+  emailDeliveryRecords?: boolean | Prisma.Store$emailDeliveryRecordsArgs<ExtArgs>
+  operationalEmailIncidents?: boolean | Prisma.Store$operationalEmailIncidentsArgs<ExtArgs>
   productKnowledgeFacts?: boolean | Prisma.Store$productKnowledgeFactsArgs<ExtArgs>
   supportTickets?: boolean | Prisma.Store$supportTicketsArgs<ExtArgs>
   _count?: boolean | Prisma.StoreCountOutputTypeDefaultArgs<ExtArgs>
@@ -3833,6 +4339,8 @@ export type $StorePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     notificationPreferences: Prisma.$NotificationPreferencePayload<ExtArgs>[]
     notificationDeliverySettings: Prisma.$NotificationDeliverySettingPayload<ExtArgs>[]
     notificationEmailDigestStates: Prisma.$NotificationEmailDigestStatePayload<ExtArgs>[]
+    emailDeliveryRecords: Prisma.$EmailDeliveryRecordPayload<ExtArgs>[]
+    operationalEmailIncidents: Prisma.$OperationalEmailIncidentPayload<ExtArgs>[]
     productKnowledgeFacts: Prisma.$ProductKnowledgeFactPayload<ExtArgs>[]
     supportTickets: Prisma.$SupportTicketPayload<ExtArgs>[]
   }
@@ -4257,6 +4765,8 @@ export interface Prisma__StoreClient<T, Null = never, ExtArgs extends runtime.Ty
   notificationPreferences<T extends Prisma.Store$notificationPreferencesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$notificationPreferencesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPreferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notificationDeliverySettings<T extends Prisma.Store$notificationDeliverySettingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$notificationDeliverySettingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationDeliverySettingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notificationEmailDigestStates<T extends Prisma.Store$notificationEmailDigestStatesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$notificationEmailDigestStatesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationEmailDigestStatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  emailDeliveryRecords<T extends Prisma.Store$emailDeliveryRecordsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$emailDeliveryRecordsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EmailDeliveryRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  operationalEmailIncidents<T extends Prisma.Store$operationalEmailIncidentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$operationalEmailIncidentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OperationalEmailIncidentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   productKnowledgeFacts<T extends Prisma.Store$productKnowledgeFactsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$productKnowledgeFactsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductKnowledgeFactPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   supportTickets<T extends Prisma.Store$supportTicketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Store$supportTicketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportTicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -5097,6 +5607,54 @@ export type Store$notificationEmailDigestStatesArgs<ExtArgs extends runtime.Type
   take?: number
   skip?: number
   distinct?: Prisma.NotificationEmailDigestStateScalarFieldEnum | Prisma.NotificationEmailDigestStateScalarFieldEnum[]
+}
+
+/**
+ * Store.emailDeliveryRecords
+ */
+export type Store$emailDeliveryRecordsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the EmailDeliveryRecord
+   */
+  select?: Prisma.EmailDeliveryRecordSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the EmailDeliveryRecord
+   */
+  omit?: Prisma.EmailDeliveryRecordOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.EmailDeliveryRecordInclude<ExtArgs> | null
+  where?: Prisma.EmailDeliveryRecordWhereInput
+  orderBy?: Prisma.EmailDeliveryRecordOrderByWithRelationInput | Prisma.EmailDeliveryRecordOrderByWithRelationInput[]
+  cursor?: Prisma.EmailDeliveryRecordWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.EmailDeliveryRecordScalarFieldEnum | Prisma.EmailDeliveryRecordScalarFieldEnum[]
+}
+
+/**
+ * Store.operationalEmailIncidents
+ */
+export type Store$operationalEmailIncidentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the OperationalEmailIncident
+   */
+  select?: Prisma.OperationalEmailIncidentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the OperationalEmailIncident
+   */
+  omit?: Prisma.OperationalEmailIncidentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OperationalEmailIncidentInclude<ExtArgs> | null
+  where?: Prisma.OperationalEmailIncidentWhereInput
+  orderBy?: Prisma.OperationalEmailIncidentOrderByWithRelationInput | Prisma.OperationalEmailIncidentOrderByWithRelationInput[]
+  cursor?: Prisma.OperationalEmailIncidentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.OperationalEmailIncidentScalarFieldEnum | Prisma.OperationalEmailIncidentScalarFieldEnum[]
 }
 
 /**

@@ -963,6 +963,125 @@ export type EnumCatalogSyncStageWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumCatalogSyncStageFilter<$PrismaModel>
 }
 
+export type EnumSyncEmailIncidentKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailIncidentKind | Prisma.EnumSyncEmailIncidentKindFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailIncidentKind[] | Prisma.ListEnumSyncEmailIncidentKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailIncidentKind[] | Prisma.ListEnumSyncEmailIncidentKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailIncidentKindFilter<$PrismaModel> | $Enums.SyncEmailIncidentKind
+}
+
+export type EnumSyncEmailIncidentStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailIncidentStatus | Prisma.EnumSyncEmailIncidentStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailIncidentStatus[] | Prisma.ListEnumSyncEmailIncidentStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailIncidentStatus[] | Prisma.ListEnumSyncEmailIncidentStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailIncidentStatusFilter<$PrismaModel> | $Enums.SyncEmailIncidentStatus
+}
+
+export type EnumSyncEmailIncidentKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailIncidentKind | Prisma.EnumSyncEmailIncidentKindFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailIncidentKind[] | Prisma.ListEnumSyncEmailIncidentKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailIncidentKind[] | Prisma.ListEnumSyncEmailIncidentKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailIncidentKindWithAggregatesFilter<$PrismaModel> | $Enums.SyncEmailIncidentKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSyncEmailIncidentKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSyncEmailIncidentKindFilter<$PrismaModel>
+}
+
+export type EnumSyncEmailIncidentStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailIncidentStatus | Prisma.EnumSyncEmailIncidentStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailIncidentStatus[] | Prisma.ListEnumSyncEmailIncidentStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailIncidentStatus[] | Prisma.ListEnumSyncEmailIncidentStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailIncidentStatusWithAggregatesFilter<$PrismaModel> | $Enums.SyncEmailIncidentStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSyncEmailIncidentStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSyncEmailIncidentStatusFilter<$PrismaModel>
+}
+
+export type EnumSyncEmailDeliveryPhaseFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailDeliveryPhase | Prisma.EnumSyncEmailDeliveryPhaseFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailDeliveryPhase[] | Prisma.ListEnumSyncEmailDeliveryPhaseFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailDeliveryPhase[] | Prisma.ListEnumSyncEmailDeliveryPhaseFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailDeliveryPhaseFilter<$PrismaModel> | $Enums.SyncEmailDeliveryPhase
+}
+
+export type EnumSyncEmailDeliveryStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailDeliveryStatus | Prisma.EnumSyncEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailDeliveryStatus[] | Prisma.ListEnumSyncEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailDeliveryStatus[] | Prisma.ListEnumSyncEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailDeliveryStatusFilter<$PrismaModel> | $Enums.SyncEmailDeliveryStatus
+}
+
+export type EnumSyncEmailDeliveryPhaseWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailDeliveryPhase | Prisma.EnumSyncEmailDeliveryPhaseFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailDeliveryPhase[] | Prisma.ListEnumSyncEmailDeliveryPhaseFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailDeliveryPhase[] | Prisma.ListEnumSyncEmailDeliveryPhaseFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailDeliveryPhaseWithAggregatesFilter<$PrismaModel> | $Enums.SyncEmailDeliveryPhase
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSyncEmailDeliveryPhaseFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSyncEmailDeliveryPhaseFilter<$PrismaModel>
+}
+
+export type EnumSyncEmailDeliveryStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailDeliveryStatus | Prisma.EnumSyncEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailDeliveryStatus[] | Prisma.ListEnumSyncEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailDeliveryStatus[] | Prisma.ListEnumSyncEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailDeliveryStatusWithAggregatesFilter<$PrismaModel> | $Enums.SyncEmailDeliveryStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSyncEmailDeliveryStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSyncEmailDeliveryStatusFilter<$PrismaModel>
+}
+
+export type EnumOperationalEmailIncidentKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalEmailIncidentKind | Prisma.EnumOperationalEmailIncidentKindFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalEmailIncidentKind[] | Prisma.ListEnumOperationalEmailIncidentKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalEmailIncidentKind[] | Prisma.ListEnumOperationalEmailIncidentKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalEmailIncidentKindFilter<$PrismaModel> | $Enums.OperationalEmailIncidentKind
+}
+
+export type EnumOperationalEmailIncidentStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalEmailIncidentStatus | Prisma.EnumOperationalEmailIncidentStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalEmailIncidentStatus[] | Prisma.ListEnumOperationalEmailIncidentStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalEmailIncidentStatus[] | Prisma.ListEnumOperationalEmailIncidentStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalEmailIncidentStatusFilter<$PrismaModel> | $Enums.OperationalEmailIncidentStatus
+}
+
+export type EnumOperationalEmailIncidentKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalEmailIncidentKind | Prisma.EnumOperationalEmailIncidentKindFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalEmailIncidentKind[] | Prisma.ListEnumOperationalEmailIncidentKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalEmailIncidentKind[] | Prisma.ListEnumOperationalEmailIncidentKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalEmailIncidentKindWithAggregatesFilter<$PrismaModel> | $Enums.OperationalEmailIncidentKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumOperationalEmailIncidentKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumOperationalEmailIncidentKindFilter<$PrismaModel>
+}
+
+export type EnumOperationalEmailIncidentStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalEmailIncidentStatus | Prisma.EnumOperationalEmailIncidentStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalEmailIncidentStatus[] | Prisma.ListEnumOperationalEmailIncidentStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalEmailIncidentStatus[] | Prisma.ListEnumOperationalEmailIncidentStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalEmailIncidentStatusWithAggregatesFilter<$PrismaModel> | $Enums.OperationalEmailIncidentStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumOperationalEmailIncidentStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumOperationalEmailIncidentStatusFilter<$PrismaModel>
+}
+
+export type EnumOperationalEmailPhaseFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalEmailPhase | Prisma.EnumOperationalEmailPhaseFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalEmailPhase[] | Prisma.ListEnumOperationalEmailPhaseFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalEmailPhase[] | Prisma.ListEnumOperationalEmailPhaseFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalEmailPhaseFilter<$PrismaModel> | $Enums.OperationalEmailPhase
+}
+
+export type EnumOperationalEmailPhaseWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalEmailPhase | Prisma.EnumOperationalEmailPhaseFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalEmailPhase[] | Prisma.ListEnumOperationalEmailPhaseFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalEmailPhase[] | Prisma.ListEnumOperationalEmailPhaseFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalEmailPhaseWithAggregatesFilter<$PrismaModel> | $Enums.OperationalEmailPhase
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumOperationalEmailPhaseFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumOperationalEmailPhaseFilter<$PrismaModel>
+}
+
 export type EnumIncomingEventTypeFilter<$PrismaModel = never> = {
   equals?: $Enums.IncomingEventType | Prisma.EnumIncomingEventTypeFieldRefInput<$PrismaModel>
   in?: $Enums.IncomingEventType[] | Prisma.ListEnumIncomingEventTypeFieldRefInput<$PrismaModel>
@@ -1301,6 +1420,23 @@ export type EnumNotificationSeverityWithAggregatesFilter<$PrismaModel = never> =
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumNotificationSeverityFilter<$PrismaModel>
   _max?: Prisma.NestedEnumNotificationSeverityFilter<$PrismaModel>
+}
+
+export type EnumEmailDeliveryStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.EmailDeliveryStatus | Prisma.EnumEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.EmailDeliveryStatus[] | Prisma.ListEnumEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.EmailDeliveryStatus[] | Prisma.ListEnumEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumEmailDeliveryStatusFilter<$PrismaModel> | $Enums.EmailDeliveryStatus
+}
+
+export type EnumEmailDeliveryStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.EmailDeliveryStatus | Prisma.EnumEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.EmailDeliveryStatus[] | Prisma.ListEnumEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.EmailDeliveryStatus[] | Prisma.ListEnumEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumEmailDeliveryStatusWithAggregatesFilter<$PrismaModel> | $Enums.EmailDeliveryStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumEmailDeliveryStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumEmailDeliveryStatusFilter<$PrismaModel>
 }
 
 export type NestedStringFilter<$PrismaModel = never> = {
@@ -2189,6 +2325,125 @@ export type NestedEnumCatalogSyncStageWithAggregatesFilter<$PrismaModel = never>
   _max?: Prisma.NestedEnumCatalogSyncStageFilter<$PrismaModel>
 }
 
+export type NestedEnumSyncEmailIncidentKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailIncidentKind | Prisma.EnumSyncEmailIncidentKindFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailIncidentKind[] | Prisma.ListEnumSyncEmailIncidentKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailIncidentKind[] | Prisma.ListEnumSyncEmailIncidentKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailIncidentKindFilter<$PrismaModel> | $Enums.SyncEmailIncidentKind
+}
+
+export type NestedEnumSyncEmailIncidentStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailIncidentStatus | Prisma.EnumSyncEmailIncidentStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailIncidentStatus[] | Prisma.ListEnumSyncEmailIncidentStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailIncidentStatus[] | Prisma.ListEnumSyncEmailIncidentStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailIncidentStatusFilter<$PrismaModel> | $Enums.SyncEmailIncidentStatus
+}
+
+export type NestedEnumSyncEmailIncidentKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailIncidentKind | Prisma.EnumSyncEmailIncidentKindFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailIncidentKind[] | Prisma.ListEnumSyncEmailIncidentKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailIncidentKind[] | Prisma.ListEnumSyncEmailIncidentKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailIncidentKindWithAggregatesFilter<$PrismaModel> | $Enums.SyncEmailIncidentKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSyncEmailIncidentKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSyncEmailIncidentKindFilter<$PrismaModel>
+}
+
+export type NestedEnumSyncEmailIncidentStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailIncidentStatus | Prisma.EnumSyncEmailIncidentStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailIncidentStatus[] | Prisma.ListEnumSyncEmailIncidentStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailIncidentStatus[] | Prisma.ListEnumSyncEmailIncidentStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailIncidentStatusWithAggregatesFilter<$PrismaModel> | $Enums.SyncEmailIncidentStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSyncEmailIncidentStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSyncEmailIncidentStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumSyncEmailDeliveryPhaseFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailDeliveryPhase | Prisma.EnumSyncEmailDeliveryPhaseFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailDeliveryPhase[] | Prisma.ListEnumSyncEmailDeliveryPhaseFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailDeliveryPhase[] | Prisma.ListEnumSyncEmailDeliveryPhaseFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailDeliveryPhaseFilter<$PrismaModel> | $Enums.SyncEmailDeliveryPhase
+}
+
+export type NestedEnumSyncEmailDeliveryStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailDeliveryStatus | Prisma.EnumSyncEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailDeliveryStatus[] | Prisma.ListEnumSyncEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailDeliveryStatus[] | Prisma.ListEnumSyncEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailDeliveryStatusFilter<$PrismaModel> | $Enums.SyncEmailDeliveryStatus
+}
+
+export type NestedEnumSyncEmailDeliveryPhaseWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailDeliveryPhase | Prisma.EnumSyncEmailDeliveryPhaseFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailDeliveryPhase[] | Prisma.ListEnumSyncEmailDeliveryPhaseFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailDeliveryPhase[] | Prisma.ListEnumSyncEmailDeliveryPhaseFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailDeliveryPhaseWithAggregatesFilter<$PrismaModel> | $Enums.SyncEmailDeliveryPhase
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSyncEmailDeliveryPhaseFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSyncEmailDeliveryPhaseFilter<$PrismaModel>
+}
+
+export type NestedEnumSyncEmailDeliveryStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SyncEmailDeliveryStatus | Prisma.EnumSyncEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.SyncEmailDeliveryStatus[] | Prisma.ListEnumSyncEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SyncEmailDeliveryStatus[] | Prisma.ListEnumSyncEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSyncEmailDeliveryStatusWithAggregatesFilter<$PrismaModel> | $Enums.SyncEmailDeliveryStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSyncEmailDeliveryStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSyncEmailDeliveryStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumOperationalEmailIncidentKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalEmailIncidentKind | Prisma.EnumOperationalEmailIncidentKindFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalEmailIncidentKind[] | Prisma.ListEnumOperationalEmailIncidentKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalEmailIncidentKind[] | Prisma.ListEnumOperationalEmailIncidentKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalEmailIncidentKindFilter<$PrismaModel> | $Enums.OperationalEmailIncidentKind
+}
+
+export type NestedEnumOperationalEmailIncidentStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalEmailIncidentStatus | Prisma.EnumOperationalEmailIncidentStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalEmailIncidentStatus[] | Prisma.ListEnumOperationalEmailIncidentStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalEmailIncidentStatus[] | Prisma.ListEnumOperationalEmailIncidentStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalEmailIncidentStatusFilter<$PrismaModel> | $Enums.OperationalEmailIncidentStatus
+}
+
+export type NestedEnumOperationalEmailIncidentKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalEmailIncidentKind | Prisma.EnumOperationalEmailIncidentKindFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalEmailIncidentKind[] | Prisma.ListEnumOperationalEmailIncidentKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalEmailIncidentKind[] | Prisma.ListEnumOperationalEmailIncidentKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalEmailIncidentKindWithAggregatesFilter<$PrismaModel> | $Enums.OperationalEmailIncidentKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumOperationalEmailIncidentKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumOperationalEmailIncidentKindFilter<$PrismaModel>
+}
+
+export type NestedEnumOperationalEmailIncidentStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalEmailIncidentStatus | Prisma.EnumOperationalEmailIncidentStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalEmailIncidentStatus[] | Prisma.ListEnumOperationalEmailIncidentStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalEmailIncidentStatus[] | Prisma.ListEnumOperationalEmailIncidentStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalEmailIncidentStatusWithAggregatesFilter<$PrismaModel> | $Enums.OperationalEmailIncidentStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumOperationalEmailIncidentStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumOperationalEmailIncidentStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumOperationalEmailPhaseFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalEmailPhase | Prisma.EnumOperationalEmailPhaseFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalEmailPhase[] | Prisma.ListEnumOperationalEmailPhaseFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalEmailPhase[] | Prisma.ListEnumOperationalEmailPhaseFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalEmailPhaseFilter<$PrismaModel> | $Enums.OperationalEmailPhase
+}
+
+export type NestedEnumOperationalEmailPhaseWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.OperationalEmailPhase | Prisma.EnumOperationalEmailPhaseFieldRefInput<$PrismaModel>
+  in?: $Enums.OperationalEmailPhase[] | Prisma.ListEnumOperationalEmailPhaseFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OperationalEmailPhase[] | Prisma.ListEnumOperationalEmailPhaseFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOperationalEmailPhaseWithAggregatesFilter<$PrismaModel> | $Enums.OperationalEmailPhase
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumOperationalEmailPhaseFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumOperationalEmailPhaseFilter<$PrismaModel>
+}
+
 export type NestedEnumIncomingEventTypeFilter<$PrismaModel = never> = {
   equals?: $Enums.IncomingEventType | Prisma.EnumIncomingEventTypeFieldRefInput<$PrismaModel>
   in?: $Enums.IncomingEventType[] | Prisma.ListEnumIncomingEventTypeFieldRefInput<$PrismaModel>
@@ -2527,6 +2782,23 @@ export type NestedEnumNotificationSeverityWithAggregatesFilter<$PrismaModel = ne
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumNotificationSeverityFilter<$PrismaModel>
   _max?: Prisma.NestedEnumNotificationSeverityFilter<$PrismaModel>
+}
+
+export type NestedEnumEmailDeliveryStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.EmailDeliveryStatus | Prisma.EnumEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.EmailDeliveryStatus[] | Prisma.ListEnumEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.EmailDeliveryStatus[] | Prisma.ListEnumEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumEmailDeliveryStatusFilter<$PrismaModel> | $Enums.EmailDeliveryStatus
+}
+
+export type NestedEnumEmailDeliveryStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.EmailDeliveryStatus | Prisma.EnumEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.EmailDeliveryStatus[] | Prisma.ListEnumEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.EmailDeliveryStatus[] | Prisma.ListEnumEmailDeliveryStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumEmailDeliveryStatusWithAggregatesFilter<$PrismaModel> | $Enums.EmailDeliveryStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumEmailDeliveryStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumEmailDeliveryStatusFilter<$PrismaModel>
 }
 
 

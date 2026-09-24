@@ -30,6 +30,12 @@ Faturalandırma kuyruğundaki ayrı günlük temizlik işi aşağıdaki sabit po
 
 Transaction referanslarında kart, tutar, adres veya ham webhook içeriği tutulmaz; yalnızca admin araması için müşteri hesabı, ortam ve Paddle kimlikleri saklanır.
 
+## E-posta olay kayıtları
+
+Senkronizasyon/kanal ve AI taslak/cevap gönderim e-posta olayları, kapanış e-postası işlemi tamamlandıktan 90 gün sonra ilişkili teslimat kayıtlarıyla birlikte temizlenir. Açık olaylar ve kapanış işlemi bekleyenler saklanır. Temizlik, bildirim e-postası kuyruğunun periyodik kontrolünde yapılır.
+
+Resend teslimat kayıtları, sağlayıcının kabul kimliği ve son gönderim sonucu ile birlikte terminal duruma geçtikten 90 gün sonra temizlenir. Bekleyen kaydın e-posta içeriği yalnızca güvenli tekrar deneme için tutulur; başarılı, kalıcı başarısız veya manuel inceleme gerektiren sonuca ulaşıldığında içerik silinir. Sonucu belirsiz kayıtlar Resend idempotency süresi dolduktan sonra otomatik yeniden gönderilmez.
+
 ## Kapsam dışında kalanlar
 
 - Fatura, ödeme, abonelik ve kullanım muhasebesi kayıtları bu temizlik işi tarafından silinmez. Billing operasyon kayıtlarının ayrı saklama politikası vardır.

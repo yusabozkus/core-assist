@@ -9,6 +9,7 @@ import {
   NotificationType,
   ProductQuestionStatus,
   StoreStatus,
+  SyncEmailIncidentKind,
 } from '../../generated/prisma/enums';
 import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
@@ -234,6 +235,10 @@ export class QuestionSyncWorkerService {
       );
     });
 
+    await this.notifications.resolveSyncFailures(data.connectionId, [
+      SyncEmailIncidentKind.QUESTION,
+      SyncEmailIncidentKind.AUTH,
+    ]);
     return { questionsProcessed };
   }
 
@@ -294,6 +299,17 @@ export class QuestionSyncWorkerService {
         transaction,
       );
     });
+
+    if (!accessError) {
+      await this.notifications.recordSyncFailure({
+        storeId: data.storeId,
+        connectionId: data.connectionId,
+        kind: authenticationError
+          ? SyncEmailIncidentKind.AUTH
+          : SyncEmailIncidentKind.QUESTION,
+        runId: data.syncRunId,
+      });
+    }
 
     await this.notifications.createForStoreMembers({
       storeId: data.storeId,

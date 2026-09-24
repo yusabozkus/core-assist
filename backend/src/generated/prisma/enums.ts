@@ -321,6 +321,69 @@ export const CatalogSyncStage = {
 export type CatalogSyncStage = (typeof CatalogSyncStage)[keyof typeof CatalogSyncStage]
 
 
+export const SyncEmailIncidentKind = {
+  FULL: 'FULL',
+  INVENTORY: 'INVENTORY',
+  QUESTION: 'QUESTION',
+  AUTH: 'AUTH'
+} as const
+
+export type SyncEmailIncidentKind = (typeof SyncEmailIncidentKind)[keyof typeof SyncEmailIncidentKind]
+
+
+export const SyncEmailIncidentStatus = {
+  OPEN: 'OPEN',
+  RESOLVED: 'RESOLVED'
+} as const
+
+export type SyncEmailIncidentStatus = (typeof SyncEmailIncidentStatus)[keyof typeof SyncEmailIncidentStatus]
+
+
+export const SyncEmailDeliveryPhase = {
+  OPEN: 'OPEN',
+  RESOLVED: 'RESOLVED'
+} as const
+
+export type SyncEmailDeliveryPhase = (typeof SyncEmailDeliveryPhase)[keyof typeof SyncEmailDeliveryPhase]
+
+
+export const SyncEmailDeliveryStatus = {
+  PENDING: 'PENDING',
+  SENT: 'SENT',
+  SKIPPED: 'SKIPPED'
+} as const
+
+export type SyncEmailDeliveryStatus = (typeof SyncEmailDeliveryStatus)[keyof typeof SyncEmailDeliveryStatus]
+
+
+export const OperationalEmailIncidentKind = {
+  AI_DRAFT: 'AI_DRAFT',
+  ANSWER_DELIVERY: 'ANSWER_DELIVERY',
+  AI_QUOTA_PAUSED: 'AI_QUOTA_PAUSED',
+  AI_BILLING_PAUSED: 'AI_BILLING_PAUSED',
+  PRODUCT_CAPACITY: 'PRODUCT_CAPACITY'
+} as const
+
+export type OperationalEmailIncidentKind = (typeof OperationalEmailIncidentKind)[keyof typeof OperationalEmailIncidentKind]
+
+
+export const OperationalEmailIncidentStatus = {
+  OPEN: 'OPEN',
+  RESOLVED: 'RESOLVED'
+} as const
+
+export type OperationalEmailIncidentStatus = (typeof OperationalEmailIncidentStatus)[keyof typeof OperationalEmailIncidentStatus]
+
+
+export const OperationalEmailPhase = {
+  OPEN: 'OPEN',
+  SUMMARY: 'SUMMARY',
+  RESOLVED: 'RESOLVED'
+} as const
+
+export type OperationalEmailPhase = (typeof OperationalEmailPhase)[keyof typeof OperationalEmailPhase]
+
+
 export const IncomingEventType = {
   PRODUCT_QUESTION: 'PRODUCT_QUESTION'
 } as const
@@ -530,3 +593,13 @@ export const NotificationSeverity = {
 } as const
 
 export type NotificationSeverity = (typeof NotificationSeverity)[keyof typeof NotificationSeverity]
+
+
+export const EmailDeliveryStatus = {
+  PENDING: 'PENDING',
+  SENT: 'SENT',
+  FAILED: 'FAILED',
+  REVIEW_REQUIRED: 'REVIEW_REQUIRED'
+} as const
+
+export type EmailDeliveryStatus = (typeof EmailDeliveryStatus)[keyof typeof EmailDeliveryStatus]

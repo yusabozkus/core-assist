@@ -84,6 +84,10 @@ export const ModelName = {
   ExternalProduct: 'ExternalProduct',
   ExternalProductVariant: 'ExternalProductVariant',
   CatalogSyncRun: 'CatalogSyncRun',
+  SyncEmailIncident: 'SyncEmailIncident',
+  SyncEmailIncidentDelivery: 'SyncEmailIncidentDelivery',
+  OperationalEmailIncident: 'OperationalEmailIncident',
+  OperationalEmailDelivery: 'OperationalEmailDelivery',
   IncomingEvent: 'IncomingEvent',
   ProductQuestion: 'ProductQuestion',
   AiDraftAttempt: 'AiDraftAttempt',
@@ -96,6 +100,7 @@ export const ModelName = {
   NotificationPreference: 'NotificationPreference',
   NotificationDeliverySetting: 'NotificationDeliverySetting',
   NotificationEmailDigestState: 'NotificationEmailDigestState',
+  EmailDeliveryRecord: 'EmailDeliveryRecord',
   WebPushSubscription: 'WebPushSubscription'
 } as const
 
@@ -695,6 +700,83 @@ export const CatalogSyncRunScalarFieldEnum = {
 export type CatalogSyncRunScalarFieldEnum = (typeof CatalogSyncRunScalarFieldEnum)[keyof typeof CatalogSyncRunScalarFieldEnum]
 
 
+export const SyncEmailIncidentScalarFieldEnum = {
+  id: 'id',
+  connectionId: 'connectionId',
+  kind: 'kind',
+  status: 'status',
+  failureCount: 'failureCount',
+  lastRunId: 'lastRunId',
+  openedAt: 'openedAt',
+  lastFailureAt: 'lastFailureAt',
+  resolvedAt: 'resolvedAt',
+  openEmailCompletedAt: 'openEmailCompletedAt',
+  resolvedEmailCompletedAt: 'resolvedEmailCompletedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SyncEmailIncidentScalarFieldEnum = (typeof SyncEmailIncidentScalarFieldEnum)[keyof typeof SyncEmailIncidentScalarFieldEnum]
+
+
+export const SyncEmailIncidentDeliveryScalarFieldEnum = {
+  id: 'id',
+  incidentId: 'incidentId',
+  recipientUserId: 'recipientUserId',
+  phase: 'phase',
+  status: 'status',
+  claimToken: 'claimToken',
+  claimUntil: 'claimUntil',
+  sentAt: 'sentAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SyncEmailIncidentDeliveryScalarFieldEnum = (typeof SyncEmailIncidentDeliveryScalarFieldEnum)[keyof typeof SyncEmailIncidentDeliveryScalarFieldEnum]
+
+
+export const OperationalEmailIncidentScalarFieldEnum = {
+  id: 'id',
+  storeId: 'storeId',
+  connectionId: 'connectionId',
+  scopeKey: 'scopeKey',
+  kind: 'kind',
+  status: 'status',
+  failureCount: 'failureCount',
+  lastEmailedFailureCount: 'lastEmailedFailureCount',
+  openedAt: 'openedAt',
+  lastFailureAt: 'lastFailureAt',
+  recoveryCandidateAt: 'recoveryCandidateAt',
+  resolvedAt: 'resolvedAt',
+  openedEmailAt: 'openedEmailAt',
+  lastEmailAt: 'lastEmailAt',
+  resolvedEmailAt: 'resolvedEmailAt',
+  claimToken: 'claimToken',
+  claimUntil: 'claimUntil',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OperationalEmailIncidentScalarFieldEnum = (typeof OperationalEmailIncidentScalarFieldEnum)[keyof typeof OperationalEmailIncidentScalarFieldEnum]
+
+
+export const OperationalEmailDeliveryScalarFieldEnum = {
+  id: 'id',
+  incidentId: 'incidentId',
+  recipientUserId: 'recipientUserId',
+  phase: 'phase',
+  sequence: 'sequence',
+  status: 'status',
+  claimToken: 'claimToken',
+  claimUntil: 'claimUntil',
+  sentAt: 'sentAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OperationalEmailDeliveryScalarFieldEnum = (typeof OperationalEmailDeliveryScalarFieldEnum)[keyof typeof OperationalEmailDeliveryScalarFieldEnum]
+
+
 export const IncomingEventScalarFieldEnum = {
   id: 'id',
   storeId: 'storeId',
@@ -947,6 +1029,33 @@ export const NotificationEmailDigestStateScalarFieldEnum = {
 } as const
 
 export type NotificationEmailDigestStateScalarFieldEnum = (typeof NotificationEmailDigestStateScalarFieldEnum)[keyof typeof NotificationEmailDigestStateScalarFieldEnum]
+
+
+export const EmailDeliveryRecordScalarFieldEnum = {
+  id: 'id',
+  deliveryKey: 'deliveryKey',
+  recipientUserId: 'recipientUserId',
+  storeId: 'storeId',
+  recipientEmail: 'recipientEmail',
+  senderEmail: 'senderEmail',
+  subject: 'subject',
+  html: 'html',
+  status: 'status',
+  providerMessageId: 'providerMessageId',
+  attemptCount: 'attemptCount',
+  firstAttemptAt: 'firstAttemptAt',
+  lastAttemptAt: 'lastAttemptAt',
+  nextAttemptAt: 'nextAttemptAt',
+  lastErrorCode: 'lastErrorCode',
+  lastErrorMessage: 'lastErrorMessage',
+  claimToken: 'claimToken',
+  claimUntil: 'claimUntil',
+  sentAt: 'sentAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type EmailDeliveryRecordScalarFieldEnum = (typeof EmailDeliveryRecordScalarFieldEnum)[keyof typeof EmailDeliveryRecordScalarFieldEnum]
 
 
 export const WebPushSubscriptionScalarFieldEnum = {

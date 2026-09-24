@@ -5,11 +5,13 @@ import {
   ChannelConnectionStatus,
   NotificationSeverity,
   NotificationType,
+  OperationalEmailIncidentKind,
   ProductQuestionStatus,
   QuestionAnswerOrigin,
   QuestionAnswerStatus,
   QuestionReplyDecision,
   StoreStatus,
+  SyncEmailIncidentKind,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import {
@@ -47,6 +49,7 @@ export class QuestionAnswerWorkerService {
       where: { id: data.answerId, storeId: data.storeId },
       select: {
         id: true,
+        connectionId: true,
         answer: true,
         origin: true,
         requestedByUserId: true,
@@ -346,6 +349,17 @@ export class QuestionAnswerWorkerService {
         answerOrigin: delivery.origin,
       },
     });
+    await this.notifications.recordOperationalSuccess({
+      storeId: data.storeId,
+      connectionId: delivery.connectionId,
+      kind: OperationalEmailIncidentKind.ANSWER_DELIVERY,
+    });
+    if (delivery.origin === QuestionAnswerOrigin.AUTOMATION) {
+      await this.notifications.resolveOperationalWarning({
+        storeId: data.storeId,
+        kind: OperationalEmailIncidentKind.AI_BILLING_PAUSED,
+      });
+    }
   }
 
   async markFinalFailure(data: QuestionAnswerJobData, error: unknown) {
@@ -418,6 +432,18 @@ export class QuestionAnswerWorkerService {
           data.storeId,
           delivery.connectionId,
         );
+        await this.notifications.recordSyncFailure({
+          storeId: data.storeId,
+          connectionId: delivery.connectionId,
+          kind: SyncEmailIncidentKind.AUTH,
+          runId: data.answerId,
+        });
+      } else {
+        await this.notifications.recordOperationalFailure({
+          storeId: data.storeId,
+          connectionId: delivery.connectionId,
+          kind: OperationalEmailIncidentKind.ANSWER_DELIVERY,
+        });
       }
     }
   }
@@ -527,6 +553,12 @@ export class QuestionAnswerWorkerService {
           ? `ai-automation-paused:${data.storeId}:billing`
           : `ai-review-required:${questionId}`,
       });
+      if (billingBlocked) {
+        await this.notifications.recordOperationalFailure({
+          storeId: data.storeId,
+          kind: OperationalEmailIncidentKind.AI_BILLING_PAUSED,
+        });
+      }
     }
   }
 

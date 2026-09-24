@@ -15,6 +15,7 @@ import {
   QuestionAnswerStatus,
   StoreRole,
   StoreStatus,
+  SyncEmailIncidentKind,
 } from '../../generated/prisma/enums';
 import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
@@ -477,58 +478,64 @@ export class ChannelsService {
       credentials,
     });
 
-    return this.prisma.$transaction(async (transaction) => {
-      const connection = existingConnection
-        ? await transaction.channelConnection.update({
-            where: { id: existingConnection.id },
-            data: {
-              type: manifest.type,
-              environment: dto.environment,
-              credentialsEncrypted: this.encryption.encrypt(credentials),
-              credentialSchemaVersion: 1,
-              status: ChannelConnectionStatus.CONNECTED,
-              connectedAt: new Date(),
-              processingStartedAt: null,
-              lastSyncAt: null,
-              lastInventorySyncAt: null,
-              failureReason: null,
-              questionSyncStartedAt: null,
-              lastQuestionSyncAt: null,
-              questionSyncFailureReason: null,
-              removedAt: null,
-            },
-            select: channelConnectionSelect,
-          })
-        : await transaction.channelConnection.create({
-            data: {
-              storeId,
-              providerKey: dto.providerKey,
-              type: manifest.type,
-              environment: dto.environment,
-              credentialsEncrypted: this.encryption.encrypt(credentials),
-              status: ChannelConnectionStatus.CONNECTED,
-              connectedAt: new Date(),
-            },
-            select: channelConnectionSelect,
-          });
-      await this.audit.record(
-        {
-          actorType: AuditActorType.USER,
-          actorUserId: userId,
-          origin: AuditOrigin.API,
-          action: AuditAction.CHANNEL_CONNECTED,
-          result: AuditResult.SUCCESS,
-          workspaceId: membership.store.workspaceId,
-          storeId,
-          targetType: 'CHANNEL_CONNECTION',
-          targetId: connection.id,
-          after: channelAuditSnapshot(connection),
-          metadata: { restoredConnection: Boolean(existingConnection) },
-        },
-        transaction,
-      );
-      return connection;
-    });
+    const createdConnection = await this.prisma.$transaction(
+      async (transaction) => {
+        const connection = existingConnection
+          ? await transaction.channelConnection.update({
+              where: { id: existingConnection.id },
+              data: {
+                type: manifest.type,
+                environment: dto.environment,
+                credentialsEncrypted: this.encryption.encrypt(credentials),
+                credentialSchemaVersion: 1,
+                status: ChannelConnectionStatus.CONNECTED,
+                connectedAt: new Date(),
+                processingStartedAt: null,
+                lastSyncAt: null,
+                lastInventorySyncAt: null,
+                failureReason: null,
+                questionSyncStartedAt: null,
+                lastQuestionSyncAt: null,
+                questionSyncFailureReason: null,
+                removedAt: null,
+              },
+              select: channelConnectionSelect,
+            })
+          : await transaction.channelConnection.create({
+              data: {
+                storeId,
+                providerKey: dto.providerKey,
+                type: manifest.type,
+                environment: dto.environment,
+                credentialsEncrypted: this.encryption.encrypt(credentials),
+                status: ChannelConnectionStatus.CONNECTED,
+                connectedAt: new Date(),
+              },
+              select: channelConnectionSelect,
+            });
+        await this.audit.record(
+          {
+            actorType: AuditActorType.USER,
+            actorUserId: userId,
+            origin: AuditOrigin.API,
+            action: AuditAction.CHANNEL_CONNECTED,
+            result: AuditResult.SUCCESS,
+            workspaceId: membership.store.workspaceId,
+            storeId,
+            targetType: 'CHANNEL_CONNECTION',
+            targetId: connection.id,
+            after: channelAuditSnapshot(connection),
+            metadata: { restoredConnection: Boolean(existingConnection) },
+          },
+          transaction,
+        );
+        return connection;
+      },
+    );
+    if (existingConnection) {
+      await this.notifications.discardSyncFailures(existingConnection.id);
+    }
+    return createdConnection;
   }
 
   async configure(
@@ -550,67 +557,77 @@ export class ChannelsService {
       credentials,
     });
 
-    return this.prisma.$transaction(async (transaction) => {
-      const configured = await transaction.channelConnection.update({
-        where: { id: connection.id },
-        data: {
-          environment: dto.environment,
-          credentialsEncrypted: this.encryption.encrypt(credentials),
-          credentialSchemaVersion: 1,
-          status: ChannelConnectionStatus.CONNECTED,
-          connectedAt: new Date(),
-          failureReason: null,
-        },
-        select: channelConnectionSelect,
-      });
-      await this.audit.record(
-        {
-          actorType: AuditActorType.USER,
-          actorUserId: userId,
-          origin: AuditOrigin.API,
-          action: AuditAction.CHANNEL_CONFIGURED,
-          result: AuditResult.SUCCESS,
-          workspaceId: membership.store.workspaceId,
-          storeId,
-          targetType: 'CHANNEL_CONNECTION',
-          targetId: connection.id,
-          before: channelAuditSnapshot(connection),
-          after: channelAuditSnapshot(configured),
-        },
-        transaction,
-      );
-      return configured;
-    });
+    const configuredConnection = await this.prisma.$transaction(
+      async (transaction) => {
+        const configured = await transaction.channelConnection.update({
+          where: { id: connection.id },
+          data: {
+            environment: dto.environment,
+            credentialsEncrypted: this.encryption.encrypt(credentials),
+            credentialSchemaVersion: 1,
+            status: ChannelConnectionStatus.CONNECTED,
+            connectedAt: new Date(),
+            failureReason: null,
+          },
+          select: channelConnectionSelect,
+        });
+        await this.audit.record(
+          {
+            actorType: AuditActorType.USER,
+            actorUserId: userId,
+            origin: AuditOrigin.API,
+            action: AuditAction.CHANNEL_CONFIGURED,
+            result: AuditResult.SUCCESS,
+            workspaceId: membership.store.workspaceId,
+            storeId,
+            targetType: 'CHANNEL_CONNECTION',
+            targetId: connection.id,
+            before: channelAuditSnapshot(connection),
+            after: channelAuditSnapshot(configured),
+          },
+          transaction,
+        );
+        return configured;
+      },
+    );
+    await this.notifications.resolveSyncFailures(connectionId, [
+      SyncEmailIncidentKind.AUTH,
+    ]);
+    return configuredConnection;
   }
 
   async disconnect(storeId: string, connectionId: string, userId: string) {
     const membership = await this.requireStoreManagement(storeId, userId);
     const connection = await this.getConnection(storeId, connectionId);
 
-    return this.prisma.$transaction(async (transaction) => {
-      const disconnected = await transaction.channelConnection.update({
-        where: { id: connectionId },
-        data: { status: ChannelConnectionStatus.DISCONNECTED },
-        select: channelConnectionSelect,
-      });
-      await this.audit.record(
-        {
-          actorType: AuditActorType.USER,
-          actorUserId: userId,
-          origin: AuditOrigin.API,
-          action: AuditAction.CHANNEL_DISCONNECTED,
-          result: AuditResult.SUCCESS,
-          workspaceId: membership.store.workspaceId,
-          storeId,
-          targetType: 'CHANNEL_CONNECTION',
-          targetId: connectionId,
-          before: channelAuditSnapshot(connection),
-          after: channelAuditSnapshot(disconnected),
-        },
-        transaction,
-      );
-      return disconnected;
-    });
+    const disconnectedConnection = await this.prisma.$transaction(
+      async (transaction) => {
+        const disconnected = await transaction.channelConnection.update({
+          where: { id: connectionId },
+          data: { status: ChannelConnectionStatus.DISCONNECTED },
+          select: channelConnectionSelect,
+        });
+        await this.audit.record(
+          {
+            actorType: AuditActorType.USER,
+            actorUserId: userId,
+            origin: AuditOrigin.API,
+            action: AuditAction.CHANNEL_DISCONNECTED,
+            result: AuditResult.SUCCESS,
+            workspaceId: membership.store.workspaceId,
+            storeId,
+            targetType: 'CHANNEL_CONNECTION',
+            targetId: connectionId,
+            before: channelAuditSnapshot(connection),
+            after: channelAuditSnapshot(disconnected),
+          },
+          transaction,
+        );
+        return disconnected;
+      },
+    );
+    await this.notifications.discardSyncFailures(connectionId);
+    return disconnectedConnection;
   }
 
   async reconnect(storeId: string, connectionId: string, userId: string) {
@@ -647,6 +664,11 @@ export class ChannelsService {
         storeId,
         connectionId,
       );
+      await this.notifications.recordSyncFailure({
+        storeId,
+        connectionId,
+        kind: SyncEmailIncidentKind.AUTH,
+      });
       await this.audit.recordSafely({
         actorType: AuditActorType.USER,
         actorUserId: userId,
@@ -663,34 +685,40 @@ export class ChannelsService {
       throw error;
     }
 
-    return this.prisma.$transaction(async (transaction) => {
-      const reconnected = await transaction.channelConnection.update({
-        where: { id: connectionId },
-        data: {
-          status: ChannelConnectionStatus.CONNECTED,
-          connectedAt: new Date(),
-          failureReason: null,
-        },
-        select: channelConnectionSelect,
-      });
-      await this.audit.record(
-        {
-          actorType: AuditActorType.USER,
-          actorUserId: userId,
-          origin: AuditOrigin.API,
-          action: AuditAction.CHANNEL_RECONNECTED,
-          result: AuditResult.SUCCESS,
-          workspaceId: membership.store.workspaceId,
-          storeId,
-          targetType: 'CHANNEL_CONNECTION',
-          targetId: connectionId,
-          before: channelAuditSnapshot(connection),
-          after: channelAuditSnapshot(reconnected),
-        },
-        transaction,
-      );
-      return reconnected;
-    });
+    const reconnectedConnection = await this.prisma.$transaction(
+      async (transaction) => {
+        const reconnected = await transaction.channelConnection.update({
+          where: { id: connectionId },
+          data: {
+            status: ChannelConnectionStatus.CONNECTED,
+            connectedAt: new Date(),
+            failureReason: null,
+          },
+          select: channelConnectionSelect,
+        });
+        await this.audit.record(
+          {
+            actorType: AuditActorType.USER,
+            actorUserId: userId,
+            origin: AuditOrigin.API,
+            action: AuditAction.CHANNEL_RECONNECTED,
+            result: AuditResult.SUCCESS,
+            workspaceId: membership.store.workspaceId,
+            storeId,
+            targetType: 'CHANNEL_CONNECTION',
+            targetId: connectionId,
+            before: channelAuditSnapshot(connection),
+            after: channelAuditSnapshot(reconnected),
+          },
+          transaction,
+        );
+        return reconnected;
+      },
+    );
+    await this.notifications.resolveSyncFailures(connectionId, [
+      SyncEmailIncidentKind.AUTH,
+    ]);
+    return reconnectedConnection;
   }
 
   async syncCatalog(storeId: string, connectionId: string, userId: string) {
@@ -900,6 +928,8 @@ export class ChannelsService {
         transaction,
       );
     });
+
+    await this.notifications.discardSyncFailures(connectionId);
 
     return { deleted: true };
   }

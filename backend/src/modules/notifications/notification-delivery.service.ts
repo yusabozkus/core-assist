@@ -1,15 +1,31 @@
 import { Injectable, Logger } from '@nestjs/common';
 import webPush from 'web-push';
+import type { Prisma } from '../../generated/prisma/client';
 import {
   NotificationType,
   type NotificationSeverity,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { ResendEmailService } from './resend-email.service';
+import {
+  FINANCE_TRANSACTIONAL_EMAIL_TYPES,
+  SECURITY_TRANSACTIONAL_EMAIL_TYPES,
+} from './critical-email.policy';
 
 type ExternalNotificationInput = {
   storeId: string;
   type: NotificationType;
   severity: NotificationSeverity;
+  title: string;
+  message: string;
+  actionUrl?: string;
+  emailDeliveryKeys?: Record<string, string>;
+};
+
+type EssentialNotificationInput = {
+  recipientUserId: string;
+  storeId?: string | null;
+  type: NotificationType;
   title: string;
   message: string;
   actionUrl?: string;
@@ -31,11 +47,13 @@ export class NotificationDeliveryService {
     process.env.WEB_PUSH_VAPID_PUBLIC_KEY?.trim() || null;
   private readonly vapidPrivateKey =
     process.env.WEB_PUSH_VAPID_PRIVATE_KEY?.trim() || null;
-  private readonly resendApiKey = process.env.RESEND_API_KEY?.trim() || null;
   private readonly emailFrom =
     process.env.NOTIFICATION_EMAIL_FROM?.trim() || null;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly resend: ResendEmailService,
+  ) {
     if (this.browserConfigured) {
       webPush.setVapidDetails(
         process.env.WEB_PUSH_VAPID_SUBJECT?.trim() ||
@@ -51,11 +69,102 @@ export class NotificationDeliveryService {
   }
 
   get emailConfigured() {
-    return Boolean(this.resendApiKey && this.emailFrom);
+    return Boolean(this.resend.configured && this.emailFrom);
   }
 
   get publicKey() {
     return this.browserConfigured ? this.vapidPublicKey : null;
+  }
+
+  async stageDirectEmail(
+    transaction: Prisma.TransactionClient,
+    notification: {
+      id: string;
+      recipientUserId: string;
+      occurrenceCount: number;
+    },
+    input: ExternalNotificationInput,
+  ) {
+    if (!this.emailConfigured || !isImmediateEmailType(input.type)) return;
+    const recipient = await transaction.user.findUnique({
+      where: { id: notification.recipientUserId },
+      select: {
+        name: true,
+        email: true,
+        notificationDeliverySettings: {
+          where: { storeId: input.storeId, emailEnabled: true },
+          take: 1,
+          select: {
+            browserEnabled: true,
+            emailEnabled: true,
+            quietHoursEnabled: true,
+            quietHoursStart: true,
+            quietHoursEnd: true,
+            timezone: true,
+          },
+        },
+      },
+    });
+    const settings = recipient?.notificationDeliverySettings[0];
+    if (!recipient || !settings || this.isQuietTime(settings)) return;
+    const actionUrl = this.toAbsoluteUrl(input.actionUrl);
+    const deliveryKey = `notification:${notification.id}:${notification.occurrenceCount}`;
+    await transaction.emailDeliveryRecord.upsert({
+      where: { deliveryKey },
+      create: {
+        deliveryKey,
+        recipientUserId: notification.recipientUserId,
+        storeId: input.storeId,
+        recipientEmail: recipient.email,
+        senderEmail: this.emailFrom!,
+        subject: input.title,
+        html: buildEmailHtml(
+          recipient.name,
+          input.title,
+          input.message,
+          actionUrl,
+        ),
+      },
+      update: {},
+    });
+  }
+
+  async stageEssentialEmail(
+    transaction: Prisma.TransactionClient,
+    notificationId: string,
+    input: EssentialNotificationInput,
+  ) {
+    if (
+      !this.emailConfigured ||
+      (!FINANCE_TRANSACTIONAL_EMAIL_TYPES.has(input.type) &&
+        !SECURITY_TRANSACTIONAL_EMAIL_TYPES.has(input.type))
+    )
+      return;
+
+    const recipient = await transaction.user.findUnique({
+      where: { id: input.recipientUserId },
+      select: { name: true, email: true, emailVerified: true },
+    });
+    if (!recipient?.emailVerified) return;
+    const deliveryKey = `critical:${notificationId}`;
+    await transaction.emailDeliveryRecord.upsert({
+      where: { deliveryKey },
+      create: {
+        deliveryKey,
+        recipientUserId: input.recipientUserId,
+        storeId: input.storeId ?? null,
+        recipientEmail: recipient.email,
+        senderEmail: this.emailFrom!,
+        subject: input.title,
+        html: buildEmailHtml(
+          recipient.name,
+          input.title,
+          input.message,
+          this.toAbsoluteUrl(input.actionUrl),
+        ),
+      },
+      update: {},
+    });
   }
 
   async deliverToUsers(
@@ -105,15 +214,21 @@ export class NotificationDeliveryService {
         if (
           settings.emailEnabled &&
           this.emailConfigured &&
-          input.type !== NotificationType.AI_REVIEW_REQUIRED &&
-          input.type !== NotificationType.LOW_STOCK &&
-          input.type !== NotificationType.OUT_OF_STOCK
+          isImmediateEmailType(input.type)
         ) {
+          const key = input.emailDeliveryKeys?.[recipient.id];
+          if (!key) throw new Error('Email delivery key is missing.');
           deliveries.push(
-            this.sendEmail(recipient.email, recipient.name, input),
+            this.sendEmail(
+              recipient.id,
+              recipient.email,
+              recipient.name,
+              input,
+              key,
+            ).then(() => undefined),
           );
         }
-        await Promise.allSettled(deliveries);
+        await Promise.all(deliveries);
       }),
     );
   }
@@ -150,7 +265,8 @@ export class NotificationDeliveryService {
     const settings = recipient?.notificationDeliverySettings[0];
     if (!recipient || !settings || this.isQuietTime(settings)) return false;
 
-    await this.sendEmail(
+    const result = await this.sendEmail(
+      recipientUserId,
       recipient.email,
       recipient.name,
       {
@@ -163,6 +279,8 @@ export class NotificationDeliveryService {
       },
       idempotencyKey,
     );
+    if (result === 'DEFERRED')
+      throw new Error('AI review email is queued for retry.');
     return true;
   }
 
@@ -200,7 +318,8 @@ export class NotificationDeliveryService {
     if (!recipient || !settings || this.isQuietTime(settings)) return false;
 
     const depleted = type === NotificationType.OUT_OF_STOCK;
-    await this.sendEmail(
+    const result = await this.sendEmail(
+      recipientUserId,
       recipient.email,
       recipient.name,
       {
@@ -217,7 +336,74 @@ export class NotificationDeliveryService {
       },
       idempotencyKey,
     );
+    if (result === 'DEFERRED')
+      throw new Error('Stock email is queued for retry.');
     return true;
+  }
+
+  async sendSyncIncidentEmail(
+    recipientUserId: string,
+    storeId: string,
+    type: NotificationType,
+    title: string,
+    message: string,
+    actionUrl: string,
+    idempotencyKey: string,
+  ): Promise<'SENT' | 'DEFERRED' | 'SKIPPED'> {
+    if (!this.emailConfigured) return 'DEFERRED';
+
+    const [recipient, preference] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: recipientUserId },
+        select: {
+          name: true,
+          email: true,
+          notificationDeliverySettings: {
+            where: { storeId },
+            take: 1,
+            select: {
+              browserEnabled: true,
+              emailEnabled: true,
+              quietHoursEnabled: true,
+              quietHoursStart: true,
+              quietHoursEnd: true,
+              timezone: true,
+            },
+          },
+        },
+      }),
+      this.prisma.notificationPreference.findUnique({
+        where: {
+          userId_storeId_type: { userId: recipientUserId, storeId, type },
+        },
+        select: { enabled: true },
+      }),
+    ]);
+    if (!recipient) return 'SKIPPED';
+    const settings = recipient.notificationDeliverySettings[0];
+    if (!settings || !settings.emailEnabled || preference?.enabled === false)
+      return 'SKIPPED';
+    if (this.isQuietTime(settings)) return 'DEFERRED';
+
+    const result = await this.sendEmail(
+      recipientUserId,
+      recipient.email,
+      recipient.name,
+      {
+        storeId,
+        type,
+        severity: 'ERROR',
+        title,
+        message,
+        actionUrl,
+      },
+      idempotencyKey,
+    );
+    return result === 'SENT'
+      ? 'SENT'
+      : result === 'FAILED'
+        ? 'SKIPPED'
+        : 'DEFERRED';
   }
 
   private async sendBrowserNotifications(
@@ -265,33 +451,22 @@ export class NotificationDeliveryService {
   }
 
   private async sendEmail(
+    recipientUserId: string,
     email: string,
     name: string,
     input: ExternalNotificationInput,
-    idempotencyKey?: string,
+    idempotencyKey: string,
   ) {
     const actionUrl = this.toAbsoluteUrl(input.actionUrl);
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.resendApiKey}`,
-        'Content-Type': 'application/json',
-        ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
-      },
-      body: JSON.stringify({
-        from: this.emailFrom,
-        to: [email],
-        subject: input.title,
-        html: buildEmailHtml(name, input.title, input.message, actionUrl),
-      }),
-      signal: AbortSignal.timeout(10_000),
+    return this.resend.send({
+      deliveryKey: idempotencyKey,
+      recipientUserId,
+      storeId: input.storeId,
+      recipientEmail: email,
+      senderEmail: this.emailFrom!,
+      subject: input.title,
+      html: buildEmailHtml(name, input.title, input.message, actionUrl),
     });
-
-    if (!response.ok) {
-      throw new Error(
-        `E-posta bildirimi gönderilemedi (${response.status}): ${(await response.text()).slice(0, 300)}`,
-      );
-    }
   }
 
   private isQuietTime(settings: DeliverySettings) {
@@ -329,6 +504,26 @@ export class NotificationDeliveryService {
       ? `${frontendUrl}${actionUrl}`
       : actionUrl || `${frontendUrl}/dashboard/settings/notifications`;
   }
+}
+
+function isImmediateEmailType(type: NotificationType) {
+  if (
+    FINANCE_TRANSACTIONAL_EMAIL_TYPES.has(type) ||
+    SECURITY_TRANSACTIONAL_EMAIL_TYPES.has(type)
+  )
+    return false;
+  return !new Set<NotificationType>([
+    NotificationType.AI_REVIEW_REQUIRED,
+    NotificationType.LOW_STOCK,
+    NotificationType.OUT_OF_STOCK,
+    NotificationType.PRODUCT_SYNC_FAILED,
+    NotificationType.QUESTION_SYNC_FAILED,
+    NotificationType.CHANNEL_CONNECTION_ERROR,
+    NotificationType.AI_DRAFT_FAILED,
+    NotificationType.ANSWER_DELIVERY_FAILED,
+    NotificationType.AI_AUTOMATION_PAUSED,
+    NotificationType.BILLING_PLAN_LIMIT,
+  ]).has(type);
 }
 
 function toMinutes(value: string) {

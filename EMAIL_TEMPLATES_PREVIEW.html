@@ -1,0 +1,1433 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Core Asistan · E-posta önizlemeleri</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Arial, sans-serif;
+        color: #17201b;
+        background: #f4f6f4;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      .page {
+        max-width: 1540px;
+        margin: 0 auto;
+        padding: 38px 30px 72px;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: #236347;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(27px, 3vw, 40px);
+        line-height: 1.15;
+        letter-spacing: -0.035em;
+      }
+
+      .intro {
+        max-width: 790px;
+        margin: 14px 0 0;
+        color: #5b6960;
+        font-size: 14px;
+        line-height: 1.65;
+      }
+
+      .toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin: 30px 0 22px;
+        padding: 14px;
+        border: 1px solid #e1e7e2;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 9px 28px rgba(19, 46, 31, 0.05);
+      }
+
+      .search {
+        width: min(100%, 280px);
+        height: 38px;
+        padding: 0 12px;
+        border: 1px solid #dce4de;
+        border-radius: 9px;
+        outline: none;
+        font: inherit;
+        font-size: 13px;
+      }
+
+      .search:focus {
+        border-color: #177245;
+      }
+
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .filter {
+        min-height: 35px;
+        padding: 0 12px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: transparent;
+        color: #58675d;
+        cursor: pointer;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .filter:hover {
+        background: #f0f5f1;
+      }
+      .filter[aria-pressed="true"] {
+        background: #e7f4ec;
+        color: #145a38;
+      }
+
+      .count {
+        margin-left: auto;
+        white-space: nowrap;
+        color: #6b776d;
+        font-size: 12px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+      }
+
+      .item {
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid #dfe6e0;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 8px 32px rgba(19, 46, 31, 0.035);
+      }
+
+      .item-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 66px;
+        padding: 16px 18px 14px;
+        border-bottom: 1px solid #edf0ed;
+      }
+
+      .item h2 {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      .item p {
+        margin: 4px 0 0;
+        color: #758278;
+        font-size: 11px;
+      }
+
+      .tag {
+        flex-shrink: 0;
+        padding: 5px 8px;
+        border-radius: 6px;
+        background: #f1f5f2;
+        color: #486553;
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      iframe {
+        display: block;
+        width: 100%;
+        height: 350px;
+        border: 0;
+      }
+
+      .item--branded iframe {
+        height: 640px;
+      }
+
+      .item--inventory iframe {
+        height: 840px;
+      }
+
+      .item--channel iframe {
+        height: 700px;
+      }
+
+      .item--capacity iframe {
+        height: 690px;
+      }
+
+      .item--security iframe {
+        height: 660px;
+      }
+
+      .item--billing iframe {
+        height: 790px;
+      }
+
+      .empty {
+        padding: 45px 20px;
+        border: 1px dashed #ccd7ce;
+        border-radius: 14px;
+        color: #66746a;
+        text-align: center;
+      }
+
+      @media (max-width: 940px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 600px) {
+        .page {
+          padding: 26px 14px 48px;
+        }
+        .toolbar {
+          top: 0;
+          margin-top: 24px;
+        }
+        .search {
+          width: 100%;
+        }
+        .count {
+          width: 100%;
+          margin: 0;
+        }
+        iframe {
+          height: 380px;
+        }
+        .item--branded iframe {
+          height: 710px;
+        }
+        .item--inventory iframe {
+          height: 980px;
+        }
+        .item--channel iframe {
+          height: 790px;
+        }
+        .item--capacity iframe {
+          height: 800px;
+        }
+        .item--security iframe {
+          height: 750px;
+        }
+        .item--billing iframe {
+          height: 900px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <p class="eyebrow">Core Asistan · Tasarım önizlemesi</p>
+      <h1>Kullanımdaki e-posta örnekleri</h1>
+      <p class="intro">
+        AI, kota, stok, kanal, operasyon, ödeme ve güvenlik e-postaları kendi
+        içeriklerine uygun tasarımlarla gösteriliyor. Aşağıdaki kişi, mağaza ve
+        sayılar örnektir. Bu sayfa e-posta göndermez.
+      </p>
+
+      <div class="toolbar">
+        <input
+          class="search"
+          id="search"
+          type="search"
+          placeholder="E-posta ara..."
+          aria-label="E-posta ara"
+        />
+        <div
+          class="filters"
+          id="filters"
+          aria-label="Kategori filtreleri"
+        ></div>
+        <span class="count" id="count"></span>
+      </div>
+
+      <div class="grid" id="gallery"></div>
+    </main>
+
+    <script>
+      const examples = [
+        {
+          group: "AI ve kota",
+          label: "İnceleme özeti",
+          title: "DeFacto: 10 soru incelemenizi bekliyor",
+          message:
+            "8 yeni soruyla birlikte 10 soru incelemenizi bekliyor. Taslakları gelen kutunuzdan kontrol edebilirsiniz.",
+          path: "/dashboard/inbox",
+          template: "AI_REVIEW",
+          metrics: { pendingCount: 10, newCount: 8 },
+        },
+        {
+          group: "AI ve kota",
+          label: "%80 kota",
+          title: "AI soru hakkınızın %80'i kullanıldı",
+          message:
+            "1.200 / 1.500 soru hakkı kullanıldı. Dönem sonuna kadar 300 hakkınız kaldı.",
+          path: "/billing",
+          template: "AI_USAGE_WARNING",
+          metrics: { used: 1200, limit: 1500, remaining: 300 },
+        },
+        {
+          group: "AI ve kota",
+          label: "%90 kota",
+          title: "AI soru hakkınızın %90'ı kullanıldı",
+          message:
+            "1.350 / 1.500 soru hakkı kullanıldı. Dönem sonuna kadar 150 hakkınız kaldı.",
+          path: "/billing",
+          template: "AI_USAGE_WARNING",
+          metrics: { used: 1350, limit: 1500, remaining: 150 },
+        },
+        {
+          group: "AI ve kota",
+          label: "%100 kota",
+          title: "AI soru hakkınız doldu",
+          message:
+            "1.500 soru hakkınızın tamamını kullandınız. Manuel yanıtlamaya devam edebilir veya planınızı yükseltebilirsiniz.",
+          path: "/billing",
+          template: "AI_USAGE_EXHAUSTED",
+          metrics: { used: 1500, limit: 1500, remaining: 0 },
+        },
+        {
+          group: "AI ve kota",
+          label: "AI taslak hatası · ilk",
+          title: "DeFacto · Trendyol: AI taslakları hatası",
+          message:
+            "Bir soruda AI taslağı hazırlanamadı. Benzer hatalar tekrar ederse ayrı e-postalar yerine toplu bir özet gönderilecek. Soruları gelen kutusunda kontrol edin.",
+          path: "/dashboard/inbox",
+          template: "OPERATION_FAILURE",
+          metrics: { process: "draft", affectedCount: 1, phase: "initial" },
+        },
+        {
+          group: "AI ve kota",
+          label: "AI taslak hatası · özet",
+          title: "DeFacto · Trendyol: AI taslakları hata özeti",
+          message:
+            "Son bildirimin ardından 4 soruda daha AI taslağı hazırlanamadı. Soruları gelen kutusunda kontrol edin.",
+          path: "/dashboard/inbox",
+          template: "OPERATION_FAILURE",
+          metrics: { process: "draft", affectedCount: 4, phase: "summary" },
+        },
+        {
+          group: "AI ve kota",
+          label: "AI taslak hatası · düzeldi",
+          title: "DeFacto · Trendyol: AI taslakları yeniden çalışıyor",
+          message:
+            "İşlem yeniden başarıyla tamamlandı. Önceden başarısız olan soruları gelen kutusunda ayrıca kontrol edin.",
+          path: "/dashboard/inbox",
+          template: "OPERATION_RECOVERED",
+          metrics: { process: "draft" },
+        },
+        {
+          group: "AI ve kota",
+          label: "Cevap gönderimi · ilk",
+          title: "DeFacto · Trendyol: Cevap gönderimi hatası",
+          message:
+            "Bir soruda cevap pazaryerine gönderilemedi. Benzer hatalar tekrar ederse ayrı e-postalar yerine toplu bir özet gönderilecek. Soruları gelen kutusunda kontrol edin.",
+          path: "/dashboard/inbox",
+          template: "OPERATION_FAILURE",
+          metrics: { process: "answer", affectedCount: 1, phase: "initial" },
+        },
+        {
+          group: "AI ve kota",
+          label: "Cevap gönderimi · özet",
+          title: "DeFacto · Trendyol: Cevap gönderimi hata özeti",
+          message:
+            "Son bildirimin ardından 3 soruda daha cevap pazaryerine gönderilemedi. Soruları gelen kutusunda kontrol edin.",
+          path: "/dashboard/inbox",
+          template: "OPERATION_FAILURE",
+          metrics: { process: "answer", affectedCount: 3, phase: "summary" },
+        },
+        {
+          group: "AI ve kota",
+          label: "Cevap gönderimi · düzeldi",
+          title: "DeFacto · Trendyol: Cevap gönderimi yeniden çalışıyor",
+          message:
+            "İşlem yeniden başarıyla tamamlandı. Önceden başarısız olan soruları gelen kutusunda ayrıca kontrol edin.",
+          path: "/dashboard/inbox",
+          template: "OPERATION_RECOVERED",
+          metrics: { process: "answer" },
+        },
+        {
+          group: "AI ve kota",
+          label: "Kota nedeniyle durdu",
+          title: "DeFacto: AI otomasyonu durduruldu",
+          message:
+            "AI soru hakkınız dolduğu için yeni otomatik taslaklar hazırlanmıyor. Yeni dönem başladığında veya planınız yükseldiğinde üretim yeniden kullanılabilir.",
+          path: "/billing",
+          template: "AUTOMATION_PAUSED",
+          metrics: { reason: "quota" },
+        },
+        {
+          group: "AI ve kota",
+          label: "Abonelik nedeniyle durdu",
+          title: "DeFacto: AI otomasyonu durduruldu",
+          message:
+            "Abonelik erişiminiz aktif olmadığı için AI otomasyonu durduruldu. Plan ve ödeme durumunuzu kontrol edin.",
+          path: "/billing",
+          template: "AUTOMATION_PAUSED",
+          metrics: { reason: "subscription" },
+        },
+        {
+          group: "Stok",
+          label: "Düşük stok özeti",
+          title: "DeFacto: 4 üründe stok uyarısı",
+          message:
+            "Mağazanızdaki bazı ürünler kritik stok seviyesine indi. Öne çıkan varyantları aşağıda görebilirsiniz.",
+          path: "/dashboard/catalog/inventory?status=low_stock",
+          template: "INVENTORY_LOW",
+          inventory: {
+            storeTotal: 18,
+            products: [
+              {
+                name: "Regular Fit Pamuklu Tişört",
+                variant: "Siyah · M",
+                stock: 2,
+                initials: "TS",
+              },
+              {
+                name: "Slim Fit Chino Pantolon",
+                variant: "Lacivert · 32",
+                stock: 1,
+                initials: "PT",
+              },
+              {
+                name: "Keten Karışımlı Yazlık Gömlek",
+                variant: "Beyaz · L",
+                stock: 4,
+                initials: "GM",
+              },
+              {
+                name: "Polo Yaka Dokulu Tişört",
+                variant: "Ekru · XL",
+                stock: 3,
+                initials: "PL",
+              },
+            ],
+          },
+        },
+        {
+          group: "Stok",
+          label: "Stok tükendi özeti",
+          title: "DeFacto: 4 üründe stok tükendi",
+          message:
+            "Mağazanızdaki bazı ürünlerin stoğu tükendi. Hangi varyantların etkilendiğini aşağıda görebilirsiniz.",
+          path: "/dashboard/catalog/inventory?status=out_of_stock",
+          template: "INVENTORY_OUT",
+          inventory: {
+            storeTotal: 5,
+            products: [
+              {
+                name: "Regular Fit Pamuklu Tişört",
+                variant: "Beyaz · S",
+                stock: 0,
+                initials: "TS",
+              },
+              {
+                name: "Slim Fit Chino Pantolon",
+                variant: "Siyah · 30",
+                stock: 0,
+                initials: "PT",
+              },
+              {
+                name: "Keten Karışımlı Yazlık Gömlek",
+                variant: "Mavi · M",
+                stock: 0,
+                initials: "GM",
+              },
+              {
+                name: "Polo Yaka Dokulu Tişört",
+                variant: "Lacivert · L",
+                stock: 0,
+                initials: "PL",
+              },
+            ],
+          },
+        },
+        {
+          group: "Kanallar",
+          label: "Bağlantı kesildi",
+          title: "DeFacto · Trendyol: Kanal bağlantısı kesildi",
+          message:
+            "Pazaryeri bağlantısının kimlik bilgileri doğrulanamadı. Bağlantıyı kontrol edene kadar bazı kanal işlemleri aksayabilir.",
+          path: "/dashboard/channels",
+          template: "CHANNEL_CONNECTION",
+          channel: { provider: "trendyol", state: "failed" },
+        },
+        {
+          group: "Kanallar",
+          label: "Bağlantı düzeldi",
+          title: "DeFacto · Trendyol: Kanal bağlantısı yeniden sağlandı",
+          message: "Pazaryeri bağlantınız yeniden doğrulandı.",
+          path: "/dashboard/channels",
+          template: "CHANNEL_CONNECTION",
+          channel: { provider: "trendyol", state: "recovered" },
+        },
+        {
+          group: "Kanallar",
+          label: "Ürün senkronizasyonu hatası",
+          title: "DeFacto · Trendyol: Ürün senkronizasyonu sorunlu",
+          message:
+            "Senkronizasyon sorunu devam ediyor. Güncel veriler gecikebilir; senkronizasyon geçmişini ve kanal bağlantısını kontrol edin.",
+          path: "/dashboard/channels/sync",
+          template: "CHANNEL_SYNC",
+          channel: {
+            provider: "trendyol",
+            state: "failed",
+            operation: "Ürün senkronizasyonu",
+            impact: "Katalogdaki yeni ürün ve değişiklikler gecikebilir.",
+          },
+        },
+        {
+          group: "Kanallar",
+          label: "Ürün senkronizasyonu düzeldi",
+          title: "DeFacto · Trendyol: Ürün senkronizasyonu düzeldi",
+          message: "Kanalın son senkronizasyonu yeniden başarıyla tamamlandı.",
+          path: "/dashboard/channels/sync",
+          template: "CHANNEL_SYNC",
+          channel: {
+            provider: "trendyol",
+            state: "recovered",
+            operation: "Ürün senkronizasyonu",
+          },
+        },
+        {
+          group: "Kanallar",
+          label: "Stok senkronizasyonu hatası",
+          title: "DeFacto · Hepsiburada: Stok senkronizasyonu sorunlu",
+          message:
+            "Senkronizasyon sorunu devam ediyor. Güncel veriler gecikebilir; senkronizasyon geçmişini ve kanal bağlantısını kontrol edin.",
+          path: "/dashboard/channels/sync",
+          template: "CHANNEL_SYNC",
+          channel: {
+            provider: "hepsiburada",
+            state: "failed",
+            operation: "Stok senkronizasyonu",
+            impact: "Stok bilgileri güncel olmayabilir.",
+          },
+        },
+        {
+          group: "Kanallar",
+          label: "Stok senkronizasyonu düzeldi",
+          title: "DeFacto · Hepsiburada: Stok senkronizasyonu düzeldi",
+          message: "Kanalın son senkronizasyonu yeniden başarıyla tamamlandı.",
+          path: "/dashboard/channels/sync",
+          template: "CHANNEL_SYNC",
+          channel: {
+            provider: "hepsiburada",
+            state: "recovered",
+            operation: "Stok senkronizasyonu",
+          },
+        },
+        {
+          group: "Kanallar",
+          label: "Soru senkronizasyonu hatası",
+          title: "DeFacto · Trendyol: Soru senkronizasyonu sorunlu",
+          message:
+            "Senkronizasyon sorunu devam ediyor. Güncel veriler gecikebilir; senkronizasyon geçmişini ve kanal bağlantısını kontrol edin.",
+          path: "/dashboard/channels/sync",
+          template: "CHANNEL_SYNC",
+          channel: {
+            provider: "trendyol",
+            state: "failed",
+            operation: "Soru senkronizasyonu",
+            impact: "Yeni müşteri soruları geç görünebilir.",
+          },
+        },
+        {
+          group: "Kanallar",
+          label: "Soru senkronizasyonu düzeldi",
+          title: "DeFacto · Trendyol: Soru senkronizasyonu düzeldi",
+          message: "Kanalın son senkronizasyonu yeniden başarıyla tamamlandı.",
+          path: "/dashboard/channels/sync",
+          template: "CHANNEL_SYNC",
+          channel: {
+            provider: "trendyol",
+            state: "recovered",
+            operation: "Soru senkronizasyonu",
+          },
+        },
+        {
+          group: "Operasyon",
+          label: "Ürün kapasitesi doldu",
+          title: "DeFacto: Ürün kapasitesi sınırına ulaşıldı",
+          message:
+            "Katalog kapasiteniz dolduğu için yeni ürünler şimdilik içe alınamıyor. Mevcut ürünleriniz güncellenmeye devam eder.",
+          path: "/billing",
+          template: "PRODUCT_CAPACITY",
+          capacity: { plan: "Starter", used: 5000, limit: 5000, pending: 12 },
+        },
+        {
+          group: "Ödeme",
+          label: "Ödeme başarısız",
+          title: "Abonelik ödemeniz tamamlanamadı",
+          message:
+            "Growth planınızın yenileme ödemesi alınamadı. Ödeme yönteminizi kontrol ederek aboneliğinizin kesintiye uğramasını önleyebilirsiniz.",
+          path: "/billing/ornek-hesap",
+          template: "BILLING_EVENT",
+          billing: {
+            kind: "payment_failed",
+            plan: "Growth",
+            amount: "7.200,00 ₺",
+            attemptedAt: "24 Eylül 2026",
+          },
+        },
+        {
+          group: "Ödeme",
+          label: "Abonelik etkin",
+          title: "Aboneliğiniz etkinleştirildi",
+          message:
+            "Growth planınızın ilk ödemesi tamamlandı. Planınız şimdi kullanıma hazır.",
+          path: "/billing/ornek-hesap/invoices",
+          template: "BILLING_EVENT",
+          billing: {
+            kind: "activated",
+            plan: "Growth",
+            cycle: "Aylık",
+            paidAmount: "7.200,00 ₺",
+            paidAt: "24 Eylül 2026",
+            nextBilledAt: "24 Ekim 2026",
+            nextAmount: "7.200,00 ₺",
+            invoiceNumber: "325-10650",
+          },
+        },
+        {
+          group: "Ödeme",
+          label: "Plan değişti",
+          title: "Abonelik planınız değiştirildi",
+          message:
+            "Growth planından Business planına geçişiniz tamamlandı. Yeni limitleriniz kullanıma açıldı.",
+          path: "/billing/ornek-hesap/invoices",
+          template: "BILLING_EVENT",
+          billing: {
+            kind: "plan_changed",
+            previousPlan: "Growth",
+            plan: "Business",
+            cycle: "Aylık",
+            paidAmount: "3.999,20 ₺",
+            nextBilledAt: "24 Ekim 2026",
+            nextAmount: "18.000,00 ₺",
+            invoiceNumber: "325-10651",
+          },
+        },
+        {
+          group: "Ödeme",
+          label: "İptal planlandı",
+          title: "Abonelik iptali planlandı",
+          message:
+            "Aboneliğiniz 4 Ekim 2026 tarihinde sona erecek. Bu tarihe kadar plan haklarınızı kullanabilirsiniz.",
+          path: "/billing/ornek-hesap",
+          template: "BILLING_EVENT",
+          billing: {
+            kind: "cancellation_scheduled",
+            plan: "Growth",
+            accessEndsAt: "4 Ekim 2026",
+          },
+        },
+        {
+          group: "Ödeme",
+          label: "Abonelik sona erdi",
+          title: "Aboneliğiniz sona erdi",
+          message:
+            "Ücretli planınız sona erdi. Kayıtlı verilerinize erişebilir ve mevcut soruları manuel yanıtlayabilirsiniz.",
+          path: "/billing/ornek-hesap",
+          template: "BILLING_EVENT",
+          billing: { kind: "ended", plan: "Growth", endedAt: "4 Ekim 2026" },
+        },
+        {
+          group: "Ödeme",
+          label: "İade onaylandı",
+          title: "İadeniz onaylandı",
+          message:
+            "2.300,00 ₺ tutarındaki iade onaylandı. Tutarın kartınıza yansıma süresi bankanıza göre değişebilir.",
+          path: "/billing/ornek-hesap/invoices",
+          template: "BILLING_EVENT",
+          billing: {
+            kind: "refund",
+            amount: "2.300,00 ₺",
+            approvedAt: "24 Eylül 2026",
+            originalInvoiceNumber: "325-10650",
+          },
+        },
+        {
+          group: "Güvenlik",
+          label: "Giriş yöntemi bağlandı",
+          title: "Yeni giriş yöntemi bağlandı",
+          message: "Google hesabı Core Asistan profilinize bağlandı.",
+          path: "/dashboard/settings/profile",
+          template: "SECURITY_EVENT",
+          security: { kind: "linked", provider: "Google" },
+        },
+        {
+          group: "Güvenlik",
+          label: "Giriş yöntemi kaldırıldı",
+          title: "Giriş yöntemi kaldırıldı",
+          message: "Microsoft hesabı Core Asistan profilinizden kaldırıldı.",
+          path: "/dashboard/settings/profile",
+          template: "SECURITY_EVENT",
+          security: { kind: "removed", provider: "Microsoft" },
+        },
+        {
+          group: "Güvenlik",
+          label: "Diğer oturumlar kapandı",
+          title: "Diğer oturumlar sonlandırıldı",
+          message: "Hesabınızın diğer cihazlardaki aktif oturumları kapatıldı.",
+          path: "/dashboard/settings/profile",
+          template: "SECURITY_EVENT",
+          security: { kind: "sessions" },
+        },
+      ];
+
+      const groups = [
+        "Tümü",
+        ...new Set(examples.map((example) => example.group)),
+      ];
+      const search = document.getElementById("search");
+      const filters = document.getElementById("filters");
+      const gallery = document.getElementById("gallery");
+      const count = document.getElementById("count");
+      let selectedGroup = "Tümü";
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function emailHtml(example) {
+        if (example.template === "BILLING_EVENT") {
+          return billingEmailHtml(example);
+        }
+        if (example.template === "SECURITY_EVENT") {
+          return securityEmailHtml(example);
+        }
+        if (example.template === "PRODUCT_CAPACITY") {
+          return capacityEmailHtml(example);
+        }
+        if (example.template?.startsWith("CHANNEL_")) {
+          return channelEmailHtml(example);
+        }
+        if (example.template?.startsWith("INVENTORY_")) {
+          return inventoryEmailHtml(example);
+        }
+        if (example.template) return brandedEmailHtml(example);
+        const actionUrl = `https://coreasistan.com${example.path}`;
+        return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0">
+          <div style="background:#f4f5f4;padding:32px 16px;font-family:Arial,sans-serif;color:#17201b">
+            <div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e2e6e3;border-radius:16px;padding:28px">
+              <p style="margin:0 0 18px;color:#66736b;font-size:13px">Core Asistan</p>
+              <h1 style="margin:0 0 12px;font-size:20px;line-height:1.35">${escapeHtml(example.title)}</h1>
+              <p style="margin:0 0 10px;font-size:14px;line-height:1.7">Merhaba ${escapeHtml("Ayşe")},</p>
+              <p style="margin:0 0 24px;color:#465149;font-size:14px;line-height:1.7">${escapeHtml(example.message)}</p>
+              <a href="${escapeHtml(actionUrl)}" style="display:inline-block;background:#177245;color:#fff;text-decoration:none;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:600">Core Asistan'da aç</a>
+            </div>
+          </div></body></html>`;
+      }
+
+      function billingSummaryRows(rows) {
+        return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">${rows
+          .map(
+            ([label, value], index) => `<tr>
+              <td style="padding:${index === 0 ? "0 0 11px" : "11px 0"};border-top:${index === 0 ? "0" : "1px solid #e8ece8"};color:#68756b;font-size:12px;line-height:1.5">${escapeHtml(label)}</td>
+              <td align="right" style="padding:${index === 0 ? "0 0 11px" : "11px 0"};border-top:${index === 0 ? "0" : "1px solid #e8ece8"};color:#263c2e;font-size:13px;font-weight:700;line-height:1.5">${escapeHtml(value)}</td>
+            </tr>`,
+          )
+          .join("")}</table>`;
+      }
+
+      function billingEmailHtml(example) {
+        const billing = example.billing;
+        const overviewUrl = "https://coreasistan.com/billing/ornek-hesap";
+        const hasInvoice = Boolean(billing.invoiceNumber && billing.paidAmount);
+        const actionUrl =
+          (billing.kind === "activated" || billing.kind === "plan_changed") &&
+          !hasInvoice
+            ? overviewUrl
+            : `https://coreasistan.com${example.path}`;
+        let category;
+        let actionLabel;
+        let secondaryAction = "";
+        let detail;
+        let note = "";
+
+        if (billing.kind === "payment_failed") {
+          category = "Ödeme sorunu";
+          actionLabel = "Ödemeyi yönet";
+          detail = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 18px;background:#fbf8f4;border:1px solid #eee5d9;border-radius:9px"><tr><td style="padding:20px">
+            <p style="margin:0 0 4px;color:#8b6548;font-size:12px;line-height:1.5">Alınamayan yenileme tutarı</p>
+            <p style="margin:0 0 18px;color:#614833;font-size:27px;font-weight:700;line-height:1.25">${escapeHtml(billing.amount)}</p>
+            ${billingSummaryRows([
+              ["Plan", billing.plan],
+              ["Ödeme denemesi", billing.attemptedAt],
+              ["Durum", "Ödeme bekleniyor"],
+            ])}
+          </td></tr></table>`;
+          note =
+            "Bu ödeme tamamlanmadığı için bu işlem adına yeni bir fatura bulunmuyor.";
+        } else if (billing.kind === "activated") {
+          category = "Ödeme alındı";
+          actionLabel = hasInvoice ? "Faturalarıma git" : "Planımı görüntüle";
+          secondaryAction = hasInvoice
+            ? `<a href="${overviewUrl}" style="color:#345f46;font-size:13px;font-weight:700;text-decoration:none">Abonelik ayrıntıları&nbsp;→</a>`
+            : "";
+          detail = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 18px;background:#f6f9f6;border:1px solid #e3ebe4;border-radius:9px"><tr><td style="padding:20px">
+            <p style="margin:0 0 4px;color:#597461;font-size:12px;line-height:1.5">Bu dönem ödenen toplam</p>
+            <p style="margin:0 0 18px;color:#214f35;font-size:27px;font-weight:700;line-height:1.25">${escapeHtml(billing.paidAmount)}</p>
+            ${billingSummaryRows([
+              ["Plan", billing.plan],
+              ["Faturalama", billing.cycle],
+              ["Ödeme tarihi", billing.paidAt],
+              ["Sonraki yenileme", billing.nextBilledAt],
+              ...(billing.nextAmount
+                ? [["Sonraki dönem tutarı", billing.nextAmount]]
+                : []),
+              ...(hasInvoice
+                ? [["Fatura numarası", billing.invoiceNumber]]
+                : []),
+            ])}
+          </td></tr></table>`;
+          note = hasInvoice
+            ? "Faturanızı Faturalar sayfasında açıp PDF olarak indirebilirsiniz."
+            : "Fatura hazır olduğunda Faturalar sayfasından erişebilirsiniz.";
+        } else if (billing.kind === "plan_changed") {
+          category = "Plan güncellendi";
+          actionLabel = hasInvoice ? "Faturalarıma git" : "Planımı görüntüle";
+          secondaryAction = hasInvoice
+            ? `<a href="${overviewUrl}" style="color:#345f46;font-size:13px;font-weight:700;text-decoration:none">Yeni planımı gör&nbsp;→</a>`
+            : "";
+          detail = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 18px;background:#f6f9f6;border:1px solid #e3ebe4;border-radius:9px"><tr><td style="padding:20px">
+            <p style="margin:0 0 4px;color:#597461;font-size:12px;line-height:1.5">Plan geçişi</p>
+            <p style="margin:0 0 18px;color:#214f35;font-size:21px;font-weight:700;line-height:1.3">${escapeHtml(billing.previousPlan)} <span style="color:#9cad9f;font-weight:400">→</span> ${escapeHtml(billing.plan)}</p>
+            ${billingSummaryRows([
+              ["Faturalama", billing.cycle],
+              ...(billing.paidAmount
+                ? [["Bu işlemde tahsil edilen", billing.paidAmount]]
+                : []),
+              ...(billing.paidAmount
+                ? [["Tahsilat türü", "Ara dönem farkı"]]
+                : []),
+              ["Sonraki yenileme", billing.nextBilledAt],
+              ...(billing.nextAmount
+                ? [["Sonraki dönem tutarı", billing.nextAmount]]
+                : []),
+              ...(hasInvoice
+                ? [["Yeni fatura numarası", billing.invoiceNumber]]
+                : []),
+            ])}
+          </td></tr></table>`;
+          note = hasInvoice
+            ? "Bu plan değişikliğine ait faturayı Faturalar sayfasından PDF olarak indirebilirsiniz."
+            : "Bu değişiklikte yeni bir ödeme alınmadıysa yeni fatura gösterilmez.";
+        } else if (billing.kind === "cancellation_scheduled") {
+          category = "İptal planlandı";
+          actionLabel = "Aboneliğimi görüntüle";
+          detail = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 18px;background:#faf8f4;border:1px solid #ebe6dc;border-radius:9px"><tr><td style="padding:20px">
+            <p style="margin:0 0 4px;color:#7b6b4c;font-size:12px;line-height:1.5">Plan erişiminizin sona ereceği tarih</p>
+            <p style="margin:0 0 18px;color:#4e4834;font-size:25px;font-weight:700;line-height:1.3">${escapeHtml(billing.accessEndsAt)}</p>
+            ${billingSummaryRows([
+              ["Geçerli plan", billing.plan],
+              ["Yeni yenileme", "Yapılmayacak"],
+            ])}
+          </td></tr></table>`;
+          note =
+            "Bu tarihe kadar plan haklarınızı kullanabilirsiniz. İptal için yeni fatura düzenlenmez.";
+        } else if (billing.kind === "ended") {
+          category = "Abonelik sona erdi";
+          actionLabel = "Planları incele";
+          detail = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 18px;border-top:1px solid #e8ece9;border-bottom:1px solid #e8ece9"><tr><td style="padding:17px 0">
+            ${billingSummaryRows([
+              ["Sona eren plan", billing.plan],
+              ["Erişim bitişi", billing.endedAt],
+              ["Yeni yenileme", "Yapılmayacak"],
+              ["Kayıtlar ve manuel yanıtlar", "Kullanılabilir"],
+            ])}
+          </td></tr></table>`;
+          note =
+            "Önceki ödemelerinizin faturaları hesabınızdaki Faturalar sayfasında kalır.";
+        } else if (billing.kind === "refund") {
+          category = "İade onaylandı";
+          actionLabel = "Faturalarımı görüntüle";
+          detail = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 18px;background:#f7f9f7;border:1px solid #e4eae5;border-radius:9px"><tr><td style="padding:20px">
+            <p style="margin:0 0 4px;color:#597461;font-size:12px;line-height:1.5">Onaylanan iade</p>
+            <p style="margin:0 0 18px;color:#214f35;font-size:27px;font-weight:700;line-height:1.25">${escapeHtml(billing.amount)}</p>
+            ${billingSummaryRows([
+              ["Onay tarihi", billing.approvedAt],
+              ["İlgili fatura", billing.originalInvoiceNumber],
+              ["Kartınıza yansıma", "Bankanıza bağlı"],
+            ])}
+          </td></tr></table>`;
+          note =
+            "İlgili faturayı Faturalar sayfasından açabilirsiniz. Paddle, iade belgesini ayrıca PDF olarak gönderir.";
+        } else {
+          throw new Error(`Bilinmeyen ödeme şablonu: ${billing.kind}`);
+        }
+
+        return `<!doctype html>
+          <html lang="tr">
+            <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
+            <body style="margin:0;padding:0;background:#f5f7f5;font-family:Arial,Helvetica,sans-serif;color:#202b24">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#f5f7f5">
+                <tr><td align="center" style="padding:32px 14px 36px">
+                  <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e3e8e4;border-radius:12px;overflow:hidden">
+                    <tr><td style="padding:25px 32px 24px;border-bottom:1px solid #edf0ed">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse"><tr>
+                        <td align="left" style="vertical-align:middle"><img src="frontend/public/logo/text.png" width="124" alt="Core Asistan" style="display:block;width:124px;height:auto;border:0;outline:none;text-decoration:none"></td>
+                        <td align="right" style="vertical-align:middle;color:#7a857c;font-size:11px">${category}</td>
+                      </tr></table>
+                    </td></tr>
+                    <tr><td style="padding:29px 32px 32px">
+                      <h1 style="margin:0 0 19px;color:#1f3026;font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-.01em">${escapeHtml(example.title)}</h1>
+                      <p style="margin:0 0 9px;color:#26382c;font-size:14px;line-height:1.7">Merhaba Ayşe,</p>
+                      <p style="margin:0 0 23px;color:#536158;font-size:14px;line-height:1.7">${escapeHtml(example.message)}</p>
+                      ${detail}
+                      <p style="margin:0 0 22px;color:#69766c;font-size:12px;line-height:1.65">${note}</p>
+                      <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0"><tr>
+                        <td bgcolor="#174b38" style="padding:12px 18px;border-radius:6px;background:#174b38"><a href="${escapeHtml(actionUrl)}" target="_blank" rel="noopener noreferrer" style="color:#ffffff;font-size:13px;font-weight:700;line-height:1.4;text-decoration:none">${actionLabel}</a></td>
+                        ${secondaryAction ? `<td style="padding-left:18px">${secondaryAction}</td>` : ""}
+                      </tr></table>
+                    </td></tr>
+                  </table>
+                  <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;border-collapse:collapse"><tr><td style="padding:19px 8px 0;text-align:center;color:#88928b;font-size:11px;line-height:1.7">Bu e-posta abonelik veya ödeme kaydınızla ilgili otomatik olarak gönderilmiştir.</td></tr></table>
+                </td></tr>
+              </table>
+            </body>
+          </html>`;
+      }
+
+      function securityEmailHtml(example) {
+        const security = example.security;
+        const isSessions = security.kind === "sessions";
+        const isRemoved = security.kind === "removed";
+        const actionUrl = `https://coreasistan.com${example.path}`;
+        const eventLabel = isSessions ? "Oturum güvenliği" : "Giriş yöntemi";
+        const eventValue = isSessions
+          ? "Diğer cihazlardaki oturumlar"
+          : security.provider;
+        const stateLabel = isSessions
+          ? "Sonlandırıldı"
+          : isRemoved
+            ? "Hesaptan kaldırıldı"
+            : "Hesaba bağlandı";
+        const note = isSessions
+          ? "Hesabınızdaki giriş yöntemlerini ve açık oturumları kontrol edin."
+          : "Hesabınızdaki giriş yöntemlerini ve açık oturumları hemen kontrol edin.";
+
+        return `<!doctype html>
+          <html lang="tr">
+            <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
+            <body style="margin:0;padding:0;background:#f5f7f5;font-family:Arial,Helvetica,sans-serif;color:#202b24">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#f5f7f5">
+                <tr><td align="center" style="padding:32px 14px 36px">
+                  <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e3e8e4;border-radius:12px;overflow:hidden">
+                    <tr><td style="padding:25px 32px 24px;border-bottom:1px solid #edf0ed">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse"><tr>
+                        <td align="left" style="vertical-align:middle"><img src="frontend/public/logo/text.png" width="124" alt="Core Asistan" style="display:block;width:124px;height:auto;border:0;outline:none;text-decoration:none"></td>
+                        <td align="right" style="vertical-align:middle;color:#7a857c;font-size:11px">Hesap güvenliği</td>
+                      </tr></table>
+                    </td></tr>
+                    <tr><td style="padding:29px 32px 32px">
+                      <p style="margin:0 0 8px;color:#557260;font-size:12px;font-weight:700;line-height:1.4">Hesap hareketi</p>
+                      <h1 style="margin:0 0 19px;color:#1f3026;font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-.01em">${escapeHtml(example.title)}</h1>
+                      <p style="margin:0 0 9px;color:#26382c;font-size:14px;line-height:1.7">Merhaba Ayşe,</p>
+                      <p style="margin:0 0 23px;color:#536158;font-size:14px;line-height:1.7">${escapeHtml(example.message)}</p>
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 19px;background:#f7f9f7;border:1px solid #e5ebe6;border-radius:8px"><tr><td style="padding:16px 19px">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+                          <tr><td style="padding:0 0 10px;color:#68756b;font-size:12px">${eventLabel}</td><td align="right" style="padding:0 0 10px;color:#26382c;font-size:13px;font-weight:700">${escapeHtml(eventValue)}</td></tr>
+                          <tr><td style="padding:10px 0 0;border-top:1px solid #e7ece8;color:#68756b;font-size:12px">Durum</td><td align="right" style="padding:10px 0 0;border-top:1px solid #e7ece8;color:#26382c;font-size:13px;font-weight:700">${stateLabel}</td></tr>
+                        </table>
+                      </td></tr></table>
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 27px;background:#faf8f4;border:1px solid #eee7dc;border-radius:8px"><tr><td style="padding:16px 19px">
+                        <p style="margin:0 0 6px;color:#775e3d;font-size:12px;font-weight:700;line-height:1.4">Bu işlemi siz yapmadıysanız</p>
+                        <p style="margin:0;color:#5f5d54;font-size:12px;line-height:1.6">${note}</p>
+                      </td></tr></table>
+                      <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0"><tr><td bgcolor="#174b38" style="padding:12px 18px;border-radius:6px;background:#174b38"><a href="${escapeHtml(actionUrl)}" target="_blank" rel="noopener noreferrer" style="color:#ffffff;font-size:13px;font-weight:700;line-height:1.4;text-decoration:none">Hesap güvenliğini görüntüle</a></td></tr></table>
+                    </td></tr>
+                  </table>
+                  <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;border-collapse:collapse"><tr><td style="padding:19px 8px 0;text-align:center;color:#88928b;font-size:11px;line-height:1.7">Bu e-posta hesap güvenliğiniz için otomatik olarak gönderilmiştir.</td></tr></table>
+                </td></tr>
+              </table>
+            </body>
+          </html>`;
+      }
+
+      function capacityEmailHtml(example) {
+        const number = new Intl.NumberFormat("tr-TR");
+        const capacity = example.capacity;
+        const percentage = Math.min(
+          100,
+          Math.max(0, Math.round((capacity.used / capacity.limit) * 100)),
+        );
+        const actionUrl = `https://coreasistan.com${example.path}`;
+        const preferencesUrl =
+          "https://coreasistan.com/dashboard/settings/notifications?view=preferences";
+
+        return `<!doctype html>
+          <html lang="tr">
+            <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
+            <body style="margin:0;padding:0;background:#f5f7f5;font-family:Arial,Helvetica,sans-serif;color:#202b24">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#f5f7f5">
+                <tr><td align="center" style="padding:32px 14px 36px">
+                  <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e3e8e4;border-radius:12px;overflow:hidden">
+                    <tr><td style="padding:25px 32px 24px;border-bottom:1px solid #edf0ed">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse"><tr>
+                        <td align="left" style="vertical-align:middle"><img src="frontend/public/logo/text.png" width="124" alt="Core Asistan" style="display:block;width:124px;height:auto;border:0;outline:none;text-decoration:none"></td>
+                        <td align="right" style="vertical-align:middle;color:#7a857c;font-size:11px">Katalog kapasitesi</td>
+                      </tr></table>
+                    </td></tr>
+                    <tr><td style="padding:29px 32px 32px">
+                      <h1 style="margin:0 0 19px;color:#1f3026;font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-.01em">Ürün kapasitesine ulaşıldı</h1>
+                      <p style="margin:0 0 9px;color:#26382c;font-size:14px;line-height:1.7">Merhaba Ayşe,</p>
+                      <p style="margin:0 0 23px;color:#536158;font-size:14px;line-height:1.7">${escapeHtml(example.message)}</p>
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 19px;background:#faf9f5;border:1px solid #ebe7dd;border-radius:9px"><tr><td style="padding:18px 20px 17px">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse"><tr>
+                          <td style="color:#6c6b61;font-size:12px;line-height:1.5">${escapeHtml(capacity.plan)} planı · Ürün kullanımı</td>
+                          <td align="right" style="color:#343b34;font-size:15px;line-height:1.5;font-weight:700">${number.format(capacity.used)} / ${number.format(capacity.limit)}</td>
+                        </tr></table>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:13px 0 10px;background:#eae7de;border-radius:5px"><tr><td width="${percentage}%" height="7" style="height:7px;background:#aa8549;border-radius:5px;font-size:1px;line-height:1px">&nbsp;</td></tr></table>
+                        <p style="margin:0;color:#746e61;font-size:12px;line-height:1.5">Plan kapasitesinin %${percentage}'ü kullanılıyor.</p>
+                      </td></tr></table>
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 27px;border-top:1px solid #e9eeea;border-bottom:1px solid #e9eeea">
+                        <tr><td style="padding:12px 0;color:#68756b;font-size:12px">Mevcut ürünler</td><td align="right" style="padding:12px 0;color:#315f45;font-size:12px;font-weight:700">Güncellenmeye devam eder</td></tr>
+                        <tr><td style="padding:12px 0;border-top:1px solid #edf1ed;color:#68756b;font-size:12px">Yeni ürünler</td><td align="right" style="padding:12px 0;border-top:1px solid #edf1ed;color:#8c682a;font-size:12px;font-weight:700">${number.format(capacity.pending)} ürün beklemede</td></tr>
+                      </table>
+                      <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0"><tr><td bgcolor="#174b38" style="padding:12px 18px;border-radius:6px;background:#174b38"><a href="${escapeHtml(actionUrl)}" target="_blank" rel="noopener noreferrer" style="color:#ffffff;font-size:13px;font-weight:700;line-height:1.4;text-decoration:none">Plan ve kullanımı incele</a></td></tr></table>
+                    </td></tr>
+                  </table>
+                  <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;border-collapse:collapse"><tr><td style="padding:19px 8px 0;text-align:center;color:#88928b;font-size:11px;line-height:1.7">
+                    Bu e-posta Core Asistan tarafından otomatik olarak gönderilmiştir.<br>
+                    Bu tür e-postaları almak istemiyorsanız <a href="${escapeHtml(preferencesUrl)}" target="_blank" rel="noopener noreferrer" style="color:#2563a6;text-decoration:underline">bildirim tercihlerinizi yönetin</a>.
+                  </td></tr></table>
+                </td></tr>
+              </table>
+            </body>
+          </html>`;
+      }
+
+      function channelEmailHtml(example) {
+        const channel = example.channel;
+        const isConnection = example.template === "CHANNEL_CONNECTION";
+        const isRecovered = channel.state === "recovered";
+        const providerName =
+          channel.provider === "hepsiburada" ? "Hepsiburada" : "Trendyol";
+        const providerLogo = `frontend/public/merchants/${channel.provider}.webp`;
+        const actionUrl = `https://coreasistan.com${example.path}`;
+        const preferencesUrl =
+          "https://coreasistan.com/dashboard/settings/notifications?view=preferences";
+        const heading = isConnection
+          ? isRecovered
+            ? "Kanal bağlantısı yeniden sağlandı"
+            : "Kanal bağlantısı kesildi"
+          : `${channel.operation} ${isRecovered ? "yeniden çalışıyor" : "sorunlu"}`;
+        const statusLabel = isRecovered
+          ? isConnection
+            ? "Bağlı"
+            : "Tamamlandı"
+          : isConnection
+            ? "Bağlantı kesildi"
+            : "Sorun var";
+        const statusColor = isRecovered ? "#315f45" : "#996840";
+        const statusBackground = isRecovered ? "#eaf3ec" : "#fbf0e7";
+        const buttonLabel = isConnection
+          ? "Kanal bağlantısını görüntüle"
+          : "Senkronizasyon geçmişini aç";
+        let detail;
+        if (isConnection) {
+          const detailTitle = isRecovered
+            ? "Bağlantı yeniden doğrulandı"
+            : "Etkilenebilecek işlemler";
+          const detailText = isRecovered
+            ? "Daha önce geciken işlemleri senkronizasyon geçmişinden kontrol edebilirsiniz."
+            : "Ürün ve soru senkronizasyonu · Cevap gönderimi";
+          detail = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 26px;background:${isRecovered ? "#f5f8f5" : "#faf7f3"};border:1px solid ${isRecovered ? "#e3eae4" : "#eee7df"};border-radius:8px"><tr><td style="padding:17px 19px">
+            <p style="margin:0 0 7px;color:${statusColor};font-size:12px;font-weight:700;line-height:1.4">${detailTitle}</p>
+            <p style="margin:0;color:#536057;font-size:13px;line-height:1.6">${detailText}</p>
+          </td></tr></table>`;
+        } else {
+          detail = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 12px;background:#f7f9f7;border:1px solid #e6ebe7;border-radius:8px"><tr>
+            <td style="padding:16px 19px;color:#718077;font-size:12px;line-height:1.5">İşlem<br><strong style="color:#27392d;font-size:14px;line-height:1.5">${escapeHtml(channel.operation)}</strong></td>
+            <td align="right" style="padding:16px 19px;color:#718077;font-size:12px;line-height:1.5">Son durum<br><strong style="color:${statusColor};font-size:14px;line-height:1.5">${statusLabel}</strong></td>
+          </tr></table>
+          <p style="margin:0 0 26px;color:#68766c;font-size:12px;line-height:1.6">${isRecovered ? "Son işlem başarılı. Önceki kayıtları geçmişten ayrıca kontrol edebilirsiniz." : escapeHtml(channel.impact)}</p>`;
+        }
+
+        return `<!doctype html>
+          <html lang="tr">
+            <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
+            <body style="margin:0;padding:0;background:#f5f7f5;font-family:Arial,Helvetica,sans-serif;color:#202b24">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#f5f7f5">
+                <tr><td align="center" style="padding:32px 14px 36px">
+                  <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e3e8e4;border-radius:12px;overflow:hidden">
+                    <tr><td style="padding:25px 32px 24px;border-bottom:1px solid #edf0ed">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse"><tr>
+                        <td align="left" style="vertical-align:middle"><img src="frontend/public/logo/text.png" width="124" alt="Core Asistan" style="display:block;width:124px;height:auto;border:0;outline:none;text-decoration:none"></td>
+                        <td align="right" style="vertical-align:middle;color:#7a857c;font-size:11px">${isConnection ? "Kanal bağlantısı" : "Kanal senkronizasyonu"}</td>
+                      </tr></table>
+                    </td></tr>
+                    <tr><td style="padding:29px 32px 32px">
+                      <h1 style="margin:0 0 19px;color:#1f3026;font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-.01em">${escapeHtml(heading)}</h1>
+                      <p style="margin:0 0 9px;color:#26382c;font-size:14px;line-height:1.7">Merhaba Ayşe,</p>
+                      <p style="margin:0 0 23px;color:#536158;font-size:14px;line-height:1.7">${escapeHtml(example.message)}</p>
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 16px;background:#ffffff;border:1px solid #e6ebe7;border-radius:9px"><tr>
+                        <td width="62" style="padding:12px 0 12px 13px;vertical-align:middle"><img src="${escapeHtml(providerLogo)}" width="44" height="44" alt="${escapeHtml(providerName)} logosu" style="display:block;width:44px;height:44px;border:0;border-radius:8px"></td>
+                        <td style="padding:12px 6px 12px 8px;vertical-align:middle"><p style="margin:0 0 3px;color:#28382d;font-size:13px;font-weight:700;line-height:1.4">${escapeHtml(providerName)}</p><p style="margin:0;color:#78857b;font-size:11px;line-height:1.4">DeFacto mağazası</p></td>
+                        <td align="right" style="padding:12px 13px 12px 0;vertical-align:middle;white-space:nowrap"><span style="display:inline-block;padding:6px 8px;background:${statusBackground};border-radius:5px;color:${statusColor};font-size:11px;font-weight:700">${statusLabel}</span></td>
+                      </tr></table>
+                      ${detail}
+                      <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0"><tr><td bgcolor="#174b38" style="padding:12px 18px;border-radius:6px;background:#174b38"><a href="${escapeHtml(actionUrl)}" target="_blank" rel="noopener noreferrer" style="color:#ffffff;font-size:13px;font-weight:700;line-height:1.4;text-decoration:none">${buttonLabel}</a></td></tr></table>
+                    </td></tr>
+                  </table>
+                  <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;border-collapse:collapse"><tr><td style="padding:19px 8px 0;text-align:center;color:#88928b;font-size:11px;line-height:1.7">
+                    Bu e-posta Core Asistan tarafından otomatik olarak gönderilmiştir.<br>
+                    Bu tür e-postaları almak istemiyorsanız <a href="${escapeHtml(preferencesUrl)}" target="_blank" rel="noopener noreferrer" style="color:#2563a6;text-decoration:underline">bildirim tercihlerinizi yönetin</a>.
+                  </td></tr></table>
+                </td></tr>
+              </table>
+            </body>
+          </html>`;
+      }
+
+      function inventoryEmailHtml(example) {
+        const number = new Intl.NumberFormat("tr-TR");
+        const isOutOfStock = example.template === "INVENTORY_OUT";
+        const products = example.inventory.products;
+        const hiddenCount = Math.max(0, products.length - 3);
+        const actionUrl = `https://coreasistan.com${example.path}`;
+        const preferencesUrl =
+          "https://coreasistan.com/dashboard/settings/notifications?view=preferences";
+        const stockColor = isOutOfStock ? "#934b43" : "#8c682a";
+        const stockBackground = isOutOfStock ? "#faecea" : "#fbf3e5";
+        const statusLabel = isOutOfStock ? "Tükenen stok" : "Kritik stok";
+        const totalLabel = isOutOfStock
+          ? "Toplam tükenen varyant"
+          : "Toplam düşük stoklu varyant";
+        const productRows = products
+          .slice(0, 3)
+          .map(
+            (
+              product,
+            ) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 9px;background:#ffffff;border:1px solid #e6ebe7;border-radius:9px">
+              <tr>
+                <td width="58" style="padding:11px 0 11px 12px;vertical-align:middle"><div style="width:42px;height:42px;border-radius:7px;background:#eef2ef;color:#486252;text-align:center;line-height:42px;font-size:11px;font-weight:700;letter-spacing:.04em">${escapeHtml(product.initials)}</div></td>
+                <td style="padding:11px 8px 11px 10px;vertical-align:middle">
+                  <p style="margin:0 0 3px;color:#28382d;font-size:13px;font-weight:700;line-height:1.4">${escapeHtml(product.name)}</p>
+                  <p style="margin:0;color:#7a867c;font-size:11px;line-height:1.4">${escapeHtml(product.variant)}</p>
+                </td>
+                <td width="88" align="right" style="padding:11px 12px 11px 0;vertical-align:middle;white-space:nowrap"><span style="display:inline-block;padding:6px 8px;background:${stockBackground};border-radius:5px;color:${stockColor};font-size:11px;font-weight:700">${isOutOfStock ? "Tükendi" : `${number.format(product.stock)} adet`}</span></td>
+              </tr>
+            </table>`,
+          )
+          .join("");
+        const moreProducts = hiddenCount
+          ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 27px;background:#f7f9f7;border:1px dashed #dce5de;border-radius:8px"><tr><td style="padding:12px 16px;color:#536258;font-size:12px;line-height:1.5;text-align:center"><strong style="color:#284f38">+${number.format(hiddenCount)} ürün daha</strong> stok takibinde sizi bekliyor.</td></tr></table>`
+          : `<div style="height:18px"></div>`;
+
+        return `<!doctype html>
+          <html lang="tr">
+            <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
+            <body style="margin:0;padding:0;background:#f5f7f5;font-family:Arial,Helvetica,sans-serif;color:#202b24">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#f5f7f5">
+                <tr><td align="center" style="padding:32px 14px 36px">
+                  <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e3e8e4;border-radius:12px;overflow:hidden">
+                    <tr><td style="padding:25px 32px 24px;border-bottom:1px solid #edf0ed">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse"><tr>
+                        <td align="left" style="vertical-align:middle"><img src="frontend/public/logo/text.png" width="124" alt="Core Asistan" style="display:block;width:124px;height:auto;border:0;outline:none;text-decoration:none"></td>
+                        <td align="right" style="vertical-align:middle;color:#7a857c;font-size:11px">Stok takibi</td>
+                      </tr></table>
+                    </td></tr>
+                    <tr><td style="padding:28px 32px 32px">
+                      <p style="margin:0 0 9px;color:${stockColor};font-size:12px;font-weight:700;line-height:1.4">${statusLabel}</p>
+                      <h1 style="margin:0 0 19px;color:#1f3026;font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-.01em">${escapeHtml(example.title)}</h1>
+                      <p style="margin:0 0 9px;color:#26382c;font-size:14px;line-height:1.7">Merhaba Ayşe,</p>
+                      <p style="margin:0 0 22px;color:#536158;font-size:14px;line-height:1.7">${escapeHtml(example.message)}</p>
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 18px;border-top:1px solid #e8ece9;border-bottom:1px solid #e8ece9"><tr>
+                        <td style="padding:12px 0;color:#67746b;font-size:12px">Bu bildirimde <strong style="color:#26382c">${number.format(products.length)} ürün</strong></td>
+                        <td align="right" style="padding:12px 0;color:#67746b;font-size:12px">${totalLabel}: <strong style="color:#26382c">${number.format(example.inventory.storeTotal)}</strong></td>
+                      </tr></table>
+                      ${productRows}
+                      ${moreProducts}
+                      <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0"><tr><td bgcolor="#174b38" style="padding:12px 18px;border-radius:6px;background:#174b38"><a href="${escapeHtml(actionUrl)}" target="_blank" rel="noopener noreferrer" style="color:#ffffff;font-size:13px;font-weight:700;line-height:1.4;text-decoration:none">Stokları incele</a></td></tr></table>
+                    </td></tr>
+                  </table>
+                  <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;border-collapse:collapse"><tr><td style="padding:19px 8px 0;text-align:center;color:#88928b;font-size:11px;line-height:1.7">
+                    Bu e-posta Core Asistan tarafından otomatik olarak gönderilmiştir.<br>
+                    Bu tür e-postaları almak istemiyorsanız <a href="${escapeHtml(preferencesUrl)}" target="_blank" rel="noopener noreferrer" style="color:#2563a6;text-decoration:underline">bildirim tercihlerinizi yönetin</a>.
+                  </td></tr></table>
+                </td></tr>
+              </table>
+            </body>
+          </html>`;
+      }
+
+      function brandedEmailHtml(example) {
+        const number = new Intl.NumberFormat("tr-TR");
+        const metrics = example.metrics;
+        let options;
+        if (example.template === "AI_REVIEW") {
+          options = {
+            category: "Yanıt incelemesi",
+            buttonLabel: "Soruları incele",
+            detail: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 27px;background:#f6f8f6;border:1px solid #e7ece8;border-radius:9px">
+              <tr>
+                <td width="50%" style="padding:18px 20px;border-right:1px solid #e5ebe6;vertical-align:top">
+                  <p style="margin:0 0 8px;color:#647168;font-size:12px;line-height:1.4">İnceleme bekleyen</p>
+                  <p style="margin:0;color:#203d2f;font-size:27px;line-height:1.1;font-weight:700">${number.format(metrics.pendingCount)}</p>
+                </td>
+                <td width="50%" style="padding:18px 20px;vertical-align:top">
+                  <p style="margin:0 0 8px;color:#647168;font-size:12px;line-height:1.4">Yeni soru</p>
+                  <p style="margin:0;color:#203d2f;font-size:27px;line-height:1.1;font-weight:700">${number.format(metrics.newCount)}</p>
+                </td>
+              </tr>
+            </table>`,
+          };
+        } else if (example.template === "AI_USAGE_WARNING") {
+          const percentage = Math.min(
+            100,
+            Math.max(0, Math.round((metrics.used / metrics.limit) * 100)),
+          );
+          options = {
+            category: "Kullanım bildirimi",
+            buttonLabel: "Kullanımı görüntüle",
+            detail: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 27px;background:#faf9f5;border:1px solid #ebe7dd;border-radius:9px">
+              <tr><td style="padding:18px 20px 17px">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+                  <tr><td style="color:#6c6b61;font-size:12px;line-height:1.5">Bu dönemki kullanım</td><td align="right" style="color:#343b34;font-size:15px;line-height:1.5;font-weight:700">${number.format(metrics.used)} / ${number.format(metrics.limit)}</td></tr>
+                </table>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:13px 0 10px;background:#eae7de;border-radius:5px"><tr><td width="${percentage}%" height="7" style="height:7px;background:#aa8549;border-radius:5px;font-size:1px;line-height:1px">&nbsp;</td><td style="font-size:1px;line-height:1px">&nbsp;</td></tr></table>
+                <p style="margin:0;color:#6d6a60;font-size:12px;line-height:1.5">${number.format(metrics.remaining)} soru hakkınız kaldı.</p>
+              </td></tr>
+            </table>`,
+          };
+        } else if (example.template === "AI_USAGE_EXHAUSTED") {
+          options = {
+            category: "Kullanım bildirimi",
+            buttonLabel: "Plan seçeneklerini incele",
+            detail: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 27px;background:#fbf7f4;border:1px solid #eee5df;border-radius:9px">
+              <tr><td style="padding:18px 20px 17px">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+                  <tr><td style="color:#71645d;font-size:12px;line-height:1.5">Bu dönemki kullanım</td><td align="right" style="color:#44372f;font-size:15px;line-height:1.5;font-weight:700">${number.format(metrics.used)} / ${number.format(metrics.limit)}</td></tr>
+                </table>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:13px 0 10px;background:#ece1db;border-radius:5px"><tr><td width="100%" height="7" style="height:7px;background:#aa7155;border-radius:5px;font-size:1px;line-height:1px">&nbsp;</td></tr></table>
+                <p style="margin:0;color:#74665d;font-size:12px;line-height:1.5">Soru hakkınızın tamamı kullanıldı.</p>
+              </td></tr>
+            </table>
+            <p style="margin:-12px 0 27px;color:#68746b;font-size:12px;line-height:1.6">Mevcut soruları manuel yanıtlamaya devam edebilirsiniz.</p>`,
+          };
+        } else if (example.template === "OPERATION_FAILURE") {
+          const processName =
+            metrics.process === "draft" ? "AI taslakları" : "Cevap gönderimi";
+          const countLabel =
+            metrics.phase === "summary"
+              ? "Son bildirimden beri etkilenen soru"
+              : "Etkilenen soru";
+          options = {
+            category: processName,
+            buttonLabel: "Soruları kontrol et",
+            detail: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 27px;background:#faf8f5;border:1px solid #ebe6de;border-radius:9px">
+              <tr>
+                <td style="padding:17px 20px;vertical-align:middle">
+                  <p style="margin:0 0 5px;color:#756c60;font-size:12px;line-height:1.4">${escapeHtml(countLabel)}</p>
+                  <p style="margin:0;color:#423b32;font-size:25px;line-height:1.2;font-weight:700">${number.format(metrics.affectedCount)}</p>
+                </td>
+                <td align="right" style="padding:17px 20px;vertical-align:middle;color:#827467;font-size:12px;line-height:1.4">İşlem tamamlanamadı</td>
+              </tr>
+            </table>`,
+          };
+        } else if (example.template === "OPERATION_RECOVERED") {
+          const processName =
+            metrics.process === "draft" ? "AI taslakları" : "Cevap gönderimi";
+          options = {
+            category: processName,
+            buttonLabel: "Gelen kutusuna git",
+            detail: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 27px;background:#f5f8f5;border:1px solid #e2e9e3;border-radius:9px">
+              <tr><td style="padding:17px 20px">
+                <p style="margin:0 0 5px;color:#66756a;font-size:12px;line-height:1.4">Güncel durum</p>
+                <p style="margin:0;color:#264d37;font-size:15px;line-height:1.4;font-weight:700">${escapeHtml(processName)} yeniden çalışıyor</p>
+              </td></tr>
+            </table>`,
+          };
+        } else if (example.template === "AUTOMATION_PAUSED") {
+          const reason =
+            metrics.reason === "quota"
+              ? "AI soru hakkı doldu"
+              : "Abonelik erişimi aktif değil";
+          options = {
+            category: "Otomasyon durumu",
+            buttonLabel:
+              metrics.reason === "quota"
+                ? "Plan ve kullanımı incele"
+                : "Ödeme durumunu incele",
+            detail: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0;margin:0 0 27px;background:#faf8f5;border:1px solid #ebe6de;border-radius:9px">
+              <tr><td style="padding:17px 20px">
+                <p style="margin:0 0 5px;color:#756c60;font-size:12px;line-height:1.4">AI otomasyonu duraklatıldı</p>
+                <p style="margin:0;color:#423b32;font-size:15px;line-height:1.4;font-weight:700">${escapeHtml(reason)}</p>
+              </td></tr>
+            </table>`,
+          };
+        } else {
+          throw new Error(`Bilinmeyen e-posta şablonu: ${example.template}`);
+        }
+
+        const actionUrl = `https://coreasistan.com${example.path}`;
+        const preferencesUrl =
+          "https://coreasistan.com/dashboard/settings/notifications?view=preferences";
+        return `<!doctype html>
+          <html lang="tr">
+            <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
+            <body style="margin:0;padding:0;background:#f5f7f5;font-family:Arial,Helvetica,sans-serif;color:#202b24">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#f5f7f5">
+                <tr><td align="center" style="padding:32px 14px 36px">
+                  <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e3e8e4;border-radius:12px;overflow:hidden">
+                    <tr><td style="padding:25px 32px 24px;border-bottom:1px solid #edf0ed">
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse"><tr>
+                        <td align="left" style="vertical-align:middle"><img src="frontend/public/logo/text.png" width="124" alt="Core Asistan" style="display:block;width:124px;height:auto;border:0;outline:none;text-decoration:none"></td>
+                        <td align="right" style="vertical-align:middle;color:#7a857c;font-size:11px">${escapeHtml(options.category)}</td>
+                      </tr></table>
+                    </td></tr>
+                    <tr><td style="padding:29px 32px 32px">
+                      <h1 style="margin:0 0 20px;color:#1f3026;font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-.01em">${escapeHtml(example.title)}</h1>
+                      <p style="margin:0 0 10px;color:#26382c;font-size:14px;line-height:1.7">Merhaba Ayşe,</p>
+                      <p style="margin:0 0 23px;color:#536158;font-size:14px;line-height:1.7">${escapeHtml(example.message)}</p>
+                      ${options.detail}
+                      <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0"><tr><td bgcolor="#174b38" style="padding:12px 18px;border-radius:6px;background:#174b38"><a href="${escapeHtml(actionUrl)}" target="_blank" rel="noopener noreferrer" style="color:#ffffff;font-size:13px;font-weight:700;line-height:1.4;text-decoration:none">${escapeHtml(options.buttonLabel)}</a></td></tr></table>
+                    </td></tr>
+                  </table>
+                  <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;border-collapse:collapse"><tr><td style="padding:19px 8px 0;text-align:center;color:#88928b;font-size:11px;line-height:1.7">
+                    Bu e-posta Core Asistan tarafından otomatik olarak gönderilmiştir.<br>
+                    Bu tür e-postaları almak istemiyorsanız <a href="${escapeHtml(preferencesUrl)}" target="_blank" rel="noopener noreferrer" style="color:#2563a6;text-decoration:underline">bildirim tercihlerinizi yönetin</a>.
+                  </td></tr></table>
+                </td></tr>
+              </table>
+            </body>
+          </html>`;
+      }
+
+      function renderFilters() {
+        filters.replaceChildren(
+          ...groups.map((group) => {
+            const button = document.createElement("button");
+            button.className = "filter";
+            button.type = "button";
+            button.textContent = group;
+            button.setAttribute(
+              "aria-pressed",
+              String(selectedGroup === group),
+            );
+            button.addEventListener("click", () => {
+              selectedGroup = group;
+              renderFilters();
+              renderGallery();
+            });
+            return button;
+          }),
+        );
+      }
+
+      function renderGallery() {
+        const query = search.value.trim().toLocaleLowerCase("tr-TR");
+        const visible = examples.filter(
+          (example) =>
+            (selectedGroup === "Tümü" || selectedGroup === example.group) &&
+            `${example.group} ${example.label} ${example.title} ${example.message}`
+              .toLocaleLowerCase("tr-TR")
+              .includes(query),
+        );
+        count.textContent = `${visible.length} / ${examples.length} örnek`;
+        if (visible.length === 0) {
+          const empty = document.createElement("p");
+          empty.className = "empty";
+          empty.textContent = "Bu aramayla eşleşen e-posta bulunamadı.";
+          gallery.replaceChildren(empty);
+          return;
+        }
+        gallery.replaceChildren(
+          ...visible.map((example) => {
+            const item = document.createElement("article");
+            item.className =
+              example.template === "BILLING_EVENT"
+                ? "item item--billing"
+                : example.template === "SECURITY_EVENT"
+                  ? "item item--security"
+                  : example.template === "PRODUCT_CAPACITY"
+                    ? "item item--capacity"
+                    : example.template?.startsWith("CHANNEL_")
+                      ? "item item--channel"
+                      : example.template?.startsWith("INVENTORY_")
+                        ? "item item--inventory"
+                        : example.template
+                          ? "item item--branded"
+                          : "item";
+            const head = document.createElement("div");
+            head.className = "item-head";
+            const heading = document.createElement("div");
+            const title = document.createElement("h2");
+            title.textContent = example.label;
+            const subject = document.createElement("p");
+            subject.textContent = `Konu: ${example.title}`;
+            heading.append(title, subject);
+            const tag = document.createElement("span");
+            tag.className = "tag";
+            tag.textContent = example.group;
+            head.append(heading, tag);
+            const preview = document.createElement("iframe");
+            preview.title = `${example.label} e-posta önizlemesi`;
+            preview.loading = "lazy";
+            preview.setAttribute(
+              "sandbox",
+              "allow-same-origin allow-popups allow-popups-to-escape-sandbox",
+            );
+            if (example.template === "BILLING_EVENT") {
+              preview.addEventListener("load", () => {
+                const content =
+                  preview.contentDocument?.querySelector("body > table");
+                if (!content) return;
+                const fitHeight = () => {
+                  preview.style.height = `${Math.ceil(content.getBoundingClientRect().height) + 2}px`;
+                };
+                fitHeight();
+                new ResizeObserver(fitHeight).observe(content);
+              });
+            }
+            preview.srcdoc = emailHtml(example);
+            item.append(head, preview);
+            return item;
+          }),
+        );
+      }
+
+      search.addEventListener("input", renderGallery);
+      renderFilters();
+      renderGallery();
+    </script>
+  </body>
+</html>

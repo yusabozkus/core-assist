@@ -8,10 +8,12 @@ import {
   InventoryPolicy,
   NotificationSeverity,
   NotificationType,
+  OperationalEmailIncidentKind,
   ProductIdentityType,
   ProductStatus,
   ProductVariantStatus,
   StoreStatus,
+  SyncEmailIncidentKind,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { CredentialsEncryptionService } from '../channels/credentials-encryption.service';
@@ -235,6 +237,13 @@ export class ProductSyncWorkerService {
     }
 
     await this.completeSync(data, chunk.counters);
+    await this.notifications.resolveSyncFailures(data.connectionId, [
+      data.kind === 'FULL'
+        ? SyncEmailIncidentKind.FULL
+        : SyncEmailIncidentKind.INVENTORY,
+      ...(data.kind === 'FULL' ? [SyncEmailIncidentKind.INVENTORY] : []),
+      SyncEmailIncidentKind.AUTH,
+    ]);
     await this.notifyProductLimit(data, chunk.counters);
     await this.notifyInventoryAlerts(data, chunk.counters);
     await updateProgress(100);
@@ -304,6 +313,19 @@ export class ProductSyncWorkerService {
       );
     });
 
+    if (!accessError && !planLimitError) {
+      await this.notifications.recordSyncFailure({
+        storeId: data.storeId,
+        connectionId: data.connectionId,
+        kind: authenticationError
+          ? SyncEmailIncidentKind.AUTH
+          : data.kind === 'FULL'
+            ? SyncEmailIncidentKind.FULL
+            : SyncEmailIncidentKind.INVENTORY,
+        runId: data.syncRunId,
+      });
+    }
+
     if (accessError) {
       await this.notifications.createForStoreMembers({
         storeId: data.storeId,
@@ -331,6 +353,11 @@ export class ProductSyncWorkerService {
         entityType: 'CATALOG_SYNC_RUN',
         entityId: data.syncRunId,
         dedupeKey: `billing-product-limit:${data.connectionId}`,
+      });
+      await this.notifications.recordOperationalFailure({
+        storeId: data.storeId,
+        connectionId: data.connectionId,
+        kind: OperationalEmailIncidentKind.PRODUCT_CAPACITY,
       });
       return;
     }
@@ -1830,7 +1857,15 @@ export class ProductSyncWorkerService {
     data: ProductSyncJobData,
     counters: SyncCounters,
   ) {
-    if (data.kind !== 'FULL' || counters.productsSkipped === 0) return;
+    if (data.kind !== 'FULL') return;
+    if (counters.productsSkipped === 0) {
+      await this.notifications.resolveOperationalWarning({
+        storeId: data.storeId,
+        connectionId: data.connectionId,
+        kind: OperationalEmailIncidentKind.PRODUCT_CAPACITY,
+      });
+      return;
+    }
 
     try {
       await this.notifications.createForStoreMembers({
@@ -1843,6 +1878,11 @@ export class ProductSyncWorkerService {
         entityType: 'CATALOG_SYNC_RUN',
         entityId: data.syncRunId,
         dedupeKey: `billing-product-limit:${data.connectionId}`,
+      });
+      await this.notifications.recordOperationalFailure({
+        storeId: data.storeId,
+        connectionId: data.connectionId,
+        kind: OperationalEmailIncidentKind.PRODUCT_CAPACITY,
       });
     } catch (error) {
       this.logger.warn(

@@ -1009,7 +1009,8 @@ export class PaddleBillingService {
           title: 'Abonelik ödemeniz tamamlanamadı',
           message:
             'Paddle yenileme ödemesinde sorun bildirdi. Ödeme yönteminizi Plan ve faturalar bölümünden güncelleyin. AI ve senkronizasyon durduruldu; mevcut soruları manuel yanıtlayabilirsiniz.',
-          dedupeKey: `billing-payment:${data.id}:${currentPeriod?.startsAt ?? snapshotAt.toISOString()}`,
+          dedupeKey: `billing-payment:${data.id}:${currentPeriod?.startsAt ?? existing.currentPeriodStart.toISOString()}`,
+          confirmedFailure: true,
         },
       );
       recipientUserIds.forEach((userId) =>

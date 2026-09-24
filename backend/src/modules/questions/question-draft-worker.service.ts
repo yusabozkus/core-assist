@@ -3,6 +3,7 @@ import {
   AiAutomationMode,
   NotificationSeverity,
   NotificationType,
+  OperationalEmailIncidentKind,
   ProductQuestionStatus,
   QuestionAnswerStatus,
   QuestionDraftProcessingStatus,
@@ -121,6 +122,21 @@ export class QuestionDraftWorkerService {
       requestedByUserId: data.requestedByUserId,
     });
 
+    if (result.status === 'DRAFTED') {
+      await this.notifications.recordOperationalSuccess({
+        storeId: data.storeId,
+        kind: OperationalEmailIncidentKind.AI_DRAFT,
+      });
+      await this.notifications.resolveOperationalWarning({
+        storeId: data.storeId,
+        kind: OperationalEmailIncidentKind.AI_QUOTA_PAUSED,
+      });
+      await this.notifications.resolveOperationalWarning({
+        storeId: data.storeId,
+        kind: OperationalEmailIncidentKind.AI_BILLING_PAUSED,
+      });
+    }
+
     if (
       result.status === 'DRAFTED' &&
       result.context.decision === 'NEEDS_REVIEW'
@@ -204,6 +220,12 @@ export class QuestionDraftWorkerService {
         entityId: data.storeId,
         dedupeKey: `ai-automation-paused:${data.storeId}:${quotaBlocked ? 'quota' : 'billing'}`,
       });
+      await this.notifications.recordOperationalFailure({
+        storeId: data.storeId,
+        kind: quotaBlocked
+          ? OperationalEmailIncidentKind.AI_QUOTA_PAUSED
+          : OperationalEmailIncidentKind.AI_BILLING_PAUSED,
+      });
     } else if (updated.count > 0) {
       await this.notifications.createForStoreMembers({
         storeId: data.storeId,
@@ -216,6 +238,10 @@ export class QuestionDraftWorkerService {
         entityType: 'PRODUCT_QUESTION',
         entityId: data.questionId,
         dedupeKey: `ai-draft-failed:${data.questionId}`,
+      });
+      await this.notifications.recordOperationalFailure({
+        storeId: data.storeId,
+        kind: OperationalEmailIncidentKind.AI_DRAFT,
       });
     }
   }

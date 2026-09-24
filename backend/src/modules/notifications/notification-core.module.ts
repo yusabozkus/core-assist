@@ -8,6 +8,9 @@ import { NotificationEmailDigestService } from './notification-email-digest.serv
 import { NotificationRetentionService } from './notification-retention.service';
 import { NotificationStreamService } from './notification-stream.service';
 import { NotificationsService } from './notifications.service';
+import { SyncEmailIncidentService } from './sync-email-incident.service';
+import { OperationalEmailIncidentService } from './operational-email-incident.service';
+import { ResendEmailService } from './resend-email.service';
 
 @Module({
   imports: [
@@ -18,7 +21,10 @@ import { NotificationsService } from './notifications.service';
     NotificationStreamService,
     NotificationRetentionService,
     NotificationDeliveryService,
+    ResendEmailService,
     NotificationEmailDigestService,
+    SyncEmailIncidentService,
+    OperationalEmailIncidentService,
     NotificationEmailDigestScheduler,
     NotificationEmailDigestProcessor,
   ],

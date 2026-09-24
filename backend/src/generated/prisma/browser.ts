@@ -183,6 +183,26 @@ export type ExternalProductVariant = Prisma.ExternalProductVariantModel
  */
 export type CatalogSyncRun = Prisma.CatalogSyncRunModel
 /**
+ * Model SyncEmailIncident
+ * 
+ */
+export type SyncEmailIncident = Prisma.SyncEmailIncidentModel
+/**
+ * Model SyncEmailIncidentDelivery
+ * 
+ */
+export type SyncEmailIncidentDelivery = Prisma.SyncEmailIncidentDeliveryModel
+/**
+ * Model OperationalEmailIncident
+ * 
+ */
+export type OperationalEmailIncident = Prisma.OperationalEmailIncidentModel
+/**
+ * Model OperationalEmailDelivery
+ * 
+ */
+export type OperationalEmailDelivery = Prisma.OperationalEmailDeliveryModel
+/**
  * Model IncomingEvent
  * 
  */
@@ -239,9 +259,14 @@ export type NotificationPreference = Prisma.NotificationPreferenceModel
 export type NotificationDeliverySetting = Prisma.NotificationDeliverySettingModel
 /**
  * Model NotificationEmailDigestState
- *
+ * 
  */
 export type NotificationEmailDigestState = Prisma.NotificationEmailDigestStateModel
+/**
+ * Model EmailDeliveryRecord
+ * 
+ */
+export type EmailDeliveryRecord = Prisma.EmailDeliveryRecordModel
 /**
  * Model WebPushSubscription
  * 

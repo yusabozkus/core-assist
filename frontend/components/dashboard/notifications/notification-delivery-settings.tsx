@@ -155,8 +155,7 @@ export function NotificationDeliverySettings({ storeId }: { storeId: string }) {
         <div>
           <h2 className="text-sm font-semibold">Teslimat kanalları</h2>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            Uygulama içi kayda ek olarak kritik gelişmeleri nereden almak
-            istediğinizi seçin.
+            Mağaza bildirimlerinin e-posta ve tarayıcı teslimatını yönetin.
           </p>
         </div>
         {status ? (
@@ -191,7 +190,7 @@ export function NotificationDeliverySettings({ storeId }: { storeId: string }) {
           title="E-posta bildirimleri"
           description={
             settings.availability.email
-              ? "Kritik mağaza olaylarını hesabınızdaki e-posta adresine gönderir."
+              ? "Mağaza olaylarını e-postayla bildirir. Ödeme ve hesap güvenliği mailleri bu ayardan bağımsızdır."
               : "Resend bilgileri yapılandırıldığında kullanılabilir."
           }
           checked={settings.emailEnabled}
@@ -209,8 +208,8 @@ export function NotificationDeliverySettings({ storeId }: { storeId: string }) {
               <div>
                 <p className="text-sm font-medium">Sessiz saatler</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Bu aralıkta e-posta ve tarayıcı teslimatı durur; bildirimler
-                  uygulama içinde görünmeye devam eder.
+                  Mağaza e-postaları ve tarayıcı bildirimleri duraklar. Ödeme ve
+                  hesap güvenliği mailleri gönderilmeye devam eder.
                 </p>
               </div>
             </div>

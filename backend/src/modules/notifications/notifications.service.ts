@@ -10,6 +10,8 @@ import {
   NotificationType,
   StoreRole,
   WorkspaceRole,
+  SyncEmailIncidentKind,
+  OperationalEmailIncidentKind,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import {
@@ -24,6 +26,12 @@ import {
 } from './notification-stream.service';
 import { NotificationDeliveryService } from './notification-delivery.service';
 import { UpdateNotificationDeliverySettingsDto } from './dto/update-notification-delivery-settings.dto';
+import { SyncEmailIncidentService } from './sync-email-incident.service';
+import { OperationalEmailIncidentService } from './operational-email-incident.service';
+import {
+  FINANCE_TRANSACTIONAL_EMAIL_TYPES,
+  SECURITY_TRANSACTIONAL_EMAIL_TYPES,
+} from './critical-email.policy';
 import {
   RemoveWebPushSubscriptionDto,
   SaveWebPushSubscriptionDto,
@@ -44,6 +52,7 @@ export type StoreNotificationInput = {
 type DirectNotificationInput = Omit<StoreNotificationInput, 'storeId'> & {
   recipientUserIds: string[];
   storeId?: string | null;
+  criticalEmail?: boolean;
 };
 
 type WorkspaceNotificationInput = Omit<StoreNotificationInput, 'storeId'>;
@@ -92,7 +101,89 @@ export class NotificationsService {
     private readonly prisma: PrismaService,
     private readonly streamEvents: NotificationStreamService,
     private readonly delivery: NotificationDeliveryService,
+    private readonly syncEmailIncidents: SyncEmailIncidentService,
+    private readonly operationalEmailIncidents: OperationalEmailIncidentService,
   ) {}
+
+  async recordOperationalFailure(input: {
+    storeId: string;
+    kind: OperationalEmailIncidentKind;
+    connectionId?: string;
+  }) {
+    try {
+      await this.operationalEmailIncidents.recordFailure(input);
+    } catch (error) {
+      this.logger.error(
+        `Operasyon e-posta olayı kaydedilemedi (${input.storeId}): ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
+      );
+    }
+  }
+
+  async recordOperationalSuccess(input: {
+    storeId: string;
+    kind: OperationalEmailIncidentKind;
+    connectionId?: string;
+  }) {
+    try {
+      await this.operationalEmailIncidents.recordSuccess(input);
+    } catch (error) {
+      this.logger.error(
+        `Operasyon e-posta olayı kapatılamadı (${input.storeId}): ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
+      );
+    }
+  }
+
+  async resolveOperationalWarning(input: {
+    storeId: string;
+    kind: OperationalEmailIncidentKind;
+    connectionId?: string;
+  }) {
+    try {
+      await this.operationalEmailIncidents.resolveWarning(input);
+    } catch (error) {
+      this.logger.error(
+        `Uyarı e-posta olayı kapatılamadı (${input.storeId}): ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
+      );
+    }
+  }
+
+  async recordSyncFailure(input: {
+    storeId: string;
+    connectionId: string;
+    kind: SyncEmailIncidentKind;
+    runId?: string;
+  }) {
+    try {
+      await this.syncEmailIncidents.recordFailure(input);
+    } catch (error) {
+      this.logger.error(
+        `Senkronizasyon e-posta olayı kaydedilemedi (${input.connectionId}): ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
+      );
+    }
+  }
+
+  async resolveSyncFailures(
+    connectionId: string,
+    kinds: SyncEmailIncidentKind[],
+  ) {
+    try {
+      await this.syncEmailIncidents.resolve(connectionId, kinds);
+    } catch (error) {
+      this.logger.error(
+        `Senkronizasyon e-posta olayı kapatılamadı (${connectionId}): ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
+      );
+    }
+  }
+
+  async discardSyncFailures(connectionId: string) {
+    try {
+      await this.syncEmailIncidents.discard(connectionId);
+    } catch (error) {
+      this.logger.error(
+        `Senkronizasyon e-posta olayı iptal edilemedi (${connectionId}): ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
+      );
+    }
+  }
 
   async stream(userId: string, storeId?: string) {
     if (storeId) await this.assertStoreMembership(userId, storeId);
@@ -425,7 +516,12 @@ export class NotificationsService {
   async createBillingIssue(
     transaction: Prisma.TransactionClient,
     workspaceId: string,
-    input: { title: string; message: string; dedupeKey: string },
+    input: {
+      title: string;
+      message: string;
+      dedupeKey: string;
+      confirmedFailure?: boolean;
+    },
   ) {
     const workspace = await transaction.workspace.findUnique({
       where: { id: workspaceId },
@@ -444,21 +540,18 @@ export class NotificationsService {
         ...workspace.members.map((member) => member.userId),
       ]),
     ];
-    const result = await transaction.notification.createMany({
-      data: recipients.map((recipientUserId) => ({
-        recipientUserId,
-        type: NotificationType.BILLING_PAYMENT_ISSUE,
-        severity: NotificationSeverity.WARNING,
-        title: input.title,
-        message: input.message,
-        dedupeKey: input.dedupeKey,
-        actionUrl: `/billing/${workspaceId}`,
-        entityType: 'BILLING_WORKSPACE',
-        entityId: workspaceId,
-      })),
-      skipDuplicates: true,
+    return this.createForUsersInTransaction(transaction, {
+      recipientUserIds: recipients,
+      type: NotificationType.BILLING_PAYMENT_ISSUE,
+      severity: NotificationSeverity.WARNING,
+      title: input.title,
+      message: input.message,
+      dedupeKey: input.dedupeKey,
+      actionUrl: `/billing/${workspaceId}`,
+      entityType: 'BILLING_WORKSPACE',
+      entityId: workspaceId,
+      criticalEmail: input.confirmedFailure === true,
     });
-    return result.count > 0 ? recipients : [];
   }
 
   async createWorkspaceFinanceNotification(
@@ -500,41 +593,81 @@ export class NotificationsService {
       skipDuplicates: true,
     });
 
+    if (
+      input.criticalEmail !== false &&
+      FINANCE_TRANSACTIONAL_EMAIL_TYPES.has(input.type)
+    ) {
+      const notifications = await transaction.notification.findMany({
+        where: {
+          recipientUserId: { in: recipientUserIds },
+          dedupeKey: input.dedupeKey,
+          type: input.type,
+        },
+        select: { id: true, recipientUserId: true },
+      });
+      for (const notification of notifications) {
+        await this.delivery.stageEssentialEmail(transaction, notification.id, {
+          recipientUserId: notification.recipientUserId,
+          storeId: input.storeId,
+          type: input.type,
+          title: input.title.slice(0, 160),
+          message: input.message.slice(0, 1_000),
+          actionUrl: input.actionUrl,
+        });
+      }
+    }
+
     return result.count > 0 ? recipientUserIds : [];
   }
 
   async createForUser(input: UserNotificationInput) {
     try {
       const now = new Date();
-      await this.prisma.notification.upsert({
-        where: {
-          recipientUserId_dedupeKey: {
-            recipientUserId: input.recipientUserId,
-            dedupeKey: input.dedupeKey,
+      await this.prisma.$transaction(async (transaction) => {
+        const notification = await transaction.notification.upsert({
+          where: {
+            recipientUserId_dedupeKey: {
+              recipientUserId: input.recipientUserId,
+              dedupeKey: input.dedupeKey,
+            },
           },
-        },
-        create: {
-          recipientUserId: input.recipientUserId,
-          storeId: input.storeId ?? null,
-          type: input.type,
-          severity: input.severity,
-          title: input.title.slice(0, 160),
-          message: input.message.slice(0, 1_000),
-          actionUrl: input.actionUrl,
-          entityType: input.entityType,
-          entityId: input.entityId,
-          dedupeKey: input.dedupeKey,
-          lastOccurredAt: now,
-        },
-        update: {
-          severity: input.severity,
-          title: input.title.slice(0, 160),
-          message: input.message.slice(0, 1_000),
-          actionUrl: input.actionUrl,
-          occurrenceCount: { increment: 1 },
-          readAt: null,
-          lastOccurredAt: now,
-        },
+          create: {
+            recipientUserId: input.recipientUserId,
+            storeId: input.storeId ?? null,
+            type: input.type,
+            severity: input.severity,
+            title: input.title.slice(0, 160),
+            message: input.message.slice(0, 1_000),
+            actionUrl: input.actionUrl,
+            entityType: input.entityType,
+            entityId: input.entityId,
+            dedupeKey: input.dedupeKey,
+            lastOccurredAt: now,
+          },
+          update: {
+            severity: input.severity,
+            title: input.title.slice(0, 160),
+            message: input.message.slice(0, 1_000),
+            actionUrl: input.actionUrl,
+            occurrenceCount: { increment: 1 },
+            readAt: null,
+            lastOccurredAt: now,
+          },
+        });
+        if (SECURITY_TRANSACTIONAL_EMAIL_TYPES.has(input.type)) {
+          await this.delivery.stageEssentialEmail(
+            transaction,
+            notification.id,
+            {
+              recipientUserId: input.recipientUserId,
+              storeId: input.storeId,
+              type: input.type,
+              title: input.title.slice(0, 160),
+              message: input.message.slice(0, 1_000),
+              actionUrl: input.actionUrl,
+            },
+          );
+        }
       });
       this.streamEvents.emit(
         [input.recipientUserId],
@@ -668,43 +801,61 @@ export class NotificationsService {
       const title = input.title.slice(0, 160);
       const message = input.message.slice(0, 1_000);
 
-      await this.prisma.$transaction(
-        enabledRecipientUserIds.map((recipientUserId) =>
-          this.prisma.notification.upsert({
-            where: {
-              recipientUserId_dedupeKey: {
-                recipientUserId,
-                dedupeKey: input.dedupeKey,
+      const notifications = await this.prisma.$transaction(
+        async (transaction) => {
+          const saved: Array<{
+            id: string;
+            recipientUserId: string;
+            occurrenceCount: number;
+          }> = [];
+          for (const recipientUserId of enabledRecipientUserIds) {
+            const notification = await transaction.notification.upsert({
+              where: {
+                recipientUserId_dedupeKey: {
+                  recipientUserId,
+                  dedupeKey: input.dedupeKey,
+                },
               },
-            },
-            create: {
-              recipientUserId,
-              storeId: workspaceFinanceNotification ? null : input.storeId,
+              create: {
+                recipientUserId,
+                storeId: workspaceFinanceNotification ? null : input.storeId,
+                type: input.type,
+                severity: input.severity,
+                title,
+                message,
+                actionUrl: input.actionUrl,
+                entityType: input.entityType,
+                entityId: input.entityId,
+                dedupeKey: input.dedupeKey,
+                lastOccurredAt: now,
+              },
+              update: {
+                storeId: workspaceFinanceNotification ? null : input.storeId,
+                type: input.type,
+                severity: input.severity,
+                title,
+                message,
+                actionUrl: input.actionUrl,
+                entityType: input.entityType,
+                entityId: input.entityId,
+                occurrenceCount: { increment: 1 },
+                readAt: null,
+                lastOccurredAt: now,
+              },
+            });
+            await this.delivery.stageDirectEmail(transaction, notification, {
+              storeId: input.storeId,
               type: input.type,
               severity: input.severity,
               title,
               message,
               actionUrl: input.actionUrl,
-              entityType: input.entityType,
-              entityId: input.entityId,
-              dedupeKey: input.dedupeKey,
-              lastOccurredAt: now,
-            },
-            update: {
-              storeId: workspaceFinanceNotification ? null : input.storeId,
-              type: input.type,
-              severity: input.severity,
-              title,
-              message,
-              actionUrl: input.actionUrl,
-              entityType: input.entityType,
-              entityId: input.entityId,
-              occurrenceCount: { increment: 1 },
-              readAt: null,
-              lastOccurredAt: now,
-            },
-          }),
-        ),
+            });
+            saved.push(notification);
+          }
+          return saved;
+        },
+        { timeout: 15_000 },
       );
       this.streamEvents.emit(
         enabledRecipientUserIds,
@@ -719,6 +870,12 @@ export class NotificationsService {
           title,
           message,
           actionUrl: input.actionUrl,
+          emailDeliveryKeys: Object.fromEntries(
+            notifications.map((notification) => [
+              notification.recipientUserId,
+              `notification:${notification.id}:${notification.occurrenceCount}`,
+            ]),
+          ),
         });
       } catch (error) {
         const deliveryError =
