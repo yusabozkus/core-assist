@@ -74,19 +74,20 @@ function loadPaddlePricing() {
   if (cachedPrices) return Promise.resolve(cachedPrices)
   if (pricingPromise) return pricingPromise
 
-  pricingPromise = Promise.all([getBillingPricingConfig(), getPaddle()])
-    .then(async ([config, paddle]) => {
-      assertMatchingEnvironment(config)
-      const response = await paddle.PricePreview({
-        items: config.items.map((item) => ({
-          priceId: item.priceId,
-          quantity: 1,
-        })),
-      })
-      const prices = normalizePricing(config, response)
-      cachedPrices = prices
-      return prices
+  pricingPromise = (async () => {
+    const config = await getBillingPricingConfig()
+    const paddle = await getPaddle()
+    assertMatchingEnvironment(config)
+    const response = await paddle.PricePreview({
+      items: config.items.map((item) => ({
+        priceId: item.priceId,
+        quantity: 1,
+      })),
     })
+    const prices = normalizePricing(config, response)
+    cachedPrices = prices
+    return prices
+  })()
     .catch((error: unknown) => {
       pricingPromise = null
       throw error

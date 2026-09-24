@@ -71,6 +71,9 @@ function createHarness() {
   };
   const service = new ResendEmailService({
     emailDeliveryRecord: model,
+    workspaceInvitation: {
+      findUnique: () => Promise.resolve(null),
+    },
   } as unknown as PrismaService);
   const input = {
     deliveryKey: 'notification:record-1:1',
@@ -81,8 +84,71 @@ function createHarness() {
     subject: 'Test mail',
     html: '<p>Test</p>',
   };
-  return { service, input, records };
+  return {
+    service,
+    input,
+    records,
+    transaction: { emailDeliveryRecord: model },
+  };
 }
+
+void test('sensitive email HTML is encrypted at rest and decrypted only for delivery', async () => {
+  const previousKey = process.env.RESEND_API_KEY;
+  const previousFetch = global.fetch;
+  process.env.RESEND_API_KEY = 'test-key';
+  const requests: string[] = [];
+  global.fetch = (_url: string | URL | Request, options?: RequestInit) => {
+    requests.push(typeof options?.body === 'string' ? options.body : '');
+    return Promise.resolve(Response.json({ id: 'resend-sensitive-1' }));
+  };
+
+  try {
+    const { service, input, records, transaction } = createHarness();
+    const sensitive = {
+      ...input,
+      deliveryKey: 'notification:sensitive-1:1',
+      html: '<p>Secret invitation token</p>',
+      sensitive: true,
+    };
+    await service.stage(
+      sensitive,
+      transaction as unknown as Parameters<ResendEmailService['stage']>[1],
+    );
+    const record = records.get(sensitive.deliveryKey)!;
+    assert.ok((record.html as string).startsWith('encrypted:'));
+    assert.ok(!(record.html as string).includes('Secret invitation token'));
+    assert.equal(await service.send(sensitive), 'SENT');
+    assert.ok(requests[0].includes('Secret invitation token'));
+    assert.equal(record.html, null);
+  } finally {
+    global.fetch = previousFetch;
+    if (previousKey === undefined) delete process.env.RESEND_API_KEY;
+    else process.env.RESEND_API_KEY = previousKey;
+  }
+});
+
+void test('invalidated invitation is not sent even if queued', async () => {
+  const previousKey = process.env.RESEND_API_KEY;
+  const previousFetch = global.fetch;
+  process.env.RESEND_API_KEY = 'test-key';
+  let sent = false;
+  global.fetch = () => {
+    sent = true;
+    return Promise.resolve(Response.json({ id: 'unexpected' }));
+  };
+
+  try {
+    const { service, input, records } = createHarness();
+    const deliveryKey = `team-invite:invitation-1:${'a'.repeat(64)}`;
+    assert.equal(await service.send({ ...input, deliveryKey }), 'FAILED');
+    assert.equal(sent, false);
+    assert.equal(records.get(deliveryKey)?.status, EmailDeliveryStatus.FAILED);
+  } finally {
+    global.fetch = previousFetch;
+    if (previousKey === undefined) delete process.env.RESEND_API_KEY;
+    else process.env.RESEND_API_KEY = previousKey;
+  }
+});
 
 void test('transient 429 is retried with the same key and payload, then records the provider id', async () => {
   const previousKey = process.env.RESEND_API_KEY;

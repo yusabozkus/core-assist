@@ -246,6 +246,8 @@ export function PricingSection() {
                     <AnimatedBillingNote cycle={billingCycle}>
                       {pricing.loading
                         ? "Güncel fiyat hesaplanıyor"
+                        : pricing.error
+                          ? "Fiyatlar şu anda görüntülenemiyor"
                         : !price
                           ? "Güncel fiyat ödeme öncesinde gösterilir"
                           : annual
@@ -318,8 +320,9 @@ export function PricingSection() {
           })}
         </div>
         <p className="mt-6 text-xs leading-5 text-[#8a957e]">
-          Vergiler, para birimi ve yıllık plan avantajı Paddle tarafından
-          konumunuza göre hesaplanır.
+          {pricing.error
+            ? "Güncel fiyatlar geçici olarak yüklenemiyor. Ödeme yapmadan önce tutarı kontrol edin."
+            : "Vergiler, para birimi ve yıllık plan avantajı Paddle tarafından konumunuza göre hesaplanır."}
         </p>
       </div>
     </section>

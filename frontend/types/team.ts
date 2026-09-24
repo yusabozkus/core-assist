@@ -1,6 +1,9 @@
 export type TeamAccessLevel =
   "ACCOUNT_ADMIN" | "STORE_ADMIN" | "AGENT" | "VIEWER"
 
+export type TeamInvitationEmailStatus =
+  "SENT" | "PENDING" | "FAILED" | "NOT_SENT"
+
 export type TeamStore = {
   id: string
   name: string
@@ -29,6 +32,7 @@ export type TeamInvitation = {
   invitedBy: { id: string; name: string } | null
   expiresAt: string
   createdAt: string
+  emailDelivery: TeamInvitationEmailStatus
 }
 
 export type TeamOverview = {
@@ -48,6 +52,7 @@ export type TeamOverview = {
 export type InvitationLinkResult = {
   invitation: TeamInvitation
   acceptPath: string
+  emailDelivery: TeamInvitationEmailStatus
 }
 
 export type WorkspaceInvitationPreview = {

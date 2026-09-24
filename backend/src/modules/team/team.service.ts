@@ -6,7 +6,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { Prisma } from '../../generated/prisma/client';
 import {
   NotificationSeverity,
@@ -26,6 +26,8 @@ import {
 } from './dto/team-member-access.dto';
 import { resolveTeamAccessLevel } from './team-access';
 import { AuditAction } from '../audit/audit-actions';
+import { TeamInvitationEmailService } from './team-invitation-email.service';
+import { TeamEventEmailService } from './team-event-email.service';
 import {
   AuditActorType,
   AuditLogService,
@@ -51,6 +53,8 @@ export class TeamService {
     private readonly billingEntitlements: BillingEntitlementService,
     private readonly notifications: NotificationsService,
     private readonly audit: AuditLogService,
+    private readonly invitationEmail: TeamInvitationEmailService,
+    private readonly teamEventEmail: TeamEventEmailService,
   ) {}
 
   async getTeam(workspaceId: string, actorUserId: string) {
@@ -99,6 +103,18 @@ export class TeamService {
       },
       orderBy: { store: { createdAt: 'asc' } },
     });
+    const deliveryKeys = workspace.invitations.map((invitation) =>
+      this.invitationEmail.deliveryKey(invitation),
+    );
+    const deliveries = deliveryKeys.length
+      ? await this.prisma.emailDeliveryRecord.findMany({
+          where: { deliveryKey: { in: deliveryKeys } },
+          select: { deliveryKey: true, status: true },
+        })
+      : [];
+    const deliveryStatuses = new Map(
+      deliveries.map((delivery) => [delivery.deliveryKey, delivery.status]),
+    );
 
     return {
       workspace: { id: workspace.id, name: workspace.name },
@@ -124,7 +140,12 @@ export class TeamService {
           isOwner: workspace.ownerId === member.userId,
         };
       }),
-      invitations: workspace.invitations.map(serializeInvitation),
+      invitations: workspace.invitations.map((invitation) => ({
+        ...serializeInvitation(invitation),
+        emailDelivery: this.invitationEmail.status(
+          deliveryStatuses.get(this.invitationEmail.deliveryKey(invitation)),
+        ),
+      })),
     };
   }
 
@@ -137,7 +158,7 @@ export class TeamService {
     const { token, tokenHash } = createInvitationToken();
     const expiresAt = new Date(Date.now() + INVITATION_LIFETIME_MS);
 
-    const invitation = await this.prisma.$transaction(async (transaction) => {
+    const result = await this.prisma.$transaction(async (transaction) => {
       const actor = await this.requireManager(
         transaction,
         workspaceId,
@@ -203,6 +224,16 @@ export class TeamService {
             include: invitationInclude,
           });
 
+      if (existing) {
+        await this.invitationEmail.cancelPending(transaction, existing.id);
+      }
+      const deliveryKey = await this.invitationEmail.stage(
+        transaction,
+        savedInvitation,
+        token,
+        dto.accessLevel,
+      );
+
       await this.audit.record(
         {
           actorType: AuditActorType.USER,
@@ -229,10 +260,20 @@ export class TeamService {
         transaction,
       );
 
-      return savedInvitation;
+      return { invitation: savedInvitation, deliveryKey };
     });
 
-    return invitationWithLink(invitation, token);
+    const emailDelivery = await this.invitationEmail.deliver(
+      result.deliveryKey,
+    );
+    return {
+      ...invitationWithLink(result.invitation, token),
+      invitation: {
+        ...serializeInvitation(result.invitation),
+        emailDelivery,
+      },
+      emailDelivery,
+    };
   }
 
   async renewInvitationLink(
@@ -242,7 +283,7 @@ export class TeamService {
   ) {
     const { token, tokenHash } = createInvitationToken();
     const expiresAt = new Date(Date.now() + INVITATION_LIFETIME_MS);
-    const invitation = await this.prisma.$transaction(async (transaction) => {
+    const result = await this.prisma.$transaction(async (transaction) => {
       await this.requireManager(transaction, workspaceId, actorUserId);
       await this.lockWorkspace(transaction, workspaceId);
       const existing = await transaction.workspaceInvitation.findFirst({
@@ -268,6 +309,17 @@ export class TeamService {
         data: { tokenHash, expiresAt },
         include: invitationInclude,
       });
+      await this.invitationEmail.cancelPending(transaction, existing.id);
+      const accessLevel = accessLevelForInvitation(renewed);
+      if (accessLevel === 'OWNER') {
+        throw new ConflictException('Hesap sahibine davet oluşturulamaz.');
+      }
+      const deliveryKey = await this.invitationEmail.stage(
+        transaction,
+        renewed,
+        token,
+        accessLevel,
+      );
       await this.audit.record(
         {
           actorType: AuditActorType.USER,
@@ -283,10 +335,20 @@ export class TeamService {
         },
         transaction,
       );
-      return renewed;
+      return { invitation: renewed, deliveryKey };
     });
 
-    return invitationWithLink(invitation, token);
+    const emailDelivery = await this.invitationEmail.deliver(
+      result.deliveryKey,
+    );
+    return {
+      ...invitationWithLink(result.invitation, token),
+      invitation: {
+        ...serializeInvitation(result.invitation),
+        emailDelivery,
+      },
+      emailDelivery,
+    };
   }
 
   async revokeInvitation(
@@ -314,6 +376,7 @@ export class TeamService {
           revokedAt: new Date(),
         },
       });
+      await this.invitationEmail.cancelPending(transaction, invitation.id);
       await this.audit.record(
         {
           actorType: AuditActorType.USER,
@@ -373,6 +436,24 @@ export class TeamService {
         orderBy: { storeId: 'asc' },
       });
 
+      const previousAccess = previousStoreAccesses
+        .map((access) => `${access.storeId}:${access.role}`)
+        .sort();
+      const nextAccess = storeAccesses
+        .map((access) => `${access.storeId}:${access.role}`)
+        .sort();
+      if (
+        target.role === workspaceRoleFor(dto.accessLevel) &&
+        previousAccess.length === nextAccess.length &&
+        previousAccess.every((access, index) => access === nextAccess[index])
+      ) {
+        return {
+          response: { updated: false, userId: targetUserId },
+          notificationRecipientIds: [],
+          emailKeys: [],
+        };
+      }
+
       await transaction.storeMember.deleteMany({
         where: { userId: targetUserId, store: { workspaceId } },
       });
@@ -426,12 +507,24 @@ export class TeamService {
         },
         transaction,
       );
+      const emailKeys = await this.teamEventEmail.stage(transaction, {
+        workspaceId,
+        recipientUserIds: [targetUserId],
+        eventKey: `access-changed:${target.id}:${randomUUID()}`,
+        event: {
+          kind: 'ACCESS_CHANGED',
+          accessLevel: dto.accessLevel,
+          storeIds: storeAccesses.map((access) => access.storeId),
+        },
+      });
       return {
         response: { updated: true, userId: targetUserId },
         notificationRecipientIds,
+        emailKeys,
       };
     });
     this.notifications.emitChange(result.notificationRecipientIds, null);
+    await this.teamEventEmail.deliver(result.emailKeys);
     return result.response;
   }
 
@@ -440,7 +533,7 @@ export class TeamService {
     targetUserId: string,
     actorUserId: string,
   ) {
-    return this.prisma.$transaction(async (transaction) => {
+    const result = await this.prisma.$transaction(async (transaction) => {
       const actor = await this.requireManager(
         transaction,
         workspaceId,
@@ -474,8 +567,16 @@ export class TeamService {
         },
         transaction,
       );
-      return { removed: true, userId: targetUserId };
+      const emailKeys = await this.teamEventEmail.stage(transaction, {
+        workspaceId,
+        recipientUserIds: [targetUserId],
+        eventKey: `member-removed:${target.id}`,
+        event: { kind: 'REMOVED' },
+      });
+      return { response: { removed: true, userId: targetUserId }, emailKeys };
     });
+    await this.teamEventEmail.deliver(result.emailKeys);
+    return result.response;
   }
 
   async getInvitation(token: string) {
@@ -596,20 +697,30 @@ export class TeamService {
             data: { onboardingCompletedAt: acceptedAt },
           }),
         ]);
+        await this.invitationEmail.cancelPending(transaction, invitation.id);
 
+        const candidateRecipientIds = [
+          ...new Set(
+            [invitation.workspace.ownerId, invitation.invitedByUserId].filter(
+              (recipientUserId): recipientUserId is string =>
+                Boolean(recipientUserId) && recipientUserId !== user.id,
+            ),
+          ),
+        ];
+        const managerMemberships = await transaction.workspaceMember.findMany({
+          where: {
+            workspaceId: invitation.workspaceId,
+            userId: { in: candidateRecipientIds },
+            role: { in: [WorkspaceRole.OWNER, WorkspaceRole.ADMIN] },
+          },
+          select: { userId: true },
+        });
+        const managerRecipientIds = managerMemberships.map(
+          (member) => member.userId,
+        );
         const notificationRecipientIds =
           await this.notifications.createForUsersInTransaction(transaction, {
-            recipientUserIds: [
-              ...new Set(
-                [
-                  invitation.workspace.ownerId,
-                  invitation.invitedByUserId,
-                ].filter(
-                  (recipientUserId): recipientUserId is string =>
-                    Boolean(recipientUserId) && recipientUserId !== user.id,
-                ),
-              ),
-            ],
+            recipientUserIds: managerRecipientIds,
             type: NotificationType.TEAM_INVITATION_ACCEPTED,
             severity: NotificationSeverity.INFO,
             title: 'Ekip daveti kabul edildi',
@@ -643,6 +754,13 @@ export class TeamService {
           transaction,
         );
 
+        const emailKeys = await this.teamEventEmail.stage(transaction, {
+          workspaceId: invitation.workspaceId,
+          recipientUserIds: managerRecipientIds,
+          eventKey: `invitation-accepted:${invitation.id}`,
+          event: { kind: 'ACCEPTED', memberName: user.name },
+        });
+
         return {
           response: {
             accepted: true,
@@ -653,9 +771,11 @@ export class TeamService {
             nextPath: '/dashboard',
           },
           notificationRecipientIds,
+          emailKeys,
         };
       });
       this.notifications.emitChange(result.notificationRecipientIds, null);
+      await this.teamEventEmail.deliver(result.emailKeys);
       return result.response;
     } catch (error) {
       if (isUniqueConstraintError(error)) {

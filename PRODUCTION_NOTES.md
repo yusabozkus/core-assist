@@ -18,13 +18,12 @@ Bu dosya, Core Asistan production ortamına alınmadan önce tamamlanması gerek
 
 ## Ekip davetleri
 
-- [ ] Ekip daveti oluşturulduğunda kullanıcıya otomatik davet e-postası gönder.
-- [ ] E-posta sağlayıcısı olarak Resend değerlendirilebilir.
-- [ ] E-postada davet eden çalışma alanı, verilen rol, erişilebilen mağazalar, son kullanma tarihi ve tek kullanımlık kabul bağlantısı yer alsın.
-- [ ] Davet token'ı e-postaya yalnızca kabul bağlantısı içinde eklensin; loglarda veya veritabanında açık biçimde saklanmasın.
-- [ ] Production uygulama adresi ortam değişkeninden alınsın ve davet bağlantısı bu adres üzerinden oluşturulsun.
-- [ ] E-posta gönderimi tekrar denemeye uygun ve idempotent olsun; aynı davet için yanlışlıkla birden fazla e-posta gönderilmesin.
-- [ ] Gönderim başarısız olduğunda davet kaydı korunarak ekip ekranında hata ve yeniden gönderme seçeneği sunulsun.
+- [x] Ekip daveti oluşturulduğunda kullanıcıya Resend üzerinden otomatik davet e-postası gönder.
+- [x] E-postada hesap adı, verilen rol, erişilebilen mağazalar, son kullanma tarihi ve kabul bağlantısı yer alsın.
+- [x] Davet token'ını veritabanında yalnızca hash olarak, bekleyen e-posta içeriğinde şifreli olarak sakla; loglama.
+- [x] Davet bağlantısını `FRONTEND_URL` üzerinden oluştur; production ortamında HTTPS kullan.
+- [x] Teslimatı idempotent kaydet ve geçici Resend hatalarını yeniden dene.
+- [x] Gönderim durumunu ekip ekranında göster; başarısızlıkta daveti koru ve yeniden gönderme sun.
 
 ## Rol bazlı e-posta bildirimleri
 

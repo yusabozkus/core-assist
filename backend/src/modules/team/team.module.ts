@@ -7,10 +7,12 @@ import {
   WorkspaceInvitationsController,
 } from './team.controller';
 import { TeamService } from './team.service';
+import { TeamInvitationEmailService } from './team-invitation-email.service';
+import { TeamEventEmailService } from './team-event-email.service';
 
 @Module({
   imports: [AuthModule, BillingModule, NotificationsModule],
   controllers: [TeamController, WorkspaceInvitationsController],
-  providers: [TeamService],
+  providers: [TeamService, TeamInvitationEmailService, TeamEventEmailService],
 })
 export class TeamModule {}

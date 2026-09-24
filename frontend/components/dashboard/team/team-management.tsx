@@ -7,6 +7,7 @@ import {
   Edit02Icon,
   Link01Icon,
   Loading03Icon,
+  Mail01Icon,
   Tick02Icon,
   UserAdd01Icon,
   UserGroupIcon,
@@ -66,6 +67,7 @@ export function TeamManagement({
     null
   )
   const [error, setError] = React.useState<string | null>(null)
+  const [notice, setNotice] = React.useState<string | null>(null)
   const [busyKey, setBusyKey] = React.useState<string | null>(null)
   const progress = Math.min(100, team.capacity.percentage)
 
@@ -75,15 +77,38 @@ export function TeamManagement({
 
   async function handleInvitationAction(
     invitation: TeamInvitation,
-    action: "copy" | "revoke"
+    action: "resend" | "revoke"
   ): Promise<boolean> {
     const key = `${action}:${invitation.id}`
     setBusyKey(key)
     setError(null)
+    setNotice(null)
     try {
-      if (action === "copy") {
+      if (action === "resend") {
         const result = await renewTeamInvitationLink(workspaceId, invitation.id)
-        await copyInvitationLink(result.acceptPath)
+        setTeam((current) => ({
+          ...current,
+          invitations: current.invitations.map((item) =>
+            item.id === invitation.id ? result.invitation : item
+          ),
+        }))
+        let copied = false
+        try {
+          await copyInvitationLink(result.acceptPath)
+          copied = true
+        } catch {
+          copied = false
+        }
+        const deliveryMessage =
+          result.emailDelivery === "SENT"
+            ? "Yeni davet e-postası gönderildi."
+            : result.emailDelivery === "PENDING"
+              ? "Davet e-postası gönderim sırasında."
+              : "E-posta gönderilemedi."
+        setNotice(
+          `${deliveryMessage} ${copied ? "Yeni bağlantı panoya kopyalandı." : "Bağlantı panoya kopyalanamadı."} Eski bağlantı artık geçersiz.`
+        )
+        return true
       } else {
         await revokeTeamInvitation(workspaceId, invitation.id)
       }
@@ -121,8 +146,8 @@ export function TeamManagement({
             Erişimi doğru kişilere verin
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Ekibinizi davet bağlantısıyla oluşturun, mağaza erişimlerini ve
-            yetkileri tek yerden yönetin.
+            Ekibinizi e-postayla davet edin, mağaza erişimlerini ve yetkileri tek
+            yerden yönetin.
           </p>
         </div>
         <Button onClick={() => setInviteOpen(true)}>
@@ -170,6 +195,11 @@ export function TeamManagement({
           {error}
         </p>
       ) : null}
+      {notice ? (
+        <p role="status" className="mt-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
+          {notice}
+        </p>
+      ) : null}
 
       <section className="mt-6 overflow-hidden rounded-xl border border-border bg-card">
         <div className="border-b border-border px-5 py-4 sm:px-6">
@@ -198,8 +228,8 @@ export function TeamManagement({
           <div className="border-b border-border px-5 py-4 sm:px-6">
             <h2 className="font-semibold">Bekleyen davetler</h2>
             <p className="mt-1 text-xs text-muted-foreground">
-              E-posta gönderilmez; bağlantıyı davet ettiğiniz kişiyle siz
-              paylaşırsınız.
+              Davet e-postalarının teslimat durumu burada görünür. Yeniden
+              gönderme işlemi eski bağlantıyı geçersiz kılar.
             </p>
           </div>
           <div className="divide-y divide-border">
@@ -208,7 +238,7 @@ export function TeamManagement({
                 key={invitation.id}
                 invitation={invitation}
                 busyKey={busyKey}
-                onCopy={() => void handleInvitationAction(invitation, "copy")}
+                onResend={() => void handleInvitationAction(invitation, "resend")}
                 onRevoke={() => handleInvitationAction(invitation, "revoke")}
               />
             ))}
@@ -333,15 +363,15 @@ function MemberRow({
 function InvitationRow({
   invitation,
   busyKey,
-  onCopy,
+  onResend,
   onRevoke,
 }: {
   invitation: TeamInvitation
   busyKey: string | null
-  onCopy: () => void
+  onResend: () => void
   onRevoke: () => Promise<boolean>
 }) {
-  const copyBusy = busyKey === `copy:${invitation.id}`
+  const resendBusy = busyKey === `resend:${invitation.id}`
   const revokeBusy = busyKey === `revoke:${invitation.id}`
   return (
     <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:px-6">
@@ -349,7 +379,29 @@ function InvitationRow({
         <HugeiconsIcon icon={Link01Icon} className="size-4" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{invitation.email}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="truncate text-sm font-medium">{invitation.email}</p>
+          <Badge
+            variant="outline"
+            className={
+              invitation.emailDelivery === "SENT"
+                ? "border-primary/20 bg-primary/5 text-primary"
+                : invitation.emailDelivery === "PENDING"
+                  ? "border-amber-500/20 bg-amber-500/5 text-amber-700 dark:text-amber-400"
+                  : invitation.emailDelivery === "FAILED"
+                    ? "border-destructive/20 bg-destructive/5 text-destructive"
+                    : "text-muted-foreground"
+            }
+          >
+            {invitation.emailDelivery === "SENT"
+              ? "E-posta gönderildi"
+              : invitation.emailDelivery === "PENDING"
+                ? "Gönderim bekleniyor"
+                : invitation.emailDelivery === "FAILED"
+                  ? "Gönderilemedi"
+                  : "E-posta yok"}
+          </Badge>
+        </div>
         <p className="mt-0.5 text-xs text-muted-foreground">
           {getTeamAccessLabel(invitation.accessLevel)} · Son tarih{" "}
           {dateFormatter.format(new Date(invitation.expiresAt))}
@@ -359,14 +411,14 @@ function InvitationRow({
         <Button
           variant="outline"
           size="sm"
-          disabled={copyBusy || revokeBusy}
-          onClick={onCopy}
+          disabled={resendBusy || revokeBusy}
+          onClick={onResend}
         >
           <HugeiconsIcon
-            icon={copyBusy ? Loading03Icon : Copy01Icon}
-            className={copyBusy ? "size-4 animate-spin" : "size-4"}
+            icon={resendBusy ? Loading03Icon : Mail01Icon}
+            className={resendBusy ? "size-4 animate-spin" : "size-4"}
           />
-          Bağlantıyı kopyala
+          Yeniden gönder
         </Button>
         <ConfirmationPopover
           title="Daveti iptal etmek istiyor musunuz?"
@@ -378,7 +430,7 @@ function InvitationRow({
           <Button
             variant="ghost"
             size="icon-sm"
-            disabled={copyBusy || revokeBusy}
+            disabled={resendBusy || revokeBusy}
             className="text-muted-foreground hover:text-destructive"
             aria-label="Daveti iptal et"
           >
@@ -503,12 +555,10 @@ function InviteMemberDialog({
         storeIds: accessLevel === "ACCOUNT_ADMIN" ? undefined : storeIds,
       })
       setCreated(result)
-      await onCreated(result)
       try {
-        await copyInvitationLink(result.acceptPath)
-        setCopied(true)
+        await onCreated(result)
       } catch {
-        setCopied(false)
+        setError("Davet oluşturuldu ancak ekip listesi yenilenemedi. Sayfayı yenileyebilirsiniz.")
       }
     } catch (caughtError) {
       setError(readError(caughtError))
@@ -524,13 +574,15 @@ function InviteMemberDialog({
         onOpenChange(nextOpen)
         if (!nextOpen) reset()
       }}
-      title={created ? "Davet bağlantısı hazır" : "Ekip üyesi davet et"}
+      title={created ? "Davet oluşturuldu" : "Ekip üyesi davet et"}
       description={
         created
-          ? copied
-            ? "Bağlantı panoya kopyalandı. Davet ettiğiniz kişiyle güvenli bir kanaldan paylaşın."
-            : "Bağlantı hazır. Kopyalayıp davet ettiğiniz kişiyle güvenli bir kanaldan paylaşın."
-          : "E-posta gönderilmez. Tek kullanımlık bağlantıyı oluşturduktan sonra siz paylaşacaksınız."
+          ? created.emailDelivery === "SENT"
+            ? "Davet e-postası gönderildi. İsterseniz bağlantıyı ayrıca kopyalayabilirsiniz."
+            : created.emailDelivery === "PENDING"
+              ? "Davet e-postası gönderim sırasında. Teslimat durumunu ekip ekranından takip edebilirsiniz."
+              : "Davet oluşturuldu ancak e-posta gönderilemedi. Bağlantıyı kopyalayıp güvenli biçimde paylaşabilirsiniz."
+          : "Davet bağlantısı bu e-posta adresine gönderilecek."
       }
       preventClose={submitting}
       contentClassName="sm:max-w-xl"
@@ -543,8 +595,13 @@ function InviteMemberDialog({
             <Button
               size="sm"
               onClick={async () => {
-                await copyInvitationLink(created.acceptPath)
-                setCopied(true)
+                try {
+                  await copyInvitationLink(created.acceptPath)
+                  setCopied(true)
+                  setError(null)
+                } catch (caughtError) {
+                  setError(readError(caughtError))
+                }
               }}
             >
               <HugeiconsIcon
@@ -569,10 +626,10 @@ function InviteMemberDialog({
               onClick={() => void submit()}
             >
               <HugeiconsIcon
-                icon={submitting ? Loading03Icon : Link01Icon}
+                icon={submitting ? Loading03Icon : Mail01Icon}
                 className={submitting ? "size-4 animate-spin" : "size-4"}
               />
-              Bağlantı oluştur
+              Davet gönder
             </Button>
           </>
         )
@@ -593,9 +650,14 @@ function InviteMemberDialog({
             </p>
           </div>
           <p className="text-xs leading-5 text-muted-foreground">
-            Güvenlik nedeniyle eski bağlantı daha sonra görüntülenmez. Ekip
-            sayfasındaki “Bağlantıyı kopyala” işlemi yeni bir bağlantı üretir.
+            Bağlantıyı yeniden oluşturursanız önceki bağlantı geçersiz olur ve
+            yeni bir davet e-postası gönderilir.
           </p>
+          {error ? (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          ) : null}
         </div>
       ) : (
         <div className="space-y-5">

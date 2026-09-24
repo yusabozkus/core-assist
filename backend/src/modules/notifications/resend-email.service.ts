@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
-import { EmailDeliveryStatus } from '../../generated/prisma/enums';
+import {
+  EmailDeliveryStatus,
+  WorkspaceInvitationStatus,
+} from '../../generated/prisma/enums';
+import { CredentialsEncryptionService } from '../channels/credentials-encryption.service';
 
 const CLAIM_MS = 2 * 60_000;
 const IDEMPOTENCY_WINDOW_MS = 23 * 60 * 60_000;
@@ -9,14 +14,15 @@ const RETENTION_MS = 90 * 24 * 60 * 60_000;
 
 export type EmailSendResult = 'SENT' | 'DEFERRED' | 'FAILED';
 
-type EmailRequest = {
+export type EmailRequest = {
   deliveryKey: string;
-  recipientUserId: string;
-  storeId: string;
+  recipientUserId: string | null;
+  storeId: string | null;
   recipientEmail: string;
   senderEmail: string;
   subject: string;
   html: string;
+  sensitive?: boolean;
 };
 
 class ResendRequestError extends Error {
@@ -33,6 +39,7 @@ class ResendRequestError extends Error {
 export class ResendEmailService {
   private readonly logger = new Logger(ResendEmailService.name);
   private readonly apiKey = process.env.RESEND_API_KEY?.trim() || null;
+  private encryption: CredentialsEncryptionService | null = null;
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -42,19 +49,58 @@ export class ResendEmailService {
 
   async send(input: EmailRequest): Promise<EmailSendResult> {
     if (!this.configured) return 'DEFERRED';
-    if (!input.deliveryKey || input.deliveryKey.length > 256)
-      throw new Error('Invalid email delivery key.');
-
-    const record = await this.prisma.emailDeliveryRecord.upsert({
-      where: { deliveryKey: input.deliveryKey },
-      create: input,
-      update: {},
-      select: { id: true },
-    });
+    const record = await this.stage(input, this.prisma);
     return this.process(record.id);
   }
 
+  async stage(
+    input: EmailRequest,
+    transaction: Pick<Prisma.TransactionClient, 'emailDeliveryRecord'>,
+  ) {
+    if (!input.deliveryKey || input.deliveryKey.length > 256)
+      throw new Error('Invalid email delivery key.');
+    const { sensitive, ...data } = input;
+    return transaction.emailDeliveryRecord.upsert({
+      where: { deliveryKey: input.deliveryKey },
+      create: {
+        ...data,
+        html: sensitive ? this.encryptHtml(input.html) : input.html,
+      },
+      update: {},
+      select: { id: true },
+    });
+  }
+
+  async deliverStaged(deliveryKey: string): Promise<EmailSendResult> {
+    if (!this.configured) return 'DEFERRED';
+    const record = await this.prisma.emailDeliveryRecord.findUnique({
+      where: { deliveryKey },
+      select: { id: true },
+    });
+    if (!record) return 'FAILED';
+    return this.process(record.id);
+  }
+
+  async cancelPendingInvitation(
+    transaction: Pick<Prisma.TransactionClient, 'emailDeliveryRecord'>,
+    invitationId: string,
+  ) {
+    await transaction.emailDeliveryRecord.updateMany({
+      where: {
+        deliveryKey: { startsWith: `team-invite:${invitationId}:` },
+        status: EmailDeliveryStatus.PENDING,
+      },
+      data: {
+        status: EmailDeliveryStatus.FAILED,
+        html: null,
+        lastErrorCode: 'INVITATION_INVALIDATED',
+        lastErrorMessage: 'Davet bağlantısı değişti veya kullanılamıyor.',
+      },
+    });
+  }
+
   async sweepDue() {
+    if (!this.configured) return;
     const now = new Date();
     let cursor: string | undefined;
     let failures = 0;
@@ -101,6 +147,7 @@ export class ResendEmailService {
   }
 
   private async process(id: string): Promise<EmailSendResult> {
+    if (!this.configured) return 'DEFERRED';
     const record = await this.prisma.emailDeliveryRecord.findUnique({
       where: { id },
     });
@@ -212,6 +259,8 @@ export class ResendEmailService {
     html: string | null;
   }) {
     if (!record.html) throw new ResendRequestError('PAYLOAD_MISSING', false);
+    await this.assertInvitationValid(record.deliveryKey);
+    const html = this.decryptHtml(record.html);
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -223,7 +272,7 @@ export class ResendEmailService {
         from: record.senderEmail,
         to: [record.recipientEmail],
         subject: record.subject,
-        html: record.html,
+        html,
       }),
       signal: AbortSignal.timeout(10_000),
     });
@@ -251,6 +300,45 @@ export class ResendEmailService {
     if (typeof id !== 'string' || !id)
       throw new ResendRequestError('INVALID_RESPONSE', true);
     return id;
+  }
+
+  private async assertInvitationValid(deliveryKey: string) {
+    if (!deliveryKey.startsWith('team-invite:')) return;
+    const [, id, tokenHash, ...rest] = deliveryKey.split(':');
+    if (!id || !tokenHash || rest.length) {
+      throw new ResendRequestError('INVITATION_INVALID', false);
+    }
+    const invitation = await this.prisma.workspaceInvitation.findUnique({
+      where: { id },
+      select: { tokenHash: true, status: true, expiresAt: true },
+    });
+    if (
+      !invitation ||
+      invitation.tokenHash !== tokenHash ||
+      invitation.status !== WorkspaceInvitationStatus.PENDING ||
+      invitation.expiresAt <= new Date()
+    ) {
+      throw new ResendRequestError('INVITATION_INVALID', false);
+    }
+  }
+
+  private encryptHtml(html: string) {
+    this.encryption ??= new CredentialsEncryptionService();
+    return `encrypted:${this.encryption.encrypt({ html })}`;
+  }
+
+  private decryptHtml(value: string) {
+    if (!value.startsWith('encrypted:')) return value;
+    try {
+      this.encryption ??= new CredentialsEncryptionService();
+      const html = this.encryption.decrypt(
+        value.slice('encrypted:'.length),
+      ).html;
+      if (!html) throw new Error('Encrypted email payload is empty.');
+      return html;
+    } catch {
+      throw new ResendRequestError('ENCRYPTED_PAYLOAD_INVALID', false);
+    }
   }
 }
 

@@ -28,6 +28,6 @@ import { ResendEmailService } from './resend-email.service';
     NotificationEmailDigestScheduler,
     NotificationEmailDigestProcessor,
   ],
-  exports: [NotificationsService],
+  exports: [NotificationsService, ResendEmailService],
 })
 export class NotificationCoreModule {}
