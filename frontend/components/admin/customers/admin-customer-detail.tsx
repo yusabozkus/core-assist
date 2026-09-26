@@ -1,4 +1,6 @@
 import Link from "next/link"
+import { Suspense } from "react"
+import { AdminCustomerEmails } from "@/components/admin/emails/admin-customer-emails"
 import {
   AlertCircleIcon,
   ArrowLeft01Icon,
@@ -191,6 +193,21 @@ export function AdminCustomerDetailView({
             ) : (
               <EmptyState text="Bu çalışma alanında mağaza bulunmuyor." />
             )}
+          </Section>
+
+          <Section
+            title="Son e-postalar"
+            description="Bu müşteri hesabına ait gönderim ve teslimat geçmişi."
+          >
+            <Suspense
+              fallback={
+                <p className="p-5 text-xs text-muted-foreground">
+                  E-postalar yükleniyor…
+                </p>
+              }
+            >
+              <AdminCustomerEmails workspaceId={customer.id} />
+            </Suspense>
           </Section>
 
           <div className="grid gap-6 2xl:grid-cols-2">

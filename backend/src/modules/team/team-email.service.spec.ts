@@ -42,7 +42,7 @@ void test('invitation email contains the correct recipient, role, stores and acc
       tokenHash: 'a'.repeat(64),
       email: 'member@example.com',
       expiresAt: new Date('2026-09-30T12:00:00Z'),
-      workspace: { name: 'Örnek Hesap' },
+      workspace: { id: 'workspace-1', name: 'Örnek Hesap' },
       invitedBy: { name: 'Ayşe' },
       storeAccesses: [{ store: { name: '<script>Mağaza</script>' } }],
     };
@@ -55,6 +55,8 @@ void test('invitation email contains the correct recipient, role, stores and acc
     assert.equal(key, `team-invite:invite-1:${invitation.tokenHash}`);
     assert.equal(staged.length, 1);
     assert.equal(staged[0].recipientEmail, invitation.email);
+    assert.equal(staged[0].workspaceId, invitation.workspace.id);
+    assert.equal(staged[0].emailType, 'TEAM_INVITATION');
     assert.equal(staged[0].sensitive, true);
     assert.ok(
       staged[0].html.includes('https://coreasistan.com/invite/private-token'),
@@ -107,6 +109,8 @@ void test('accepted invitation email is staged once per distinct manager', async
     ]);
     assert.ok(staged.every((email) => email.html.includes('Zeynep')));
     assert.ok(staged.every((email) => email.sensitive));
+    assert.ok(staged.every((email) => email.workspaceId === 'workspace-1'));
+    assert.ok(staged.every((email) => email.emailType === 'TEAM_EVENT'));
   } finally {
     restore();
   }

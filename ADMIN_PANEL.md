@@ -39,6 +39,9 @@ tabanlı sistem rolleri ve izin matrisiyle değiştirilmelidir.
 | Destek talepleri | `/admin/support` | Talep filtreleme, SLA ve sorumlu takibi |
 | Destek konuşması | `/admin/support/[ticketId]` | Müşteri konuşması, dahili not, atama ve durum yönetimi |
 | İletişim mesajları | `/admin/contact-messages` | Landing sayfasından gönderilen iletişim formları |
+| E-posta | `/admin/emails` | Gönderim geçmişi, teslimat takibi, hata sayaçları ve yapılandırma durumu |
+| E-posta detayı | `/admin/emails/[emailId]` | Deneme zamanları, hata nedeni ve doğrulanmış teslimat olayları |
+| Duyurular | `/admin/announcements` | Rollere göre toplu panel bildirimi ve isteğe bağlı e-posta gönderimi |
 | Operasyonlar | `/admin/operations` | Katalog ve soru senkronizasyonları ile bağlantı sorunları |
 | Kuyruk detayı | `/admin/operations/queues/[queueKey]` | Zamanlanmış, gecikmiş ve başarısız worker işleri |
 | AI ve Kullanım | `/admin/ai-usage` | Taslak performansı, kotalar ve güncel işlem engelleri |
@@ -50,6 +53,49 @@ tabanlı sistem rolleri ve izin matrisiyle değiştirilmelidir.
 Header araması müşteri e-postası ve hesabı, mağaza, ticket numarası,
 senkronizasyon kimliği ve Paddle customer/subscription/transaction kimliklerini
 arayabilir.
+
+## E-posta takibi
+
+- E-posta listesi alıcı, konu, Resend mesaj kimliği, müşteri ve mağaza adıyla aranabilir.
+  Gönderim durumu, teslimat durumu ve oluşturulma tarih aralığıyla filtrelenir.
+  Tarihler arayüzde Türkiye saatine göre gösterilir; bitiş günü dahil edilir.
+- Müşteri detayında o hesaba bağlı son beş gönderim gösterilir. İlişki açık
+  `workspaceId` veya mağazanın hesabından kurulur; aynı alıcının başka hesaba ait
+  e-postaları bu listeye taşınmaz. Bağlamı bilinmeyen eski kayıtlar genel listede kalır.
+- `SENT`, gönderimin Resend tarafından kabul edildiğini belirtir. Alıcı posta
+  sunucusuna teslim bilgisi ayrı webhook olaylarıyla doğrulanır; okunma ölçülmez.
+- Son 24 saat sayaçları kabul, mevcut teslimat sonucu ve hata zamanlarına bakar.
+  Bekleyen ve inceleme gerektiren sayaçlar tüm açık kayıtları kapsar. Liste
+  filtreleri sayaçları değiştirmez; müşteri veya mağaza kapsamı değiştirir.
+- Yapılandırma kartları anahtar ve gönderici adresinin tanımlı olduğunu gösterir;
+  domain doğrulaması veya sağlayıcının erişilebilirliği için başarı iddiasında bulunmaz.
+  Son doğrulanmış webhook zamanı ve beş dakikadan fazla geciken denemeler gösterilir.
+- Ham HTML, davet token'ları, idempotency anahtarları ve gizli API anahtarları
+  admin yanıtlarına eklenmez. İlk sürümde bu ekranlar salt okunurdur.
+- Geçici gönderim hataları mevcut otomatik deneme akışında kalır. Sonucu belirsiz
+  `REVIEW_REQUIRED` kayıtları Resend tarafında incelenmelidir.
+
+Kurulum ve doğrulama: [E-posta teslimat takibi](backend/docs/admin-emails.md).
+
+## Toplu duyurular
+
+Admin, duyuru başlığını ve mesajını yazar; hesap sahibi, hesap yöneticisi, mağaza
+yöneticisi, temsilci ve görüntüleyici rollerinden birini veya birkaçını seçer.
+“Hepsi” tüm rolleri işaretler. Rol eşleşmesi ekip ekranındaki erişim düzeyiyle
+aynıdır. Birden fazla mağazası olan kullanıcıya bir bildirim gider; platform
+adminleri alıcı listesine dahil edilmez.
+
+“E-posta da gönder” anahtarı yalnızca Resend, gönderici adresi ve uygulama adresi
+tanımlıysa kullanılabilir. E-posta adresini doğrulamamış kişiler panel bildirimi
+alır, e-posta listesine eklenmez. Önizleme ekranında bildirim ve e-posta alıcı
+sayıları, atlanan adres sayısı ve örnek alıcılar gösterilir. Önizleme 10 dakika
+geçerlidir; bu sürede alıcı veya rol bilgisi değişirse yeni önizleme gerekir.
+
+Onay, bildirimleri ve e-posta gönderim kayıtlarını aynı veritabanı işleminde
+oluşturur. E-postalar mevcut otomatik gönderim akışında işlenir; gerçek gönderim
+ve teslimat durumları `/admin/emails` ekranından izlenir. Aynı onay isteğinin
+tekrarı ikinci gönderim oluşturmaz. Son 30 duyuru geçmişte gösterilir ve işlem
+denetim kaydına yazılır. Müşteri listesi için 10.000 kullanıcı sınırı vardır.
 
 ## Güvenlik ilkeleri
 

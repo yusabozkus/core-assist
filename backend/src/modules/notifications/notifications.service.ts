@@ -56,6 +56,7 @@ export type StoreNotificationInput = {
 
 type DirectNotificationInput = Omit<StoreNotificationInput, 'storeId'> & {
   recipientUserIds: string[];
+  workspaceId?: string;
   storeId?: string | null;
   criticalEmail?: boolean;
 };
@@ -550,6 +551,7 @@ export class NotificationsService {
     return this.createForUsersInTransaction(transaction, {
       recipientUserIds: recipients,
       type: NotificationType.BILLING_PAYMENT_ISSUE,
+      workspaceId,
       severity: NotificationSeverity.WARNING,
       title: input.title,
       message: input.message,
@@ -575,6 +577,7 @@ export class NotificationsService {
       ...input,
       recipientUserIds: recipients,
       storeId: null,
+      workspaceId,
     });
   }
 
@@ -616,6 +619,7 @@ export class NotificationsService {
       for (const notification of notifications) {
         await this.delivery.stageEssentialEmail(transaction, notification.id, {
           recipientUserId: notification.recipientUserId,
+          workspaceId: input.workspaceId,
           storeId: input.storeId,
           type: input.type,
           title: input.title.slice(0, 160),

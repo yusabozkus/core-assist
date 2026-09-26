@@ -71,6 +71,10 @@ function createHarness() {
   };
   const service = new ResendEmailService({
     emailDeliveryRecord: model,
+    emailProviderMessage: {
+      upsert: () => Promise.resolve({}),
+      deleteMany: () => Promise.resolve({ count: 0 }),
+    },
     workspaceInvitation: {
       findUnique: () => Promise.resolve(null),
     },

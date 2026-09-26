@@ -265,6 +265,11 @@ export type SupportTicket = Prisma.SupportTicketModel
  */
 export type SupportMessage = Prisma.SupportMessageModel
 /**
+ * Model AdminAnnouncement
+ * 
+ */
+export type AdminAnnouncement = Prisma.AdminAnnouncementModel
+/**
  * Model Notification
  * 
  */
@@ -289,6 +294,16 @@ export type NotificationEmailDigestState = Prisma.NotificationEmailDigestStateMo
  * 
  */
 export type EmailDeliveryRecord = Prisma.EmailDeliveryRecordModel
+/**
+ * Model EmailProviderMessage
+ * 
+ */
+export type EmailProviderMessage = Prisma.EmailProviderMessageModel
+/**
+ * Model EmailDeliveryEvent
+ * 
+ */
+export type EmailDeliveryEvent = Prisma.EmailDeliveryEventModel
 /**
  * Model WebPushSubscription
  * 

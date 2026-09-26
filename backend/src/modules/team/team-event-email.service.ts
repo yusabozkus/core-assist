@@ -75,6 +75,8 @@ export class TeamEventEmailService {
           deliveryKey,
           recipientUserId: recipient.id,
           storeId: null,
+          workspaceId: input.workspaceId,
+          emailType: 'TEAM_EVENT',
           recipientEmail: recipient.email,
           senderEmail,
           subject: event.subject,

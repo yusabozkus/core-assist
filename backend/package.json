@@ -6,6 +6,9 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "test:admin-announcements": "node --require ./scripts/register-email-tests.cjs --test src/modules/admin/admin-announcements.spec.ts",
+    "test:admin-emails": "node --require ./scripts/register-email-tests.cjs --test src/modules/notifications/resend-webhook.policy.spec.ts src/modules/notifications/resend-email.service.spec.ts src/modules/admin/admin-emails.service.spec.ts src/modules/team/team-email.service.spec.ts",
+    "test:admin-emails:integration": "node --require ./scripts/register-email-tests.cjs --test src/modules/admin/admin-emails.integration.spec.ts",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
     "start": "nest start",

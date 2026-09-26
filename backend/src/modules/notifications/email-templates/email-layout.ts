@@ -14,6 +14,7 @@ export function renderEmailLayout(input: {
   title: string;
   recipientName: string;
   message: string;
+  preserveMessageNewlines?: boolean;
   detailsHtml: string;
   actionUrl: string;
   actionLabel: string;
@@ -38,7 +39,7 @@ export function renderEmailLayout(input: {
                 <p style="margin:0 0 8px;color:#557260;font-size:12px;font-weight:700;line-height:1.4">${escapeEmailHtml(input.eyebrow)}</p>
                 <h1 style="margin:0 0 19px;color:#1f3026;font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-.01em">${escapeEmailHtml(input.title)}</h1>
                 <p style="margin:0 0 9px;color:#26382c;font-size:14px;line-height:1.7">Merhaba ${escapeEmailHtml(input.recipientName)},</p>
-                <p style="margin:0 0 23px;color:#536158;font-size:14px;line-height:1.7">${escapeEmailHtml(input.message)}</p>
+                <p style="margin:0 0 23px;color:#536158;font-size:14px;line-height:1.7${input.preserveMessageNewlines ? ';white-space:pre-line' : ''}">${escapeEmailHtml(input.message)}</p>
                 ${input.detailsHtml}
                 <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0"><tr><td bgcolor="#174b38" style="padding:12px 18px;border-radius:6px;background:#174b38"><a href="${escapeEmailHtml(input.actionUrl)}" style="color:#fff;font-size:13px;font-weight:700;line-height:1.4;text-decoration:none">${escapeEmailHtml(input.actionLabel)}</a></td></tr></table>
               </td></tr>

@@ -25,6 +25,9 @@ export const APP_ROUTES = {
   admin: {
     root: "/admin",
     notifications: "/admin/notifications",
+    emails: "/admin/emails",
+    announcements: "/admin/announcements",
+    email: (emailId: string) => `/admin/emails/${emailId}`,
     customers: "/admin/customers",
     customer: (workspaceId: string) => `/admin/customers/${workspaceId}`,
     support: "/admin/support",

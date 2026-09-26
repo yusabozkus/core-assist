@@ -53,6 +53,7 @@ type ExternalNotificationInput = {
 
 type EssentialNotificationInput = {
   recipientUserId: string;
+  workspaceId?: string | null;
   storeId?: string | null;
   type: NotificationType;
   title: string;
@@ -167,6 +168,7 @@ export class NotificationDeliveryService {
         recipientUserId: notification.recipientUserId,
         storeId: input.storeId,
         recipientEmail: recipient.email,
+        emailType: input.type,
         senderEmail: this.emailFrom!,
         subject: rendered.subject,
         html: rendered.html,
@@ -228,6 +230,8 @@ export class NotificationDeliveryService {
         deliveryKey,
         recipientUserId: input.recipientUserId,
         storeId: input.storeId ?? null,
+        workspaceId: input.workspaceId,
+        emailType: input.type,
         recipientEmail: recipient.email,
         senderEmail: this.emailFrom!,
         subject: rendered.subject,
@@ -599,6 +603,7 @@ export class NotificationDeliveryService {
       recipientUserId,
       storeId: input.storeId,
       recipientEmail: email,
+      emailType: input.type,
       senderEmail: this.emailFrom!,
       subject: rendered.subject,
       html: rendered.html,

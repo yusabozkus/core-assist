@@ -39,6 +39,8 @@ export type EmailDeliveryRecordMinAggregateOutputType = {
   deliveryKey: string | null
   recipientUserId: string | null
   storeId: string | null
+  workspaceId: string | null
+  emailType: string | null
   recipientEmail: string | null
   senderEmail: string | null
   subject: string | null
@@ -63,6 +65,8 @@ export type EmailDeliveryRecordMaxAggregateOutputType = {
   deliveryKey: string | null
   recipientUserId: string | null
   storeId: string | null
+  workspaceId: string | null
+  emailType: string | null
   recipientEmail: string | null
   senderEmail: string | null
   subject: string | null
@@ -87,6 +91,8 @@ export type EmailDeliveryRecordCountAggregateOutputType = {
   deliveryKey: number
   recipientUserId: number
   storeId: number
+  workspaceId: number
+  emailType: number
   recipientEmail: number
   senderEmail: number
   subject: number
@@ -121,6 +127,8 @@ export type EmailDeliveryRecordMinAggregateInputType = {
   deliveryKey?: true
   recipientUserId?: true
   storeId?: true
+  workspaceId?: true
+  emailType?: true
   recipientEmail?: true
   senderEmail?: true
   subject?: true
@@ -145,6 +153,8 @@ export type EmailDeliveryRecordMaxAggregateInputType = {
   deliveryKey?: true
   recipientUserId?: true
   storeId?: true
+  workspaceId?: true
+  emailType?: true
   recipientEmail?: true
   senderEmail?: true
   subject?: true
@@ -169,6 +179,8 @@ export type EmailDeliveryRecordCountAggregateInputType = {
   deliveryKey?: true
   recipientUserId?: true
   storeId?: true
+  workspaceId?: true
+  emailType?: true
   recipientEmail?: true
   senderEmail?: true
   subject?: true
@@ -280,6 +292,8 @@ export type EmailDeliveryRecordGroupByOutputType = {
   deliveryKey: string
   recipientUserId: string | null
   storeId: string | null
+  workspaceId: string | null
+  emailType: string | null
   recipientEmail: string
   senderEmail: string
   subject: string
@@ -327,6 +341,8 @@ export type EmailDeliveryRecordWhereInput = {
   deliveryKey?: Prisma.StringFilter<"EmailDeliveryRecord"> | string
   recipientUserId?: Prisma.StringNullableFilter<"EmailDeliveryRecord"> | string | null
   storeId?: Prisma.StringNullableFilter<"EmailDeliveryRecord"> | string | null
+  workspaceId?: Prisma.StringNullableFilter<"EmailDeliveryRecord"> | string | null
+  emailType?: Prisma.StringNullableFilter<"EmailDeliveryRecord"> | string | null
   recipientEmail?: Prisma.StringFilter<"EmailDeliveryRecord"> | string
   senderEmail?: Prisma.StringFilter<"EmailDeliveryRecord"> | string
   subject?: Prisma.StringFilter<"EmailDeliveryRecord"> | string
@@ -346,6 +362,8 @@ export type EmailDeliveryRecordWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"EmailDeliveryRecord"> | Date | string
   recipient?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   store?: Prisma.XOR<Prisma.StoreNullableScalarRelationFilter, Prisma.StoreWhereInput> | null
+  workspace?: Prisma.XOR<Prisma.WorkspaceNullableScalarRelationFilter, Prisma.WorkspaceWhereInput> | null
+  providerMessage?: Prisma.XOR<Prisma.EmailProviderMessageNullableScalarRelationFilter, Prisma.EmailProviderMessageWhereInput> | null
 }
 
 export type EmailDeliveryRecordOrderByWithRelationInput = {
@@ -353,6 +371,8 @@ export type EmailDeliveryRecordOrderByWithRelationInput = {
   deliveryKey?: Prisma.SortOrder
   recipientUserId?: Prisma.SortOrderInput | Prisma.SortOrder
   storeId?: Prisma.SortOrderInput | Prisma.SortOrder
+  workspaceId?: Prisma.SortOrderInput | Prisma.SortOrder
+  emailType?: Prisma.SortOrderInput | Prisma.SortOrder
   recipientEmail?: Prisma.SortOrder
   senderEmail?: Prisma.SortOrder
   subject?: Prisma.SortOrder
@@ -372,6 +392,8 @@ export type EmailDeliveryRecordOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   recipient?: Prisma.UserOrderByWithRelationInput
   store?: Prisma.StoreOrderByWithRelationInput
+  workspace?: Prisma.WorkspaceOrderByWithRelationInput
+  providerMessage?: Prisma.EmailProviderMessageOrderByWithRelationInput
 }
 
 export type EmailDeliveryRecordWhereUniqueInput = Prisma.AtLeast<{
@@ -382,6 +404,8 @@ export type EmailDeliveryRecordWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.EmailDeliveryRecordWhereInput | Prisma.EmailDeliveryRecordWhereInput[]
   recipientUserId?: Prisma.StringNullableFilter<"EmailDeliveryRecord"> | string | null
   storeId?: Prisma.StringNullableFilter<"EmailDeliveryRecord"> | string | null
+  workspaceId?: Prisma.StringNullableFilter<"EmailDeliveryRecord"> | string | null
+  emailType?: Prisma.StringNullableFilter<"EmailDeliveryRecord"> | string | null
   recipientEmail?: Prisma.StringFilter<"EmailDeliveryRecord"> | string
   senderEmail?: Prisma.StringFilter<"EmailDeliveryRecord"> | string
   subject?: Prisma.StringFilter<"EmailDeliveryRecord"> | string
@@ -401,6 +425,8 @@ export type EmailDeliveryRecordWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"EmailDeliveryRecord"> | Date | string
   recipient?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   store?: Prisma.XOR<Prisma.StoreNullableScalarRelationFilter, Prisma.StoreWhereInput> | null
+  workspace?: Prisma.XOR<Prisma.WorkspaceNullableScalarRelationFilter, Prisma.WorkspaceWhereInput> | null
+  providerMessage?: Prisma.XOR<Prisma.EmailProviderMessageNullableScalarRelationFilter, Prisma.EmailProviderMessageWhereInput> | null
 }, "id" | "deliveryKey">
 
 export type EmailDeliveryRecordOrderByWithAggregationInput = {
@@ -408,6 +434,8 @@ export type EmailDeliveryRecordOrderByWithAggregationInput = {
   deliveryKey?: Prisma.SortOrder
   recipientUserId?: Prisma.SortOrderInput | Prisma.SortOrder
   storeId?: Prisma.SortOrderInput | Prisma.SortOrder
+  workspaceId?: Prisma.SortOrderInput | Prisma.SortOrder
+  emailType?: Prisma.SortOrderInput | Prisma.SortOrder
   recipientEmail?: Prisma.SortOrder
   senderEmail?: Prisma.SortOrder
   subject?: Prisma.SortOrder
@@ -440,6 +468,8 @@ export type EmailDeliveryRecordScalarWhereWithAggregatesInput = {
   deliveryKey?: Prisma.StringWithAggregatesFilter<"EmailDeliveryRecord"> | string
   recipientUserId?: Prisma.StringNullableWithAggregatesFilter<"EmailDeliveryRecord"> | string | null
   storeId?: Prisma.StringNullableWithAggregatesFilter<"EmailDeliveryRecord"> | string | null
+  workspaceId?: Prisma.StringNullableWithAggregatesFilter<"EmailDeliveryRecord"> | string | null
+  emailType?: Prisma.StringNullableWithAggregatesFilter<"EmailDeliveryRecord"> | string | null
   recipientEmail?: Prisma.StringWithAggregatesFilter<"EmailDeliveryRecord"> | string
   senderEmail?: Prisma.StringWithAggregatesFilter<"EmailDeliveryRecord"> | string
   subject?: Prisma.StringWithAggregatesFilter<"EmailDeliveryRecord"> | string
@@ -462,12 +492,12 @@ export type EmailDeliveryRecordScalarWhereWithAggregatesInput = {
 export type EmailDeliveryRecordCreateInput = {
   id?: string
   deliveryKey: string
+  emailType?: string | null
   recipientEmail: string
   senderEmail: string
   subject: string
   html?: string | null
   status?: $Enums.EmailDeliveryStatus
-  providerMessageId?: string | null
   attemptCount?: number
   firstAttemptAt?: Date | string | null
   lastAttemptAt?: Date | string | null
@@ -481,6 +511,8 @@ export type EmailDeliveryRecordCreateInput = {
   updatedAt?: Date | string
   recipient?: Prisma.UserCreateNestedOneWithoutEmailDeliveryRecordsInput
   store?: Prisma.StoreCreateNestedOneWithoutEmailDeliveryRecordsInput
+  workspace?: Prisma.WorkspaceCreateNestedOneWithoutEmailDeliveryRecordsInput
+  providerMessage?: Prisma.EmailProviderMessageCreateNestedOneWithoutDeliveriesInput
 }
 
 export type EmailDeliveryRecordUncheckedCreateInput = {
@@ -488,6 +520,8 @@ export type EmailDeliveryRecordUncheckedCreateInput = {
   deliveryKey: string
   recipientUserId?: string | null
   storeId?: string | null
+  workspaceId?: string | null
+  emailType?: string | null
   recipientEmail: string
   senderEmail: string
   subject: string
@@ -510,12 +544,12 @@ export type EmailDeliveryRecordUncheckedCreateInput = {
 export type EmailDeliveryRecordUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
   senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
   subject?: Prisma.StringFieldUpdateOperationsInput | string
   html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
-  providerMessageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   attemptCount?: Prisma.IntFieldUpdateOperationsInput | number
   firstAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -529,6 +563,8 @@ export type EmailDeliveryRecordUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   recipient?: Prisma.UserUpdateOneWithoutEmailDeliveryRecordsNestedInput
   store?: Prisma.StoreUpdateOneWithoutEmailDeliveryRecordsNestedInput
+  workspace?: Prisma.WorkspaceUpdateOneWithoutEmailDeliveryRecordsNestedInput
+  providerMessage?: Prisma.EmailProviderMessageUpdateOneWithoutDeliveriesNestedInput
 }
 
 export type EmailDeliveryRecordUncheckedUpdateInput = {
@@ -536,6 +572,8 @@ export type EmailDeliveryRecordUncheckedUpdateInput = {
   deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
   recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workspaceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
   senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
   subject?: Prisma.StringFieldUpdateOperationsInput | string
@@ -560,6 +598,8 @@ export type EmailDeliveryRecordCreateManyInput = {
   deliveryKey: string
   recipientUserId?: string | null
   storeId?: string | null
+  workspaceId?: string | null
+  emailType?: string | null
   recipientEmail: string
   senderEmail: string
   subject: string
@@ -582,12 +622,12 @@ export type EmailDeliveryRecordCreateManyInput = {
 export type EmailDeliveryRecordUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
   senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
   subject?: Prisma.StringFieldUpdateOperationsInput | string
   html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
-  providerMessageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   attemptCount?: Prisma.IntFieldUpdateOperationsInput | number
   firstAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -606,6 +646,8 @@ export type EmailDeliveryRecordUncheckedUpdateManyInput = {
   deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
   recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workspaceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
   senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
   subject?: Prisma.StringFieldUpdateOperationsInput | string
@@ -640,6 +682,8 @@ export type EmailDeliveryRecordCountOrderByAggregateInput = {
   deliveryKey?: Prisma.SortOrder
   recipientUserId?: Prisma.SortOrder
   storeId?: Prisma.SortOrder
+  workspaceId?: Prisma.SortOrder
+  emailType?: Prisma.SortOrder
   recipientEmail?: Prisma.SortOrder
   senderEmail?: Prisma.SortOrder
   subject?: Prisma.SortOrder
@@ -668,6 +712,8 @@ export type EmailDeliveryRecordMaxOrderByAggregateInput = {
   deliveryKey?: Prisma.SortOrder
   recipientUserId?: Prisma.SortOrder
   storeId?: Prisma.SortOrder
+  workspaceId?: Prisma.SortOrder
+  emailType?: Prisma.SortOrder
   recipientEmail?: Prisma.SortOrder
   senderEmail?: Prisma.SortOrder
   subject?: Prisma.SortOrder
@@ -692,6 +738,8 @@ export type EmailDeliveryRecordMinOrderByAggregateInput = {
   deliveryKey?: Prisma.SortOrder
   recipientUserId?: Prisma.SortOrder
   storeId?: Prisma.SortOrder
+  workspaceId?: Prisma.SortOrder
+  emailType?: Prisma.SortOrder
   recipientEmail?: Prisma.SortOrder
   senderEmail?: Prisma.SortOrder
   subject?: Prisma.SortOrder
@@ -757,6 +805,48 @@ export type EmailDeliveryRecordUncheckedUpdateManyWithoutRecipientNestedInput = 
   deleteMany?: Prisma.EmailDeliveryRecordScalarWhereInput | Prisma.EmailDeliveryRecordScalarWhereInput[]
 }
 
+export type EmailDeliveryRecordCreateNestedManyWithoutWorkspaceInput = {
+  create?: Prisma.XOR<Prisma.EmailDeliveryRecordCreateWithoutWorkspaceInput, Prisma.EmailDeliveryRecordUncheckedCreateWithoutWorkspaceInput> | Prisma.EmailDeliveryRecordCreateWithoutWorkspaceInput[] | Prisma.EmailDeliveryRecordUncheckedCreateWithoutWorkspaceInput[]
+  connectOrCreate?: Prisma.EmailDeliveryRecordCreateOrConnectWithoutWorkspaceInput | Prisma.EmailDeliveryRecordCreateOrConnectWithoutWorkspaceInput[]
+  createMany?: Prisma.EmailDeliveryRecordCreateManyWorkspaceInputEnvelope
+  connect?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+}
+
+export type EmailDeliveryRecordUncheckedCreateNestedManyWithoutWorkspaceInput = {
+  create?: Prisma.XOR<Prisma.EmailDeliveryRecordCreateWithoutWorkspaceInput, Prisma.EmailDeliveryRecordUncheckedCreateWithoutWorkspaceInput> | Prisma.EmailDeliveryRecordCreateWithoutWorkspaceInput[] | Prisma.EmailDeliveryRecordUncheckedCreateWithoutWorkspaceInput[]
+  connectOrCreate?: Prisma.EmailDeliveryRecordCreateOrConnectWithoutWorkspaceInput | Prisma.EmailDeliveryRecordCreateOrConnectWithoutWorkspaceInput[]
+  createMany?: Prisma.EmailDeliveryRecordCreateManyWorkspaceInputEnvelope
+  connect?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+}
+
+export type EmailDeliveryRecordUpdateManyWithoutWorkspaceNestedInput = {
+  create?: Prisma.XOR<Prisma.EmailDeliveryRecordCreateWithoutWorkspaceInput, Prisma.EmailDeliveryRecordUncheckedCreateWithoutWorkspaceInput> | Prisma.EmailDeliveryRecordCreateWithoutWorkspaceInput[] | Prisma.EmailDeliveryRecordUncheckedCreateWithoutWorkspaceInput[]
+  connectOrCreate?: Prisma.EmailDeliveryRecordCreateOrConnectWithoutWorkspaceInput | Prisma.EmailDeliveryRecordCreateOrConnectWithoutWorkspaceInput[]
+  upsert?: Prisma.EmailDeliveryRecordUpsertWithWhereUniqueWithoutWorkspaceInput | Prisma.EmailDeliveryRecordUpsertWithWhereUniqueWithoutWorkspaceInput[]
+  createMany?: Prisma.EmailDeliveryRecordCreateManyWorkspaceInputEnvelope
+  set?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  disconnect?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  delete?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  connect?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  update?: Prisma.EmailDeliveryRecordUpdateWithWhereUniqueWithoutWorkspaceInput | Prisma.EmailDeliveryRecordUpdateWithWhereUniqueWithoutWorkspaceInput[]
+  updateMany?: Prisma.EmailDeliveryRecordUpdateManyWithWhereWithoutWorkspaceInput | Prisma.EmailDeliveryRecordUpdateManyWithWhereWithoutWorkspaceInput[]
+  deleteMany?: Prisma.EmailDeliveryRecordScalarWhereInput | Prisma.EmailDeliveryRecordScalarWhereInput[]
+}
+
+export type EmailDeliveryRecordUncheckedUpdateManyWithoutWorkspaceNestedInput = {
+  create?: Prisma.XOR<Prisma.EmailDeliveryRecordCreateWithoutWorkspaceInput, Prisma.EmailDeliveryRecordUncheckedCreateWithoutWorkspaceInput> | Prisma.EmailDeliveryRecordCreateWithoutWorkspaceInput[] | Prisma.EmailDeliveryRecordUncheckedCreateWithoutWorkspaceInput[]
+  connectOrCreate?: Prisma.EmailDeliveryRecordCreateOrConnectWithoutWorkspaceInput | Prisma.EmailDeliveryRecordCreateOrConnectWithoutWorkspaceInput[]
+  upsert?: Prisma.EmailDeliveryRecordUpsertWithWhereUniqueWithoutWorkspaceInput | Prisma.EmailDeliveryRecordUpsertWithWhereUniqueWithoutWorkspaceInput[]
+  createMany?: Prisma.EmailDeliveryRecordCreateManyWorkspaceInputEnvelope
+  set?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  disconnect?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  delete?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  connect?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  update?: Prisma.EmailDeliveryRecordUpdateWithWhereUniqueWithoutWorkspaceInput | Prisma.EmailDeliveryRecordUpdateWithWhereUniqueWithoutWorkspaceInput[]
+  updateMany?: Prisma.EmailDeliveryRecordUpdateManyWithWhereWithoutWorkspaceInput | Prisma.EmailDeliveryRecordUpdateManyWithWhereWithoutWorkspaceInput[]
+  deleteMany?: Prisma.EmailDeliveryRecordScalarWhereInput | Prisma.EmailDeliveryRecordScalarWhereInput[]
+}
+
 export type EmailDeliveryRecordCreateNestedManyWithoutStoreInput = {
   create?: Prisma.XOR<Prisma.EmailDeliveryRecordCreateWithoutStoreInput, Prisma.EmailDeliveryRecordUncheckedCreateWithoutStoreInput> | Prisma.EmailDeliveryRecordCreateWithoutStoreInput[] | Prisma.EmailDeliveryRecordUncheckedCreateWithoutStoreInput[]
   connectOrCreate?: Prisma.EmailDeliveryRecordCreateOrConnectWithoutStoreInput | Prisma.EmailDeliveryRecordCreateOrConnectWithoutStoreInput[]
@@ -803,15 +893,57 @@ export type EnumEmailDeliveryStatusFieldUpdateOperationsInput = {
   set?: $Enums.EmailDeliveryStatus
 }
 
+export type EmailDeliveryRecordCreateNestedManyWithoutProviderMessageInput = {
+  create?: Prisma.XOR<Prisma.EmailDeliveryRecordCreateWithoutProviderMessageInput, Prisma.EmailDeliveryRecordUncheckedCreateWithoutProviderMessageInput> | Prisma.EmailDeliveryRecordCreateWithoutProviderMessageInput[] | Prisma.EmailDeliveryRecordUncheckedCreateWithoutProviderMessageInput[]
+  connectOrCreate?: Prisma.EmailDeliveryRecordCreateOrConnectWithoutProviderMessageInput | Prisma.EmailDeliveryRecordCreateOrConnectWithoutProviderMessageInput[]
+  createMany?: Prisma.EmailDeliveryRecordCreateManyProviderMessageInputEnvelope
+  connect?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+}
+
+export type EmailDeliveryRecordUncheckedCreateNestedManyWithoutProviderMessageInput = {
+  create?: Prisma.XOR<Prisma.EmailDeliveryRecordCreateWithoutProviderMessageInput, Prisma.EmailDeliveryRecordUncheckedCreateWithoutProviderMessageInput> | Prisma.EmailDeliveryRecordCreateWithoutProviderMessageInput[] | Prisma.EmailDeliveryRecordUncheckedCreateWithoutProviderMessageInput[]
+  connectOrCreate?: Prisma.EmailDeliveryRecordCreateOrConnectWithoutProviderMessageInput | Prisma.EmailDeliveryRecordCreateOrConnectWithoutProviderMessageInput[]
+  createMany?: Prisma.EmailDeliveryRecordCreateManyProviderMessageInputEnvelope
+  connect?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+}
+
+export type EmailDeliveryRecordUpdateManyWithoutProviderMessageNestedInput = {
+  create?: Prisma.XOR<Prisma.EmailDeliveryRecordCreateWithoutProviderMessageInput, Prisma.EmailDeliveryRecordUncheckedCreateWithoutProviderMessageInput> | Prisma.EmailDeliveryRecordCreateWithoutProviderMessageInput[] | Prisma.EmailDeliveryRecordUncheckedCreateWithoutProviderMessageInput[]
+  connectOrCreate?: Prisma.EmailDeliveryRecordCreateOrConnectWithoutProviderMessageInput | Prisma.EmailDeliveryRecordCreateOrConnectWithoutProviderMessageInput[]
+  upsert?: Prisma.EmailDeliveryRecordUpsertWithWhereUniqueWithoutProviderMessageInput | Prisma.EmailDeliveryRecordUpsertWithWhereUniqueWithoutProviderMessageInput[]
+  createMany?: Prisma.EmailDeliveryRecordCreateManyProviderMessageInputEnvelope
+  set?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  disconnect?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  delete?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  connect?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  update?: Prisma.EmailDeliveryRecordUpdateWithWhereUniqueWithoutProviderMessageInput | Prisma.EmailDeliveryRecordUpdateWithWhereUniqueWithoutProviderMessageInput[]
+  updateMany?: Prisma.EmailDeliveryRecordUpdateManyWithWhereWithoutProviderMessageInput | Prisma.EmailDeliveryRecordUpdateManyWithWhereWithoutProviderMessageInput[]
+  deleteMany?: Prisma.EmailDeliveryRecordScalarWhereInput | Prisma.EmailDeliveryRecordScalarWhereInput[]
+}
+
+export type EmailDeliveryRecordUncheckedUpdateManyWithoutProviderMessageNestedInput = {
+  create?: Prisma.XOR<Prisma.EmailDeliveryRecordCreateWithoutProviderMessageInput, Prisma.EmailDeliveryRecordUncheckedCreateWithoutProviderMessageInput> | Prisma.EmailDeliveryRecordCreateWithoutProviderMessageInput[] | Prisma.EmailDeliveryRecordUncheckedCreateWithoutProviderMessageInput[]
+  connectOrCreate?: Prisma.EmailDeliveryRecordCreateOrConnectWithoutProviderMessageInput | Prisma.EmailDeliveryRecordCreateOrConnectWithoutProviderMessageInput[]
+  upsert?: Prisma.EmailDeliveryRecordUpsertWithWhereUniqueWithoutProviderMessageInput | Prisma.EmailDeliveryRecordUpsertWithWhereUniqueWithoutProviderMessageInput[]
+  createMany?: Prisma.EmailDeliveryRecordCreateManyProviderMessageInputEnvelope
+  set?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  disconnect?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  delete?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  connect?: Prisma.EmailDeliveryRecordWhereUniqueInput | Prisma.EmailDeliveryRecordWhereUniqueInput[]
+  update?: Prisma.EmailDeliveryRecordUpdateWithWhereUniqueWithoutProviderMessageInput | Prisma.EmailDeliveryRecordUpdateWithWhereUniqueWithoutProviderMessageInput[]
+  updateMany?: Prisma.EmailDeliveryRecordUpdateManyWithWhereWithoutProviderMessageInput | Prisma.EmailDeliveryRecordUpdateManyWithWhereWithoutProviderMessageInput[]
+  deleteMany?: Prisma.EmailDeliveryRecordScalarWhereInput | Prisma.EmailDeliveryRecordScalarWhereInput[]
+}
+
 export type EmailDeliveryRecordCreateWithoutRecipientInput = {
   id?: string
   deliveryKey: string
+  emailType?: string | null
   recipientEmail: string
   senderEmail: string
   subject: string
   html?: string | null
   status?: $Enums.EmailDeliveryStatus
-  providerMessageId?: string | null
   attemptCount?: number
   firstAttemptAt?: Date | string | null
   lastAttemptAt?: Date | string | null
@@ -824,12 +956,16 @@ export type EmailDeliveryRecordCreateWithoutRecipientInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   store?: Prisma.StoreCreateNestedOneWithoutEmailDeliveryRecordsInput
+  workspace?: Prisma.WorkspaceCreateNestedOneWithoutEmailDeliveryRecordsInput
+  providerMessage?: Prisma.EmailProviderMessageCreateNestedOneWithoutDeliveriesInput
 }
 
 export type EmailDeliveryRecordUncheckedCreateWithoutRecipientInput = {
   id?: string
   deliveryKey: string
   storeId?: string | null
+  workspaceId?: string | null
+  emailType?: string | null
   recipientEmail: string
   senderEmail: string
   subject: string
@@ -883,6 +1019,8 @@ export type EmailDeliveryRecordScalarWhereInput = {
   deliveryKey?: Prisma.StringFilter<"EmailDeliveryRecord"> | string
   recipientUserId?: Prisma.StringNullableFilter<"EmailDeliveryRecord"> | string | null
   storeId?: Prisma.StringNullableFilter<"EmailDeliveryRecord"> | string | null
+  workspaceId?: Prisma.StringNullableFilter<"EmailDeliveryRecord"> | string | null
+  emailType?: Prisma.StringNullableFilter<"EmailDeliveryRecord"> | string | null
   recipientEmail?: Prisma.StringFilter<"EmailDeliveryRecord"> | string
   senderEmail?: Prisma.StringFilter<"EmailDeliveryRecord"> | string
   subject?: Prisma.StringFilter<"EmailDeliveryRecord"> | string
@@ -902,9 +1040,37 @@ export type EmailDeliveryRecordScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"EmailDeliveryRecord"> | Date | string
 }
 
-export type EmailDeliveryRecordCreateWithoutStoreInput = {
+export type EmailDeliveryRecordCreateWithoutWorkspaceInput = {
   id?: string
   deliveryKey: string
+  emailType?: string | null
+  recipientEmail: string
+  senderEmail: string
+  subject: string
+  html?: string | null
+  status?: $Enums.EmailDeliveryStatus
+  attemptCount?: number
+  firstAttemptAt?: Date | string | null
+  lastAttemptAt?: Date | string | null
+  nextAttemptAt?: Date | string
+  lastErrorCode?: string | null
+  lastErrorMessage?: string | null
+  claimToken?: string | null
+  claimUntil?: Date | string | null
+  sentAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  recipient?: Prisma.UserCreateNestedOneWithoutEmailDeliveryRecordsInput
+  store?: Prisma.StoreCreateNestedOneWithoutEmailDeliveryRecordsInput
+  providerMessage?: Prisma.EmailProviderMessageCreateNestedOneWithoutDeliveriesInput
+}
+
+export type EmailDeliveryRecordUncheckedCreateWithoutWorkspaceInput = {
+  id?: string
+  deliveryKey: string
+  recipientUserId?: string | null
+  storeId?: string | null
+  emailType?: string | null
   recipientEmail: string
   senderEmail: string
   subject: string
@@ -922,13 +1088,65 @@ export type EmailDeliveryRecordCreateWithoutStoreInput = {
   sentAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+}
+
+export type EmailDeliveryRecordCreateOrConnectWithoutWorkspaceInput = {
+  where: Prisma.EmailDeliveryRecordWhereUniqueInput
+  create: Prisma.XOR<Prisma.EmailDeliveryRecordCreateWithoutWorkspaceInput, Prisma.EmailDeliveryRecordUncheckedCreateWithoutWorkspaceInput>
+}
+
+export type EmailDeliveryRecordCreateManyWorkspaceInputEnvelope = {
+  data: Prisma.EmailDeliveryRecordCreateManyWorkspaceInput | Prisma.EmailDeliveryRecordCreateManyWorkspaceInput[]
+  skipDuplicates?: boolean
+}
+
+export type EmailDeliveryRecordUpsertWithWhereUniqueWithoutWorkspaceInput = {
+  where: Prisma.EmailDeliveryRecordWhereUniqueInput
+  update: Prisma.XOR<Prisma.EmailDeliveryRecordUpdateWithoutWorkspaceInput, Prisma.EmailDeliveryRecordUncheckedUpdateWithoutWorkspaceInput>
+  create: Prisma.XOR<Prisma.EmailDeliveryRecordCreateWithoutWorkspaceInput, Prisma.EmailDeliveryRecordUncheckedCreateWithoutWorkspaceInput>
+}
+
+export type EmailDeliveryRecordUpdateWithWhereUniqueWithoutWorkspaceInput = {
+  where: Prisma.EmailDeliveryRecordWhereUniqueInput
+  data: Prisma.XOR<Prisma.EmailDeliveryRecordUpdateWithoutWorkspaceInput, Prisma.EmailDeliveryRecordUncheckedUpdateWithoutWorkspaceInput>
+}
+
+export type EmailDeliveryRecordUpdateManyWithWhereWithoutWorkspaceInput = {
+  where: Prisma.EmailDeliveryRecordScalarWhereInput
+  data: Prisma.XOR<Prisma.EmailDeliveryRecordUpdateManyMutationInput, Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutWorkspaceInput>
+}
+
+export type EmailDeliveryRecordCreateWithoutStoreInput = {
+  id?: string
+  deliveryKey: string
+  emailType?: string | null
+  recipientEmail: string
+  senderEmail: string
+  subject: string
+  html?: string | null
+  status?: $Enums.EmailDeliveryStatus
+  attemptCount?: number
+  firstAttemptAt?: Date | string | null
+  lastAttemptAt?: Date | string | null
+  nextAttemptAt?: Date | string
+  lastErrorCode?: string | null
+  lastErrorMessage?: string | null
+  claimToken?: string | null
+  claimUntil?: Date | string | null
+  sentAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
   recipient?: Prisma.UserCreateNestedOneWithoutEmailDeliveryRecordsInput
+  workspace?: Prisma.WorkspaceCreateNestedOneWithoutEmailDeliveryRecordsInput
+  providerMessage?: Prisma.EmailProviderMessageCreateNestedOneWithoutDeliveriesInput
 }
 
 export type EmailDeliveryRecordUncheckedCreateWithoutStoreInput = {
   id?: string
   deliveryKey: string
   recipientUserId?: string | null
+  workspaceId?: string | null
+  emailType?: string | null
   recipientEmail: string
   senderEmail: string
   subject: string
@@ -974,10 +1192,88 @@ export type EmailDeliveryRecordUpdateManyWithWhereWithoutStoreInput = {
   data: Prisma.XOR<Prisma.EmailDeliveryRecordUpdateManyMutationInput, Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutStoreInput>
 }
 
+export type EmailDeliveryRecordCreateWithoutProviderMessageInput = {
+  id?: string
+  deliveryKey: string
+  emailType?: string | null
+  recipientEmail: string
+  senderEmail: string
+  subject: string
+  html?: string | null
+  status?: $Enums.EmailDeliveryStatus
+  attemptCount?: number
+  firstAttemptAt?: Date | string | null
+  lastAttemptAt?: Date | string | null
+  nextAttemptAt?: Date | string
+  lastErrorCode?: string | null
+  lastErrorMessage?: string | null
+  claimToken?: string | null
+  claimUntil?: Date | string | null
+  sentAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  recipient?: Prisma.UserCreateNestedOneWithoutEmailDeliveryRecordsInput
+  store?: Prisma.StoreCreateNestedOneWithoutEmailDeliveryRecordsInput
+  workspace?: Prisma.WorkspaceCreateNestedOneWithoutEmailDeliveryRecordsInput
+}
+
+export type EmailDeliveryRecordUncheckedCreateWithoutProviderMessageInput = {
+  id?: string
+  deliveryKey: string
+  recipientUserId?: string | null
+  storeId?: string | null
+  workspaceId?: string | null
+  emailType?: string | null
+  recipientEmail: string
+  senderEmail: string
+  subject: string
+  html?: string | null
+  status?: $Enums.EmailDeliveryStatus
+  attemptCount?: number
+  firstAttemptAt?: Date | string | null
+  lastAttemptAt?: Date | string | null
+  nextAttemptAt?: Date | string
+  lastErrorCode?: string | null
+  lastErrorMessage?: string | null
+  claimToken?: string | null
+  claimUntil?: Date | string | null
+  sentAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type EmailDeliveryRecordCreateOrConnectWithoutProviderMessageInput = {
+  where: Prisma.EmailDeliveryRecordWhereUniqueInput
+  create: Prisma.XOR<Prisma.EmailDeliveryRecordCreateWithoutProviderMessageInput, Prisma.EmailDeliveryRecordUncheckedCreateWithoutProviderMessageInput>
+}
+
+export type EmailDeliveryRecordCreateManyProviderMessageInputEnvelope = {
+  data: Prisma.EmailDeliveryRecordCreateManyProviderMessageInput | Prisma.EmailDeliveryRecordCreateManyProviderMessageInput[]
+  skipDuplicates?: boolean
+}
+
+export type EmailDeliveryRecordUpsertWithWhereUniqueWithoutProviderMessageInput = {
+  where: Prisma.EmailDeliveryRecordWhereUniqueInput
+  update: Prisma.XOR<Prisma.EmailDeliveryRecordUpdateWithoutProviderMessageInput, Prisma.EmailDeliveryRecordUncheckedUpdateWithoutProviderMessageInput>
+  create: Prisma.XOR<Prisma.EmailDeliveryRecordCreateWithoutProviderMessageInput, Prisma.EmailDeliveryRecordUncheckedCreateWithoutProviderMessageInput>
+}
+
+export type EmailDeliveryRecordUpdateWithWhereUniqueWithoutProviderMessageInput = {
+  where: Prisma.EmailDeliveryRecordWhereUniqueInput
+  data: Prisma.XOR<Prisma.EmailDeliveryRecordUpdateWithoutProviderMessageInput, Prisma.EmailDeliveryRecordUncheckedUpdateWithoutProviderMessageInput>
+}
+
+export type EmailDeliveryRecordUpdateManyWithWhereWithoutProviderMessageInput = {
+  where: Prisma.EmailDeliveryRecordScalarWhereInput
+  data: Prisma.XOR<Prisma.EmailDeliveryRecordUpdateManyMutationInput, Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutProviderMessageInput>
+}
+
 export type EmailDeliveryRecordCreateManyRecipientInput = {
   id?: string
   deliveryKey: string
   storeId?: string | null
+  workspaceId?: string | null
+  emailType?: string | null
   recipientEmail: string
   senderEmail: string
   subject: string
@@ -1000,12 +1296,12 @@ export type EmailDeliveryRecordCreateManyRecipientInput = {
 export type EmailDeliveryRecordUpdateWithoutRecipientInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
   senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
   subject?: Prisma.StringFieldUpdateOperationsInput | string
   html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
-  providerMessageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   attemptCount?: Prisma.IntFieldUpdateOperationsInput | number
   firstAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1018,12 +1314,16 @@ export type EmailDeliveryRecordUpdateWithoutRecipientInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   store?: Prisma.StoreUpdateOneWithoutEmailDeliveryRecordsNestedInput
+  workspace?: Prisma.WorkspaceUpdateOneWithoutEmailDeliveryRecordsNestedInput
+  providerMessage?: Prisma.EmailProviderMessageUpdateOneWithoutDeliveriesNestedInput
 }
 
 export type EmailDeliveryRecordUncheckedUpdateWithoutRecipientInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
   storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workspaceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
   senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
   subject?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1047,6 +1347,108 @@ export type EmailDeliveryRecordUncheckedUpdateManyWithoutRecipientInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
   storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workspaceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  subject?: Prisma.StringFieldUpdateOperationsInput | string
+  html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
+  providerMessageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  attemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  firstAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextAttemptAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  claimToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  claimUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type EmailDeliveryRecordCreateManyWorkspaceInput = {
+  id?: string
+  deliveryKey: string
+  recipientUserId?: string | null
+  storeId?: string | null
+  emailType?: string | null
+  recipientEmail: string
+  senderEmail: string
+  subject: string
+  html?: string | null
+  status?: $Enums.EmailDeliveryStatus
+  providerMessageId?: string | null
+  attemptCount?: number
+  firstAttemptAt?: Date | string | null
+  lastAttemptAt?: Date | string | null
+  nextAttemptAt?: Date | string
+  lastErrorCode?: string | null
+  lastErrorMessage?: string | null
+  claimToken?: string | null
+  claimUntil?: Date | string | null
+  sentAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type EmailDeliveryRecordUpdateWithoutWorkspaceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  subject?: Prisma.StringFieldUpdateOperationsInput | string
+  html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
+  attemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  firstAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextAttemptAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  claimToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  claimUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  recipient?: Prisma.UserUpdateOneWithoutEmailDeliveryRecordsNestedInput
+  store?: Prisma.StoreUpdateOneWithoutEmailDeliveryRecordsNestedInput
+  providerMessage?: Prisma.EmailProviderMessageUpdateOneWithoutDeliveriesNestedInput
+}
+
+export type EmailDeliveryRecordUncheckedUpdateWithoutWorkspaceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  subject?: Prisma.StringFieldUpdateOperationsInput | string
+  html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
+  providerMessageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  attemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  firstAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextAttemptAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  claimToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  claimUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type EmailDeliveryRecordUncheckedUpdateManyWithoutWorkspaceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
   senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
   subject?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1070,6 +1472,8 @@ export type EmailDeliveryRecordCreateManyStoreInput = {
   id?: string
   deliveryKey: string
   recipientUserId?: string | null
+  workspaceId?: string | null
+  emailType?: string | null
   recipientEmail: string
   senderEmail: string
   subject: string
@@ -1092,12 +1496,12 @@ export type EmailDeliveryRecordCreateManyStoreInput = {
 export type EmailDeliveryRecordUpdateWithoutStoreInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
   senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
   subject?: Prisma.StringFieldUpdateOperationsInput | string
   html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
-  providerMessageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   attemptCount?: Prisma.IntFieldUpdateOperationsInput | number
   firstAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1110,12 +1514,16 @@ export type EmailDeliveryRecordUpdateWithoutStoreInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   recipient?: Prisma.UserUpdateOneWithoutEmailDeliveryRecordsNestedInput
+  workspace?: Prisma.WorkspaceUpdateOneWithoutEmailDeliveryRecordsNestedInput
+  providerMessage?: Prisma.EmailProviderMessageUpdateOneWithoutDeliveriesNestedInput
 }
 
 export type EmailDeliveryRecordUncheckedUpdateWithoutStoreInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
   recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workspaceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
   senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
   subject?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1139,12 +1547,114 @@ export type EmailDeliveryRecordUncheckedUpdateManyWithoutStoreInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
   recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workspaceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
   senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
   subject?: Prisma.StringFieldUpdateOperationsInput | string
   html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
   providerMessageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  attemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  firstAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextAttemptAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  claimToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  claimUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type EmailDeliveryRecordCreateManyProviderMessageInput = {
+  id?: string
+  deliveryKey: string
+  recipientUserId?: string | null
+  storeId?: string | null
+  workspaceId?: string | null
+  emailType?: string | null
+  recipientEmail: string
+  senderEmail: string
+  subject: string
+  html?: string | null
+  status?: $Enums.EmailDeliveryStatus
+  attemptCount?: number
+  firstAttemptAt?: Date | string | null
+  lastAttemptAt?: Date | string | null
+  nextAttemptAt?: Date | string
+  lastErrorCode?: string | null
+  lastErrorMessage?: string | null
+  claimToken?: string | null
+  claimUntil?: Date | string | null
+  sentAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type EmailDeliveryRecordUpdateWithoutProviderMessageInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  subject?: Prisma.StringFieldUpdateOperationsInput | string
+  html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
+  attemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  firstAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextAttemptAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  claimToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  claimUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  recipient?: Prisma.UserUpdateOneWithoutEmailDeliveryRecordsNestedInput
+  store?: Prisma.StoreUpdateOneWithoutEmailDeliveryRecordsNestedInput
+  workspace?: Prisma.WorkspaceUpdateOneWithoutEmailDeliveryRecordsNestedInput
+}
+
+export type EmailDeliveryRecordUncheckedUpdateWithoutProviderMessageInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workspaceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  subject?: Prisma.StringFieldUpdateOperationsInput | string
+  html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
+  attemptCount?: Prisma.IntFieldUpdateOperationsInput | number
+  firstAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextAttemptAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastErrorCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastErrorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  claimToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  claimUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type EmailDeliveryRecordUncheckedUpdateManyWithoutProviderMessageInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryKey?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  storeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workspaceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  senderEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  subject?: Prisma.StringFieldUpdateOperationsInput | string
+  html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
   attemptCount?: Prisma.IntFieldUpdateOperationsInput | number
   firstAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1165,6 +1675,8 @@ export type EmailDeliveryRecordSelect<ExtArgs extends runtime.Types.Extensions.I
   deliveryKey?: boolean
   recipientUserId?: boolean
   storeId?: boolean
+  workspaceId?: boolean
+  emailType?: boolean
   recipientEmail?: boolean
   senderEmail?: boolean
   subject?: boolean
@@ -1184,6 +1696,8 @@ export type EmailDeliveryRecordSelect<ExtArgs extends runtime.Types.Extensions.I
   updatedAt?: boolean
   recipient?: boolean | Prisma.EmailDeliveryRecord$recipientArgs<ExtArgs>
   store?: boolean | Prisma.EmailDeliveryRecord$storeArgs<ExtArgs>
+  workspace?: boolean | Prisma.EmailDeliveryRecord$workspaceArgs<ExtArgs>
+  providerMessage?: boolean | Prisma.EmailDeliveryRecord$providerMessageArgs<ExtArgs>
 }, ExtArgs["result"]["emailDeliveryRecord"]>
 
 export type EmailDeliveryRecordSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1191,6 +1705,8 @@ export type EmailDeliveryRecordSelectCreateManyAndReturn<ExtArgs extends runtime
   deliveryKey?: boolean
   recipientUserId?: boolean
   storeId?: boolean
+  workspaceId?: boolean
+  emailType?: boolean
   recipientEmail?: boolean
   senderEmail?: boolean
   subject?: boolean
@@ -1210,6 +1726,8 @@ export type EmailDeliveryRecordSelectCreateManyAndReturn<ExtArgs extends runtime
   updatedAt?: boolean
   recipient?: boolean | Prisma.EmailDeliveryRecord$recipientArgs<ExtArgs>
   store?: boolean | Prisma.EmailDeliveryRecord$storeArgs<ExtArgs>
+  workspace?: boolean | Prisma.EmailDeliveryRecord$workspaceArgs<ExtArgs>
+  providerMessage?: boolean | Prisma.EmailDeliveryRecord$providerMessageArgs<ExtArgs>
 }, ExtArgs["result"]["emailDeliveryRecord"]>
 
 export type EmailDeliveryRecordSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1217,6 +1735,8 @@ export type EmailDeliveryRecordSelectUpdateManyAndReturn<ExtArgs extends runtime
   deliveryKey?: boolean
   recipientUserId?: boolean
   storeId?: boolean
+  workspaceId?: boolean
+  emailType?: boolean
   recipientEmail?: boolean
   senderEmail?: boolean
   subject?: boolean
@@ -1236,6 +1756,8 @@ export type EmailDeliveryRecordSelectUpdateManyAndReturn<ExtArgs extends runtime
   updatedAt?: boolean
   recipient?: boolean | Prisma.EmailDeliveryRecord$recipientArgs<ExtArgs>
   store?: boolean | Prisma.EmailDeliveryRecord$storeArgs<ExtArgs>
+  workspace?: boolean | Prisma.EmailDeliveryRecord$workspaceArgs<ExtArgs>
+  providerMessage?: boolean | Prisma.EmailDeliveryRecord$providerMessageArgs<ExtArgs>
 }, ExtArgs["result"]["emailDeliveryRecord"]>
 
 export type EmailDeliveryRecordSelectScalar = {
@@ -1243,6 +1765,8 @@ export type EmailDeliveryRecordSelectScalar = {
   deliveryKey?: boolean
   recipientUserId?: boolean
   storeId?: boolean
+  workspaceId?: boolean
+  emailType?: boolean
   recipientEmail?: boolean
   senderEmail?: boolean
   subject?: boolean
@@ -1262,18 +1786,24 @@ export type EmailDeliveryRecordSelectScalar = {
   updatedAt?: boolean
 }
 
-export type EmailDeliveryRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deliveryKey" | "recipientUserId" | "storeId" | "recipientEmail" | "senderEmail" | "subject" | "html" | "status" | "providerMessageId" | "attemptCount" | "firstAttemptAt" | "lastAttemptAt" | "nextAttemptAt" | "lastErrorCode" | "lastErrorMessage" | "claimToken" | "claimUntil" | "sentAt" | "createdAt" | "updatedAt", ExtArgs["result"]["emailDeliveryRecord"]>
+export type EmailDeliveryRecordOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "deliveryKey" | "recipientUserId" | "storeId" | "workspaceId" | "emailType" | "recipientEmail" | "senderEmail" | "subject" | "html" | "status" | "providerMessageId" | "attemptCount" | "firstAttemptAt" | "lastAttemptAt" | "nextAttemptAt" | "lastErrorCode" | "lastErrorMessage" | "claimToken" | "claimUntil" | "sentAt" | "createdAt" | "updatedAt", ExtArgs["result"]["emailDeliveryRecord"]>
 export type EmailDeliveryRecordInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   recipient?: boolean | Prisma.EmailDeliveryRecord$recipientArgs<ExtArgs>
   store?: boolean | Prisma.EmailDeliveryRecord$storeArgs<ExtArgs>
+  workspace?: boolean | Prisma.EmailDeliveryRecord$workspaceArgs<ExtArgs>
+  providerMessage?: boolean | Prisma.EmailDeliveryRecord$providerMessageArgs<ExtArgs>
 }
 export type EmailDeliveryRecordIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   recipient?: boolean | Prisma.EmailDeliveryRecord$recipientArgs<ExtArgs>
   store?: boolean | Prisma.EmailDeliveryRecord$storeArgs<ExtArgs>
+  workspace?: boolean | Prisma.EmailDeliveryRecord$workspaceArgs<ExtArgs>
+  providerMessage?: boolean | Prisma.EmailDeliveryRecord$providerMessageArgs<ExtArgs>
 }
 export type EmailDeliveryRecordIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   recipient?: boolean | Prisma.EmailDeliveryRecord$recipientArgs<ExtArgs>
   store?: boolean | Prisma.EmailDeliveryRecord$storeArgs<ExtArgs>
+  workspace?: boolean | Prisma.EmailDeliveryRecord$workspaceArgs<ExtArgs>
+  providerMessage?: boolean | Prisma.EmailDeliveryRecord$providerMessageArgs<ExtArgs>
 }
 
 export type $EmailDeliveryRecordPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1281,12 +1811,16 @@ export type $EmailDeliveryRecordPayload<ExtArgs extends runtime.Types.Extensions
   objects: {
     recipient: Prisma.$UserPayload<ExtArgs> | null
     store: Prisma.$StorePayload<ExtArgs> | null
+    workspace: Prisma.$WorkspacePayload<ExtArgs> | null
+    providerMessage: Prisma.$EmailProviderMessagePayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     deliveryKey: string
     recipientUserId: string | null
     storeId: string | null
+    workspaceId: string | null
+    emailType: string | null
     recipientEmail: string
     senderEmail: string
     subject: string
@@ -1700,6 +2234,8 @@ export interface Prisma__EmailDeliveryRecordClient<T, Null = never, ExtArgs exte
   readonly [Symbol.toStringTag]: "PrismaPromise"
   recipient<T extends Prisma.EmailDeliveryRecord$recipientArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.EmailDeliveryRecord$recipientArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   store<T extends Prisma.EmailDeliveryRecord$storeArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.EmailDeliveryRecord$storeArgs<ExtArgs>>): Prisma.Prisma__StoreClient<runtime.Types.Result.GetResult<Prisma.$StorePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  workspace<T extends Prisma.EmailDeliveryRecord$workspaceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.EmailDeliveryRecord$workspaceArgs<ExtArgs>>): Prisma.Prisma__WorkspaceClient<runtime.Types.Result.GetResult<Prisma.$WorkspacePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  providerMessage<T extends Prisma.EmailDeliveryRecord$providerMessageArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.EmailDeliveryRecord$providerMessageArgs<ExtArgs>>): Prisma.Prisma__EmailProviderMessageClient<runtime.Types.Result.GetResult<Prisma.$EmailProviderMessagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1733,6 +2269,8 @@ export interface EmailDeliveryRecordFieldRefs {
   readonly deliveryKey: Prisma.FieldRef<"EmailDeliveryRecord", 'String'>
   readonly recipientUserId: Prisma.FieldRef<"EmailDeliveryRecord", 'String'>
   readonly storeId: Prisma.FieldRef<"EmailDeliveryRecord", 'String'>
+  readonly workspaceId: Prisma.FieldRef<"EmailDeliveryRecord", 'String'>
+  readonly emailType: Prisma.FieldRef<"EmailDeliveryRecord", 'String'>
   readonly recipientEmail: Prisma.FieldRef<"EmailDeliveryRecord", 'String'>
   readonly senderEmail: Prisma.FieldRef<"EmailDeliveryRecord", 'String'>
   readonly subject: Prisma.FieldRef<"EmailDeliveryRecord", 'String'>
@@ -2186,6 +2724,44 @@ export type EmailDeliveryRecord$storeArgs<ExtArgs extends runtime.Types.Extensio
    */
   include?: Prisma.StoreInclude<ExtArgs> | null
   where?: Prisma.StoreWhereInput
+}
+
+/**
+ * EmailDeliveryRecord.workspace
+ */
+export type EmailDeliveryRecord$workspaceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Workspace
+   */
+  select?: Prisma.WorkspaceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Workspace
+   */
+  omit?: Prisma.WorkspaceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WorkspaceInclude<ExtArgs> | null
+  where?: Prisma.WorkspaceWhereInput
+}
+
+/**
+ * EmailDeliveryRecord.providerMessage
+ */
+export type EmailDeliveryRecord$providerMessageArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the EmailProviderMessage
+   */
+  select?: Prisma.EmailProviderMessageSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the EmailProviderMessage
+   */
+  omit?: Prisma.EmailProviderMessageOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.EmailProviderMessageInclude<ExtArgs> | null
+  where?: Prisma.EmailProviderMessageWhereInput
 }
 
 /**

@@ -15,6 +15,7 @@ Bu dosya, Core Asistan production ortamına alınmadan önce tamamlanması gerek
 - [ ] Google OAuth izin ekranındaki uygulama adını `Core Asistan` yap ve production callback adresini ekle.
 - [ ] Microsoft Entra uygulama adını `Core Asistan` yap ve production callback adresini ekle.
 - [ ] Resend gönderici domainini `coreasistan.com` olarak doğrula; gönderici adını `Core Asistan` yap.
+- [ ] Resend teslimat webhook'unu kur ve backend'e `RESEND_WEBHOOK_SECRET` ekle. Adımlar: [E-posta teslimat takibi](backend/docs/admin-emails.md).
 
 ## Ekip davetleri
 

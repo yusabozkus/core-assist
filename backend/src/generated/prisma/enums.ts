@@ -557,6 +557,7 @@ export type SupportMessageAuthorType = (typeof SupportMessageAuthorType)[keyof t
 
 
 export const NotificationType = {
+  ADMIN_ANNOUNCEMENT: 'ADMIN_ANNOUNCEMENT',
   BILLING_PAYMENT_ISSUE: 'BILLING_PAYMENT_ISSUE',
   BILLING_SUBSCRIPTION_CHANGED: 'BILLING_SUBSCRIPTION_CHANGED',
   BILLING_CANCELLATION: 'BILLING_CANCELLATION',
@@ -603,3 +604,17 @@ export const EmailDeliveryStatus = {
 } as const
 
 export type EmailDeliveryStatus = (typeof EmailDeliveryStatus)[keyof typeof EmailDeliveryStatus]
+
+
+export const EmailProviderStatus = {
+  UNKNOWN: 'UNKNOWN',
+  SENT: 'SENT',
+  DELAYED: 'DELAYED',
+  DELIVERED: 'DELIVERED',
+  FAILED: 'FAILED',
+  SUPPRESSED: 'SUPPRESSED',
+  BOUNCED: 'BOUNCED',
+  COMPLAINED: 'COMPLAINED'
+} as const
+
+export type EmailProviderStatus = (typeof EmailProviderStatus)[keyof typeof EmailProviderStatus]

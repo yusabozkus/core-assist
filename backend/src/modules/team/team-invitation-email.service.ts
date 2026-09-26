@@ -15,7 +15,7 @@ type InvitationDetails = {
   tokenHash: string;
   email: string;
   expiresAt: Date;
-  workspace: { name: string };
+  workspace: { id: string; name: string };
   invitedBy: { name: string } | null;
   storeAccesses: Array<{ store: { name: string } }>;
 };
@@ -80,6 +80,8 @@ export class TeamInvitationEmailService {
         deliveryKey,
         recipientUserId: null,
         storeId: null,
+        workspaceId: invitation.workspace.id,
+        emailType: 'TEAM_INVITATION',
         recipientEmail: invitation.email,
         senderEmail,
         subject: `${invitation.workspace.name} ekibine davet edildiniz`,

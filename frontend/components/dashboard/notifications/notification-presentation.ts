@@ -22,6 +22,7 @@ export const NOTIFICATION_TYPE_DETAILS: Record<
     icon: typeof AlertCircleIcon
   }
 > = {
+  ADMIN_ANNOUNCEMENT: { label: "Duyuru", icon: InboxIcon },
   BILLING_SUBSCRIPTION_CHANGED: {
     label: "Abonelik",
     icon: Package01Icon,

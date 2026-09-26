@@ -96,11 +96,14 @@ export const ModelName = {
   ContactMessage: 'ContactMessage',
   SupportTicket: 'SupportTicket',
   SupportMessage: 'SupportMessage',
+  AdminAnnouncement: 'AdminAnnouncement',
   Notification: 'Notification',
   NotificationPreference: 'NotificationPreference',
   NotificationDeliverySetting: 'NotificationDeliverySetting',
   NotificationEmailDigestState: 'NotificationEmailDigestState',
   EmailDeliveryRecord: 'EmailDeliveryRecord',
+  EmailProviderMessage: 'EmailProviderMessage',
+  EmailDeliveryEvent: 'EmailDeliveryEvent',
   WebPushSubscription: 'WebPushSubscription'
 } as const
 
@@ -961,6 +964,25 @@ export const SupportMessageScalarFieldEnum = {
 export type SupportMessageScalarFieldEnum = (typeof SupportMessageScalarFieldEnum)[keyof typeof SupportMessageScalarFieldEnum]
 
 
+export const AdminAnnouncementScalarFieldEnum = {
+  id: 'id',
+  createdById: 'createdById',
+  title: 'title',
+  message: 'message',
+  roles: 'roles',
+  sendEmail: 'sendEmail',
+  audienceHash: 'audienceHash',
+  recipientCount: 'recipientCount',
+  emailCount: 'emailCount',
+  skippedEmailCount: 'skippedEmailCount',
+  createdAt: 'createdAt',
+  expiresAt: 'expiresAt',
+  publishedAt: 'publishedAt'
+} as const
+
+export type AdminAnnouncementScalarFieldEnum = (typeof AdminAnnouncementScalarFieldEnum)[keyof typeof AdminAnnouncementScalarFieldEnum]
+
+
 export const NotificationScalarFieldEnum = {
   id: 'id',
   recipientUserId: 'recipientUserId',
@@ -1036,6 +1058,8 @@ export const EmailDeliveryRecordScalarFieldEnum = {
   deliveryKey: 'deliveryKey',
   recipientUserId: 'recipientUserId',
   storeId: 'storeId',
+  workspaceId: 'workspaceId',
+  emailType: 'emailType',
   recipientEmail: 'recipientEmail',
   senderEmail: 'senderEmail',
   subject: 'subject',
@@ -1056,6 +1080,29 @@ export const EmailDeliveryRecordScalarFieldEnum = {
 } as const
 
 export type EmailDeliveryRecordScalarFieldEnum = (typeof EmailDeliveryRecordScalarFieldEnum)[keyof typeof EmailDeliveryRecordScalarFieldEnum]
+
+
+export const EmailProviderMessageScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  statusAt: 'statusAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type EmailProviderMessageScalarFieldEnum = (typeof EmailProviderMessageScalarFieldEnum)[keyof typeof EmailProviderMessageScalarFieldEnum]
+
+
+export const EmailDeliveryEventScalarFieldEnum = {
+  id: 'id',
+  providerMessageId: 'providerMessageId',
+  type: 'type',
+  status: 'status',
+  occurredAt: 'occurredAt',
+  receivedAt: 'receivedAt'
+} as const
+
+export type EmailDeliveryEventScalarFieldEnum = (typeof EmailDeliveryEventScalarFieldEnum)[keyof typeof EmailDeliveryEventScalarFieldEnum]
 
 
 export const WebPushSubscriptionScalarFieldEnum = {

@@ -81,6 +81,18 @@ export const ADMIN_NAVIGATION: ReadonlyArray<AdminNavigationItem> = [
     url: APP_ROUTES.admin.auditLogs,
     icon: ShieldCheckIcon,
   },
+  {
+    title: "E-posta",
+    description: "Gönderim geçmişi ve teslimat takibi",
+    url: APP_ROUTES.admin.emails,
+    icon: Mail01Icon,
+  },
+  {
+    title: "Duyurular",
+    description: "Rollere göre toplu bildirim ve e-posta",
+    url: APP_ROUTES.admin.announcements,
+    icon: Notification01Icon,
+  },
 ]
 
 export const ADMIN_NAVIGATION_GROUPS: ReadonlyArray<AdminNavigationGroup> = [
@@ -90,11 +102,16 @@ export const ADMIN_NAVIGATION_GROUPS: ReadonlyArray<AdminNavigationGroup> = [
   },
   {
     label: "Destek ve İletişim",
-    items: [ADMIN_NAVIGATION[2], ADMIN_NAVIGATION[3]],
+    items: [
+      ADMIN_NAVIGATION[2],
+      ADMIN_NAVIGATION[3],
+      ADMIN_NAVIGATION[9],
+      ADMIN_NAVIGATION[10],
+    ],
   },
   {
     label: "Sistem ve Operasyon",
-    items: ADMIN_NAVIGATION.slice(5),
+    items: ADMIN_NAVIGATION.slice(5, 9),
   },
 ]
 

@@ -673,6 +673,7 @@ const ACTION_LABELS: Record<string, string> = {
   ADMIN_SUPPORT_STATUS_CHANGED: "Destek talebi durumu değiştirildi",
   ADMIN_SUPPORT_ASSIGNEE_CHANGED: "Destek sorumlusu değiştirildi",
   ADMIN_CONTACT_MESSAGE_STATUS_CHANGED: "İletişim mesajı durumu değiştirildi",
+  ADMIN_ANNOUNCEMENT_PUBLISHED: "Toplu duyuru yayımlandı",
   TEAM_INVITATION_CREATED: "Ekip daveti oluşturuldu",
   TEAM_INVITATION_LINK_RENEWED: "Davet bağlantısı yenilendi",
   TEAM_INVITATION_REVOKED: "Ekip daveti iptal edildi",

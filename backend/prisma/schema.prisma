@@ -160,6 +160,7 @@ model Workspace {
   billingTransactionReferences BillingTransactionReference[]
   invitations                  WorkspaceInvitation[]
   supportTickets               SupportTicket[]
+  emailDeliveryRecords         EmailDeliveryRecord[]
 
   @@map("workspace")
 }
@@ -1493,6 +1494,7 @@ model SupportMessage {
 }
 
 enum NotificationType {
+  ADMIN_ANNOUNCEMENT
   BILLING_PAYMENT_ISSUE
   BILLING_SUBSCRIPTION_CHANGED
   BILLING_CANCELLATION
@@ -1517,6 +1519,27 @@ enum NotificationType {
   SUPPORT_ADMIN_REPLY
   SUPPORT_SLA_BREACHED
   SUPPORT_ASSIGNMENT_CHANGED
+}
+
+// A preview is immutable; publication and all deliveries commit together.
+model AdminAnnouncement {
+  id                String    @id @default(uuid())
+  createdById       String
+  title             String    @db.VarChar(160)
+  message           String    @db.VarChar(1000)
+  roles             String[]
+  sendEmail         Boolean   @default(false)
+  audienceHash      String    @db.VarChar(64)
+  recipientCount    Int
+  emailCount        Int
+  skippedEmailCount Int
+  createdAt         DateTime  @default(now())
+  expiresAt         DateTime
+  publishedAt       DateTime?
+
+  @@index([publishedAt])
+  @@index([createdById, createdAt])
+  @@map("admin_announcement")
 }
 
 enum NotificationSeverity {
@@ -1624,6 +1647,8 @@ model EmailDeliveryRecord {
   deliveryKey       String              @unique @db.VarChar(256)
   recipientUserId   String?
   storeId           String?
+  workspaceId       String?
+  emailType         String?             @db.VarChar(80)
   recipientEmail    String              @db.VarChar(320)
   senderEmail       String              @db.VarChar(320)
   subject           String              @db.VarChar(500)
@@ -1644,13 +1669,58 @@ model EmailDeliveryRecord {
 
   recipient         User?               @relation(fields: [recipientUserId], references: [id], onDelete: Cascade)
   store             Store?              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  workspace         Workspace?          @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  providerMessage   EmailProviderMessage? @relation(fields: [providerMessageId], references: [id], onDelete: SetNull)
 
   @@index([status, nextAttemptAt])
   @@index([status, claimUntil])
   @@index([recipientUserId, createdAt])
   @@index([storeId, createdAt])
+  @@index([workspaceId, createdAt])
+  @@index([providerMessageId])
   @@index([createdAt])
   @@map("email_delivery_record")
+}
+
+enum EmailProviderStatus {
+  UNKNOWN
+  SENT
+  DELAYED
+  DELIVERED
+  FAILED
+  SUPPRESSED
+  BOUNCED
+  COMPLAINED
+}
+
+// Webhooks can arrive before the send request returns. Keep provider messages
+// independently, then attach the local delivery without losing early events.
+model EmailProviderMessage {
+  id          String              @id
+  status      EmailProviderStatus @default(UNKNOWN)
+  statusAt    DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  deliveries  EmailDeliveryRecord[]
+  events      EmailDeliveryEvent[]
+
+  @@index([status, statusAt])
+  @@index([createdAt])
+  @@map("email_provider_message")
+}
+
+model EmailDeliveryEvent {
+  id                String              @id @db.VarChar(255)
+  providerMessageId String
+  type              String              @db.VarChar(80)
+  status            EmailProviderStatus
+  occurredAt        DateTime
+  receivedAt        DateTime            @default(now())
+  providerMessage   EmailProviderMessage @relation(fields: [providerMessageId], references: [id], onDelete: Cascade)
+
+  @@index([providerMessageId, occurredAt])
+  @@index([receivedAt])
+  @@map("email_delivery_event")
 }
 
 model WebPushSubscription {

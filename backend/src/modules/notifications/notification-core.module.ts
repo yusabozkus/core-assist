@@ -11,12 +11,15 @@ import { NotificationsService } from './notifications.service';
 import { SyncEmailIncidentService } from './sync-email-incident.service';
 import { OperationalEmailIncidentService } from './operational-email-incident.service';
 import { ResendEmailService } from './resend-email.service';
+import { ResendWebhookController } from './resend-webhook.controller';
+import { ResendWebhookService } from './resend-webhook.service';
 
 @Module({
   imports: [
     BullModule.registerQueue({ name: NOTIFICATION_EMAIL_DIGEST_QUEUE }),
   ],
   providers: [
+    ResendWebhookService,
     NotificationsService,
     NotificationStreamService,
     NotificationRetentionService,
@@ -29,5 +32,6 @@ import { ResendEmailService } from './resend-email.service';
     NotificationEmailDigestProcessor,
   ],
   exports: [NotificationsService, ResendEmailService],
+  controllers: [ResendWebhookController],
 })
 export class NotificationCoreModule {}

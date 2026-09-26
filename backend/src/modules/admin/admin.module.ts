@@ -36,9 +36,15 @@ import { AdminSystemHealthService } from './admin-system-health.service';
 import { AdminGlobalSearchService } from './admin-global-search.service';
 import { AdminContactMessagesController } from './admin-contact-messages.controller';
 import { AdminContactMessagesService } from './admin-contact-messages.service';
+import { AdminEmailsController } from './admin-emails.controller';
+import { AdminEmailsService } from './admin-emails.service';
+import { NotificationCoreModule } from '../notifications/notification-core.module';
+import { AdminAnnouncementsController } from './admin-announcements.controller';
+import { AdminAnnouncementsService } from './admin-announcements.service';
 
 @Module({
   imports: [
+    NotificationCoreModule,
     AuthModule,
     BillingModule,
     ChannelsModule,
@@ -58,6 +64,8 @@ import { AdminContactMessagesService } from './admin-contact-messages.service';
     ),
   ],
   controllers: [
+    AdminAnnouncementsController,
+    AdminEmailsController,
     AdminAuditLogsController,
     AdminInsightsController,
     AdminController,
@@ -68,6 +76,8 @@ import { AdminContactMessagesService } from './admin-contact-messages.service';
     AdminContactMessagesController,
   ],
   providers: [
+    AdminAnnouncementsService,
+    AdminEmailsService,
     AdminAuditLogsService,
     AdminAiUsageService,
     AdminAccessService,

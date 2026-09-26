@@ -18,6 +18,8 @@ export type EmailRequest = {
   deliveryKey: string;
   recipientUserId: string | null;
   storeId: string | null;
+  workspaceId?: string | null;
+  emailType?: string;
   recipientEmail: string;
   senderEmail: string;
   subject: string;
@@ -144,6 +146,12 @@ export class ResendEmailService {
     });
     if (failures)
       throw new Error(`${failures} e-posta kaydı yeniden denenecek.`);
+    await this.prisma.emailProviderMessage.deleteMany({
+      where: {
+        deliveries: { none: {} },
+        updatedAt: { lte: new Date(now.getTime() - RETENTION_MS) },
+      },
+    });
   }
 
   private async process(id: string): Promise<EmailSendResult> {
@@ -231,6 +239,11 @@ export class ResendEmailService {
         return failure.retryable ? 'DEFERRED' : 'FAILED';
       }
 
+      await this.prisma.emailProviderMessage.upsert({
+        where: { id: providerMessageId },
+        create: { id: providerMessageId },
+        update: {},
+      });
       await this.prisma.emailDeliveryRecord.updateMany({
         where: { id, claimToken: token },
         data: {
