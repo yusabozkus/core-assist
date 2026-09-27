@@ -16,6 +16,7 @@ import { QuestionDraftWorkerService } from './question-draft-worker.service';
 import { ProductAnswerContextService } from './product-answer-context.service';
 import { QuestionDraftService } from './question-draft.service';
 import { QuestionReplyDecisionService } from './question-reply-decision.service';
+import { DraftExecutionService } from './draft-execution.service';
 import { QuestionResponsePolicyService } from './question-response-policy.service';
 
 @Module({
@@ -29,6 +30,7 @@ import { QuestionResponsePolicyService } from './question-response-policy.servic
     BullModule.registerQueue({ name: QUESTION_DRAFT_QUEUE }),
   ],
   providers: [
+    DraftExecutionService,
     ProductAnswerContextService,
     QuestionDraftService,
     QuestionResponsePolicyService,

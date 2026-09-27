@@ -1,0 +1,173 @@
+name: core-assist-${DEPLOYMENT_ENV:-production}
+
+x-service: &service
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+  security_opt: [no-new-privileges:true]
+
+x-backend: &backend
+  <<: *service
+  image: core-assist-backend:${RELEASE_TAG:?Set RELEASE_TAG}
+  build: { context: ./backend }
+  init: true
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  environment:
+    NODE_ENV: production
+    DEPLOYMENT_ENV: ${DEPLOYMENT_ENV:-production}
+    PORT: "4001"
+    TRUST_PROXY_HOPS: "1"
+    FRONTEND_URL: https://${WEB_DOMAIN:?Set WEB_DOMAIN}
+    BETTER_AUTH_URL: https://${API_DOMAIN:?Set API_DOMAIN}
+    AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:?Set AUTH_COOKIE_DOMAIN}
+    APP_ENV_FILE: /run/secrets/backend_env
+    POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    REDIS_PASSWORD_FILE: /run/secrets/redis_password
+    POSTGRES_USER: core_assist
+    POSTGRES_DB: core_assist
+    CATALOG_CONNECTOR_MODE: live
+    QUESTION_CONNECTOR_MODE: live
+    PADDLE_ENV: ${PADDLE_ENV:-production}
+    BILLING_TEST_LIMITS_ENABLED: "false"
+    LOG_FORMAT: json
+    LOG_LEVEL: info
+    NODE_OPTIONS: --max-old-space-size=2304
+  secrets: [backend_env, postgres_password, redis_password]
+  networks: [data, application]
+  mem_limit: 3g
+  stop_grace_period: 180s
+
+services:
+  postgres:
+    <<: *service
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: core_assist
+      POSTGRES_DB: core_assist
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets: [postgres_password]
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    networks: [data]
+    mem_limit: 2g
+    shm_size: 256m
+    stop_grace_period: 60s
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U core_assist -d core_assist"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  redis:
+    <<: *service
+    image: redis:7-alpine
+    entrypoint: [sh, /opt/redis-start.sh]
+    secrets: [redis_password]
+    volumes:
+      - redis_data:/data
+      - ./deploy/redis-start.sh:/opt/redis-start.sh:ro
+    networks: [data]
+    # Leave room above maxmemory for AOF rewrite buffers and Redis overhead.
+    mem_limit: 1280m
+    stop_grace_period: 60s
+    healthcheck:
+      test: [CMD-SHELL, 'REDISCLI_AUTH="$$(cat /run/secrets/redis_password)" redis-cli ping | grep -q PONG']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  migrate:
+    <<: *backend
+    restart: "no"
+    command: [node_modules/prisma/build/index.js, migrate, deploy]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  backend:
+    <<: *backend
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:4001/health/ready',{signal:AbortSignal.timeout(3000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 4s
+      start_period: 60s
+      retries: 3
+
+  frontend:
+    <<: *service
+    image: core-assist-frontend:${RELEASE_TAG:?Set RELEASE_TAG}
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: https://${API_DOMAIN:?Set API_DOMAIN}
+        NEXT_PUBLIC_PADDLE_ENV: ${PADDLE_ENV:-production}
+        NEXT_PUBLIC_PADDLE_CLIENT_TOKEN: ${PADDLE_CLIENT_TOKEN:?Set public PADDLE_CLIENT_TOKEN}
+    init: true
+    read_only: true
+    tmpfs: [/tmp, "/app/.next/cache:uid=1000,gid=1000,mode=0700"]
+    cap_drop: [ALL]
+    environment:
+      API_URL: http://backend:4001
+      NODE_OPTIONS: --max-old-space-size=1024
+    networks: [application]
+    mem_limit: 1536m
+    stop_grace_period: 45s
+    depends_on:
+      backend: { condition: service_healthy }
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/login',{signal:AbortSignal.timeout(3000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 4s
+      start_period: 45s
+      retries: 3
+
+  proxy:
+    <<: *service
+    image: caddy:2-alpine
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      WEB_DOMAIN: ${WEB_DOMAIN:?Set WEB_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN:?Set API_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [application]
+    mem_limit: 256m
+    stop_grace_period: 30s
+    depends_on:
+      frontend: { condition: service_healthy }
+
+  backup:
+    <<: *service
+    profiles: [ops]
+    restart: "no"
+    build: { context: ./deploy/backup }
+    environment:
+      PGHOST: postgres
+      PGUSER: core_assist
+      PGDATABASE: core_assist
+      AGE_RECIPIENT: ${AGE_RECIPIENT:-}
+    secrets: [postgres_password]
+    volumes:
+      - ${BACKUP_DIR:?Set BACKUP_DIR}:/backups
+    networks: [data]
+    mem_limit: 512m
+
+networks:
+  data: { internal: true }
+  application: {}
+volumes:
+  postgres_data:
+  redis_data:
+  caddy_data:
+  caddy_config:
+secrets:
+  backend_env: { file: "${SECRETS_DIR:-./deploy/secrets}/backend.env" }
+  postgres_password: { file: "${SECRETS_DIR:-./deploy/secrets}/postgres_password" }
+  redis_password: { file: "${SECRETS_DIR:-./deploy/secrets}/redis_password" }

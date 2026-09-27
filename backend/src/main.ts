@@ -6,15 +6,29 @@ import { AppModule } from './app.module';
 import { createHttpLoggingMiddleware } from './infrastructure/logging/http-logging.middleware';
 import { RequestContextInterceptor } from './infrastructure/logging/request-context.interceptor';
 import { StructuredLogger } from './infrastructure/logging/structured-logger';
+import { RuntimeState } from './infrastructure/runtime/runtime-state';
+import { installShutdownHandlers } from './infrastructure/runtime/graceful-shutdown';
+import { validateProductionConfig } from './infrastructure/runtime/production-config';
+import type { Request, Response, NextFunction } from 'express';
 
 const logger = new StructuredLogger();
 
 async function bootstrap() {
+  validateProductionConfig();
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
     logger,
   });
   const isProduction = process.env.NODE_ENV === 'production';
+  const runtime = app.get(RuntimeState);
+  app.use((request: Request, response: Response, next: NextFunction) => {
+    if (runtime.draining) {
+      response.setHeader('Connection', 'close');
+      response.status(503).json({ status: 'draining' });
+      return;
+    }
+    next();
+  });
   const configuredFrontendURL = process.env.FRONTEND_URL?.trim();
   const trustProxyHops = parseTrustProxyHops(process.env.TRUST_PROXY_HOPS);
 
@@ -62,6 +76,8 @@ async function bootstrap() {
 
   const port = process.env.PORT ?? 4001;
   await app.listen(port);
+  runtime.ready = true;
+  installShutdownHandlers(app, logger);
   logger.log(
     {
       message: 'Backend started.',

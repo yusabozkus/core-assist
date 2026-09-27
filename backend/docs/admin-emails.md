@@ -9,18 +9,48 @@ Bu özellik e-posta göndermez; mevcut gönderim akışını gözlemler.
 1. Backend dizininde `npm run db:generate` ve `npm run db:migrate:deploy` çalıştırın.
 2. Backend ortamında `RESEND_API_KEY` ve `NOTIFICATION_EMAIL_FROM` tanımlı olmalıdır.
    Resend panelinde gönderici domaininin doğrulanmış olduğunu kontrol edin.
-3. Resend → Webhooks bölümünde şu adresi ekleyin:
-   `https://api.coreasistan.com/notifications/webhooks/resend`
+3. Resend → Webhooks bölümüne webhook adresini ekleyin. Canlı ortamda backend'in
+   erişilebilir adresini kullanın; örnek:
+   `https://api.coreasistan.com/notifications/webhooks/resend`. Yerel geliştirmede
+   aşağıdaki Hookdeck kurulumunun verdiği **Resend Source URL** adresini kullanın.
 4. Şu olayları seçin: `email.sent`, `email.delivered`, `email.delivery_delayed`,
    `email.bounced`, `email.complained`, `email.failed`, `email.suppressed`.
 5. Webhook signing secret değerini backend ortamına `RESEND_WEBHOOK_SECRET`
    olarak ekleyin ve backend'i yeniden başlatın. Bu anahtar frontend'e aktarılmaz.
-6. Resend panelinin webhook test/replay özelliğiyle doğrulanmış bir olay gönderin.
+6. Yeni bir test e-postası göndererek imzalı bir olay üretin.
    E-posta ekranındaki son bildirim zamanı güncellenmelidir. Teslimat detayının
    bağlanması için olayın `data.email_id` değeri yerel gönderimin Resend kimliğiyle
    eşleşmelidir. Anahtarın tanımlı olması, webhook'un kurulduğunu tek başına kanıtlamaz.
 
-Yerel geliştirmede webhook için dışarıdan erişilebilir HTTPS adresi gerekir.
+### Yerel geliştirme: Hookdeck
+
+Backend `localhost:4001` üzerinde çalışırken proje kökündeki
+`start-development.bat` dosyası Paddle ve Resend için ayrı Hookdeck dinleyicileri
+başlatır. Resend dinleyicisini tek başına da çalıştırabilirsiniz:
+
+```bash
+hookdeck listen 4001 resend --path /notifications/webhooks/resend
+```
+
+`hookdeck` komutu bulunamazsa Hookdeck CLI'yi `npm install -g hookdeck-cli`
+ile kurun ve Paddle için kullandığınız Hookdeck hesabında oturum açın.
+
+Hookdeck çıktısındaki **Resend Source** için `Requests to` adresini kopyalayıp
+Resend → Webhooks → Add Webhook ekranındaki URL alanına yapıştırın. Bu adres
+Hookdeck tarafından üretilir; `localhost` veya Paddle kaynağının adresi değildir.
+Resend'e verilen Hookdeck adresinin sonuna yerel webhook yolunu eklemeyin.
+Çıktıdaki `Forwards to` adresi
+`http://localhost:4001/notifications/webhooks/resend` olmalıdır. Webhook'u
+oluşturduktan sonra Resend'in verdiği signing secret değerini `backend/.env`
+dosyasında `RESEND_WEBHOOK_SECRET` olarak kaydedip backend'i yeniden başlatın.
+Resend kaynağında gövde veya `svix-*` başlıklarını değiştiren Hookdeck dönüşümleri
+uygulamayın; backend gelen ham gövdenin imzasını doğrular.
+
+Yerel dinleyici açık değilken gelen olaylar otomatik olarak daha sonra yerel
+sunucuya iletilmez. Ayrıca beş dakikadan eski imzalı olayların Hookdeck üzerinden
+tekrar gönderimi backend tarafından reddedilir; kontrol için yeni bir test olayı
+oluşturun.
+
 Mevcut gönderimler geçmişteki webhook olayları olmadan otomatik olarak
 "teslim edildi" sayılmaz. Yapılandırma eksikliği e-posta listelemeyi engellemez.
 

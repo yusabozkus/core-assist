@@ -5,6 +5,7 @@ import { createHmac, randomUUID } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { after, before, test } from 'node:test';
 import { Pool } from 'pg';
+import { dropIsolatedDatabase } from '../../../test/isolated-database';
 import { PrismaService } from '../../database/prisma.service';
 import { ResendEmailService } from '../notifications/resend-email.service';
 import { ResendWebhookService } from '../notifications/resend-webhook.service';
@@ -97,20 +98,21 @@ before(async () => {
 });
 
 after(async () => {
-  if (prisma) await prisma.onModuleDestroy();
-  if (rootPool) {
-    if (
-      databaseCreated &&
-      /^core_assist_email_test_[a-f0-9]{12}$/.test(databaseName)
-    )
-      await rootPool.query(`DROP DATABASE "${databaseName}" WITH (FORCE)`);
-    await rootPool.end();
+  try {
+    if (prisma) await prisma.onModuleDestroy();
+    if (rootPool && databaseCreated)
+      await dropIsolatedDatabase(rootPool, databaseName);
+  } finally {
+    try {
+      if (rootPool) await rootPool.end();
+    } finally {
+      restore('DATABASE_URL', previousDatabaseUrl);
+      restore('RESEND_WEBHOOK_SECRET', previousSecret);
+      restore('RESEND_API_KEY', previousApiKey);
+      restore('NOTIFICATION_EMAIL_FROM', previousSender);
+      restore('FRONTEND_URL', previousFrontend);
+    }
   }
-  restore('DATABASE_URL', previousDatabaseUrl);
-  restore('RESEND_WEBHOOK_SECRET', previousSecret);
-  restore('RESEND_API_KEY', previousApiKey);
-  restore('NOTIFICATION_EMAIL_FROM', previousSender);
-  restore('FRONTEND_URL', previousFrontend);
 });
 
 function restore(key: string, value: string | undefined) {

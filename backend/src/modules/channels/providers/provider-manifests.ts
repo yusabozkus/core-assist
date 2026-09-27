@@ -40,7 +40,8 @@ export const PROVIDER_MANIFESTS: ProviderManifest[] = [
     name: 'Hepsiburada',
     type: 'COMMERCE',
     image: '/merchants/hepsiburada.webp',
-    description: 'Merchant listing verilerinizi Core Asistan kataloğuna aktarın.',
+    description:
+      'Merchant listing verilerinizi Core Asistan kataloğuna aktarın.',
     capabilities: [
       'CATALOG_READ',
       'INVENTORY_READ',

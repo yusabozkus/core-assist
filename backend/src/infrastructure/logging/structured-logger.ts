@@ -1,5 +1,6 @@
 import type { LoggerService, LogLevel } from '@nestjs/common';
 import { LoggingContext } from './logging-context';
+import { redactInvitationPaths } from './redact-path';
 
 type StructuredLogLevel =
   'fatal' | 'error' | 'warn' | 'log' | 'debug' | 'verbose';
@@ -99,7 +100,7 @@ export class StructuredLogger implements LoggerService {
       level: level === 'log' ? 'info' : level,
       service: this.serviceName,
       environment: this.environment,
-      ...(requestContext ?? {}),
+      ...(sanitizeLogValue(requestContext ?? {}) as LogRecord),
       ...(context ? { context } : {}),
       message,
       ...withoutReservedFields(metadata),
@@ -206,7 +207,7 @@ function withoutReservedFields(record: LogRecord): LogRecord {
 }
 
 function redactText(value: string) {
-  const redacted = value
+  const redacted = redactInvitationPaths(value)
     .replace(/Bearer\s+[A-Za-z0-9._~+/-]+=*/gi, 'Bearer [REDACTED]')
     .replace(
       /((?:password|secret|token|authorization|cookie|api[_-]?key|signature)=)[^&\s]+/gi,

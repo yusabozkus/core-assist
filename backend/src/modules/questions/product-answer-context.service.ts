@@ -366,7 +366,8 @@ export class ProductAnswerContextService {
 
     if (
       question.answerDelivery?.status === QuestionAnswerStatus.QUEUED ||
-      question.answerDelivery?.status === QuestionAnswerStatus.PROCESSING
+      question.answerDelivery?.status === QuestionAnswerStatus.PROCESSING ||
+      question.answerDelivery?.status === QuestionAnswerStatus.REVIEW_REQUIRED
     ) {
       throw new ConflictException(
         'Gönderim kuyruğundaki cevap için yeni taslak oluşturulamaz.',

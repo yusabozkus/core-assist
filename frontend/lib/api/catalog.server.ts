@@ -1,4 +1,5 @@
 import "server-only"
+import { fetchServerApi } from "@/lib/api/server-fetch"
 
 import { headers } from "next/headers"
 import { cache } from "react"
@@ -7,12 +8,6 @@ import type { CatalogProductPage } from "@/types/product"
 import type { InventoryPage, InventoryStockFilter } from "@/types/inventory"
 
 const CATALOG_REQUEST_TIMEOUT_MS = 8_000
-
-const apiUrl = (
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4001"
-).replace(/\/$/, "")
 
 export const getServerCatalogProducts = cache(
   async (storeId: string): Promise<CatalogProductPage> => {
@@ -27,16 +22,9 @@ export const getServerCatalogProducts = cache(
       }
     }
 
-    const response = await fetch(
-      `${apiUrl}/stores/${storeId}/catalog/products?limit=12`,
-      {
-        cache: "no-store",
-        headers: {
-          Accept: "application/json",
-          cookie,
-        },
-        signal: AbortSignal.timeout(CATALOG_REQUEST_TIMEOUT_MS),
-      }
+    const response = await fetchServerApi(
+      `/stores/${storeId}/catalog/products?limit=12`,
+      { cookie, timeoutMs: CATALOG_REQUEST_TIMEOUT_MS }
     )
 
     if (!response.ok) {
@@ -75,16 +63,9 @@ export const getServerCatalogInventory = cache(
       searchParams.set("provider", options.provider)
     }
 
-    const response = await fetch(
-      `${apiUrl}/stores/${storeId}/catalog/inventory?${searchParams.toString()}`,
-      {
-        cache: "no-store",
-        headers: {
-          Accept: "application/json",
-          cookie,
-        },
-        signal: AbortSignal.timeout(CATALOG_REQUEST_TIMEOUT_MS),
-      }
+    const response = await fetchServerApi(
+      `/stores/${storeId}/catalog/inventory?${searchParams.toString()}`,
+      { cookie, timeoutMs: CATALOG_REQUEST_TIMEOUT_MS }
     )
 
     if (!response.ok) {

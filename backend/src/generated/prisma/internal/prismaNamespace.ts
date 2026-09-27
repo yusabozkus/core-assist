@@ -403,6 +403,7 @@ export const ModelName = {
   Verification: 'Verification',
   AuditLog: 'AuditLog',
   Workspace: 'Workspace',
+  AiDraftLease: 'AiDraftLease',
   WorkspaceMember: 'WorkspaceMember',
   WorkspaceInvitation: 'WorkspaceInvitation',
   WorkspaceInvitationStoreAccess: 'WorkspaceInvitationStoreAccess',
@@ -466,7 +467,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "auditLog" | "workspace" | "workspaceMember" | "workspaceInvitation" | "workspaceInvitationStoreAccess" | "billingSubscription" | "billingWebhookEvent" | "billingTransactionReference" | "billingClosureRecord" | "billingCheckout" | "billingPlanChange" | "billingUsagePeriod" | "billingUsageEvent" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productKnowledgeFact" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "syncEmailIncident" | "syncEmailIncidentDelivery" | "operationalEmailIncident" | "operationalEmailDelivery" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "contactMessage" | "supportTicket" | "supportMessage" | "adminAnnouncement" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "notificationEmailDigestState" | "emailDeliveryRecord" | "emailProviderMessage" | "emailDeliveryEvent" | "webPushSubscription"
+    modelProps: "user" | "session" | "account" | "verification" | "auditLog" | "workspace" | "aiDraftLease" | "workspaceMember" | "workspaceInvitation" | "workspaceInvitationStoreAccess" | "billingSubscription" | "billingWebhookEvent" | "billingTransactionReference" | "billingClosureRecord" | "billingCheckout" | "billingPlanChange" | "billingUsagePeriod" | "billingUsageEvent" | "store" | "storeKnowledgeProfile" | "storeKnowledgeFaq" | "storeAiInstruction" | "channelKnowledgeOverride" | "channelConnection" | "product" | "productIdentity" | "productVariant" | "productAttribute" | "productKnowledgeFact" | "productImage" | "productSizeGuide" | "externalProduct" | "externalProductVariant" | "catalogSyncRun" | "syncEmailIncident" | "syncEmailIncidentDelivery" | "operationalEmailIncident" | "operationalEmailDelivery" | "incomingEvent" | "productQuestion" | "aiDraftAttempt" | "questionAnswer" | "storeMember" | "contactMessage" | "supportTicket" | "supportMessage" | "adminAnnouncement" | "notification" | "notificationPreference" | "notificationDeliverySetting" | "notificationEmailDigestState" | "emailDeliveryRecord" | "emailProviderMessage" | "emailDeliveryEvent" | "webPushSubscription"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -911,6 +912,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.WorkspaceCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.WorkspaceCountAggregateOutputType> | number
+        }
+      }
+    }
+    AiDraftLease: {
+      payload: Prisma.$AiDraftLeasePayload<ExtArgs>
+      fields: Prisma.AiDraftLeaseFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AiDraftLeaseFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftLeasePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AiDraftLeaseFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftLeasePayload>
+        }
+        findFirst: {
+          args: Prisma.AiDraftLeaseFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftLeasePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AiDraftLeaseFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftLeasePayload>
+        }
+        findMany: {
+          args: Prisma.AiDraftLeaseFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftLeasePayload>[]
+        }
+        create: {
+          args: Prisma.AiDraftLeaseCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftLeasePayload>
+        }
+        createMany: {
+          args: Prisma.AiDraftLeaseCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AiDraftLeaseCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftLeasePayload>[]
+        }
+        delete: {
+          args: Prisma.AiDraftLeaseDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftLeasePayload>
+        }
+        update: {
+          args: Prisma.AiDraftLeaseUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftLeasePayload>
+        }
+        deleteMany: {
+          args: Prisma.AiDraftLeaseDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AiDraftLeaseUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AiDraftLeaseUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftLeasePayload>[]
+        }
+        upsert: {
+          args: Prisma.AiDraftLeaseUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiDraftLeasePayload>
+        }
+        aggregate: {
+          args: Prisma.AiDraftLeaseAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAiDraftLease>
+        }
+        groupBy: {
+          args: Prisma.AiDraftLeaseGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AiDraftLeaseGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AiDraftLeaseCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AiDraftLeaseCountAggregateOutputType> | number
         }
       }
     }
@@ -4602,6 +4677,17 @@ export const WorkspaceScalarFieldEnum = {
 export type WorkspaceScalarFieldEnum = (typeof WorkspaceScalarFieldEnum)[keyof typeof WorkspaceScalarFieldEnum]
 
 
+export const AiDraftLeaseScalarFieldEnum = {
+  workspaceId: 'workspaceId',
+  questionId: 'questionId',
+  token: 'token',
+  expiresAt: 'expiresAt',
+  startedAt: 'startedAt'
+} as const
+
+export type AiDraftLeaseScalarFieldEnum = (typeof AiDraftLeaseScalarFieldEnum)[keyof typeof AiDraftLeaseScalarFieldEnum]
+
+
 export const WorkspaceMemberScalarFieldEnum = {
   id: 'id',
   workspaceId: 'workspaceId',
@@ -6670,6 +6756,7 @@ export type GlobalOmitConfig = {
   verification?: Prisma.VerificationOmit
   auditLog?: Prisma.AuditLogOmit
   workspace?: Prisma.WorkspaceOmit
+  aiDraftLease?: Prisma.AiDraftLeaseOmit
   workspaceMember?: Prisma.WorkspaceMemberOmit
   workspaceInvitation?: Prisma.WorkspaceInvitationOmit
   workspaceInvitationStoreAccess?: Prisma.WorkspaceInvitationStoreAccessOmit

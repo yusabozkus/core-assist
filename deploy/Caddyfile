@@ -1,0 +1,53 @@
+{
+	email {$ACME_EMAIL}
+	admin off
+	log default {
+		format filter {
+			wrap json
+			fields {
+				request>uri delete
+				request>headers delete
+				resp_headers delete
+			}
+		}
+	}
+}
+
+(safe_site) {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+	request_body {
+		max_size 2MB
+	}
+	log {
+		output stdout
+		format filter {
+			wrap json
+			fields {
+				request>uri delete
+				request>headers delete
+				resp_headers delete
+			}
+		}
+	}
+}
+
+{$WEB_DOMAIN} {
+	import safe_site
+	reverse_proxy frontend:3000
+}
+
+{$API_DOMAIN} {
+	import safe_site
+	reverse_proxy backend:4001 {
+		health_uri /health/ready
+		health_interval 5s
+		health_timeout 3s
+		flush_interval -1
+	}
+}

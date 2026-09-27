@@ -42,6 +42,10 @@ import {
   DEFAULT_AUTO_SEND_CONFIDENCE,
   evaluateAutoSendEligibility,
 } from './ai-auto-send-policy';
+import {
+  DraftExecutionService,
+  type DraftExecution,
+} from './draft-execution.service';
 
 type GenerateDraftOptions = {
   trigger?: 'MANUAL' | 'AUTOMATION';
@@ -63,12 +67,24 @@ export class QuestionDraftService {
     private readonly billingUsage: BillingUsageService,
     private readonly billingUsageNotifications: BillingUsageNotificationService,
     private readonly billing: BillingSubscriptionService,
+    private readonly executions: DraftExecutionService,
   ) {}
 
   async generate(
     storeId: string,
     questionId: string,
     options: GenerateDraftOptions = {},
+  ): Promise<DraftQuestionAnswer> {
+    return this.executions.run(storeId, questionId, (execution) =>
+      this.generateClaimed(storeId, questionId, options, execution),
+    );
+  }
+
+  private async generateClaimed(
+    storeId: string,
+    questionId: string,
+    options: GenerateDraftOptions,
+    execution: DraftExecution,
   ): Promise<DraftQuestionAnswer> {
     const policyQuestion = await this.prisma.productQuestion.findFirst({
       where: { id: questionId, storeId },
@@ -87,7 +103,9 @@ export class QuestionDraftService {
       policyQuestion.answerDelivery?.status === QuestionAnswerStatus.QUEUED ||
       policyQuestion.answerDelivery?.status ===
         QuestionAnswerStatus.PROCESSING ||
-      policyQuestion.answerDelivery?.status === QuestionAnswerStatus.SENT
+      policyQuestion.answerDelivery?.status === QuestionAnswerStatus.SENT ||
+      policyQuestion.answerDelivery?.status ===
+        QuestionAnswerStatus.REVIEW_REQUIRED
     ) {
       throw new ConflictException(
         'Gönderim süreci başlamış bir soru için yeni taslak oluşturulamaz.',
@@ -181,6 +199,7 @@ export class QuestionDraftService {
     try {
       if (context.requestedFacts.includes('STOCK')) await verifyInventory();
       await this.billing.assertStoreAccess(storeId);
+      await execution.assertActive();
       aiDraft = await this.aiDrafts.generate(context);
       if (
         aiDraft &&
@@ -192,6 +211,7 @@ export class QuestionDraftService {
         await verifyInventory();
         // Discard the first answer: it was composed before the provider check.
         await this.billing.assertStoreAccess(storeId);
+        await execution.assertActive();
         aiDraft = await this.aiDrafts.generate(context);
       }
     } catch (error) {
@@ -232,6 +252,8 @@ export class QuestionDraftService {
     });
     const draftedAt = new Date();
     const draftAttempt = await this.prisma.$transaction(async (transaction) => {
+      // Lock/fence the lease in the same transaction as the draft and quota.
+      await execution.assertActive(transaction);
       await transaction.aiDraftAttempt.updateMany({
         where: {
           storeId,
@@ -280,6 +302,10 @@ export class QuestionDraftService {
           status: {
             in: [ProductQuestionStatus.PENDING, ProductQuestionStatus.DRAFTED],
           },
+          OR: [
+            { answerDelivery: { is: null } },
+            { answerDelivery: { is: { status: QuestionAnswerStatus.FAILED } } },
+          ],
         },
         data: {
           answer,

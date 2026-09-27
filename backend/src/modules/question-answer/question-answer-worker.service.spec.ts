@@ -80,7 +80,11 @@ function createHarness() {
   };
 }
 
-const job = { storeId: 'store-1', answerId: 'answer-1' };
+const job = {
+  storeId: 'store-1',
+  answerId: 'answer-1',
+  queuedAt: '2026-09-27T00:00:00.000Z',
+};
 
 void test('cevap gönderiminde yetkilendirme hatası tek bir kanal olayı açar', async () => {
   const harness = createHarness();

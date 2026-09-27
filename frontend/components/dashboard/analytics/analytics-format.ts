@@ -45,6 +45,11 @@ export const reviewReasonLabels: Record<string, string> = {
 }
 
 export function activityStatus(item: AiPerformance["recentActivity"][number]) {
+  if (item.deliveryStatus === "REVIEW_REQUIRED")
+    return {
+      label: "Teslimat kontrolü gerekli",
+      tone: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+    }
   if (item.deliveryStatus === "SENT")
     return {
       label:

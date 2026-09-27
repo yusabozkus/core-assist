@@ -33,6 +33,7 @@ export enum PendingQuestionStateFilter {
   BLOCKED_SUBSCRIPTION = 'BLOCKED_SUBSCRIPTION',
   DRAFT_FAILED = 'DRAFT_FAILED',
   SEND_FAILED = 'SEND_FAILED',
+  SEND_REVIEW = 'SEND_REVIEW',
 }
 
 export const ALL_PENDING_QUESTION_STATES = Object.values(

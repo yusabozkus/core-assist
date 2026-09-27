@@ -239,6 +239,7 @@ function pageHref(data: AdminAiBlockerList, page: number) {
 function statusLabel(value: string) {
   const labels: Record<string, string> = {
     FAILED: "Başarısız",
+    REVIEW_REQUIRED: "Teslimat kontrolü gerekli",
     BLOCKED_QUOTA: "Kota bekliyor",
     BLOCKED_SUBSCRIPTION: "Abonelik bekliyor",
     DRAFTED: "Taslak hazır",

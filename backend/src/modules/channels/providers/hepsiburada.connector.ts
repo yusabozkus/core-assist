@@ -714,7 +714,7 @@ function getNextQuestionPage(
   return itemCount === size ? String(page + 1) : undefined;
 }
 
-function normalizeHepsiburadaQuestion(item: Record<string, unknown>) {
+export function normalizeHepsiburadaQuestion(item: Record<string, unknown>) {
   const product = asRecord(item.product);
   const externalId = firstString(item, ['number', 'id', 'issueNumber']);
   const externalProductId =

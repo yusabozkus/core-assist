@@ -138,6 +138,9 @@ function resolveOutcome(
   className?: string
 } {
   if (delivery?.draftAttemptId === attempt.id) {
+    if (delivery.status === "REVIEW_REQUIRED") {
+      return { label: "Teslimat kontrolü gerekli", variant: "warning" }
+    }
     if (delivery.status === "FAILED") {
       return {
         label: "Gönderim başarısız",

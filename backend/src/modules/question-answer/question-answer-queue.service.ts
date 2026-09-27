@@ -1,8 +1,9 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
-  ServiceUnavailableException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import type { Queue } from 'bullmq';
@@ -25,6 +26,10 @@ import { BILLING_AUTOMATION_STOPPED_MESSAGE } from '../billing/billing-access.po
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
 import {
   QUESTION_ANSWER_QUEUE,
+  RECONCILE_QUESTION_ANSWERS_JOB,
+  ANSWER_RECONCILE_INTERVAL_MS,
+  ANSWER_PROCESSING_TIMEOUT_MS,
+  ANSWER_DELIVERY_REVIEW_MESSAGE,
   SEND_QUESTION_ANSWER_JOB,
 } from './question-answer.constants';
 import type {
@@ -36,7 +41,10 @@ import type {
 import { requiresInventoryVerification } from './automatic-answer-inventory.guard';
 
 @Injectable()
-export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
+export class QuestionAnswerQueueService
+  implements QuestionAnswerDispatcher, OnModuleInit
+{
+  private readonly logger = new Logger(QuestionAnswerQueueService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly providers: ProviderRegistryService,
@@ -44,6 +52,96 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
     private readonly queue: Queue<QuestionAnswerJobData>,
     private readonly billing: BillingSubscriptionService,
   ) {}
+
+  async onModuleInit() {
+    await this.queue.upsertJobScheduler(
+      'question-answer-reconciliation',
+      { every: ANSWER_RECONCILE_INTERVAL_MS },
+      {
+        name: RECONCILE_QUESTION_ANSWERS_JOB,
+        data: { storeId: '', answerId: '' },
+        opts: { removeOnComplete: true, removeOnFail: failedJobRetention(25) },
+      },
+    );
+  }
+
+  async reconcile() {
+    // PROCESSING is the durable boundary before the external POST. Never reset
+    // it to QUEUED: the marketplace might already have accepted the answer.
+    await this.prisma.questionAnswer.updateMany({
+      where: {
+        status: QuestionAnswerStatus.PROCESSING,
+        OR: [
+          {
+            processingStartedAt: {
+              lt: new Date(Date.now() - ANSWER_PROCESSING_TIMEOUT_MS),
+            },
+          },
+          {
+            processingStartedAt: null,
+            updatedAt: {
+              lt: new Date(Date.now() - ANSWER_PROCESSING_TIMEOUT_MS),
+            },
+          },
+        ],
+      },
+      data: {
+        status: QuestionAnswerStatus.REVIEW_REQUIRED,
+        lastError: ANSWER_DELIVERY_REVIEW_MESSAGE,
+      },
+    });
+    // The delivery row is the outbox; its status changes only when claimed by
+    // the worker. Cursor pagination prevents a stuck first page starving others.
+    let cursor: string | undefined;
+    let failed = 0;
+    do {
+      const rows = await this.prisma.questionAnswer.findMany({
+        where: { status: QuestionAnswerStatus.QUEUED },
+        select: { id: true, storeId: true, queuedAt: true },
+        orderBy: { id: 'asc' },
+        take: 100,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      });
+      for (const row of rows) {
+        try {
+          const job = await this.queue.getJob(this.jobId(row.id, row.queuedAt));
+          const state = await job?.getState();
+          if (state === 'failed') await job!.retry('failed');
+          else if (!job || state === 'completed') {
+            if (job) await job.remove();
+            await this.dispatch(row.storeId, row.id, row.queuedAt);
+          }
+        } catch {
+          // A concurrent reconciler may remove/retry this job. Do not let one
+          // such race permanently starve later deliveries in the scan.
+          failed += 1;
+        }
+      }
+      cursor = rows.length === 100 ? rows[rows.length - 1].id : undefined;
+    } while (cursor);
+    if (failed)
+      throw new Error(
+        `${failed} answer deliveries await queue reconciliation.`,
+      );
+  }
+
+  private jobId(answerId: string, queuedAt: Date) {
+    return `question-answer-${answerId}-${queuedAt.getTime()}`;
+  }
+
+  private dispatch(storeId: string, answerId: string, queuedAt: Date) {
+    return this.queue.add(
+      SEND_QUESTION_ANSWER_JOB,
+      { storeId, answerId, queuedAt: queuedAt.toISOString() },
+      {
+        jobId: this.jobId(answerId, queuedAt),
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2_000 },
+        removeOnComplete: { count: 250 },
+        removeOnFail: failedJobRetention(500),
+      },
+    );
+  }
 
   async enqueue(
     input: QueueQuestionAnswerInput,
@@ -165,7 +263,7 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
       );
     }
 
-    const queuedAt = new Date();
+    let queuedAt = new Date();
     const selectedDraftAttempt =
       question.status === ProductQuestionStatus.DRAFTED
         ? latestDraftAttempt
@@ -177,11 +275,17 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
     );
     const existing = await this.prisma.questionAnswer.findUnique({
       where: { questionId: question.id },
-      select: { id: true, status: true },
+      select: { id: true, status: true, queuedAt: true },
     });
     let answerId: string;
 
     if (existing) {
+      queuedAt = new Date(
+        Math.max(queuedAt.getTime(), existing.queuedAt.getTime() + 1),
+      );
+      if (existing.status === QuestionAnswerStatus.REVIEW_REQUIRED) {
+        throw new ConflictException(ANSWER_DELIVERY_REVIEW_MESSAGE);
+      }
       if (existing.status === QuestionAnswerStatus.SENT) {
         throw new ConflictException('Bu ürün sorusu daha önce yanıtlandı.');
       }
@@ -197,7 +301,11 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
         await this.ensureStoreAcceptsAnswers(transaction, input.storeId);
 
         const deliveryUpdate = await transaction.questionAnswer.updateMany({
-          where: { id: existing.id, status: QuestionAnswerStatus.FAILED },
+          where: {
+            id: existing.id,
+            status: QuestionAnswerStatus.FAILED,
+            queuedAt: existing.queuedAt,
+          },
           data: {
             answer: input.answer,
             requestedByUserId: input.requestedByUserId ?? null,
@@ -210,6 +318,9 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
             processingStartedAt: null,
           },
         });
+        if (deliveryUpdate.count !== 1) {
+          throw new ConflictException('Cevabın gönderim durumu değişti.');
+        }
         if (selectedDraftAttempt) {
           await transaction.aiDraftAttempt.update({
             where: { id: selectedDraftAttempt.id },
@@ -272,28 +383,12 @@ export class QuestionAnswerQueueService implements QuestionAnswerDispatcher {
     }
 
     try {
-      await this.queue.add(
-        SEND_QUESTION_ANSWER_JOB,
-        { storeId: input.storeId, answerId },
-        {
-          jobId: `question-answer-${answerId}-${queuedAt.getTime()}`,
-          attempts: 3,
-          backoff: { type: 'exponential', delay: 2_000 },
-          removeOnComplete: { count: 250 },
-          removeOnFail: failedJobRetention(500),
-        },
-      );
-    } catch (error) {
-      await this.prisma.questionAnswer.updateMany({
-        where: { id: answerId, status: QuestionAnswerStatus.QUEUED },
-        data: {
-          status: QuestionAnswerStatus.FAILED,
-          lastError: 'Cevap gönderim kuyruğuna eklenemedi.',
-        },
-      });
-      throw new ServiceUnavailableException(
-        'Cevap gönderim kuyruğuna şu anda ulaşılamıyor.',
-        { cause: error },
+      await this.dispatch(input.storeId, answerId, queuedAt);
+    } catch {
+      // A timeout can mean Redis accepted the job. Keep the durable intention;
+      // reconciliation will use the same job ID once Redis is reachable again.
+      this.logger.warn(
+        `Answer ${answerId} saved; queue dispatch awaits reconciliation.`,
       );
     }
 

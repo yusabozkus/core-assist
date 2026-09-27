@@ -3,6 +3,7 @@ import type { LoggerService } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 import type { RequestWithAuth } from '../../modules/auth/auth.types';
 import { LoggingContext } from './logging-context';
+import { safeRequestPath } from './redact-path';
 
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9._:-]{8,128}$/;
 
@@ -34,7 +35,7 @@ export function createHttpLoggingMiddleware(logger: LoggerService) {
               : 'HTTP request completed.',
             event: 'http_request',
             method: request.method,
-            path: request.path,
+            path: safeRequestPath(request.path),
             statusCode: response.statusCode,
             durationMs: Number(durationMs.toFixed(2)),
             ...(authenticatedRequest.user?.id

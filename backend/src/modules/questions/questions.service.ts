@@ -661,6 +661,12 @@ function pendingQuestionStateWhere(
         draftProcessingStatus: QuestionDraftProcessingStatus.FAILED,
         ...noAnswerDelivery,
       };
+    case PendingQuestionStateFilter.SEND_REVIEW:
+      return {
+        answerDelivery: {
+          is: { status: QuestionAnswerStatus.REVIEW_REQUIRED },
+        },
+      };
     case PendingQuestionStateFilter.SEND_FAILED:
       return {
         answerDelivery: {

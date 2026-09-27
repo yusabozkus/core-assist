@@ -1,0 +1,1 @@
+ALTER TYPE "QuestionAnswerStatus" ADD VALUE 'REVIEW_REQUIRED';

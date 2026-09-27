@@ -161,8 +161,20 @@ model Workspace {
   invitations                  WorkspaceInvitation[]
   supportTickets               SupportTicket[]
   emailDeliveryRecords         EmailDeliveryRecord[]
+  aiDraftLease                 AiDraftLease?
 
   @@map("workspace")
+}
+
+model AiDraftLease {
+  workspaceId String @id
+  questionId  String
+  token       String
+  expiresAt   DateTime
+  startedAt   DateTime
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("ai_draft_lease")
 }
 
 model WorkspaceMember {
@@ -1179,6 +1191,7 @@ enum QuestionReplyDecision {
 enum QuestionAnswerStatus {
   QUEUED
   PROCESSING
+  REVIEW_REQUIRED
   SENT
   FAILED
 }

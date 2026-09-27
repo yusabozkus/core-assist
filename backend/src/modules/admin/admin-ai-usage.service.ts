@@ -75,7 +75,14 @@ export class AdminAiUsageService {
     const skip = (query.page - 1) * query.pageSize;
 
     if (type === AdminAiBlockerType.DELIVERY_FAILURES) {
-      const where = { status: QuestionAnswerStatus.FAILED } as const;
+      const where = {
+        status: {
+          in: [
+            QuestionAnswerStatus.FAILED,
+            QuestionAnswerStatus.REVIEW_REQUIRED,
+          ],
+        },
+      };
       const [total, answers] = await Promise.all([
         this.prisma.questionAnswer.count({ where }),
         this.prisma.questionAnswer.findMany({
@@ -336,7 +343,14 @@ export class AdminAiUsageService {
         _count: { _all: true },
       }),
       this.prisma.questionAnswer.count({
-        where: { status: QuestionAnswerStatus.FAILED },
+        where: {
+          status: {
+            in: [
+              QuestionAnswerStatus.FAILED,
+              QuestionAnswerStatus.REVIEW_REQUIRED,
+            ],
+          },
+        },
       }),
       this.prisma.billingUsageEvent.aggregate({
         where: {

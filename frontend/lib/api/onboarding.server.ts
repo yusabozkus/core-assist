@@ -1,4 +1,5 @@
 import "server-only"
+import { fetchServerApi } from "@/lib/api/server-fetch"
 
 import { headers } from "next/headers"
 import { cache } from "react"
@@ -6,12 +7,6 @@ import { cache } from "react"
 import type { OnboardingStatus } from "@/types/onboarding"
 
 const ONBOARDING_STATUS_REQUEST_TIMEOUT_MS = 8_000
-
-const apiUrl = (
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4001"
-).replace(/\/$/, "")
 
 export class OnboardingStatusUnavailableError extends Error {
   readonly code = "ONBOARDING_STATUS_UNAVAILABLE"
@@ -33,13 +28,9 @@ export const getOnboardingStatus = cache(
     let response: Response
 
     try {
-      response = await fetch(`${apiUrl}/onboarding/status`, {
-        cache: "no-store",
-        headers: {
-          Accept: "application/json",
-          cookie,
-        },
-        signal: AbortSignal.timeout(ONBOARDING_STATUS_REQUEST_TIMEOUT_MS),
+      response = await fetchServerApi(`/onboarding/status`, {
+        cookie,
+        timeoutMs: ONBOARDING_STATUS_REQUEST_TIMEOUT_MS,
       })
     } catch (error) {
       throw new OnboardingStatusUnavailableError(error)

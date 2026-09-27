@@ -322,6 +322,7 @@ export class StoresService {
                 in: [
                   QuestionAnswerStatus.QUEUED,
                   QuestionAnswerStatus.PROCESSING,
+                  QuestionAnswerStatus.REVIEW_REQUIRED,
                 ],
               },
             },
@@ -485,6 +486,7 @@ export class StoresService {
                 in: [
                   QuestionAnswerStatus.QUEUED,
                   QuestionAnswerStatus.PROCESSING,
+                  QuestionAnswerStatus.REVIEW_REQUIRED,
                 ],
               },
             },

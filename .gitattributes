@@ -1,0 +1,4 @@
+# Shell scripts mounted into Linux containers must not acquire CRLF on Windows.
+deploy/*.sh text eol=lf
+deploy/backup/*.sh text eol=lf
+**/Dockerfile text eol=lf

@@ -261,6 +261,21 @@ export class QuestionDraftWorkerService {
     });
   }
 
+  async deferForCapacity(data: QuestionDraftJobData) {
+    await this.prisma.productQuestion.updateMany({
+      where: {
+        id: data.questionId,
+        storeId: data.storeId,
+        status: ProductQuestionStatus.PENDING,
+        draftProcessingStatus: QuestionDraftProcessingStatus.PROCESSING,
+      },
+      data: {
+        draftProcessingStatus: QuestionDraftProcessingStatus.QUEUED,
+        draftProcessingStartedAt: null,
+      },
+    });
+  }
+
   private async clearProcessingState(data: QuestionDraftJobData) {
     await this.prisma.productQuestion.updateMany({
       where: {

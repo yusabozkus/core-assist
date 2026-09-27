@@ -1,4 +1,5 @@
 import "server-only"
+import { fetchServerApi } from "@/lib/api/server-fetch"
 
 import { headers } from "next/headers"
 
@@ -9,12 +10,6 @@ import type {
   AdminAiUsagePeriod,
 } from "@/types/admin-ai-usage"
 import type { AdminSystemHealth } from "@/types/admin-system-health"
-
-const apiUrl = (
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4001"
-).replace(/\/$/, "")
 
 export function getServerAdminAiUsage(period: AdminAiUsagePeriod) {
   return adminInsightsFetch<AdminAiUsage>(
@@ -46,11 +41,7 @@ async function adminInsightsFetch<T>(path: string) {
     throw new Error("Admin insights requires an authenticated session.")
   }
 
-  const response = await fetch(`${apiUrl}${path}`, {
-    cache: "no-store",
-    headers: { Accept: "application/json", cookie },
-    signal: AbortSignal.timeout(10_000),
-  })
+  const response = await fetchServerApi(path, { cookie })
   if (!response.ok) {
     throw new Error(`Admin insights request failed with ${response.status}.`)
   }

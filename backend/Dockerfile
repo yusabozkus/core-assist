@@ -27,10 +27,12 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 COPY prisma ./prisma
 COPY prisma.config.ts ./
+COPY docker-env.cjs ./
 COPY --from=build /app/dist ./dist
 
 USER node
 
 EXPOSE 4001
 
-CMD ["sh", "-c", "npm run db:migrate:deploy && exec node dist/src/main.js"]
+ENTRYPOINT ["node", "--require", "./docker-env.cjs"]
+CMD ["dist/src/main.js"]

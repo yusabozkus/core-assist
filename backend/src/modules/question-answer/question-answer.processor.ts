@@ -2,18 +2,27 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import type { Job } from 'bullmq';
 import {
   QUESTION_ANSWER_QUEUE,
+  RECONCILE_QUESTION_ANSWERS_JOB,
   SEND_QUESTION_ANSWER_JOB,
 } from './question-answer.constants';
 import type { QuestionAnswerJobData } from './question-answer.types';
 import { QuestionAnswerWorkerService } from './question-answer-worker.service';
+import { QuestionAnswerQueueService } from './question-answer-queue.service';
 
 @Processor(QUESTION_ANSWER_QUEUE)
 export class QuestionAnswerProcessor extends WorkerHost {
-  constructor(private readonly answerWorker: QuestionAnswerWorkerService) {
+  constructor(
+    private readonly answerWorker: QuestionAnswerWorkerService,
+    private readonly answerQueue: QuestionAnswerQueueService,
+  ) {
     super();
   }
 
   async process(job: Job<QuestionAnswerJobData>) {
+    if (job.name === RECONCILE_QUESTION_ANSWERS_JOB) {
+      await this.answerQueue.reconcile();
+      return;
+    }
     if (job.name !== SEND_QUESTION_ANSWER_JOB) {
       throw new Error(`Unsupported question answer job: ${job.name}`);
     }

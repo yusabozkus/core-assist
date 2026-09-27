@@ -1,4 +1,5 @@
 import "server-only"
+import { fetchServerApi } from "@/lib/api/server-fetch"
 
 import { headers } from "next/headers"
 
@@ -7,12 +8,6 @@ import type {
   AdminOperationsPage,
   AdminOperationsQuery,
 } from "@/types/admin-operations"
-
-const apiUrl = (
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4001"
-).replace(/\/$/, "")
 
 export function getServerAdminOperations(query: AdminOperationsQuery) {
   const search = new URLSearchParams()
@@ -45,11 +40,7 @@ async function adminOperationsServerFetch<T>(path: string) {
     throw new Error("Admin operations requires an authenticated session.")
   }
 
-  const response = await fetch(`${apiUrl}${path}`, {
-    cache: "no-store",
-    headers: { Accept: "application/json", cookie },
-    signal: AbortSignal.timeout(10_000),
-  })
+  const response = await fetchServerApi(path, { cookie })
   if (!response.ok) {
     throw new Error(`Admin operations request failed with ${response.status}.`)
   }

@@ -29,3 +29,8 @@ pnpm-debug.log*
 .idea/
 *.tsbuildinfo
 next-env.d.ts
+
+# Production secrets and local deployment test artifacts
+deploy/.env
+deploy/secrets/
+.ops-test/

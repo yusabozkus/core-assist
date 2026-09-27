@@ -16,6 +16,8 @@ export class NotificationRetentionService
 {
   private readonly logger = new Logger(NotificationRetentionService.name);
   private cleanupTimer?: NodeJS.Timeout;
+  private running?: Promise<void>;
+  private stopped = false;
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -26,15 +28,28 @@ export class NotificationRetentionService
     );
 
     this.cleanupTimer = setInterval(() => {
-      void this.removeExpiredNotifications();
+      this.runCleanup();
     }, intervalMs);
     this.cleanupTimer.unref();
 
-    void this.removeExpiredNotifications();
+    this.runCleanup();
   }
 
-  onModuleDestroy() {
+  async stopAndDrain() {
+    this.stopped = true;
     if (this.cleanupTimer) clearInterval(this.cleanupTimer);
+    await this.running;
+  }
+
+  async onModuleDestroy() {
+    await this.stopAndDrain();
+  }
+
+  private runCleanup() {
+    if (this.stopped || this.running) return;
+    this.running = this.removeExpiredNotifications().finally(() => {
+      this.running = undefined;
+    });
   }
 
   private async removeExpiredNotifications() {

@@ -57,6 +57,7 @@ export const ModelName = {
   Verification: 'Verification',
   AuditLog: 'AuditLog',
   Workspace: 'Workspace',
+  AiDraftLease: 'AiDraftLease',
   WorkspaceMember: 'WorkspaceMember',
   WorkspaceInvitation: 'WorkspaceInvitation',
   WorkspaceInvitationStoreAccess: 'WorkspaceInvitationStoreAccess',
@@ -218,6 +219,17 @@ export const WorkspaceScalarFieldEnum = {
 } as const
 
 export type WorkspaceScalarFieldEnum = (typeof WorkspaceScalarFieldEnum)[keyof typeof WorkspaceScalarFieldEnum]
+
+
+export const AiDraftLeaseScalarFieldEnum = {
+  workspaceId: 'workspaceId',
+  questionId: 'questionId',
+  token: 'token',
+  expiresAt: 'expiresAt',
+  startedAt: 'startedAt'
+} as const
+
+export type AiDraftLeaseScalarFieldEnum = (typeof AiDraftLeaseScalarFieldEnum)[keyof typeof AiDraftLeaseScalarFieldEnum]
 
 
 export const WorkspaceMemberScalarFieldEnum = {

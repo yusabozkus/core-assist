@@ -1,13 +1,10 @@
 import Link from "next/link"
 import type { MouseEventHandler } from "react"
-import { Layers01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
 
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 
 export function LandingBrand({
-  compact = false,
   className,
   onClick,
 }: {

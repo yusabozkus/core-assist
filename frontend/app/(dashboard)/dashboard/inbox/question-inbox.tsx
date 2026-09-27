@@ -149,6 +149,11 @@ const pendingStateOptions: Array<{
     dotClassName: "bg-red-500",
   },
   { value: "SEND_FAILED", label: "Gönderilemedi", dotClassName: "bg-red-500" },
+  {
+    value: "SEND_REVIEW",
+    label: "Teslimat kontrolü",
+    dotClassName: "bg-amber-500",
+  },
 ]
 
 export function QuestionInbox({
