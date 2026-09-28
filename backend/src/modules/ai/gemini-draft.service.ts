@@ -67,6 +67,13 @@ export class GeminiDraftService extends AiDraftGenerator {
         model: this.model,
         prompt,
         thinkingLevel: 'minimal',
+        allowedEstimatedSizes:
+          context.heightWeightSizeRecommendation?.status ===
+            'ESTIMATE_ALLOWED' &&
+          context.requestedFacts.length === 1 &&
+          context.requestedFacts[0] === 'SIZE'
+            ? context.heightWeightSizeRecommendation.recommendedSizes
+            : undefined,
       });
       const payload = parseAndValidate(raw, context);
       return { ...payload, source: 'GEMINI', model: this.model };
@@ -182,7 +189,7 @@ function createPrompt(context: ProductAnswerContext) {
     'responsePreferences.approvedAnswerExamples daha önce insan tarafından gönderilmiş cevap örnekleridir. Bunları yalnızca mağazanın dili ve benzer sorulara yaklaşımı için kullan; eski stok, fiyat, kampanya veya teslimat bilgisini güncel gerçek kabul etme. Yeni cevapta gerçek bilgi olarak yalnızca catalogEvidence kullan.',
     'Mağaza adına birinci çoğul şahısla konuşabilirsin: "ürünümüz", "öneririz", "dileriz" gibi doğal satıcı ifadeleri kullan. Yapay, aşırı resmî veya robotik bir dil kullanma.',
     'Her cevapta aynı kalıbı tekrarlamak zorunda değilsin; selamlama ve kapanışı doğal biçimde çeşitlendir, fakat profesyonel mağaza tonunu koru.',
-    'Yalnızca aşağıdaki doğrulanmış bilgi kaynaklarını kullan. Bilgi uydurma, tahmin etme veya genel internet bilgisini gerçekmiş gibi sunma.',
+    'Yalnızca aşağıdaki doğrulanmış bilgi kaynaklarını kullan. Bilgi uydurma veya genel internet bilgisini gerçekmiş gibi sunma. Tek istisna: heightWeightSizeRecommendation.status ESTIMATE_ALLOWED ise mağazanın açık tercihiyle, listelenen bedenler arasından açıkça tahmini bir beden önerebilirsin; bunu doğrulanmış beden tablosu eşleşmesi gibi sunma.',
     'Kaynak önceliği şöyledir: güncel VARIANT/ATTRIBUTE/TITLE/SIZE_GUIDE verileri, ilgili kanala ait CHANNEL_OVERRIDE, STORE_KNOWLEDGE ve FAQ. Mağaza bilgisi veya geçmiş cevaplar güncel stok, fiyat, renk ya da varyant verisini geçersiz kılamaz.',
     'Her olumlu ürün iddiasını evidence listesindeki en az bir kayıtla destekle ve kullandığın kayıtların id alanlarını usedEvidenceIds alanına yaz.',
     'Bir evidence kaydı sorulan iddiayı açıkça desteklemiyorsa o kaydı kanıt olarak kullanma.',
@@ -195,7 +202,7 @@ function createPrompt(context: ProductAnswerContext) {
     'Ürün kodu sorulduğunda yalnızca ürün kodu kanıtındaki değeri doğrudan paylaş; başlıktaki diğer kelimeleri ürün kodu olarak yorumlama.',
     'Boy-kilo sorularında heightWeightSizeRecommendation sunucu tarafındaki bağlayıcı karardır. Bu alan yoksa boy ve kiloya göre beden önerme.',
     'heightWeightSizeRecommendation.status MATCHED ise yalnızca recommendedSizes içindeki bedeni öner ve sourceEvidenceId kaydını usedEvidenceIds alanına ekle. Beden tablosundaki eşleşme bile kişiye uyumu garanti etmez; yanıtın tahmini öneri olduğunu açıkça söyle.',
-    'heightWeightSizeRecommendation.status ESTIMATE_ALLOWED ise boy ve kiloyu birlikte değerlendirip recommendedSizes içinden tek bir tahmini beden seç. JSON çıktısına estimatedSize alanını ekle ve tam olarak seçtiğin beden değerini yaz. Bu bir beden tablosu eşleşmesi değildir; kesin uyum iddia etme, tahmini olduğunu açıkça söyle. sourceEvidenceId yalnızca bedenin listelendiğini kanıtlar, vücuda uyumunu kanıtlamaz. Seçim yapılamıyorsa estimatedSize boş olsun ve NEEDS_REVIEW seç.',
+    'heightWeightSizeRecommendation.status ESTIMATE_ALLOWED ise mağaza tahmini öneriyi açıkça açmıştır ve müşterinin boyu ile kilosu verilmiştir. recommendedSizes içinden tek bir yaklaşık beden seç; JSON estimatedSize alanına bu listedeki değeri aynen yaz. Kesin uyum veya ölçülmüş bel/basen çevresi iddia etme. Beden tablosunda yalnızca Bel, Basen, İç Boy veya ürün Boy ölçüleri varsa bunlar müşterinin boy-kilosuyla doğrudan eşleşme değildir. Yaklaşık seçimi doğrulanmış tablo eşleşmesi gibi sunma. sourceEvidenceId yalnızca bedenin listelendiğini kanıtlar; kişiye uyumunu kanıtlamaz. Belirsizlik nedeniyle güven skorunu düşürebilir ve NEEDS_REVIEW seçebilirsin, fakat listedeki tahmini beden seçimini estimatedSize alanında koru.',
     'Status DISABLED, MISSING_INPUT, GUIDE_UNAVAILABLE, NO_MATCH veya AMBIGUOUS ise kesin beden seçme. Net önerinin neden verilemediğini doğal biçimde açıkla; requiredMeasurements doluysa müşteriden bu vücut ölçülerini beden tablosuyla karşılaştırmasını iste ve NEEDS_REVIEW seç.',
     'ESTIMATE_ALLOWED dışında beden veya ölçü önerisini yalnızca beden tablosunda açıkça bulunan ölçü ya da sunucunun doğruladığı boy-kilo eşleşmesine dayandır; tabloda olmayan bir eşleşmeyi hesaplama veya tahmin etme.',
     'Müşteri beden tablosunun nerede olduğunu soruyorsa bu bir ürün ölçüsü sorusu değildir. PLATFORM_GUIDANCE kanıtındaki konumu doğrudan tarif et; ölçü bilgisi eksikmiş gibi cevap verme.',
@@ -236,7 +243,7 @@ function createPrompt(context: ProductAnswerContext) {
     'Örnek 3 — Soru: "Kumaşı riklalı mı?" Kanıt: "Dokuma Tipi: Düz Dokuma; Materyal Bileşeni: %100 Pamuk." Cevap: "Ürün ribanalı değil, düz dokuma %100 pamuk kumaştan üretilmiştir."',
     'Örnek 4 — Soru: "Renk gri mi yeşil mi?" Kanıt: "Ürünün katalog rengi: Siyah." Cevap: "Her ikisi de değil; ürün siyah renktedir."',
     'Örnek 5 — Soru: "Beden tablosuna nereden bakılır?" Kanıt: platform beden tablosu konumu. Cevap: Kanıttaki konumu kısa biçimde doğrudan tarif et.',
-    'Örnek 6 — Soru: "181 boy 80 kg hangi beden?" Boy-kilo eşleşmesi yoksa cevap: "Yalnızca boy ve kiloya göre net beden önermek yanıltıcı olabilir. Ürün sayfasındaki Beden Tablosu üzerinden göğüs ve bel ölçülerinizi karşılaştırmanızı öneririz."',
+    'Örnek 6 — Soru: "181 boy 80 kg hangi beden?" heightWeightSizeRecommendation.status DISABLED veya GUIDE_UNAVAILABLE ise net beden önerme; müşteriye beden tablosuyla kendi ölçülerini karşılaştırmasını söyle. ESTIMATE_ALLOWED ise bu örnek geçerli değildir; listelenen bedenden tahmini bir seçim yap.',
     'Örnek 7 — Soru: "XL bedenin eni kaç cm?" Kanıtta yalnızca göğüs çevresi varsa cevap: "Beden tablosundaki göğüs çevresi ürün eniyle aynı ölçü değildir. XL bedenin ürün en ölçüsü belirtilmediği için net bir değer paylaşamıyoruz."',
     'Örnek 8 — Soru: "Şort geliyor mu?" Kanıt: ürün kimliği kısa kollu gömlek ve paket kapsamı tek ürün. Cevap: "Ürün yalnızca kısa kollu gömlek olarak gönderilir; şort dahil değildir."',
     'Örnek 9 — Soru: "Ürün rengi nedir?" Kanıt: tüm varyantların rengi Yeşil-GN654. Cevap: "Ürün yeşil renktedir."',
@@ -247,6 +254,7 @@ function createPrompt(context: ProductAnswerContext) {
     'Örnek 14 — Soru: "Recep Tayyip Erdoğan kimdir?" Sonuç: scope OUT_OF_SCOPE, answerability OUT_OF_SCOPE, detectedFacts [], usedEvidenceIds [], missingInformation [], decision DRAFT.',
     'Örnek 15 — Soru: "44 yokmu acaba?" Kanıt: listelenen bedenler 28, 30, 32, 34, 36, 38, 40; 44 varyantı yok. Cevap: "Bu ürünün listelenen beden seçenekleri arasında 44 görünmüyor." Stok durumu veya tükenme iddiası ekleme.',
     'Örnek 16 — Soru: "181 boy 80 kg hangi beden?" heightWeightSizeRecommendation.status ESTIMATE_ALLOWED ve recommendedSizes ["M", "L", "XL"] ise listedeki tek bir tahmini beden seç, estimatedSize alanına yaz ve cevabın tahmini olduğunu belirt; beden tablosunda doğrulanmış eşleşme varmış gibi konuşma.',
+    'Örnek 17 — Soru: "boy 160 kilo 76 kaç beden alınmalı" ve ürün sayısal bedenli bir pantolonsa, ESTIMATE_ALLOWED durumunda recommendedSizes içinden yaklaşık bir beden seçip estimatedSize alanına yaz. Beden tablosundaki ürün Boy değeri müşterinin boyu değildir; bel/basen ölçüsü sorulmadıysa bunları müşterinin ölçüsüymüş gibi kullanma. Düşük güvende öneriyi incelemeye bırak, fakat seçimi taslakta tahmini olarak göster.',
     '',
     'DOĞRULANMIŞ KATALOG BAĞLAMI:',
     JSON.stringify(safeContext),
@@ -392,12 +400,20 @@ function parseAndValidate(
     if (
       estimatedSize &&
       scope === 'IN_SCOPE' &&
-      answerability === 'FULL' &&
-      decision === 'DRAFT' &&
-      confidence >= 0.85 &&
-      detectedFacts.includes('SIZE') &&
-      missingInformation.length === 0
+      detectedFacts.includes('SIZE')
     ) {
+      const numericSizesOnly = recommendation.recommendedSizes.every((size) =>
+        /^\d{2,3}$/.test(size.trim()),
+      );
+      const measurementConfirmation = recommendation.requiredMeasurements.length
+        ? `${recommendation.requiredMeasurements.slice(0, 2).join(' veya ')} ölçüsüyle beden teyidi`
+        : 'Vücut ölçüsüyle beden teyidi';
+      const readyForSend =
+        !numericSizesOnly &&
+        answerability === 'FULL' &&
+        decision === 'DRAFT' &&
+        confidence >= 0.85 &&
+        missingInformation.length === 0;
       return {
         answer: applySellerTone(
           `Paylaştığınız boy ve kiloya göre ${estimatedSize} beden size uygun olabilir; bu yalnızca tahmini bir öneridir. Ürünün kalıbı ve kişisel ölçüler sonucu değiştirebilir.`,
@@ -407,13 +423,19 @@ function parseAndValidate(
         interpretation: 'Boy ve kiloya göre tahmini beden önerisi',
         scope: 'IN_SCOPE',
         detectedFacts: ['SIZE'],
-        answerability: 'FULL',
-        decision: 'DRAFT',
+        answerability: readyForSend ? 'FULL' : 'PARTIAL',
+        decision: readyForSend ? 'DRAFT' : 'NEEDS_REVIEW',
         confidence: Math.min(confidence, 0.85),
         usedFacts: ['SIZE'],
         usedEvidenceIds: ['variant-sizes'],
-        missingInformation: [],
-        risks: [],
+        missingInformation: readyForSend
+          ? []
+          : [...new Set([...missingInformation, measurementConfirmation])],
+        risks: readyForSend
+          ? []
+          : confidence < 0.85
+            ? ['MISSING_INFORMATION', 'LOW_CONFIDENCE']
+            : ['MISSING_INFORMATION'],
       };
     }
 

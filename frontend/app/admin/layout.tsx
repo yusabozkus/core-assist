@@ -1,3 +1,4 @@
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { AdminHeader } from "@/components/admin/admin-header"
@@ -9,6 +10,7 @@ import {
   getAdminAccess,
   getAdminHeaderSummaryOrUnavailable,
 } from "@/lib/admin-access.server"
+import { requireCompletedOnboarding } from "@/lib/require-onboarding.server"
 
 export const dynamic = "force-dynamic"
 
@@ -23,6 +25,8 @@ export default async function AdminLayout({
     )
   }
 
+  await requireCompletedOnboarding()
+
   if (access.status === "forbidden") {
     redirect(APP_ROUTES.dashboard.root)
   }
@@ -31,9 +35,11 @@ export default async function AdminLayout({
   // Access remains fail-closed above. The header summary is operational
   // decoration and must not make an authorized admin session unusable.
   const headerSummary = await getAdminHeaderSummaryOrUnavailable()
+  const sidebarDefaultOpen =
+    (await cookies()).get("sidebar_state")?.value !== "false"
 
   return (
-    <SidebarProvider className="min-h-svh">
+    <SidebarProvider defaultOpen={sidebarDefaultOpen} className="min-h-svh">
       <AdminSidebar
         variant="inset"
         user={{

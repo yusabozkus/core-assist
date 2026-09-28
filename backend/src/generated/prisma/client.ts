@@ -270,6 +270,11 @@ export type SupportTicket = Prisma.SupportTicketModel
  */
 export type SupportMessage = Prisma.SupportMessageModel
 /**
+ * Model SupportAttachment
+ *
+ */
+export type SupportAttachment = Prisma.SupportAttachmentModel
+/**
  * Model AdminAnnouncement
  *
  */

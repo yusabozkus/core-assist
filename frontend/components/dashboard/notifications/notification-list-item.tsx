@@ -37,12 +37,22 @@ export function NotificationListItem({
         list
           ? "px-4 py-4 sm:px-5"
           : "rounded-xl border border-border px-4 py-4",
-        unread ? "bg-primary/[0.045]" : "bg-card",
+        unread ? "bg-primary/[0.09]" : "bg-card",
         list
-          ? "hover:bg-muted/45"
-          : "hover:border-foreground/15 hover:bg-muted/25"
+          ? unread
+            ? "hover:bg-primary/[0.12]"
+            : "hover:bg-muted/45"
+          : unread
+            ? "hover:border-primary/30 hover:bg-primary/[0.12]"
+            : "hover:border-foreground/15 hover:bg-muted/25"
       )}
     >
+      {unread ? (
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-3 left-0 w-[3px] rounded-r-full bg-primary/70"
+        />
+      ) : null}
       <button
         type="button"
         onClick={() => onSelect(notification)}
@@ -54,7 +64,8 @@ export function NotificationListItem({
         className={cn(
           "pointer-events-none relative mt-0.5 flex shrink-0 items-center justify-center rounded-lg",
           list ? "size-10 sm:size-9" : "size-9",
-          severity.icon
+          severity.icon,
+          !unread && "opacity-60"
         )}
       >
         <HugeiconsIcon icon={details.icon} className="size-4" />
@@ -64,8 +75,10 @@ export function NotificationListItem({
         <div className="flex min-w-0 items-start gap-2">
           <p
             className={cn(
-              "min-w-0 flex-1 text-sm leading-5 text-foreground",
-              unread ? "font-semibold" : "font-medium"
+              "min-w-0 flex-1 text-sm leading-5",
+              unread
+                ? "font-semibold text-foreground"
+                : "font-normal text-muted-foreground"
             )}
           >
             {notification.title}
@@ -82,7 +95,8 @@ export function NotificationListItem({
         </div>
         <p
           className={cn(
-            "mt-1 text-xs leading-5 text-muted-foreground",
+            "mt-1 text-xs leading-5",
+            unread ? "text-foreground/75" : "text-muted-foreground",
             list ? "line-clamp-2 sm:line-clamp-3" : "line-clamp-3"
           )}
         >
@@ -91,7 +105,12 @@ export function NotificationListItem({
         <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
           {showStore && notification.store ? (
             <>
-              <span className="font-medium text-foreground/75">
+              <span
+                className={cn(
+                  "font-medium",
+                  unread ? "text-foreground/75" : "text-muted-foreground"
+                )}
+              >
                 {notification.store.name}
               </span>
               <span aria-hidden="true">·</span>

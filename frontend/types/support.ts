@@ -49,8 +49,15 @@ export type SupportMessage = {
   id: string
   authorType: SupportMessageAuthorType
   body: string
+  attachments: SupportAttachment[]
   createdAt: string
   author: SupportTicketPerson | null
+}
+
+export type SupportAttachment = {
+  id: string
+  contentType: string
+  size: number
 }
 
 export type SupportTicketDetail = SupportTicketSummary & {

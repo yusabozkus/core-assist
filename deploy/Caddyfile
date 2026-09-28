@@ -21,9 +21,6 @@
 		Referrer-Policy strict-origin-when-cross-origin
 		-Server
 	}
-	request_body {
-		max_size 2MB
-	}
 	log {
 		output stdout
 		format filter {
@@ -37,17 +34,39 @@
 	}
 }
 
-{$WEB_DOMAIN} {
-	import safe_site
-	reverse_proxy frontend:3000
-}
-
-{$API_DOMAIN} {
-	import safe_site
+(api_upstream) {
 	reverse_proxy backend:4001 {
 		health_uri /health/ready
 		health_interval 5s
 		health_timeout 3s
 		flush_interval -1
+	}
+}
+
+{$WEB_DOMAIN} {
+	import safe_site
+	request_body {
+		max_size 2MB
+	}
+	reverse_proxy frontend:3000
+}
+
+{$API_DOMAIN} {
+	import safe_site
+	@support_image_upload {
+		method POST
+		path /support/tickets/*/image-messages /admin/support/tickets/*/image-messages
+	}
+	handle @support_image_upload {
+		request_body {
+			max_size 17MB
+		}
+		import api_upstream
+	}
+	handle {
+		request_body {
+			max_size 2MB
+		}
+		import api_upstream
 	}
 }

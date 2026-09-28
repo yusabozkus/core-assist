@@ -45,6 +45,7 @@ export type GeminiGenerationRequest = {
   model: string;
   prompt: string;
   thinkingLevel: 'minimal' | 'low' | 'medium';
+  allowedEstimatedSizes?: string[];
 };
 
 export class AiDraftRateLimitError extends Error {

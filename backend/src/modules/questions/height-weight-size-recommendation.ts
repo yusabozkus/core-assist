@@ -212,18 +212,20 @@ function extractCustomerHeightWeight(question: string) {
   const namedWeight = normalized.match(
     /(?:kilom|kiloyum|kilo|agirligim|agirlik)\s*(?:[:=]?\s*)(\d{2,3}(?:\.\d+)?)/,
   );
-  const weightKg = plausibleWeight(
-    Number(weightMatches[0]?.[1] ?? namedWeight?.[1]),
-  );
+  const selectedWeight = namedWeight ?? weightMatches[0];
+  const weightKg = plausibleWeight(Number(selectedWeight?.[1]));
 
-  const explicitHeight =
-    normalized.match(
-      /(\d(?:\.\d{1,2})|\d{3}(?:\.\d+)?)\s*(?:cm|santimetre|metre|boy(?:um)?)\b/,
-    ) ??
-    normalized.match(
-      /(?:boyum|boyu|boy)\s*(?:[:=]?\s*)(\d(?:\.\d{1,2})|\d{3}(?:\.\d+)?)/,
-    );
-  let heightCm = plausibleHeight(Number(explicitHeight?.[1]));
+  const namedHeight = normalized.match(
+    /(?:boyum|boyu|boy)\s*(?:[:=]?\s*)(\d(?:\.\d{1,2})|\d{3}(?:\.\d+)?)/,
+  );
+  const measuredHeight = normalized.match(
+    /(\d(?:\.\d{1,2})|\d{3}(?:\.\d+)?)\s*(?:cm|santimetre|metre|boy(?:um)?)\b/,
+  );
+  let heightCm =
+    capturedNumberOffset(namedHeight) !== capturedNumberOffset(selectedWeight)
+      ? plausibleHeight(Number(namedHeight?.[1]))
+      : null;
+  heightCm ??= plausibleHeight(Number(measuredHeight?.[1]));
 
   if (heightCm === null && weightMatches[0]) {
     const beforeWeight = normalized.slice(0, weightMatches[0].index);
@@ -239,6 +241,10 @@ function extractCustomerHeightWeight(question: string) {
     );
 
   return { requested, heightCm, weightKg };
+}
+
+function capturedNumberOffset(match: RegExpMatchArray | null | undefined) {
+  return match ? (match.index ?? 0) + match[0].lastIndexOf(match[1]) : null;
 }
 
 function guideHasHeightWeightMapping(data: ProductAnswerSizeGuideData | null) {

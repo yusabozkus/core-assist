@@ -17,6 +17,11 @@ import {
   AuditResult,
 } from '../audit/audit-log.service';
 import { SupportNotificationService } from '../support/support-notification.service';
+import {
+  SupportAttachmentService,
+  assertSupportImageQuota,
+  type StoredSupportImage,
+} from '../support/support-attachment.service';
 import { lockSupportTicket } from '../support/support-ticket-lock';
 import { AdminAccessService } from './admin-access.service';
 import { AdminSupportAssigneeDto } from './dto/admin-support-assignee.dto';
@@ -69,7 +74,10 @@ const adminTicketDetailInclude = {
   assignedAdmin: { select: personSelect },
   messages: {
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-    include: { author: { select: personSelect } },
+    include: {
+      author: { select: personSelect },
+      attachments: { select: { id: true, contentType: true, size: true } },
+    },
   },
   _count: { select: { messages: true } },
 } satisfies Prisma.SupportTicketInclude;
@@ -89,6 +97,7 @@ export class AdminSupportService {
     private readonly adminAccess: AdminAccessService,
     private readonly audit: AuditLogService,
     private readonly supportNotifications: SupportNotificationService,
+    private readonly attachments: SupportAttachmentService,
   ) {}
 
   async findAll(query: AdminSupportTicketsQueryDto, currentAdminId: string) {
@@ -163,6 +172,7 @@ export class AdminSupportService {
     ticketId: string,
     adminUserId: string,
     body: AdminSupportMessageDto,
+    images: StoredSupportImage[] = [],
   ) {
     const isInternal =
       body.visibility === AdminSupportMessageVisibility.INTERNAL;
@@ -179,6 +189,14 @@ export class AdminSupportService {
         );
       }
 
+      if (images.length) {
+        const usage = await transaction.supportAttachment.aggregate({
+          where: { message: { ticket: { workspaceId: ticket.workspaceId } } },
+          _sum: { size: true },
+        });
+        assertSupportImageQuota(usage._sum.size ?? 0, images);
+      }
+
       const now = new Date();
       const message = await transaction.supportMessage.create({
         data: {
@@ -187,6 +205,7 @@ export class AdminSupportService {
           authorType: SupportMessageAuthorType.SUPPORT,
           isInternal,
           body: body.message,
+          attachments: images.length ? { create: images } : undefined,
         },
       });
       await transaction.supportTicket.update({
@@ -254,6 +273,38 @@ export class AdminSupportService {
     this.supportNotifications.emitRead(result.resolved);
 
     return this.findOne(ticketId);
+  }
+
+  async addMessageWithImages(
+    ticketId: string,
+    adminUserId: string,
+    body: AdminSupportMessageDto,
+    files: Express.Multer.File[],
+  ) {
+    await this.findOne(ticketId);
+    const images = await this.attachments.upload(files);
+    try {
+      return await this.addMessage(
+        ticketId,
+        adminUserId,
+        { ...body, message: body.message?.trim() || 'Görsel eklendi' },
+        images,
+      );
+    } catch (error) {
+      await this.attachments.remove(images);
+      throw error;
+    }
+  }
+
+  async readAttachment(ticketId: string, attachmentId: string) {
+    const attachment = await this.prisma.supportAttachment.findFirst({
+      where: { id: attachmentId, message: { ticketId } },
+    });
+    if (!attachment) throw new NotFoundException('Görsel bulunamadı.');
+    return {
+      contentType: attachment.contentType,
+      bytes: await this.attachments.read(attachment.objectKey),
+    };
   }
 
   async updateStatus(
@@ -547,6 +598,7 @@ export class AdminSupportService {
         authorType: message.authorType,
         isInternal: message.isInternal,
         body: message.body,
+        attachments: message.attachments,
         createdAt: message.createdAt,
         author: message.author,
       })),

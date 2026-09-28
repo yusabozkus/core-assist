@@ -9,6 +9,7 @@ import type {
 } from './catalog-connector';
 import { TRENDYOL_DEFACTO_PRODUCT_SEEDS } from './fixtures/trendyol-defacto-product-seeds';
 import { HEPSIBURADA_DEFACTO_PRODUCT_SEEDS } from './fixtures/hepsiburada-defacto-product-seeds';
+import { HEPSIBURADA_QUESTION_PRODUCT_SEEDS } from './fixtures/hepsiburada-question-product-seeds';
 import { createHepsiburadaMenSizeGuide } from './hepsiburada-men-size-guide';
 
 const TEST_PRODUCT_IMAGE_URL =
@@ -16,9 +17,12 @@ const TEST_PRODUCT_IMAGE_URL =
 const DEFAULT_MOCK_PAGE_SIZE = 100;
 const MAX_MOCK_PAGE_SIZE = 500;
 
-// 30 Trendyol DeFacto + 30 Hepsiburada DeFacto men's catalogue snapshots.
-export const MOCK_PRODUCTS_PER_PROVIDER = 30;
-export const MOCK_PRODUCTS_TOTAL = 60;
+export const MOCK_TRENDYOL_PRODUCTS = TRENDYOL_DEFACTO_PRODUCT_SEEDS.length;
+export const MOCK_HEPSIBURADA_PRODUCTS =
+  HEPSIBURADA_DEFACTO_PRODUCT_SEEDS.length +
+  HEPSIBURADA_QUESTION_PRODUCT_SEEDS.length;
+export const MOCK_PRODUCTS_TOTAL =
+  MOCK_TRENDYOL_PRODUCTS + MOCK_HEPSIBURADA_PRODUCTS;
 
 export type MockProductVariantSeed = {
   externalId: string;
@@ -296,9 +300,10 @@ function createTrendyolProducts(): ProductBatch['products'] {
 }
 
 function createHepsiburadaProducts(): ProductBatch['products'] {
-  return HEPSIBURADA_DEFACTO_PRODUCT_SEEDS.map((seed) =>
-    createMockProduct('hepsiburada', seed),
-  );
+  return [
+    ...HEPSIBURADA_DEFACTO_PRODUCT_SEEDS,
+    ...HEPSIBURADA_QUESTION_PRODUCT_SEEDS,
+  ].map((seed) => createMockProduct('hepsiburada', seed));
 }
 
 function createMockProduct(
@@ -339,7 +344,7 @@ function createMockProduct(
     images: seed.source?.images ?? [TEST_PRODUCT_IMAGE_URL],
     sizeGuide: seed.source?.sizeChartUrl
       ? { sourceUrl: seed.source.sizeChartUrl }
-      : provider === 'hepsiburada'
+      : provider === 'hepsiburada' && !/kadın/i.test(seed.category)
         ? createHepsiburadaMenSizeGuide(seed.category)
         : undefined,
     variants: variants.map((variant, index) => {

@@ -1500,10 +1500,25 @@ model SupportMessage {
 
   ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   author User?         @relation("SupportMessageAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
+  attachments SupportAttachment[]
 
   @@index([ticketId, createdAt])
   @@index([ticketId, isInternal, createdAt])
   @@map("support_message")
+}
+
+model SupportAttachment {
+  id          String         @id @default(uuid())
+  messageId   String
+  objectKey   String         @unique
+  contentType String
+  size        Int
+  createdAt   DateTime       @default(now())
+
+  message SupportMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("support_attachment")
 }
 
 enum NotificationType {

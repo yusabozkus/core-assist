@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft01Icon,
@@ -23,13 +22,13 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { AnimatePresence, motion, MotionConfig } from "motion/react"
 
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
+import { AppLogo } from "@/components/shared/brand/app-logo"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
@@ -590,19 +589,13 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
     <MotionConfig reducedMotion="user">
       <div className="grid min-h-dvh bg-background lg:grid-cols-[310px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
         <aside className="commerce-panel-grid hidden min-h-dvh flex-col bg-[#10251e] px-7 py-8 text-white lg:flex xl:px-9">
-          <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-white text-[#173c2e] shadow-sm">
-              <HugeiconsIcon icon={Layers01Icon} className="size-5" />
-            </span>
-            <div>
-              <p className="text-[15px] font-bold tracking-[-0.025em]">
-                Core Asistan
-              </p>
-              <p className="mt-0.5 text-[10px] font-medium tracking-[0.13em] text-[#91aa9e] uppercase">
-                İlk kurulum
-              </p>
-            </div>
-          </div>
+          <AppLogo
+            href={APP_ROUTES.onboarding}
+            className="[&_span]:text-[#91aa9e]"
+            showIcon
+            description="İlk kurulum"
+            fullDark
+          />
 
           <div className="mt-14">
             <p className="text-[11px] font-semibold tracking-[0.16em] text-[#9bc5b0] uppercase">
@@ -611,10 +604,6 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
             <h1 className="mt-4 text-3xl leading-[1.15] font-semibold tracking-[-0.04em]">
               Mağazanızı birlikte hazırlayalım.
             </h1>
-            <p className="mt-4 text-sm leading-6 text-[#a9bdb3]">
-              Mağazanızı tanımlayacak, ilk pazaryerinizi bağlayacak ve AI’ın
-              müşterilerle nasıl konuşacağını belirleyeceğiz.
-            </p>
           </div>
 
           <nav className="mt-10 space-y-1.5" aria-label="Kurulum adımları">
@@ -738,16 +727,6 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
             </div>
 
             <div className="flex min-w-0 items-center justify-end gap-2">
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="hidden sm:inline-flex"
-              >
-                <Link href={APP_ROUTES.dashboard.settings.billing}>
-                  Plan ve faturalama
-                </Link>
-              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -769,32 +748,14 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                 <DropdownMenuContent
                   align="end"
                   sideOffset={8}
-                  className="w-56"
+                  className="w-44"
                 >
-                  <div className="px-3 py-2.5">
-                    <p className="text-sm font-semibold">{user.name}</p>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href={APP_ROUTES.dashboard.settings.billing}>
-                      Plan ve faturalama
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href={APP_ROUTES.dashboard.support}>
-                      Yardım ve destek
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="cursor-pointer gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
                   >
                     <HugeiconsIcon icon={Logout01Icon} className="size-4" />
-                    Oturumu kapat
+                    Çıkış yap
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

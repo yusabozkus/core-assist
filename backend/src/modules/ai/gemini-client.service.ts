@@ -131,6 +131,20 @@ export class GeminiClientService {
       throw new Error('Gemini API anahtarı yapılandırılmamış.');
     }
 
+    const responseSchema = request.allowedEstimatedSizes?.length
+      ? {
+          ...DRAFT_RESPONSE_SCHEMA,
+          required: [...DRAFT_RESPONSE_SCHEMA.required, 'estimatedSize'],
+          properties: {
+            ...DRAFT_RESPONSE_SCHEMA.properties,
+            estimatedSize: {
+              type: 'string',
+              enum: request.allowedEstimatedSizes,
+            },
+          },
+        }
+      : DRAFT_RESPONSE_SCHEMA;
+
     const interaction = await this.client.interactions.create(
       {
         model: request.model,
@@ -142,7 +156,7 @@ export class GeminiClientService {
         response_format: {
           type: 'text',
           mime_type: 'application/json',
-          schema: DRAFT_RESPONSE_SCHEMA,
+          schema: responseSchema,
         },
         store: false,
       },

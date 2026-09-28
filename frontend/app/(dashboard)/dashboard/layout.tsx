@@ -1,3 +1,4 @@
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { DashboardHeader } from "@/components/shared/dashboard/dashboard-header"
@@ -50,6 +51,8 @@ export default async function DashboardLayout({
     getServerStoreBillingUsage(activeStore.id).catch(() => null),
   ])
   const syncState = getDashboardSyncState(connections)
+  const sidebarDefaultOpen =
+    (await cookies()).get("sidebar_state")?.value !== "false"
 
   return (
     <BillingUsageProvider
@@ -58,7 +61,10 @@ export default async function DashboardLayout({
       initialUsage={billingUsage}
     >
       <BillingPaymentIssueShell workspaceId={billingWorkspaces[0]?.id}>
-        <SidebarProvider className="min-h-0 flex-1">
+        <SidebarProvider
+          defaultOpen={sidebarDefaultOpen}
+          className="min-h-0 flex-1"
+        >
           <AppSidebar
             variant="inset"
             user={{
