@@ -140,10 +140,9 @@ denetim kaydına yazılır. Müşteri listesi için 10.000 kullanıcı sınırı
 - Müşteri hesabına gizli biçimde giriş yapma
 - Keyfî kota veya veritabanı kaydı düzenleme
 - Doğrudan iade veya tahsilat başlatma
-- Feature flag, toplu e-posta veya yardım içeriği yönetimi
+- Feature flag, bağımsız toplu e-posta kampanyası veya yardım içeriği yönetimi
 
 Bu özellikler gerçek ihtiyaç oluştuğunda ayrıca yetki, audit ve güvenlik
 değerlendirmesiyle tasarlanmalıdır.
 
-Production öncesi harici servis ve e-posta işleri
-[PRODUCTION_NOTES.md](PRODUCTION_NOTES.md) dosyasında takip edilir.
+Production öncesi harici servis kabulü [staging kabul kaydında](deploy/STAGING_ACCEPTANCE.md), bildirim ve e-posta politikası [bildirim rehberinde](backend/docs/notifications.md) takip edilir.

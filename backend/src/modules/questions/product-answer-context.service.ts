@@ -954,7 +954,7 @@ function isStockQuestion(normalizedQuestion: string) {
   if (includesAny(normalizedQuestion, STOCK_PATTERNS)) return true;
 
   if (
-    /(?:^| )(?:xxs|xs|s|m|l|xl|xxl|xxxl|[2-6]xl|\d{2,3})(?: beden| bedeni| numara)? (?:var ?mi|mevcut|bulunur|kalmis)(?: |$)/.test(
+    /(?:^| )(?:xxs|xs|s|m|l|xl|xxl|xxxl|[2-6]xl|\d{2,3})(?: beden| bedeni| numara)? (?:var ?mi|yok ?mu|mevcut|bulunur|kalmis)(?: |$)/.test(
       normalizedQuestion,
     )
   ) {
@@ -1275,10 +1275,16 @@ function createEvidence(input: {
   }
 
   if (input.requestedFacts.includes('STOCK')) {
+    const requestedOptionMissing = Boolean(
+      (input.requestedSize && !input.matchedSize) ||
+      (input.requestedColor && !input.matchedColor),
+    );
     const variants =
       input.matchingVariants.length > 0
         ? input.matchingVariants
-        : input.variants;
+        : requestedOptionMissing
+          ? []
+          : input.variants;
     evidence.push({
       id: 'variant-stock',
       fact: 'STOCK',
@@ -1292,10 +1298,16 @@ function createEvidence(input: {
   }
 
   if (input.requestedFacts.includes('PRICE')) {
+    const requestedOptionMissing = Boolean(
+      (input.requestedSize && !input.matchedSize) ||
+      (input.requestedColor && !input.matchedColor),
+    );
     const variants =
       input.matchingVariants.length > 0
         ? input.matchingVariants
-        : input.variants;
+        : requestedOptionMissing
+          ? []
+          : input.variants;
     evidence.push({
       id: 'variant-price',
       fact: 'PRICE',
@@ -1590,7 +1602,11 @@ function findGenericSizeMention(normalizedQuestion: string) {
   const numericSizeMatch = normalizedQuestion.match(
     /(?:^| )(?:beden|numara) (\d{2,3})(?: |$)|(?:^| )(\d{2,3}) (?:beden|numara)(?: |$)/,
   );
-  const numericSize = numericSizeMatch?.[1] ?? numericSizeMatch?.[2];
+  const bareAvailabilitySize = normalizedQuestion.match(
+    /(?:^| )(\d{2,3}) (?:var ?mi|yok ?mu|mevcut mu|bulunuyor mu)(?: |$)/,
+  )?.[1];
+  const numericSize =
+    numericSizeMatch?.[1] ?? numericSizeMatch?.[2] ?? bareAvailabilitySize;
   const value = numericSize ? Number(numericSize) : null;
 
   return value !== null && value >= 24 && value <= 120

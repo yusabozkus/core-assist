@@ -1,6 +1,6 @@
 # Push, AI taslak ve log korumaları
 
-Production incelemesinin 3. adımı: PUSH-01, AI-01, LOG-01. Kod ve yerel testler tamamlandı; gerçek tarayıcı/HTTPS staging kabulü ayrıca yapılmalı.
+Push, AI taslak ve davet logu korumalarının kodu ile yerel testleri tamamlandı; gerçek tarayıcı/HTTPS staging kabulü [güncel kabul kaydında](../../deploy/STAGING_ACCEPTANCE.md) ayrıca izlenir.
 
 ## Push abonelikleri
 

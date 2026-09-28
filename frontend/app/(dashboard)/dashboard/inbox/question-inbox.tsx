@@ -210,6 +210,7 @@ export function QuestionInbox({
   const liveRefreshInFlightRef = useRef(false)
   const lastSummaryRefreshAtRef = useRef(0)
   const questionsRef = useRef(initialPage.items)
+  const selectedQuestionRef = useRef<ProductQuestion | null>(null)
   const selectedQuestionSummaryRef = useRef<ProductQuestionListItem | null>(
     null
   )
@@ -234,16 +235,24 @@ export function QuestionInbox({
     selectedQuestionSummaryRef.current = selectedQuestionSummary
   }, [selectedQuestionSummary])
 
+  useEffect(() => {
+    selectedQuestionRef.current = selectedQuestion
+  }, [selectedQuestion])
+
   const loadQuestionDetail = useCallback(
     async (questionId: string, force = false) => {
       detailAbortControllerRef.current?.abort()
       const requestId = ++detailRequestIdRef.current
       const cached = detailCacheRef.current.get(questionId)
+      const listQuestion = questionsRef.current.find(
+        (question) => question.id === questionId
+      )
 
       if (
         !force &&
         cached &&
-        Date.now() - cached.cachedAt < DETAIL_CACHE_TTL_MS
+        Date.now() - cached.cachedAt < DETAIL_CACHE_TTL_MS &&
+        (!listQuestion || !hasQuestionStateChanged(cached.question, listQuestion))
       ) {
         setSelectedQuestion(cached.question)
         setDetailError(null)
@@ -456,7 +465,7 @@ export function QuestionInbox({
   function selectQuestion(question: ProductQuestionListItem) {
     setSelectedQuestionId(question.id)
     setSelectedQuestionSummary(question)
-    void loadQuestionDetail(question.id)
+    void loadQuestionDetail(question.id, true)
 
     if (isDesktop === false) {
       setIsMobileDetailOpen(true)
@@ -500,7 +509,7 @@ export function QuestionInbox({
 
   const refreshCurrentList = useCallback(
     async ({ includeSummary = false }: { includeSummary?: boolean } = {}) => {
-      if (liveRefreshInFlightRef.current) return
+      if (liveRefreshInFlightRef.current) return false
 
       liveRefreshInFlightRef.current = true
       try {
@@ -526,6 +535,20 @@ export function QuestionInbox({
           page = pageWithSummary
         } else {
           page = await getProductQuestionUpdates(storeId, requestOptions)
+        }
+
+        let selectedDetailChanged = false
+        for (const question of page.items) {
+          const cached = detailCacheRef.current.get(question.id)
+          if (cached && hasQuestionStateChanged(cached.question, question)) {
+            detailCacheRef.current.delete(question.id)
+          }
+          if (
+            selectedQuestionRef.current?.id === question.id &&
+            hasQuestionStateChanged(selectedQuestionRef.current, question)
+          ) {
+            selectedDetailChanged = true
+          }
         }
 
         setQuestions((currentQuestions) => {
@@ -556,8 +579,10 @@ export function QuestionInbox({
           selectedQuestionSummaryRef.current = nextQuestion
           return nextQuestion
         })
+        return selectedDetailChanged
       } catch {
         // Senkronizasyon arka planda sürerken mevcut liste korunur.
+        return false
       } finally {
         liveRefreshInFlightRef.current = false
       }
@@ -585,9 +610,12 @@ export function QuestionInbox({
         Date.now() - lastSummaryRefreshAtRef.current >=
         SUMMARY_REFRESH_INTERVAL_MS
 
-      await refreshCurrentList({ includeSummary })
+      const selectedDetailChanged = await refreshCurrentList({ includeSummary })
 
-      if (isQuestionProcessing(selectedQuestionSummaryRef.current)) {
+      if (
+        selectedDetailChanged ||
+        isQuestionProcessing(selectedQuestionSummaryRef.current)
+      ) {
         await refreshSelectedQuestion()
       }
     }
@@ -905,7 +933,7 @@ export function QuestionInbox({
               size="sm"
               variant="outline"
               className="mt-4"
-              onClick={() => void loadQuestionDetail(selectedQuestionId)}
+              onClick={() => void loadQuestionDetail(selectedQuestionId, true)}
             >
               <HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
               Tekrar dene
@@ -1032,8 +1060,10 @@ function listItemFromDetail(
     question: question.question,
     status: question.status,
     draftDecision: question.draftDecision,
+    draftAnswerability: question.draftAnswerability,
     draftProcessingStatus: question.draftProcessingStatus,
     externalCreatedAt: question.externalCreatedAt,
+    updatedAt: question.updatedAt,
     connection: question.connection,
     product: question.product
       ? {
@@ -1045,6 +1075,11 @@ function listItemFromDetail(
     answerDelivery: question.answerDelivery
       ? { status: question.answerDelivery.status }
       : null,
+    draftAttempts: question.draftAttempts.slice(0, 1).map((attempt) => ({
+      automationMode: attempt.automationMode,
+      autoSendEligible: attempt.autoSendEligible,
+      appliedConfidenceThreshold: attempt.appliedConfidenceThreshold,
+    })),
   }
 }
 
@@ -1066,6 +1101,20 @@ function filterCount(
 
 function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === "AbortError"
+}
+
+function hasQuestionStateChanged(
+  current: ProductQuestion | ProductQuestionListItem,
+  next: ProductQuestionListItem
+) {
+  return (
+    current.updatedAt !== next.updatedAt ||
+    current.status !== next.status ||
+    current.draftDecision !== next.draftDecision ||
+    current.draftAnswerability !== next.draftAnswerability ||
+    current.draftProcessingStatus !== next.draftProcessingStatus ||
+    current.answerDelivery?.status !== next.answerDelivery?.status
+  )
 }
 
 function isQuestionProcessing(question: ProductQuestionListItem | null) {

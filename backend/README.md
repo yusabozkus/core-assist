@@ -32,7 +32,7 @@ npm run test:integration
 
 ## Dağıtım ve işletim
 
-Production için [Docker dağıtım rehberi](../deploy/README.md) ve [yayın kabul raporu](../PRODUCTION_READINESS_AUDIT.md) izlenmeli. Worker durdurma, migration ve rollback sırası bu rehberdedir. Yerel Compose production paketi değildir.
+Production için [Docker dağıtım rehberi](../deploy/README.md) ve [güncel staging kabul kaydı](../deploy/STAGING_ACCEPTANCE.md) izlenmeli. Worker durdurma, migration ve rollback sırası dağıtım rehberindedir. Yerel Compose production paketi değildir.
 
 - [Paddle billing](docs/paddle-billing.md)
 - [Admin e-posta ve webhook](docs/admin-emails.md)

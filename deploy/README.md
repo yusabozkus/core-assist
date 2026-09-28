@@ -4,6 +4,8 @@
 
 ## Ağ, kapasite ve sırlar
 
+Sunucu satın almadan yerelde HTTP/SSR kabulünü çalıştırmak için `node deploy/test-local-e2e.mjs` kullanılabilir. İzole ortam, kapsam ve 37 senaryonun sonuçları: [yerel E2E kaydı](LOCAL_E2E_RESULTS.md). Bu kontrol tarayıcı etkileşimleri ve gerçek sağlayıcı kabulünün yerine geçmez.
+
 - Yalnızca proxy 80/443 TCP ve 443 UDP yayınlar. API, frontend, PostgreSQL ve Redis host portu yayınlamaz. DB/Redis `internal` ağdadır; backend ayrıca dış sağlayıcılara ulaşabilen uygulama ağına bağlıdır.
 - Başlangıç bellek tavanları: PostgreSQL 2 GiB, Redis 1.25 GiB (`maxmemory=512mb`; AOF rewrite/overhead için ek pay), backend 3 GiB, frontend 1.5 GiB, proxy 256 MiB. Bunlar gerçek kullanım veya performans garantisi değildir. 10 GB VDS'de OS, Docker ve Redis AOF rewrite için payı izleyin; `docker stats`, disk doluluğu ve kuyruk gecikmesiyle ayarlayın. Image build'i trafik alan VDS dışında yapmak tercih edilir; VDS'de yapılıyorsa sıralı derleyin.
 - Redis AOF/everysec ve `noeviction` kullanır. Ani makine kaybında son yaklaşık 1 saniye yazım kaybı mümkündür. `noeviction`, bellek dolduğunda yeni yazımların hata alması demektir; disk/RAM alarmı gereklidir. Volume bir yedek değildir.
@@ -39,6 +41,17 @@ chmod 444 deploy/secrets/backend.env deploy/secrets/postgres_password deploy/sec
 
 `deploy/.env` içinde gerçek domainleri, ortak cookie domainini, ACME e-postasını, public Paddle client token'ını ve benzersiz `RELEASE_TAG` değerini yazın. API key'i `PADDLE_CLIENT_TOKEN` yerine koymayın. Production'da `PADDLE_ENV=production`; bilinçli sandbox kabulünde `DEPLOYMENT_ENV=staging`, `PADDLE_ENV=sandbox`. Her ikisinde connector modları `live` kalır. Staging farklı DB, volume, sırlar ve güvenilir ayrı domain kullanmalı; production verisinin kopyasını worker'larla açmayın.
 
+Production web/API adresleri sırasıyla `https://coreasistan.com` ve `https://api.coreasistan.com` olarak planlanmıştır. OAuth callback adresleri `https://api.coreasistan.com/api/auth/callback/google` ve `https://api.coreasistan.com/api/auth/callback/microsoft` olmalıdır. Backend'de aşağıdaki origin ve cookie ayarlarını birlikte doğrulayın:
+
+```dotenv
+NODE_ENV=production
+BETTER_AUTH_URL=https://api.coreasistan.com
+FRONTEND_URL=https://coreasistan.com
+AUTH_COOKIE_DOMAIN=coreasistan.com
+```
+
+Frontend build'inde `NEXT_PUBLIC_API_URL=https://api.coreasistan.com` kullanın. SSR için `API_URL` iç ağdaki backend adresi olabilir; `BETTER_AUTH_URL` tarayıcının kullandığı dış HTTPS origin olarak kalır. Adreslere ayrıca `/api/auth` eklemeyin. Ortak cookie domaini API oturum çerezini frontend SSR'a ulaştırır; `Secure`, `HttpOnly`, `SameSite=Lax` ve `Path=/` özellikleri korunur. Son giriş yöntemini hatırlatan tercih çerezi arayüz tarafından okunduğu için HttpOnly değildir. Ortak domain, başka subdomainleri güvenilir origin yapmaz; origin kontrolleri sürer. `AUTH_COOKIE_DOMAIN` kapsamındaki tüm subdomainler güvenilir olmalı; kullanıcıya devredilen subdomainleri bu kapsama almayın. Localhost veya tek hostlu HTTPS kurulumunda ortak domain boş kalır. Domain değiştirildiğinde eski kapsamlı çerezleri temizleyip yeniden giriş yapın.
+
 ## Build, migration ve başlatma
 
 ### Staging ortamını hazırlama
@@ -47,7 +60,7 @@ Staging için ayrı sunucu/checkout üzerinde `cp deploy/.env.staging.example de
 
 Compose varsayılan proje adı ortama göre `core-assist-staging` veya `core-assist-production` olur. Böylece DB/Redis/Caddy volume ve ağ adları ayrılır; production'ın mevcut kaynak adları değişmez. Shell'de `COMPOSE_PROJECT_NAME` veya komutta `-p` verilmesi bu ayrımı geçersiz kılabilir; iki ortama aynı proje adını vermeyin. Örnek staging dosyası secret ve backup yollarını da ayırır. Her iki proxy 80/443 kullandığından mevcut dosya iki ortamı aynı hostta eşzamanlı yayınlamak için yeterli değildir; ayrı host kullanın veya ortak proxy tasarımını ayrıca yapın.
 
-Production cookie domaini `coreasistan.com` olduğunda cookie'ler onun alt domainlerine de gönderilir. Bu nedenle staging için bu kapsamın dışında bir domain seçin; örnekte `staging.example.net` bunun için kullanılır. `WEB_DOMAIN`, `API_DOMAIN`, `AUTH_COOKIE_DOMAIN` ve sağlayıcı callback/webhook adresleri aynı staging kurulumunu göstermeli.
+Production cookie domaini `coreasistan.com` olduğunda cookie'ler onun alt domainlerine de gönderilir. Bu nedenle tam ayrım için staging'e bu kapsamın dışında bir domain seçin; örnekte `staging.example.net` bunun için kullanılır. `staging.coreasistan.com` ile `api.staging.coreasistan.com` ve `AUTH_COOKIE_DOMAIN=staging.coreasistan.com` staging çerezini kendi içinde sınırlar, ancak production çerezi bu hostlara da gider; yalnızca güvenilir staging ortamında kullanılabilir. `WEB_DOMAIN`, `API_DOMAIN`, `AUTH_COOKIE_DOMAIN` ve sağlayıcı callback/webhook adresleri aynı staging kurulumunu göstermeli. Public suffix veya HTTPS dışı ortak cookie domaini başlangıçta reddedilir.
 
 Konteyner başlatmadan örneklerin kaynak ayrımını doğrulamak için repo kökünde `node --test deploy/compose-config.test.mjs` çalıştırın. Bu test gerçek secret dosyalarını okumaz; Docker Compose CLI gerekir. Gerçek domain/sağlayıcı kabulünün yerine geçmez.
 

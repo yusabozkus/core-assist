@@ -46,6 +46,7 @@ import {
   DraftExecutionService,
   type DraftExecution,
 } from './draft-execution.service';
+import { getUnlistedAvailabilitySize } from './unlisted-size-availability';
 
 type GenerateDraftOptions = {
   trigger?: 'MANUAL' | 'AUTOMATION';
@@ -197,13 +198,19 @@ export class QuestionDraftService {
     let aiDraft: AiDraftResult | null;
 
     try {
-      if (context.requestedFacts.includes('STOCK')) await verifyInventory();
+      if (
+        context.requestedFacts.includes('STOCK') &&
+        !getUnlistedAvailabilitySize(context)
+      ) {
+        await verifyInventory();
+      }
       await this.billing.assertStoreAccess(storeId);
       await execution.assertActive();
       aiDraft = await this.aiDrafts.generate(context);
       if (
         aiDraft &&
         !inventoryCheckAttempted &&
+        !getUnlistedAvailabilitySize(context) &&
         (aiDraft.detectedFacts.includes('STOCK') ||
           aiDraft.usedFacts.includes('STOCK') ||
           aiDraft.usedEvidenceIds.includes('variant-stock'))
@@ -249,6 +256,9 @@ export class QuestionDraftService {
       storeMinimumConfidence:
         context.responsePreferences?.minimumAutoSendConfidence ??
         DEFAULT_AUTO_SEND_CONFIDENCE,
+      allowHeightWeightRecommendation:
+        context.heightWeightSizeRecommendation?.status === 'ESTIMATE_ALLOWED' ||
+        context.heightWeightSizeRecommendation?.status === 'MATCHED',
     });
     const draftedAt = new Date();
     const draftAttempt = await this.prisma.$transaction(async (transaction) => {
@@ -441,6 +451,7 @@ function applyInventoryFreshnessGuard(
   if (
     draft.answerability === 'OUT_OF_SCOPE' ||
     !context.requestedFacts.includes('STOCK') ||
+    getUnlistedAvailabilitySize(context) ||
     (context.inventoryVerification?.status === 'VERIFIED' &&
       context.inventoryFreshness.status === 'FRESH')
   ) {

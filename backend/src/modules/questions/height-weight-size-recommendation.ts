@@ -44,11 +44,33 @@ export function applyHeightWeightSizeRecommendation(
     });
   }
 
+  const catalogSizes = uniqueSizesByNormalized(
+    context.product.variants.flatMap((variant) =>
+      variant.size ? [variant.size] : [],
+    ),
+  );
+  const canEstimate =
+    !/(?:^| )(?:ayakkabi|sneaker|terlik|sandalet|cizme|bot|canta|kemer|aksesuar)(?: |$)/.test(
+      normalize(`${context.product.category ?? ''} ${context.product.title}`),
+    );
+  const estimatedRecommendation = (candidateSizes: string[]) =>
+    withRecommendation(context, {
+      status: 'ESTIMATE_ALLOWED',
+      customerHeightCm: measurements.heightCm,
+      customerWeightKg: measurements.weightKg,
+      recommendedSizes: candidateSizes,
+      requiredMeasurements: findRequiredBodyMeasurements(context),
+      sourceEvidenceId: 'variant-sizes',
+    });
+
   const guidesWithHeightWeight =
     context.product.sizeGuides?.filter((guide) =>
       guideHasHeightWeightMapping(guide.structuredData),
     ) ?? [];
   if (guidesWithHeightWeight.length === 0) {
+    if (canEstimate && catalogSizes.length >= 2) {
+      return estimatedRecommendation(catalogSizes);
+    }
     return withRecommendation(context, {
       status: 'GUIDE_UNAVAILABLE',
       customerHeightCm: measurements.heightCm,
@@ -196,10 +218,10 @@ function extractCustomerHeightWeight(question: string) {
 
   const explicitHeight =
     normalized.match(
-      /(?:boyum|boyu|boy)\s*(?:[:=]?\s*)(\d(?:\.\d{1,2})|\d{3}(?:\.\d+)?)/,
+      /(\d(?:\.\d{1,2})|\d{3}(?:\.\d+)?)\s*(?:cm|santimetre|metre|boy(?:um)?)\b/,
     ) ??
     normalized.match(
-      /(\d(?:\.\d{1,2})|\d{3}(?:\.\d+)?)\s*(?:cm|santimetre|metre|boy(?:um)?)\b/,
+      /(?:boyum|boyu|boy)\s*(?:[:=]?\s*)(\d(?:\.\d{1,2})|\d{3}(?:\.\d+)?)/,
     );
   let heightCm = plausibleHeight(Number(explicitHeight?.[1]));
 
@@ -428,6 +450,17 @@ function clampConfidence(value: number) {
 
 function unique(values: string[]) {
   return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+}
+
+function uniqueSizesByNormalized(values: string[]) {
+  return [
+    ...new Map(
+      values
+        .map((value) => value.trim())
+        .filter(Boolean)
+        .map((value) => [normalizeSize(value), value]),
+    ).values(),
+  ];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -62,6 +62,7 @@ const DRAFT_RESPONSE_SCHEMA = {
       type: 'array',
       items: { type: 'string' },
     },
+    estimatedSize: { type: 'string' },
   },
 } as const;
 

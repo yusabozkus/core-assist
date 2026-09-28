@@ -134,6 +134,7 @@ export type ProductQuestion = {
   answeredAt: string | null
   externalCreatedAt: string
   createdAt: string
+  updatedAt: string
   connection: {
     providerKey: string
   }
@@ -158,6 +159,7 @@ export type ProductQuestionListItem = {
     "FULL" | "PARTIAL" | "INSUFFICIENT" | "OUT_OF_SCOPE" | null
   draftProcessingStatus: QuestionDraftProcessingStatus | null
   externalCreatedAt: string
+  updatedAt: string
   connection: {
     providerKey: string
   }

@@ -37,4 +37,4 @@ npm exec -- shadcn add button
 
 `shadcn` geliştirme bağımlılığıdır; `app/globals.css` içindeki `shadcn/tailwind.css` importu build sırasında gereklidir. Build aşamasında devDependencies kurulmalıdır. Docker runtime derlenmiş standalone çıktıyı çalıştırır.
 
-Production build arg'ları, SSR adresi, HTTPS ve cookie domain kabulü: [dağıtım rehberi](../deploy/README.md) ve [production notları](../PRODUCTION_NOTES.md).
+Production build arg'ları, SSR adresi, HTTPS ve cookie domain ayarları: [dağıtım rehberi](../deploy/README.md). Gerçek ortam kabul durumu: [staging kabul kaydı](../deploy/STAGING_ACCEPTANCE.md).

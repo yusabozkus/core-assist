@@ -66,7 +66,7 @@ Auth handler regresyonu Origin/CSRF denetimini test örneğinde açıkça etkinl
 
 ## CI ve yayın kabulü
 
-[Quality workflow](../../.github/workflows/quality.yml) pull request, `main`/`master`/`ci/production-readiness` push ve elle tetiklemede Node 22 üzerinde çalışır. Backend job'ı PostgreSQL 16 ve Redis 7 servisleri, `npm ci`, Prisma generate, `check` ve bütün integration testlerini içerir. Frontend job'ı `npm ci` ve `check` çalıştırır. Production secret kullanmaz ve deploy yapmaz. Workflow'un depoya eklenmesi GitHub üzerinde başarılı koşu alındığı anlamına gelmez; ilk koşu ayrıca doğrulanmalı, korunan dal için iki job required check olarak seçilmeli.
+[Quality workflow](../../.github/workflows/quality.yml) pull request, `main`/`master`/`ci/production-readiness` push ve elle tetiklemede Node 22 üzerinde çalışır. Backend job'ı PostgreSQL 16 ve Redis 7 servisleri, `npm ci`, Prisma generate, `check` ve bütün integration testlerini içerir. Frontend job'ı `npm ci` ve `check` çalıştırır. Production secret kullanmaz ve deploy yapmaz. İlk başarılı koşu ve commit [staging kabul kaydında](../../deploy/STAGING_ACCEPTANCE.md) yer alır; yeni aday aynı iki job için yeniden doğrulanmalı ve korunan dalda required check seçilmelidir.
 
 Docker kabulü ve gerekli image build komutları: [deploy rehberi](../../deploy/README.md). `node deploy/test-production.mjs` ayrı rastgele Compose projesinde readiness, kalıcılık, proxy logları, şifreli backup/restore ve gerçek SIGTERM kapanışını sınar.
 
@@ -74,4 +74,4 @@ Repo kökünde `node --test deploy/compose-config.test.mjs`, Docker Compose CLI 
 
 `node deploy/test-quality.mjs` CI'daki komutları temiz Node 22/Linux konteynerlerinde, gerçek env dosyaları olmadan çalıştırır. İzole DB/Redis ve yerel loglar kullanır; GitHub workflow koşusu yerine geçmez. Gerçek ortam sırası ve sonuç alanları: [staging kabul kaydı](../../deploy/STAGING_ACCEPTANCE.md).
 
-Yayın öncesinde [incelemenin staging kabul matrisi](../../PRODUCTION_READINESS_AUDIT.md) ayrıca tamamlanmalı: HTTPS OAuth/oturum/Server Action, gerçek Paddle sandbox checkout-yenileme-plan değişikliği-iptal, Resend webhook ve teslimat, tarayıcı push, pazaryeri senaryoları, VDS yük ölçümü ve off-site restore. Otomatik testlerin geçmesi bağımlılık güvenlik bulgularını da kendiliğinden kapatmaz.
+Yayın öncesinde [staging kabul kaydı](../../deploy/STAGING_ACCEPTANCE.md) ayrıca tamamlanmalı: HTTPS OAuth/oturum/Server Action, gerçek Paddle sandbox checkout-yenileme-plan değişikliği-iptal, Resend webhook ve teslimat, tarayıcı push, pazaryeri senaryoları, VDS yük ölçümü ve off-site restore. Otomatik testlerin geçmesi bağımlılık güvenlik bulgularını da kendiliğinden kapatmaz.

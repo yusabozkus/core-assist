@@ -15,7 +15,8 @@ tanımlanmadığında ayar ekranındaki ilgili seçenekler pasif görünür.
 AI, senkronizasyon, kanal ve stok bildirimleri mağaza bazında kapatılabilir.
 Finans, ekip erişimi ve hesap güvenliği bildirimleri zorunludur. Başarılı rutin
 senkronizasyonlar, her yeni soru ve kullanıcının kendi başlattığı davet
-oluşturma/iptal işlemleri bildirim üretmez.
+oluşturma/iptal işlemleri başlatan kişiye ayrıca panel bildirimi üretmez;
+davet edilene gönderilen davet e-postası ayrı akıştır.
 
 ## Tarayıcı bildirimleri
 
@@ -46,6 +47,27 @@ alan adını doğruladıktan sonra aşağıdaki değerleri ekleyin:
 RESEND_API_KEY=""
 NOTIFICATION_EMAIL_FROM="Core Asistan <notifications@coreasistan.com>"
 ```
+
+Ekip daveti oluşturulduğunda Resend e-postasında hesap, rol, erişilen mağazalar, son kullanma tarihi ve `FRONTEND_URL` üzerinden kurulan kabul bağlantısı bulunur. Davet token'ı veritabanında hash, bekleyen e-posta içeriğinde şifreli saklanır; loglanmaz. Gönderim idempotent kaydedilir, geçici hata tekrar denenir; başarısızlık daveti silmez ve ekip ekranında yeniden gönderme sunulur.
+
+### Rol bazlı e-posta hedef politikası
+
+Bu tablo, önemli veya işlem gerektiren olaylar için hedef alıcı ve gönderim şeklini tanımlar; her satırın uçtan uca uygulanmış olduğu anlamına gelmez. Gerçek sağlayıcı ve rol kabulü [staging kaydında](../../deploy/STAGING_ACCEPTANCE.md) yapılır.
+
+| Olay | Hedef alıcı | Gönderim |
+| --- | --- | --- |
+| Davet oluşturuldu | Davet edilen kişi | Anında, zorunlu |
+| Davet kabul edildi | Hesap sahibi ve daveti oluşturan yönetici | Anında |
+| Rol/mağaza erişimi değişti veya üyelik kaldırıldı | Yetkisi değişen kullanıcı | Anında, zorunlu |
+| Ödeme başarısızlığı, abonelik/plan değişimi, fatura/iade | Hesap sahibi ve hesap yöneticileri | Anında |
+| AI kotası %80/%95/%100 | Hesap sahibi ve hesap yöneticileri | Her eşikte bir kez |
+| Kanal kopması, tekrarlı senkronizasyon hatası | İlgili mağaza ve hesap yöneticileri | Olay veya eşik anında |
+| Otomatik yanıt hatası veya otomasyon durması | İlgili mağaza yöneticileri ve temsilciler | Anında |
+| İnceleme bekleyen sorular, düşük/tükenen stok | İlgili mağaza yöneticileri ve temsilciler | Günlük veya tercihe bağlı özet |
+| Yeni cihaz/giriş sağlayıcısı değişikliği | İlgili kullanıcı | Anında, zorunlu |
+| Hesap silme talebi | İlgili kullanıcı ve hesap sahibi | Anında, zorunlu |
+
+Merkezi `olay → alıcı rolleri` politikası, mağaza erişimine göre alıcı seçimi, görüntüleyiciye varsayılan operasyonel e-posta göndermeme, finans/güvenlik e-postalarının kapatılamaması ve olay başına mükerrer gönderim koruması **açık uygulama işleridir**. Operasyonel e-postalar tercih ve hız sınırına, yoğun bildirimler günlük özete bağlanmalıdır; bütün mağaza üyelerine kör yayın yapılmamalıdır.
 
 ## Sessiz saatler
 

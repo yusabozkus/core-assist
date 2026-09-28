@@ -43,6 +43,7 @@ const QUESTION_LIST_SELECT = {
   draftAnswerability: true,
   draftProcessingStatus: true,
   externalCreatedAt: true,
+  updatedAt: true,
   connection: {
     select: { providerKey: true },
   },
@@ -83,6 +84,7 @@ const QUESTION_DETAIL_SELECT = {
   status: true,
   externalCreatedAt: true,
   createdAt: true,
+  updatedAt: true,
   answer: true,
   draftDecision: true,
   draftConfidence: true,

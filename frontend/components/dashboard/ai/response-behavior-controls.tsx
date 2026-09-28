@@ -137,7 +137,7 @@ export function ResponseBehaviorControls({
         />
         <SettingsSwitchRow
           title="Boy ve kiloya göre beden önerisi"
-          description="Yalnızca beden tablosunda açık bir boy-kilo eşleşmesi bulunduğunda öneri verir."
+          description="Boy ve kilo birlikte verilirse listelenen bedenlerden tahmini bir öneri hazırlar. Yalnızca Güvenli otomatik modunda ve güven eşiği sağlanırsa gönderir."
           checked={profile.heightWeightSizeRecommendationEnabled}
           onCheckedChange={(checked) =>
             onChange("heightWeightSizeRecommendationEnabled", checked)

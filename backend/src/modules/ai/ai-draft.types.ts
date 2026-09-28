@@ -39,7 +39,7 @@ export type GeminiDraftPayload = Pick<
   | 'confidence'
   | 'usedEvidenceIds'
   | 'missingInformation'
->;
+> & { estimatedSize?: string };
 
 export type GeminiGenerationRequest = {
   model: string;

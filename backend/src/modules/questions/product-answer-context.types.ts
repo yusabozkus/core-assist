@@ -86,6 +86,7 @@ export type HeightWeightSizeRecommendation = {
     | 'GUIDE_UNAVAILABLE'
     | 'NO_MATCH'
     | 'AMBIGUOUS'
+    | 'ESTIMATE_ALLOWED'
     | 'MATCHED';
   customerHeightCm: number | null;
   customerWeightKg: number | null;
