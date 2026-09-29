@@ -164,6 +164,7 @@ export class QuestionAnswerWorkerService {
       if (
         draft?.answerability !== 'OUT_OF_SCOPE' &&
         requiresInventoryVerification({
+          answer: delivery.answer,
           evidenceIds: delivery.question.draftEvidenceIds,
           requestedFacts: draft?.requestedFacts,
           detectedFacts: draft?.detectedFacts,

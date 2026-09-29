@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { useCallback, useEffect, useState, type ReactNode } from "react"
+import { useSearchParams } from "next/navigation"
 import {
   AiSparklesIcon,
   ArrowDown01Icon,
@@ -13,6 +14,7 @@ import {
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 
 import { AiResponsePreview } from "@/components/dashboard/ai/ai-response-preview"
+import { ResponseSettingsTour } from "@/components/dashboard/setup/response-settings-tour"
 import { AutomationModeSelector } from "@/components/dashboard/ai/automation-mode-selector"
 import { ResponseBehaviorControls } from "@/components/dashboard/ai/response-behavior-controls"
 import {
@@ -52,6 +54,9 @@ export function AiResponseSettings({
     initialKnowledge.profile.automationMode
   )
   const [instructionDialogOpen, setInstructionDialogOpen] = useState(false)
+  const [instructionSectionOpen, setInstructionSectionOpen] = useState(false)
+  const [tourOpen, setTourOpen] = useState(false)
+  const searchParams = useSearchParams()
   const [autoReplyConfirmationOpen, setAutoReplyConfirmationOpen] =
     useState(false)
   const [instructionDraft, setInstructionDraft] = useState("")
@@ -69,6 +74,23 @@ export function AiResponseSettings({
       knowledge.profile.minimumAutoSendConfidence
   const isSaving = isSavingBehavior || isSavingAutomation || isSavingInstruction
   const hasUnsavedChanges = behaviorHasChanges || automationHasChanges
+
+  useEffect(() => {
+    if (searchParams.get("setupGuideTour") !== "1") return
+    const url = new URL(window.location.href)
+    url.searchParams.delete("setupGuideTour")
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${url.pathname}${url.search}${url.hash}`
+    )
+    window.requestAnimationFrame(() => setTourOpen(true))
+  }, [searchParams])
+
+  const closeTour = useCallback(() => setTourOpen(false), [])
+  const onTourStepChange = useCallback((step: number) => {
+    if (step === 2) setInstructionSectionOpen(true)
+  }, [])
 
   function updateProfile<Key extends keyof StoreKnowledge["profile"]>(
     key: Key,
@@ -213,12 +235,27 @@ export function AiResponseSettings({
           </p>
         </div>
 
-        <SaveState isSaving={isSaving} hasUnsavedChanges={hasUnsavedChanges} />
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setTourOpen(true)}
+          >
+            <HugeiconsIcon icon={AiSparklesIcon} className="size-4" />
+            Kısa tur
+          </Button>
+          <SaveState
+            isSaving={isSaving}
+            hasUnsavedChanges={hasUnsavedChanges}
+          />
+        </div>
       </header>
 
       <div className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_23rem]">
         <main className="min-w-0 overflow-hidden rounded-xl border border-border bg-card shadow-xs">
           <SettingsSection
+            tourId="automation"
             icon={AiSparklesIcon}
             title="Yanıt otomasyonu"
             description="Her yeni soruda uygulanacak akışı seçin."
@@ -291,6 +328,7 @@ export function AiResponseSettings({
           </SettingsSection>
 
           <SettingsSection
+            tourId="behavior"
             icon={Settings02Icon}
             title="Yanıt biçimi"
             description="Cevapların müşteriye nasıl sunulacağını belirleyin."
@@ -319,11 +357,14 @@ export function AiResponseSettings({
           </SettingsSection>
 
           <SettingsSection
+            tourId="instructions"
             icon={WorkflowSquare01Icon}
             title="Özel AI talimatları"
             description="Mağazanıza özgü kalıcı davranış kuralları ekleyin."
             badge={`${knowledge.instructions.length} kural`}
             last
+            open={instructionSectionOpen}
+            onOpenChange={setInstructionSectionOpen}
             action={
               <Button
                 variant="outline"
@@ -472,11 +513,19 @@ export function AiResponseSettings({
           </SettingsField>
         </div>
       </ResponsiveDialog>
+
+      {tourOpen ? (
+        <ResponseSettingsTour
+          onClose={closeTour}
+          onStepChange={onTourStepChange}
+        />
+      ) : null}
     </div>
   )
 }
 
 function SettingsSection({
+  tourId,
   icon,
   title,
   description,
@@ -485,8 +534,11 @@ function SettingsSection({
   action,
   children,
   defaultOpen = false,
+  open,
+  onOpenChange,
   last = false,
 }: {
+  tourId: string
   icon: IconSvgElement
   title: string
   description: string
@@ -495,12 +547,20 @@ function SettingsSection({
   action: ReactNode
   children: ReactNode
   defaultOpen?: boolean
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   last?: boolean
 }) {
   return (
     <Collapsible
       defaultOpen={defaultOpen}
-      className={cn("group/section", !last && "border-b border-border")}
+      open={open}
+      onOpenChange={onOpenChange}
+      data-response-tour-section={tourId}
+      className={cn(
+        "group/section scroll-mt-4",
+        !last && "border-b border-border"
+      )}
     >
       <section>
         <header className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">

@@ -6,6 +6,7 @@ import { MobileBottomNavigation } from "@/components/shared/dashboard/mobile-bot
 import { BillingPaymentIssueShell } from "@/components/dashboard/billing/billing-payment-issue-banner"
 import { BillingUsageProvider } from "@/components/dashboard/billing/billing-usage-provider"
 import { AppSidebar } from "@/components/shared/sidebar/app-sidebar"
+import { SetupGuide } from "@/components/dashboard/setup/setup-guide"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { APP_ROUTES } from "@/constants/site"
 import { getServerChannelConnections } from "@/lib/api/channels.server"
@@ -87,6 +88,14 @@ export default async function DashboardLayout({
             </div>
             {activeStore.status === "ACTIVE" ? (
               <MobileBottomNavigation />
+            ) : null}
+            {activeStore.status === "ACTIVE" ? (
+              <SetupGuide
+                key={activeStore.id}
+                storeId={activeStore.id}
+                userId={currentUser.user.id}
+                canManageTeam={billingWorkspaces.length > 0}
+              />
             ) : null}
             <Toaster
               position="top-center"

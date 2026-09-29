@@ -206,7 +206,7 @@ function extractCustomerHeightWeight(question: string) {
   const normalized = normalize(question).replaceAll(',', '.');
   const weightMatches = [
     ...normalized.matchAll(
-      /(\d{2,3}(?:\.\d+)?)\s*(?:kg|kilo(?:gram)?)(?:yum|yim|um|im)?\b/g,
+      /(\d{2,3}(?:\.\d+)?)\s*(?:kg|kilo(?:gram)?)(?:yum|yim|um|im|ya|ye|yla|yle)?\b/g,
     ),
   ];
   const namedWeight = normalized.match(
@@ -236,7 +236,7 @@ function extractCustomerHeightWeight(question: string) {
   }
 
   const requested =
-    /\b(?:boy|boyum|kilo|kiloyum|kilom|kg|agirlik|agirligim)\b/.test(
+    /\b(?:boy|boyum|kilo(?:gram)?(?:yum|yim|um|im|ya|ye|yla|yle)?|kilom|kg|agirlik|agirligim)\b/.test(
       normalized,
     );
 

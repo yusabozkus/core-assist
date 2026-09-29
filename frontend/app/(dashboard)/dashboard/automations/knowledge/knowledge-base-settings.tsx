@@ -251,7 +251,7 @@ export function KnowledgeBaseSettings({
           />
         </SettingsCard>
 
-        <div className="space-y-3">
+        <div id="faq" className="scroll-mt-6 space-y-3">
           <FeedbackBanner feedback={faqFeedback} />
           <CollectionCard
             title="Sık sorulan sorular"

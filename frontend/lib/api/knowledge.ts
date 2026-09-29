@@ -4,6 +4,13 @@ import type {
   UpdateStoreKnowledgePayload,
 } from "@/types/knowledge"
 
+export function getStoreKnowledge(storeId: string, signal?: AbortSignal) {
+  return apiFetch<StoreKnowledge>(`/stores/${storeId}/knowledge`, {
+    cache: "no-store",
+    signal,
+  })
+}
+
 export function updateStoreKnowledge(
   storeId: string,
   payload: UpdateStoreKnowledgePayload

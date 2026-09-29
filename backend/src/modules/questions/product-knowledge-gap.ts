@@ -1,5 +1,6 @@
 import { ProductKnowledgeFactType } from '../../generated/prisma/enums';
 import type { ProductAnswerFact } from './product-answer-context.types';
+import { isCustomerMeasurementGap } from './customer-measurement-gap';
 
 export type ProductKnowledgeGap = {
   key: string;
@@ -34,6 +35,7 @@ export function extractProductKnowledgeGaps(input: {
   return missingItems.flatMap((item) => {
     const label = cleanLabel(item);
     if (!label) return [];
+    if (isCustomerMeasurementGap(label)) return [];
 
     const normalized = normalizeKnowledgeText(`${label} ${input.question}`);
     if (DYNAMIC_OR_POLICY_PATTERN.test(normalized)) return [];

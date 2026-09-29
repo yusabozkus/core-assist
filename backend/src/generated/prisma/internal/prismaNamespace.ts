@@ -5441,7 +5441,12 @@ export const StoreMemberScalarFieldEnum = {
   userId: 'userId',
   role: 'role',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  setupGuidePhase: 'setupGuidePhase',
+  setupGuideAiSettingsVisitedAt: 'setupGuideAiSettingsVisitedAt',
+  setupGuideChannelsVisitedAt: 'setupGuideChannelsVisitedAt',
+  setupGuideTeamVisitedAt: 'setupGuideTeamVisitedAt',
+  setupGuideFaqSkippedAt: 'setupGuideFaqSkippedAt'
 } as const
 
 export type StoreMemberScalarFieldEnum = (typeof StoreMemberScalarFieldEnum)[keyof typeof StoreMemberScalarFieldEnum]

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams } from "next/navigation"
 import {
   Copy01Icon,
   Delete02Icon,
@@ -45,6 +46,31 @@ import type {
   TeamOverview,
 } from "@/types/team"
 import { TeamAccessFields } from "./team-access-fields"
+import {
+  GuidedSpotlightTour,
+  type GuidedTourStep,
+} from "@/components/dashboard/setup/response-settings-tour"
+
+const teamTourSteps: GuidedTourStep[] = [
+  {
+    targets: ["[data-team-tour-invite]"],
+    title: "Ekip üyesi davet edin",
+    description:
+      "Bir ekip arkadaşınızı e-posta ile davet edebilirsiniz. Davet sırasında rolünü ve erişebileceği mağazaları seçersiniz; tur davet göndermez.",
+  },
+  {
+    targets: ["[data-team-tour-capacity]"],
+    title: "Kapasiteyi takip edin",
+    description:
+      "Planınızın kullanıcı sınırını ve kullanılan koltuk sayısını burada izleyebilirsiniz. Bekleyen davetler de aşağıda listelenir.",
+  },
+  {
+    targets: ["[data-team-tour-members]", "[data-team-tour-member]"],
+    title: "Üyeleri ve yetkileri görün",
+    description:
+      "Burada her üyenin rolü ve mağaza erişimi görünür. Yetkiniz varsa düzenleme düğmesiyle rolünü değiştirebilir veya erişimini kaldırabilirsiniz.",
+  },
+]
 
 const dateFormatter = new Intl.DateTimeFormat("tr-TR", {
   day: "numeric",
@@ -61,6 +87,8 @@ export function TeamManagement({
   currentUserId: string
   initialTeam: TeamOverview
 }) {
+  const searchParams = useSearchParams()
+  const [tourOpen, setTourOpen] = React.useState(false)
   const [team, setTeam] = React.useState(initialTeam)
   const [inviteOpen, setInviteOpen] = React.useState(false)
   const [editingMember, setEditingMember] = React.useState<TeamMember | null>(
@@ -70,6 +98,18 @@ export function TeamManagement({
   const [notice, setNotice] = React.useState<string | null>(null)
   const [busyKey, setBusyKey] = React.useState<string | null>(null)
   const progress = Math.min(100, team.capacity.percentage)
+
+  React.useEffect(() => {
+    if (searchParams.get("setupGuideTour") !== "1") return
+    const url = new URL(window.location.href)
+    url.searchParams.delete("setupGuideTour")
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${url.pathname}${url.search}${url.hash}`
+    )
+    window.requestAnimationFrame(() => setTourOpen(true))
+  }, [searchParams])
 
   async function refreshTeam() {
     setTeam(await getTeam(workspaceId))
@@ -146,14 +186,19 @@ export function TeamManagement({
             Erişimi doğru kişilere verin
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Ekibinizi e-postayla davet edin, mağaza erişimlerini ve yetkileri tek
-            yerden yönetin.
+            Ekibinizi e-postayla davet edin, mağaza erişimlerini ve yetkileri
+            tek yerden yönetin.
           </p>
         </div>
-        <Button onClick={() => setInviteOpen(true)}>
-          <HugeiconsIcon icon={UserAdd01Icon} className="size-4" />
-          Ekip üyesi davet et
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setTourOpen(true)}>
+            Kısa tur
+          </Button>
+          <Button data-team-tour-invite="" onClick={() => setInviteOpen(true)}>
+            <HugeiconsIcon icon={UserAdd01Icon} className="size-4" />
+            Ekip üyesi davet et
+          </Button>
+        </div>
       </header>
 
       <section className="mt-7 grid gap-4 sm:grid-cols-[minmax(0,1fr)_280px]">
@@ -171,7 +216,10 @@ export function TeamManagement({
             </p>
           </div>
         </div>
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div
+          data-team-tour-capacity=""
+          className="rounded-xl border border-border bg-card p-5"
+        >
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Kullanıcı kapasitesi</span>
             <span className="font-semibold tabular-nums">
@@ -196,20 +244,26 @@ export function TeamManagement({
         </p>
       ) : null}
       {notice ? (
-        <p role="status" className="mt-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
+        <p
+          role="status"
+          className="mt-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground"
+        >
           {notice}
         </p>
       ) : null}
 
       <section className="mt-6 overflow-hidden rounded-xl border border-border bg-card">
-        <div className="border-b border-border px-5 py-4 sm:px-6">
+        <div
+          data-team-tour-members=""
+          className="border-b border-border px-5 py-4 sm:px-6"
+        >
           <h2 className="font-semibold">Ekip üyeleri</h2>
           <p className="mt-1 text-xs text-muted-foreground">
             Aktif kullanıcılar ve erişebildikleri mağazalar
           </p>
         </div>
         <div className="divide-y divide-border">
-          {team.members.map((member) => (
+          {team.members.map((member, index) => (
             <MemberRow
               key={member.user.id}
               member={member}
@@ -218,6 +272,7 @@ export function TeamManagement({
               isRemoving={busyKey === `remove:${member.user.id}`}
               onEdit={() => setEditingMember(member)}
               onRemove={() => handleRemoveMember(member)}
+              tourTarget={index === 0}
             />
           ))}
         </div>
@@ -238,7 +293,9 @@ export function TeamManagement({
                 key={invitation.id}
                 invitation={invitation}
                 busyKey={busyKey}
-                onResend={() => void handleInvitationAction(invitation, "resend")}
+                onResend={() =>
+                  void handleInvitationAction(invitation, "resend")
+                }
                 onRevoke={() => handleInvitationAction(invitation, "revoke")}
               />
             ))}
@@ -264,6 +321,13 @@ export function TeamManagement({
           setEditingMember(null)
         }}
       />
+      {tourOpen ? (
+        <GuidedSpotlightTour
+          eyebrow="Ekip ve yetkiler"
+          steps={teamTourSteps}
+          onClose={() => setTourOpen(false)}
+        />
+      ) : null}
     </div>
   )
 }
@@ -275,6 +339,7 @@ function MemberRow({
   isRemoving,
   onEdit,
   onRemove,
+  tourTarget = false,
 }: {
   member: TeamMember
   currentUserId: string
@@ -282,6 +347,7 @@ function MemberRow({
   isRemoving: boolean
   onEdit: () => void
   onRemove: () => Promise<boolean>
+  tourTarget?: boolean
 }) {
   const isCurrentUser = member.user.id === currentUserId
   const canEdit =
@@ -290,7 +356,10 @@ function MemberRow({
     (canManageAccountAdmins || member.accessLevel !== "ACCOUNT_ADMIN")
 
   return (
-    <div className="flex items-center gap-3 px-5 py-4 sm:px-6">
+    <div
+      data-team-tour-member={tourTarget ? "" : undefined}
+      className="flex items-center gap-3 px-5 py-4 sm:px-6"
+    >
       <Avatar className="size-9">
         {member.user.image ? (
           <AvatarImage src={member.user.image} alt={member.user.name} />
@@ -558,7 +627,9 @@ function InviteMemberDialog({
       try {
         await onCreated(result)
       } catch {
-        setError("Davet oluşturuldu ancak ekip listesi yenilenemedi. Sayfayı yenileyebilirsiniz.")
+        setError(
+          "Davet oluşturuldu ancak ekip listesi yenilenemedi. Sayfayı yenileyebilirsiniz."
+        )
       }
     } catch (caughtError) {
       setError(readError(caughtError))

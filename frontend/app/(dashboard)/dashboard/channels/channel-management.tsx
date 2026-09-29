@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState, useTransition } from "react"
+import { useEffect, useMemo, useState, useTransition } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   AlertCircleIcon,
   ArrowRight01Icon,
@@ -17,6 +17,10 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { ChannelCard } from "@/components/dashboard/channels/channel-card"
+import {
+  GuidedSpotlightTour,
+  type GuidedTourStep,
+} from "@/components/dashboard/setup/response-settings-tour"
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -65,6 +69,9 @@ export function ChannelManagement({
   providers,
 }: ChannelManagementProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [tourOpen, setTourOpen] = useState(false)
+  const [tourStep, setTourStep] = useState(0)
   const [isConnectionDialogOpen, setIsConnectionDialogOpen] = useState(false)
   const [selectedProviderKey, setSelectedProviderKey] = useState<string | null>(
     null
@@ -114,6 +121,69 @@ export function ChannelManagement({
   const hasRunningSync = connections.some(
     (connection) =>
       connection.processingStartedAt || connection.questionSyncStartedAt
+  )
+  const firstConnectionStatus = connections[0]?.status
+
+  useEffect(() => {
+    if (searchParams.get("setupGuideTour") !== "1") return
+    const url = new URL(window.location.href)
+    url.searchParams.delete("setupGuideTour")
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${url.pathname}${url.search}${url.hash}`
+    )
+    window.requestAnimationFrame(() => {
+      setTourStep(0)
+      setTourOpen(true)
+    })
+  }, [searchParams])
+
+  const tourSteps = useMemo<GuidedTourStep[]>(
+    () => [
+      {
+        targets: ["[data-channel-tour-connect]"],
+        title: "Yeni kanal ekleyin",
+        description: availableProviders.length
+          ? "Kanal bağla düğmesiyle yeni bir pazaryeri ekleyebilirsiniz. Alttaki uygun pazaryeri kartlarından da aynı işlemi başlatabilirsiniz."
+          : "Desteklenen kanalların tümü bağlı. Yeni bir kanal kullanılabilir olduğunda ekleme düğmesi burada görünür.",
+      },
+      ...(connections.length
+        ? [
+            {
+              targets: [
+                "[data-channel-tour-menu-trigger]",
+                "[data-channel-tour-menu]",
+              ],
+              title: "Bağlantı işlemleri",
+              description:
+                firstConnectionStatus === "PENDING"
+                  ? "Üç nokta menüsünden henüz tamamlanmamış bağlantıyı kaldırabilirsiniz. Kurulumu tamamla düğmesiyle bağlantı bilgilerini girebilirsiniz."
+                  : firstConnectionStatus === "CONNECTED"
+                    ? "Üç nokta menüsünden bağlantı ayarlarını açabilir, kanalı devre dışı bırakabilir veya kaldırabilirsiniz. Kaldırma işlemini ayrıca onaylamanız gerekir."
+                    : "Üç nokta menüsünden bağlantı ayarlarını açabilir veya kanalı kaldırabilirsiniz. Kaldırma işlemini ayrıca onaylamanız gerekir.",
+            },
+            {
+              targets: ["[data-channel-tour-actions]"],
+              title: "Güncelleme düğmeleri",
+              description:
+                firstConnectionStatus === "PENDING"
+                  ? "Kurulumu tamamla düğmesi bağlantı bilgilerini açar. Bağlandıktan sonra katalog ve stok güncelleme düğmeleri burada görünür."
+                  : firstConnectionStatus === "CONNECTED"
+                    ? "Kataloğu güncelle ve Stokları güncelle düğmeleri veri akışını başlatır. Geçmiş bağlantısı yapılan işlemleri gösterir."
+                    : "Yeniden bağla düğmesi bağlantıyı doğrular. Bağlantı düzeldiğinde katalog ve stok güncelleme düğmeleri burada görünür.",
+            },
+          ]
+        : [
+            {
+              targets: ["[data-channel-tour-empty]"],
+              title: "Kanallarınız burada görünür",
+              description:
+                "Bir kanal bağladığınızda bağlantı durumu, ürün ve stok güncellemeleri bu alanda görünür.",
+            },
+          ]),
+    ],
+    [availableProviders.length, connections.length, firstConnectionStatus]
   )
 
   useEffect(() => {
@@ -303,8 +373,27 @@ export function ChannelManagement({
         </div>
 
         <div
+          data-channel-tour-connect={
+            availableProviders.length === 0 ? "" : undefined
+          }
           className={`grid gap-2 sm:flex sm:flex-wrap sm:items-center ${availableProviders.length > 0 ? "grid-cols-2" : "grid-cols-1"}`}
         >
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className={
+              availableProviders.length
+                ? "col-span-2 justify-self-end sm:col-span-1"
+                : "justify-self-end"
+            }
+            onClick={() => {
+              setTourStep(0)
+              setTourOpen(true)
+            }}
+          >
+            Kısa tur
+          </Button>
           <Button
             asChild
             size="sm"
@@ -329,7 +418,12 @@ export function ChannelManagement({
             contentClassName="sm:max-w-2xl"
             trigger={
               availableProviders.length > 0 ? (
-                <Button type="button" size="sm" className="w-full sm:w-auto">
+                <Button
+                  data-channel-tour-connect=""
+                  type="button"
+                  size="sm"
+                  className="w-full sm:w-auto"
+                >
                   <HugeiconsIcon icon={PlusSignIcon} className="size-3.5" />
                   Kanal bağla
                 </Button>
@@ -545,7 +639,10 @@ export function ChannelManagement({
         </div>
 
         {connections.length === 0 ? (
-          <div className="flex min-h-48 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 py-8 text-center">
+          <div
+            data-channel-tour-empty=""
+            className="flex min-h-48 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 py-8 text-center"
+          >
             <span className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <HugeiconsIcon icon={PlugSocketIcon} className="size-5" />
             </span>
@@ -559,7 +656,7 @@ export function ChannelManagement({
           </div>
         ) : (
           <div className="grid gap-4 xl:grid-cols-2">
-            {connections.map((connection) => (
+            {connections.map((connection, index) => (
               <ChannelCard
                 key={connection.id}
                 connection={connection}
@@ -573,6 +670,8 @@ export function ChannelManagement({
                 onConfigure={openConfiguration}
                 onAction={runConnectionAction}
                 onRemove={setConnectionToRemove}
+                tourTarget={index === 0}
+                tourMenuOpen={tourOpen && tourStep === 1 && index === 0}
               />
             ))}
           </div>
@@ -672,6 +771,15 @@ export function ChannelManagement({
           ) : null}
         </div>
       </ResponsiveDialog>
+
+      {tourOpen ? (
+        <GuidedSpotlightTour
+          eyebrow="Bağlı kanallar"
+          steps={tourSteps}
+          onClose={() => setTourOpen(false)}
+          onStepChange={setTourStep}
+        />
+      ) : null}
     </div>
   )
 }

@@ -233,6 +233,7 @@ export class QuestionAnswerQueueService
           !isNonEmptyList(question.draftEvidenceIds)) ||
         (latestDraftAttempt.answerability !== 'OUT_OF_SCOPE' &&
           requiresInventoryVerification({
+            answer: input.answer,
             evidenceIds: question.draftEvidenceIds,
             requestedFacts: latestDraftAttempt.requestedFacts,
             detectedFacts: latestDraftAttempt.detectedFacts,

@@ -1363,6 +1363,12 @@ model StoreMember {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
+  setupGuidePhase               String    @default("ESSENTIAL")
+  setupGuideAiSettingsVisitedAt DateTime?
+  setupGuideChannelsVisitedAt   DateTime?
+  setupGuideTeamVisitedAt       DateTime?
+  setupGuideFaqSkippedAt        DateTime?
+
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
