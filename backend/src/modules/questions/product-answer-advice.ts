@@ -144,6 +144,26 @@ function isCarrierOnlyQuestion(question: string) {
   );
 }
 
+function hasNamedCarrier(value: string) {
+  const namedCarrier = [
+    ...value.matchAll(
+      /(?<![\p{L}\p{N}])(?:\p{Lu}[\p{L}\p{N}.-]*\s+){1,2}(?:Kargo|KARGO|kargo|Kurye|kurye|Express)(?![\p{L}\p{N}])/gu,
+    ),
+  ].some(([name]) => {
+    const words = normalize(name).split(/\s+/);
+    const brand = words[words.length - 2];
+    return !/^(?:anlasmali|standart|hizli|ucretsiz|ekonomik|normal|siparis)/.test(
+      brand,
+    );
+  });
+  return (
+    namedCarrier ||
+    /\b(?:HepsiJET|Kargoist|Scotty|FedEx|UPS|DHL|PTT|Kolay\s+Gelsin)\b/iu.test(
+      value,
+    )
+  );
+}
+
 function verifiedCarrierAdvice(context: ProductAnswerContext): Advice | null {
   if (!isCarrierOnlyQuestion(context.question)) return null;
   const policy = context.evidence.find(
@@ -152,15 +172,20 @@ function verifiedCarrierAdvice(context: ProductAnswerContext): Advice | null {
       ['STORE_KNOWLEDGE', 'CHANNEL_OVERRIDE'].includes(item.source) &&
       item.id === 'store-shipping-policy',
   );
-  if (!policy || policy.value.length > 160) return null;
-  const value = normalize(policy.value);
+  if (!policy) return null;
+  const carrierStatements = policy.value
+    .split(/\r?\n+|(?<=[.!?;])\s+/u)
+    .map((statement) => statement.trim())
+    .filter(hasNamedCarrier);
+  if (carrierStatements.length !== 1) return null;
+  const statement = carrierStatements[0];
   if (
-    /\d|ucret|fiyat|gun|saat|teslim|iade|degisim|garanti|takip/.test(value) ||
-    !/kargo|kurye|jet|ups|dhl|ptt|fedex/.test(value)
+    statement.length > 240 ||
+    /iade|degisim|garanti/.test(normalize(statement))
   )
     return null;
   return {
-    answer: policy.value,
+    answer: statement,
     responseKind: 'VERIFIED_STORE_POLICY',
     usedEvidenceIds: [policy.id],
     confidence: 0.99,

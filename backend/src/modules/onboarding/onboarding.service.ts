@@ -73,6 +73,8 @@ export class OnboardingService {
               knowledgeProfile: {
                 select: {
                   brandDescription: true,
+                  shippingPolicy: true,
+                  returnPolicy: true,
                   tone: true,
                   responseLength: true,
                 },
@@ -382,10 +384,14 @@ export class OnboardingService {
           storeId: store.id,
           tone: dto.tone,
           responseLength: dto.responseLength,
+          shippingPolicy: dto.shippingPolicy,
+          returnPolicy: dto.returnPolicy,
         },
         update: {
           tone: dto.tone,
           responseLength: dto.responseLength,
+          shippingPolicy: dto.shippingPolicy,
+          returnPolicy: dto.returnPolicy,
         },
       });
 

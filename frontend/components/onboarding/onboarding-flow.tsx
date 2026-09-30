@@ -24,6 +24,7 @@ import { AnimatePresence, motion, MotionConfig } from "motion/react"
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import { AppLogo } from "@/components/shared/brand/app-logo"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -76,6 +77,12 @@ const STEPS = [
     label: "AI yanıtları",
     description: "Yanıt tonunu ve uzunluğunu belirleyin",
     icon: Message01Icon,
+  },
+  {
+    id: 5,
+    label: "Kargo ve iade",
+    description: "Müşterilere uygulanacak kuralları ekleyin",
+    icon: Package01Icon,
   },
 ] as const
 
@@ -279,6 +286,42 @@ function getInitials(name: string) {
   return `${parts[0][0]}${parts.at(-1)?.[0] ?? ""}`.toLocaleUpperCase("tr-TR")
 }
 
+function OnboardingUserAvatar({
+  user,
+  dark = false,
+}: {
+  user: AuthUser
+  dark?: boolean
+}) {
+  return (
+    <Avatar
+      className={cn(
+        "overflow-hidden rounded-xl after:rounded-xl",
+        dark ? "size-9 after:border-white/10" : "size-8"
+      )}
+    >
+      {user.image ? (
+        <AvatarImage
+          src={user.image}
+          alt={user.name}
+          referrerPolicy="no-referrer"
+          className="rounded-xl"
+        />
+      ) : null}
+      <AvatarFallback
+        className={cn(
+          "rounded-xl text-[10px] font-bold",
+          dark
+            ? "bg-white/10 text-[#d9e7e0]"
+            : "bg-secondary text-secondary-foreground"
+        )}
+      >
+        {getInitials(user.name)}
+      </AvatarFallback>
+    </Avatar>
+  )
+}
+
 export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
   const router = useRouter()
   const initialStep = getInitialStep(initialStatus)
@@ -331,6 +374,8 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
   >(() => ({
     ...INITIAL_AI_PROFILE,
     brandDescription: initialStatus.profile?.brandDescription ?? null,
+    shippingPolicy: initialStatus.profile?.shippingPolicy ?? null,
+    returnPolicy: initialStatus.profile?.returnPolicy ?? null,
     tone: initialStatus.profile?.tone ?? INITIAL_AI_PROFILE.tone,
     responseLength:
       initialStatus.profile?.responseLength ??
@@ -362,7 +407,13 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
         ? Boolean(selectedChannel && channelCredentialsComplete)
         : currentStep === 3
           ? Boolean(inventoryPolicy)
-          : Boolean(provisionedStore)
+        : currentStep === 4
+          ? Boolean(provisionedStore)
+          : Boolean(
+              provisionedStore &&
+                profileDraft.shippingPolicy?.trim() &&
+                profileDraft.returnPolicy?.trim()
+            )
 
   React.useEffect(() => {
     const catalogSync = initialStatus.catalogSync
@@ -479,11 +530,16 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
       return
     }
 
+    if (currentStep === 4) {
+      advanceToStep(5)
+      return
+    }
+
     await connectChannelAndSyncCatalog()
   }
 
   const handleBack = () => {
-    if (currentStep <= 1 || provisionedStore) return
+    if (currentStep <= 1 || (provisionedStore && currentStep <= 4)) return
 
     setDirection(-1)
     setCurrentStep((step) => step - 1)
@@ -561,7 +617,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
   }
 
   const handleFinish = async () => {
-    if (!provisionedStore) return
+    if (!provisionedStore || !canProceed) return
 
     setIsSubmitting(true)
     setSubmitError(null)
@@ -572,6 +628,8 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
         inventoryPolicy,
         tone: profileDraft.tone,
         responseLength: profileDraft.responseLength,
+        shippingPolicy: profileDraft.shippingPolicy?.trim() ?? "",
+        returnPolicy: profileDraft.returnPolicy?.trim() ?? "",
       })
       router.replace(result.nextPath)
       router.refresh()
@@ -611,7 +669,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
               const isActive = step.id === currentStep
               const isCompleted = step.id < currentStep
               const isReachable =
-                step.id <= furthestStep && (!provisionedStore || step.id === 3)
+                step.id <= furthestStep && (!provisionedStore || step.id >= 4)
 
               return (
                 <button
@@ -678,9 +736,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
 
           <div className="mt-auto border-t border-white/10 pt-6">
             <div className="flex items-center gap-3">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-white/10 text-xs font-bold text-[#d9e7e0]">
-                {getInitials(user.name)}
-              </span>
+              <OnboardingUserAvatar user={user} dark />
               <div className="min-w-0">
                 <p className="truncate text-xs font-semibold text-white">
                   {user.name}
@@ -733,9 +789,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                     type="button"
                     className="flex items-center gap-2 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                   >
-                    <span className="flex size-8 items-center justify-center rounded-lg bg-secondary text-[10px] font-bold text-secondary-foreground">
-                      {getInitials(user.name)}
-                    </span>
+                    <OnboardingUserAvatar user={user} />
                     <span className="hidden max-w-36 truncate text-xs font-semibold sm:block">
                       {user.name}
                     </span>
@@ -811,7 +865,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                           value={inventoryPolicy}
                           onChange={setInventoryPolicy}
                         />
-                      ) : (
+                      ) : currentStep === 4 ? (
                         <AiPreferencesStep
                           tone={profileDraft.tone}
                           responseLength={profileDraft.responseLength}
@@ -820,6 +874,17 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                           onToneChange={(value) => updateProfile("tone", value)}
                           onResponseLengthChange={(value) =>
                             updateProfile("responseLength", value)
+                          }
+                        />
+                      ) : (
+                        <ShippingReturnsStep
+                          shippingPolicy={profileDraft.shippingPolicy ?? ""}
+                          returnPolicy={profileDraft.returnPolicy ?? ""}
+                          onShippingPolicyChange={(value) =>
+                            updateProfile("shippingPolicy", value || null)
+                          }
+                          onReturnPolicyChange={(value) =>
+                            updateProfile("returnPolicy", value || null)
                           }
                         />
                       )}
@@ -847,12 +912,15 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                     onClick={handleBack}
                     disabled={
                       currentStep === 1 ||
-                      Boolean(provisionedStore) ||
+                      (Boolean(provisionedStore) && currentStep <= 4) ||
                       isProvisioning ||
                       isSubmitting
                     }
                     className={
-                      currentStep === 1 || provisionedStore ? "invisible" : ""
+                      currentStep === 1 ||
+                      (provisionedStore && currentStep <= 4)
+                        ? "invisible"
+                        : ""
                     }
                   >
                     <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
@@ -1504,6 +1572,82 @@ function AiPreferencesStep({
             </div>
           </div>
         </section>
+      </div>
+    </div>
+  )
+}
+
+function ShippingReturnsStep({
+  shippingPolicy,
+  returnPolicy,
+  onShippingPolicyChange,
+  onReturnPolicyChange,
+}: {
+  shippingPolicy: string
+  returnPolicy: string
+  onShippingPolicyChange: (value: string) => void
+  onReturnPolicyChange: (value: string) => void
+}) {
+  return (
+    <div>
+      <StepHeading
+        eyebrow="Mağaza politikaları"
+        title="Kargo ve iade süreciniz nasıl işliyor?"
+        description="Müşterilere doğru bilgi verebilmemiz için mağazanızın geçerli kargo ve iade kurallarını yazın. Bu bilgileri daha sonra bilgi tabanından değiştirebilirsiniz."
+      />
+
+      <div className="grid max-w-3xl gap-7">
+        <div>
+          <label
+            htmlFor="onboarding-shipping-policy"
+            className="mb-2 block text-sm font-medium text-foreground"
+          >
+            Kargo bilgileri <span className="text-destructive">*</span>
+          </label>
+          <Textarea
+            id="onboarding-shipping-policy"
+            value={shippingPolicy}
+            onChange={(event) => onShippingPolicyChange(event.target.value)}
+            placeholder="Kargo firmaları, sipariş hazırlama süresi ve gönderim koşullarınızı yazın."
+            maxLength={4000}
+            required
+            aria-describedby="onboarding-shipping-help"
+            className="min-h-32 border-input bg-card px-4 py-3 text-sm leading-6 shadow-xs hover:border-foreground/25 focus-visible:bg-card dark:bg-card"
+          />
+          <p
+            id="onboarding-shipping-help"
+            className="mt-2 text-xs leading-5 text-muted-foreground"
+          >
+            Yalnızca müşterileriniz için geçerli ve doğrulayabildiğiniz bilgileri
+            girin.
+          </p>
+        </div>
+
+        <div>
+          <label
+            htmlFor="onboarding-return-policy"
+            className="mb-2 block text-sm font-medium text-foreground"
+          >
+            İade politikası <span className="text-destructive">*</span>
+          </label>
+          <Textarea
+            id="onboarding-return-policy"
+            value={returnPolicy}
+            onChange={(event) => onReturnPolicyChange(event.target.value)}
+            placeholder="İade süresi, kabul koşulları ve başvuru adımlarınızı yazın."
+            maxLength={4000}
+            required
+            aria-describedby="onboarding-return-help"
+            className="min-h-32 border-input bg-card px-4 py-3 text-sm leading-6 shadow-xs hover:border-foreground/25 focus-visible:bg-card dark:bg-card"
+          />
+          <p
+            id="onboarding-return-help"
+            className="mt-2 text-xs leading-5 text-muted-foreground"
+          >
+            Pazaryerlerine göre farklı kurallarınız varsa bunları daha sonra kanal
+            bazında düzenleyebilirsiniz.
+          </p>
+        </div>
       </div>
     </div>
   )

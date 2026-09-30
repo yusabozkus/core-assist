@@ -96,4 +96,14 @@ export class CompleteOnboardingDto {
 
   @IsEnum(AiResponseLength)
   responseLength: AiResponseLength;
+
+  @Transform(trimString)
+  @IsString()
+  @Length(1, 4_000)
+  shippingPolicy: string;
+
+  @Transform(trimString)
+  @IsString()
+  @Length(1, 4_000)
+  returnPolicy: string;
 }

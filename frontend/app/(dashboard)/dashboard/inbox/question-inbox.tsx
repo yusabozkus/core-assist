@@ -77,6 +77,7 @@ export type QuestionInboxProps = {
   initialPage: ProductQuestionPage
   initialFilter: ProductQuestionFilter
   initialPendingStates: PendingQuestionState[]
+  initialQuery: string
 }
 
 const PAGE_SIZE = 30
@@ -161,11 +162,15 @@ export function QuestionInbox({
   initialPage,
   initialFilter,
   initialPendingStates,
+  initialQuery,
 }: QuestionInboxProps) {
   const isDesktop = useIsDesktop()
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const selectedQuestionId = searchParams.get("question")
+  const query = searchParams.get("q") ?? ""
+  const searchQuery = query.trim()
   const filter = parseQuestionFilter(searchParams.get("status"))
   const pendingStateParam = searchParams.get("pending")
   const pendingStates = useMemo(
@@ -176,21 +181,17 @@ export function QuestionInbox({
   const [questions, setQuestions] = useState(initialPage.items)
   const [nextCursor, setNextCursor] = useState(initialPage.nextCursor)
   const [summary, setSummary] = useState(initialPage.summary)
-  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
-    searchParams.get("question")
-  )
   const [selectedQuestionSummary, setSelectedQuestionSummary] =
     useState<ProductQuestionListItem | null>(null)
   const [selectedQuestion, setSelectedQuestion] =
     useState<ProductQuestion | null>(null)
   const [isDetailLoading, setIsDetailLoading] = useState(
-    Boolean(searchParams.get("question"))
+    Boolean(selectedQuestionId)
   )
-  const [detailError, setDetailError] = useState<string | null>(null)
-  const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(
-    Boolean(searchParams.get("question"))
-  )
-  const [query, setQuery] = useState("")
+  const [detailError, setDetailError] = useState<{
+    questionId: string
+    message: string
+  } | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [listError, setListError] = useState<string | null>(null)
@@ -201,7 +202,7 @@ export function QuestionInbox({
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const listRequestIdRef = useRef(0)
   const lastListRequestKeyRef = useRef(
-    `${storeId}|${initialFilter}|${initialPendingStates.join(",")}|`
+    `${storeId}|${initialFilter}|${initialPendingStates.join(",")}|${initialQuery}`
   )
   const detailRequestIdRef = useRef(0)
   const detailAbortControllerRef = useRef<AbortController | null>(null)
@@ -252,7 +253,8 @@ export function QuestionInbox({
         !force &&
         cached &&
         Date.now() - cached.cachedAt < DETAIL_CACHE_TTL_MS &&
-        (!listQuestion || !hasQuestionStateChanged(cached.question, listQuestion))
+        (!listQuestion ||
+          !hasQuestionStateChanged(cached.question, listQuestion))
       ) {
         setSelectedQuestion(cached.question)
         setDetailError(null)
@@ -301,11 +303,13 @@ export function QuestionInbox({
           requestId === detailRequestIdRef.current &&
           !isAbortError(caughtError)
         ) {
-          setDetailError(
-            caughtError instanceof Error
-              ? caughtError.message
-              : "Soru detayları yüklenemedi."
-          )
+          setDetailError({
+            questionId,
+            message:
+              caughtError instanceof Error
+                ? caughtError.message
+                : "Soru detayları yüklenemedi.",
+          })
         }
         return null
       } finally {
@@ -321,30 +325,30 @@ export function QuestionInbox({
     return () => detailAbortControllerRef.current?.abort()
   }, [])
 
-  // Explicit overview links can open a question outside the first page.
-  // Ordinary inbox visits still start without an automatic selection.
-  const linkedQuestionId = searchParams.get("question")
+  // The selected question follows the URL, including direct links and back/forward.
   useEffect(() => {
-    if (!linkedQuestionId) return
+    if (!selectedQuestionId) {
+      detailAbortControllerRef.current?.abort()
+      detailRequestIdRef.current += 1
+      return
+    }
+
     let disposed = false
-    void loadQuestionDetail(linkedQuestionId).then((question) => {
+    void loadQuestionDetail(selectedQuestionId).then((question) => {
       if (!question || disposed) return
-      setSelectedQuestionId(question.id)
-      setSelectedQuestionSummary(
+      setSelectedQuestionSummary((current) =>
         listItemFromDetail(
-          {
-            ...question,
-            product: null,
-          },
+          current?.id === question.id
+            ? current
+            : { ...question, product: null },
           question
         )
       )
-      setIsMobileDetailOpen(true)
     })
     return () => {
       disposed = true
     }
-  }, [linkedQuestionId, loadQuestionDetail])
+  }, [selectedQuestionId, loadQuestionDetail])
 
   const refreshSelectedQuestion = useCallback(async () => {
     if (!selectedQuestionId || detailRefreshInFlightRef.current) return
@@ -358,7 +362,7 @@ export function QuestionInbox({
   }, [loadQuestionDetail, selectedQuestionId])
 
   useEffect(() => {
-    const normalizedQuery = query.trim()
+    const normalizedQuery = searchQuery
     const requestKey = `${storeId}|${filter}|${pendingStateKey}|${normalizedQuery}`
 
     if (requestKey === lastListRequestKeyRef.current) return
@@ -405,7 +409,14 @@ export function QuestionInbox({
       window.clearTimeout(timeoutId)
       controller.abort()
     }
-  }, [applyFirstPage, filter, pendingStateKey, pendingStates, query, storeId])
+  }, [
+    applyFirstPage,
+    filter,
+    pendingStateKey,
+    pendingStates,
+    searchQuery,
+    storeId,
+  ])
 
   const loadMore = useCallback(async () => {
     if (!nextCursor || isListLoading || isLoadingMore) return
@@ -418,7 +429,7 @@ export function QuestionInbox({
         cursor: nextCursor,
         limit: PAGE_SIZE,
         status: filter,
-        query,
+        query: searchQuery,
         pendingStates,
       })
 
@@ -441,7 +452,7 @@ export function QuestionInbox({
     isLoadingMore,
     nextCursor,
     pendingStates,
-    query,
+    searchQuery,
     storeId,
   ])
 
@@ -463,17 +474,37 @@ export function QuestionInbox({
   }, [isDesktop, isListLoading, loadMore, nextCursor])
 
   function selectQuestion(question: ProductQuestionListItem) {
-    setSelectedQuestionId(question.id)
-    setSelectedQuestionSummary(question)
-    void loadQuestionDetail(question.id, true)
-
-    if (isDesktop === false) {
-      setIsMobileDetailOpen(true)
+    const url = new URL(window.location.href)
+    if (url.searchParams.get("question") === question.id) {
+      return
     }
+
+    url.searchParams.set("question", question.id)
+    setSelectedQuestionSummary(question)
+    setSelectedQuestion(null)
+    setIsDetailLoading(true)
+    window.history.pushState(null, "", url)
+  }
+
+  function changeQuery(value: string) {
+    const url = new URL(window.location.href)
+    if (value) {
+      url.searchParams.set("q", value)
+    } else {
+      url.searchParams.delete("q")
+    }
+    window.history.replaceState(null, "", url)
+  }
+
+  function closeMobileDetail() {
+    const url = new URL(window.location.href)
+    if (!url.searchParams.has("question")) return
+    url.searchParams.delete("question")
+    window.history.pushState(null, "", url)
   }
 
   function changeFilter(nextFilter: ProductQuestionFilter) {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(window.location.search)
     if (nextFilter === "PENDING") {
       params.delete("status")
     } else {
@@ -498,7 +529,7 @@ export function QuestionInbox({
     const orderedStates = PENDING_QUESTION_STATES.filter((item) =>
       selectedStates.has(item)
     )
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(window.location.search)
     params.set(
       "pending",
       orderedStates.map((item) => item.toLowerCase()).join(",")
@@ -521,7 +552,7 @@ export function QuestionInbox({
         const requestOptions = {
           limit: refreshLimit,
           status: filter,
-          query: query.trim(),
+          query: searchQuery,
           pendingStates,
         } as const
         let page: ProductQuestionListSlice
@@ -587,7 +618,7 @@ export function QuestionInbox({
         liveRefreshInFlightRef.current = false
       }
     },
-    [filter, pendingStates, query, storeId]
+    [filter, pendingStates, searchQuery, storeId]
   )
 
   useEffect(() => {
@@ -596,7 +627,7 @@ export function QuestionInbox({
     let cycleInFlight = false
 
     async function refreshLiveState() {
-      const activeRequestKey = `${storeId}|${filter}|${pendingStateKey}|${query.trim()}`
+      const activeRequestKey = `${storeId}|${filter}|${pendingStateKey}|${searchQuery}`
       if (
         document.visibilityState !== "visible" ||
         isListLoading ||
@@ -664,7 +695,7 @@ export function QuestionInbox({
     isListLoading,
     isLoadingMore,
     pendingStateKey,
-    query,
+    searchQuery,
     refreshCurrentList,
     refreshSelectedQuestion,
     storeId,
@@ -697,7 +728,12 @@ export function QuestionInbox({
     })
   }
 
-  if (initialPage.summary.total === 0 && summary.total === 0) {
+  if (
+    !initialQuery &&
+    !searchQuery &&
+    initialPage.summary.total === 0 &&
+    summary.total === 0
+  ) {
     return (
       <div className="h-full min-h-0 w-full">
         <EmptyInbox onSync={syncQuestions} isSyncing={isSyncing} />
@@ -715,7 +751,7 @@ export function QuestionInbox({
         <div className="flex items-center gap-2">
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => changeQuery(event.target.value)}
             placeholder="Müşteri, ürün veya soru ara"
             aria-label="Gelen kutusunda ara"
             icon={<HugeiconsIcon icon={Search01Icon} className="size-4" />}
@@ -723,7 +759,7 @@ export function QuestionInbox({
               query ? (
                 <button
                   type="button"
-                  onClick={() => setQuery("")}
+                  onClick={() => changeQuery("")}
                   aria-label="Aramayı temizle"
                   className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
@@ -895,11 +931,18 @@ export function QuestionInbox({
     </aside>
   )
   function renderQuestionDetail() {
-    if (isDetailLoading) {
+    const activeDetailError =
+      detailError?.questionId === selectedQuestionId
+        ? detailError.message
+        : null
+    if (
+      isDetailLoading ||
+      (selectedQuestion?.id !== selectedQuestionId && !activeDetailError)
+    ) {
       return <QuestionDetailSkeleton showHeader={false} />
     }
 
-    if (selectedQuestion) {
+    if (selectedQuestion?.id === selectedQuestionId) {
       return (
         <QuestionDetail
           storeId={storeId}
@@ -924,7 +967,7 @@ export function QuestionInbox({
             Soru detayları yüklenemedi
           </p>
           <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-            {detailError ??
+            {activeDetailError ??
               "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin."}
           </p>
           {selectedQuestionId ? (
@@ -962,6 +1005,11 @@ export function QuestionInbox({
       </div>
     </div>
   )
+  const activeQuestionSummary =
+    selectedQuestionSummary?.id === selectedQuestionId
+      ? selectedQuestionSummary
+      : (questions.find((question) => question.id === selectedQuestionId) ??
+        null)
 
   return (
     <div className="h-full min-h-0 w-full bg-background px-0 lg:px-6">
@@ -993,37 +1041,39 @@ export function QuestionInbox({
           {questionListPanel}
           {selectedQuestionId ? (
             <ResponsiveDialog
-              open={isMobileDetailOpen}
-              onOpenChange={setIsMobileDetailOpen}
+              open
+              onOpenChange={(open) => {
+                if (!open) closeMobileDetail()
+              }}
               title={
                 <span className="flex min-w-0 items-center gap-2">
                   <span className="truncate">
-                    {selectedQuestionSummary?.customerName ??
+                    {activeQuestionSummary?.customerName ??
                       "Pazaryeri müşterisi"}
                   </span>
-                  {selectedQuestionSummary && (
+                  {activeQuestionSummary && (
                     <QuestionStatus
-                      status={selectedQuestionSummary.status}
+                      status={activeQuestionSummary.status}
                       deliveryStatus={
-                        selectedQuestionSummary.answerDelivery?.status
+                        activeQuestionSummary.answerDelivery?.status
                       }
                       draftProcessingStatus={
-                        selectedQuestionSummary.draftProcessingStatus
+                        activeQuestionSummary.draftProcessingStatus
                       }
-                      draftDecision={selectedQuestionSummary.draftDecision}
+                      draftDecision={activeQuestionSummary.draftDecision}
                       draftAnswerability={
-                        selectedQuestionSummary.draftAnswerability
+                        activeQuestionSummary.draftAnswerability
                       }
                     />
                   )}
                 </span>
               }
               description={
-                selectedQuestionSummary
+                activeQuestionSummary
                   ? `${providerName(
-                      selectedQuestionSummary.connection.providerKey
+                      activeQuestionSummary.connection.providerKey
                     )} · ${inboxDateFormatter.format(
-                      new Date(selectedQuestionSummary.externalCreatedAt)
+                      new Date(activeQuestionSummary.externalCreatedAt)
                     )}`
                   : "Soru detayları"
               }

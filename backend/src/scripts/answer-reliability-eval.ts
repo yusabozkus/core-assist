@@ -5,7 +5,10 @@ import {
   GeminiDraftService,
   sanitizeDraftAnswer,
 } from '../modules/ai/gemini-draft.service';
-import type { AiDraftResult } from '../modules/ai/ai-draft.types';
+import type {
+  AiDraftResult,
+  GeminiGenerationRequest,
+} from '../modules/ai/ai-draft.types';
 import { MockCatalogConnector } from '../modules/channels/providers/mock-catalog.connector';
 import {
   MOCK_HEPSIBURADA_QUESTIONS,
@@ -23,6 +26,9 @@ import type {
 } from '../modules/questions/product-answer-context.types';
 import { evaluateQuestionResponsePolicy } from '../modules/questions/question-response-policy.service';
 import { applyHeightWeightSizeRecommendation } from '../modules/questions/height-weight-size-recommendation';
+import { evaluateAutoSendEligibility } from '../modules/questions/ai-auto-send-policy';
+import { QuestionReplyDecisionService } from '../modules/questions/question-reply-decision.service';
+import { resolveProductAnswerAdvice } from '../modules/questions/product-answer-advice';
 import { formatNormalizedSizeGuide } from '../modules/size-guides/size-guide-queue.service';
 
 const PROVIDERS = ['trendyol', 'hepsiburada'] as const;
@@ -32,6 +38,14 @@ const connectorContext: ConnectorContext = {
 };
 
 async function run() {
+  if (process.argv.includes('--regressions-only')) {
+    const regressions = evaluateRegressions();
+    const draftRegressions = await evaluateDraftRegressions();
+    process.stdout.write(
+      `${JSON.stringify({ ok: true, regressions, draftRegressions }, null, 2)}\n`,
+    );
+    return;
+  }
   const targetedOnly =
     process.argv.includes('--targeted-only') ||
     process.argv.includes('--fit-only');
@@ -40,6 +54,7 @@ async function run() {
     : await createEvaluationContexts();
   const deterministic = evaluateContexts(contexts);
   const regressions = evaluateRegressions();
+  const draftRegressions = await evaluateDraftRegressions();
   const withAi = process.argv.includes('--with-ai');
   const ai = withAi ? await evaluateAiDrafts(contexts) : null;
 
@@ -56,6 +71,7 @@ async function run() {
             : 'CONTEXT_ONLY',
         ...deterministic,
         regressions,
+        draftRegressions,
         ai,
       },
       null,
@@ -596,6 +612,166 @@ function evaluateRegressions() {
     ribbedFabricEvidenceCreated: true,
     heightWeightSizeRecommendationMatched: true,
     disabledHeightWeightSizeRecommendationBlocked: true,
+  };
+}
+
+async function evaluateDraftRegressions() {
+  const product: ProductAnswerContext['product'] = {
+    id: 'shipping-and-size-regression-product',
+    title: 'Regular Fit Pamuklu Gömlek',
+    description: null,
+    brand: 'DeFacto',
+    category: 'Gömlek',
+    attributes: [],
+    variants: ['S', 'M', 'L', 'XL', '2XL'].map((size) => ({
+      title: `Beyaz / ${size}`,
+      sku: `REGRESSION-${size}`,
+      color: 'Beyaz',
+      size,
+      price: 300,
+      currency: 'TRY',
+      stock: 10,
+      status: 'ACTIVE' as const,
+      lastSyncedAt: '2026-09-28T12:00:00.000Z',
+    })),
+    sizeGuides: [],
+  };
+  const preferences: NonNullable<ProductAnswerContext['responsePreferences']> =
+    {
+      automationMode: 'SAFE_AUTO',
+      minimumAutoSendConfidence: 0.85,
+      tone: 'MINIMAL',
+      responseLength: 'SHORT',
+      greetingEnabled: true,
+      closingEnabled: true,
+      emojiPolicy: 'NEVER',
+      preferredEmoji: null,
+      heightWeightSizeRecommendationEnabled: true,
+      instructions: [],
+      approvedAnswerExamples: [],
+    };
+  const policy =
+    'Siparişler ortalama 2 gün içerisinde kargoya verilir.\nAnlaşmalı firmalar Aras Kargo ve HepsiJET firmalarıdır.';
+  const shippingContext: ProductAnswerContext = {
+    ...analyzeProductQuestion({
+      questionId: 'regression-carrier-only',
+      question: 'merhaba hangi kargo',
+      product,
+    }),
+    evidence: [
+      {
+        id: 'store-shipping-policy',
+        fact: 'SHIPPING',
+        label: 'Mağaza kargo politikası',
+        value: policy,
+        source: 'STORE_KNOWLEDGE',
+        confidence: 1,
+      },
+    ],
+    responsePreferences: preferences,
+  };
+  if (
+    resolveProductAnswerAdvice({
+      ...shippingContext,
+      evidence: [
+        {
+          ...shippingContext.evidence[0],
+          value: 'Siparişlerimiz Standart Kargo ile gönderilir.',
+        },
+      ],
+    })
+  ) {
+    throw new Error('Genel kargo ifadesi firma adı sanıldı.');
+  }
+  const modelAnswer = {
+    answer: 'Siparişleriniz 2 gün içerisinde kargoya verilir.',
+    interpretation: 'Kargo firması sorusu',
+    scope: 'IN_SCOPE',
+    detectedFacts: ['SHIPPING'],
+    answerability: 'FULL',
+    decision: 'DRAFT',
+    confidence: 0.99,
+    usedEvidenceIds: ['store-shipping-policy'],
+    missingInformation: [],
+  };
+  const shippingClient = {
+    isEnabled: () => true,
+    generate: () => Promise.resolve(JSON.stringify(modelAnswer)),
+  } as unknown as GeminiClientService;
+  const shippingDraft = await new GeminiDraftService(shippingClient).generate(
+    shippingContext,
+  );
+  if (
+    !shippingDraft ||
+    !shippingDraft.answer.includes('Aras Kargo') ||
+    !shippingDraft.answer.includes('HepsiJET') ||
+    shippingDraft.answer.includes('2 gün') ||
+    shippingDraft.risks.length > 0
+  ) {
+    throw new Error(
+      'Kısa kargo yanıtında doğrulanmış firma adları korunamadı.',
+    );
+  }
+  const decision = new QuestionReplyDecisionService().evaluate(shippingDraft);
+  const eligibility = evaluateAutoSendEligibility({
+    draft: shippingDraft,
+    decision,
+    requestedFacts: shippingContext.requestedFacts,
+    storeMinimumConfidence: preferences.minimumAutoSendConfidence,
+  });
+  if (decision !== 'READY_FOR_SEND' || !eligibility.eligible) {
+    throw new Error('Doğrulanmış kargo firması yanıtı gönderime hazır olmadı.');
+  }
+
+  const prompts: string[] = [];
+  const sizeClient = {
+    isEnabled: () => true,
+    generate: (request: GeminiGenerationRequest) => {
+      prompts.push(request.prompt);
+      return Promise.resolve(
+        JSON.stringify({
+          ...modelAnswer,
+          answer: '2XL beden uygun olabilir; bu yalnızca tahmini bir öneridir.',
+          interpretation: 'Boy ve kiloya göre beden önerisi',
+          detectedFacts: ['SIZE'],
+          confidence: 0.9,
+          usedEvidenceIds: ['variant-sizes'],
+          estimatedSize: '2XL',
+        }),
+      );
+    },
+  } as unknown as GeminiClientService;
+  const sizeGenerator = new GeminiDraftService(sizeClient);
+  for (const askedSize of ['M', 'L', '2XL']) {
+    const context = applyHeightWeightSizeRecommendation({
+      ...analyzeProductQuestion({
+        questionId: `regression-asked-${askedSize}`,
+        question: `193 102 kg ${askedSize} olur mu?`,
+        product,
+      }),
+      responsePreferences: preferences,
+    });
+    if (context.heightWeightSizeRecommendation?.status !== 'ESTIMATE_ALLOWED') {
+      throw new Error(`${askedSize}: tahmini beden yolu açılmadı.`);
+    }
+    const draft = await sizeGenerator.generate(context);
+    if (
+      !draft ||
+      draft.responseKind !== 'SIZE_ESTIMATE' ||
+      !draft.answer.includes('2XL beden') ||
+      (askedSize !== '2XL' &&
+        !draft.answer.includes(`Sorduğunuz ${askedSize} beden yerine`))
+    ) {
+      throw new Error(`${askedSize}: bağımsız beden tahmini uygulanamadı.`);
+    }
+  }
+  if (new Set(prompts).size !== 1) {
+    throw new Error('Sorulan beden değişince modelin tahmin girdisi değişti.');
+  }
+  return {
+    verifiedCarriersRetainedInShortReply: true,
+    verifiedCarrierReadyForAutoSend: true,
+    sizeEstimateIndependentOfAskedSize: true,
   };
 }
 

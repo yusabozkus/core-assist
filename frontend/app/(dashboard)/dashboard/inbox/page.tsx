@@ -15,16 +15,20 @@ export default async function InboxPage({
   searchParams: Promise<{
     status?: string | string[]
     pending?: string | string[]
+    q?: string | string[]
   }>
 }) {
   const { activeStore } = await getOperationalStoreContext()
   const params = await searchParams
   const initialFilter = parseQuestionFilter(params.status)
   const initialPendingStates = parsePendingStates(params.pending)
+  const initialQuery =
+    (Array.isArray(params.q) ? params.q[0] : params.q)?.trim() ?? ""
 
   const initialPage = await getServerProductQuestions(activeStore.id, {
     status: initialFilter,
     pendingStates: initialPendingStates,
+    query: initialQuery,
   })
 
   return (
@@ -34,6 +38,7 @@ export default async function InboxPage({
       initialPage={initialPage}
       initialFilter={initialFilter}
       initialPendingStates={initialPendingStates}
+      initialQuery={initialQuery}
     />
   )
 }

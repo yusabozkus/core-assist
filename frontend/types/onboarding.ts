@@ -26,6 +26,8 @@ export type CompleteOnboardingPayload = {
   inventoryPolicy: InventoryPolicy
   tone: AiTone
   responseLength: AiResponseLength
+  shippingPolicy: string
+  returnPolicy: string
 }
 
 export type OnboardingResource = {
@@ -48,6 +50,8 @@ export type OnboardingStatus = {
   store: OnboardingResource | null
   profile: {
     brandDescription: string | null
+    shippingPolicy: string | null
+    returnPolicy: string | null
     tone: AiTone
     responseLength: AiResponseLength
   } | null

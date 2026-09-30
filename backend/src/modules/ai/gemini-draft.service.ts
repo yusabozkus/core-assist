@@ -105,7 +105,42 @@ export class GeminiDraftService extends AiDraftGenerator {
 }
 
 function createPrompt(context: ProductAnswerContext) {
-  const normalizedQuestion = normalizeText(context.question);
+  const recommendation = context.heightWeightSizeRecommendation;
+  const independentSizeEstimate =
+    recommendation?.status === 'ESTIMATE_ALLOWED' &&
+    recommendation.customerHeightCm !== null &&
+    recommendation.customerWeightKg !== null &&
+    context.requestedFacts.includes('SIZE') &&
+    context.requestedFacts.every((fact) => fact === 'SIZE' || fact === 'FIT');
+  // The size named in "M olur mu?" is what the customer wants checked, not
+  // evidence that M fits. Give the model the same inference input for M/L/2XL.
+  const modelQuestion = independentSizeEstimate
+    ? `${recommendation.customerHeightCm} cm boy ve ${recommendation.customerWeightKg} kg için bu ürünün ${context.requestedFacts.includes('FIT') ? 'kalıbına göre ' : ''}hangi bedeni tahmini olarak önerirsiniz?`
+    : context.question;
+  const modelEvidence = independentSizeEstimate
+    ? context.evidence
+        .filter(
+          (item) =>
+            item.source !== 'CUSTOMER_INPUT' &&
+            item.source !== 'SIZE_GUIDE' &&
+            (item.fact !== 'SIZE' || item.id === 'variant-sizes'),
+        )
+        .map((item) =>
+          item.id === 'variant-sizes'
+            ? {
+                ...item,
+                value: [
+                  ...new Set(
+                    context.product.variants
+                      .map((variant) => variant.size)
+                      .filter((size): size is string => Boolean(size)),
+                  ),
+                ].join(', '),
+              }
+            : item,
+        )
+    : context.evidence;
+  const normalizedQuestion = normalizeText(modelQuestion);
   const storeInstructions =
     context.responsePreferences?.instructions
       .map((instruction) => instruction.trim())
@@ -127,7 +162,7 @@ function createPrompt(context: ProductAnswerContext) {
     ['STOCK', 'PRICE', 'SIZE', 'COLOR'].includes(fact),
   );
   const safeContext = {
-    question: context.question,
+    question: modelQuestion,
     platform: context.providerKey,
     ruleHints: context.requestedFacts,
     availableFactTypes: PRODUCT_ANSWER_FACTS,
@@ -151,29 +186,36 @@ function createPrompt(context: ProductAnswerContext) {
       hasVerifiedColorEvidence: Boolean(verifiedColorEvidence),
       hasSingleProductPackageEvidence: Boolean(packageScopeEvidence),
     },
-    requestedVariant: variantFactsRequested
-      ? {
-          color: context.requestedColor,
-          size: context.requestedSize,
-        }
-      : undefined,
-    matchedVariant: variantFactsRequested
-      ? {
-          color: context.matchedColor,
-          size: context.matchedSize,
-        }
-      : undefined,
+    requestedVariant:
+      variantFactsRequested && !independentSizeEstimate
+        ? {
+            color: context.requestedColor,
+            size: context.requestedSize,
+          }
+        : undefined,
+    matchedVariant:
+      variantFactsRequested && !independentSizeEstimate
+        ? {
+            color: context.matchedColor,
+            size: context.matchedSize,
+          }
+        : undefined,
     inventoryFreshness: context.inventoryFreshness,
     inventoryVerification: context.inventoryVerification,
     heightWeightSizeRecommendation: context.heightWeightSizeRecommendation,
-    resolvedGuidance: resolveProductAnswerAdvice(context),
+    resolvedGuidance: independentSizeEstimate
+      ? null
+      : resolveProductAnswerAdvice(context),
     product: {
       title: context.product.title,
       brand: context.product.brand,
       category: context.product.category,
     },
-    responsePreferences: context.responsePreferences,
-    catalogEvidence: context.evidence,
+    responsePreferences:
+      independentSizeEstimate && context.responsePreferences
+        ? { ...context.responsePreferences, approvedAnswerExamples: [] }
+        : context.responsePreferences,
+    catalogEvidence: modelEvidence,
   };
 
   return [
@@ -532,10 +574,16 @@ function parseAndValidate(
         customerMeasurementsOnly &&
         ((answerability === 'FULL' && decision === 'DRAFT') ||
           (answerability === 'PARTIAL' && missingInformation.length > 0));
+      const askedSize = context.requestedSize;
+      const estimateAnswer = askedSize
+        ? normalizeSizeValue(askedSize) === normalizeSizeValue(estimatedSize)
+          ? `Sorduğunuz ${askedSize} beden, paylaştığınız boy ve kiloya göre size uygun olabilir; bu yalnızca tahmini bir öneridir.`
+          : `Sorduğunuz ${askedSize} beden yerine, paylaştığınız boy ve kiloya göre ${estimatedSize} beden daha uygun olabilir; bu yalnızca tahmini bir öneridir.`
+        : `Paylaştığınız boy ve kiloya göre ${estimatedSize} beden size uygun olabilir; bu yalnızca tahmini bir öneridir.`;
       return {
         responseKind: 'SIZE_ESTIMATE',
         answer: applySellerTone(
-          `${context.requestedFacts.includes('FIT') ? fitDescription(context) : ''}Paylaştığınız boy ve kiloya göre ${estimatedSize} beden size uygun olabilir; bu yalnızca tahmini bir öneridir. Ürünün kalıbı ve kişisel ölçüler sonucu değiştirebilir.`,
+          `${context.requestedFacts.includes('FIT') ? fitDescription(context) : ''}${estimateAnswer} Ürünün kalıbı ve kişisel ölçüler sonucu değiştirebilir.`,
           context.questionId,
           context.responsePreferences,
         ),
