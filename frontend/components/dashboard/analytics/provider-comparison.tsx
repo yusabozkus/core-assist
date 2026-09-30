@@ -18,9 +18,6 @@ export function ProviderComparison({
         <h2 id="provider-comparison-title" className="text-sm font-semibold">
           Pazaryerlerine göre sonuçlar
         </h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Kanalların aynı dönemdeki kısa özeti
-        </p>
       </header>
       <div className="divide-y divide-border/70 border-t border-border/70">
         {providers.map((provider) => {

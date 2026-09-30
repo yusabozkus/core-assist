@@ -13,22 +13,22 @@ import { Button } from "@/components/ui/button"
 
 const responseSettingsSteps = [
   {
-    targets: ['[data-response-tour-section="automation"]'],
-    title: "Yanıt otomasyonu",
+    targets: ['[data-response-tour-header="automation"]'],
+    title: "Sorular nasıl işlensin?",
     description:
-      "Sorular geldiğinde AI'ın nasıl çalışacağını buradan seçersiniz: manuel, otomatik taslak veya güvenli otomatik yanıt. Şimdilik bir seçim yapmanız gerekmiyor.",
+      "Yeni sorularda AI'ın yalnızca siz istediğinizde mi çalışacağını, taslak mı hazırlayacağını, yoksa güvenli yanıtları otomatik mi göndereceğini seçin.",
   },
   {
-    targets: ['[data-response-tour-section="behavior"]'],
-    title: "Yanıt biçimi",
+    targets: ['[data-response-tour-header="behavior"]'],
+    title: "Yanıtlar nasıl yazılsın?",
     description:
-      "AI'ın üslubunu, cevap uzunluğunu ve karşılama biçimini burada ayarlarsınız. Boy ve kiloya göre tahmini beden önerisi de bu bölümde yönetilir.",
+      "Üslubu, uzunluğu ve mesaj yapısını belirleyin. Aynı bölümdeki örnek yanıt değişikliklerin nasıl görüneceğini gösterir.",
   },
   {
-    targets: ['[data-response-tour-section="instructions"]'],
+    targets: ['[data-response-tour-header="instructions"]'],
     title: "Özel AI talimatları",
     description:
-      "Mağazanıza özgü kalıcı kuralları buraya ekleyebilirsiniz. Örneğin kesin teslimat tarihi sözü vermemesini isteyebilirsiniz. Bunu daha sonra da yapabilirsiniz.",
+      "Mağazanıza özgü ek kuralları buraya yazın. Bu bölüm isteğe bağlıdır; örneğin kesin teslimat tarihi sözü verilmemesini belirtebilirsiniz.",
   },
 ] as const
 
@@ -50,7 +50,7 @@ export function ResponseSettingsTour({
   onStepChange,
 }: {
   onClose: () => void
-  onStepChange: (step: number) => void
+  onStepChange?: (step: number) => void
 }) {
   return (
     <GuidedSpotlightTour

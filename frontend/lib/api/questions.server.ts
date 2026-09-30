@@ -37,7 +37,7 @@ export const getServerProductQuestions = cache(
     })
 
     if (query?.trim()) searchParams.set("query", query.trim())
-    if (pendingStates?.length) {
+    if (pendingStates) {
       searchParams.set("pendingStates", pendingStates.join(","))
     }
 

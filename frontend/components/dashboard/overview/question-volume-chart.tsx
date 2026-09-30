@@ -44,9 +44,6 @@ export function QuestionVolumeChart({ data }: { data: DashboardOverview }) {
           <h2 id="activity-title" className="text-sm font-semibold">
             Soru akışı
           </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Günlük gelen ve yanıtlanan sorular
-          </p>
         </div>
         <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1.5">

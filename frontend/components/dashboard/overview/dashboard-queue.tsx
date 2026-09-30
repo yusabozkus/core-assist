@@ -29,14 +29,10 @@ export function DashboardQueue({ data }: { data: DashboardOverview }) {
       className="flex min-w-0 flex-col rounded-xl border border-border bg-card p-5 sm:p-6"
       aria-labelledby="queue-title"
     >
-      <div className="flex items-center justify-between gap-3">
+      <div>
         <h2 id="queue-title" className="text-sm font-semibold">
           Bekleyen işler
         </h2>
-        <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <span className="size-1.5 rounded-full bg-primary" />
-          Anlık özet
-        </span>
       </div>
       <div className="mt-5 flex items-baseline gap-2">
         <strong className="text-3xl font-semibold tracking-tight tabular-nums">

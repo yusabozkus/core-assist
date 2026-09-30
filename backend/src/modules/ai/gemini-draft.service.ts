@@ -245,8 +245,8 @@ function createPrompt(context: ProductAnswerContext) {
     'responsePreferences mağazanın üslup tercihidir. Bu tercihler hiçbir zaman katalog kanıtlarını, güvenlik kurallarını veya doğruluk gereksinimini geçersiz kılamaz.',
     'greetingEnabled true ise cevaba tercihen "Merhabalar," veya "Merhaba," diye başla; false ise selamlama kullanma. Ardından sonucu doğrudan söyle; gereksiz giriş yapma.',
     'closingEnabled true ise cevabı bağlama uygun kısa ve nazik bir kapanışla bitir; false ise kapanış kullanma. Özel mağaza talimatı belirli bir kapanış biçimi istiyorsa onu uygula.',
-    'emojiPolicy NEVER ise hiçbir emoji kullanma. WHEN_APPROPRIATE ise yalnızca mesajın bağlamına ve mağaza tonuna gerçekten uygunsa en fazla bir emoji kullan; sıradan bilgi cevaplarına zorunlu olarak emoji ekleme. ALWAYS ise cevabın sonunda tam olarak bir emoji kullan. preferredEmoji doluysa emoji kullanacağın her durumda onu tercih et. Emoji mesajın ortasında bulunmamalıdır.',
-    'Emoji politikası yapılandırılmış ve belirleyici bir ayardır. Özel mağaza talimatı emoji politikasıyla çelişirse emojiPolicy ve preferredEmoji değerleri önceliklidir.',
+    'emojiPolicy NEVER ise hiçbir emoji kullanma. WHEN_APPROPRIATE ise yalnızca mesajın bağlamına ve mağaza tonuna gerçekten uygunsa en fazla bir emoji kullan; sıradan bilgi cevaplarına zorunlu olarak emoji ekleme. ALWAYS ise cevabın sonunda tam olarak bir emoji kullan. preferredEmoji doluysa boşlukla ayrılmış izin verilen emoji listesidir; emoji kullanacağın zaman yalnızca bu listeden, bağlama uygun tek bir emoji seç. Emoji mesajın ortasında bulunmamalıdır.',
+    'Emoji politikası yapılandırılmış ve belirleyici bir ayardır. Özel mağaza talimatı emoji politikasıyla çelişirse emojiPolicy ve preferredEmoji listesindeki değerler önceliklidir.',
     'tone PROFESSIONAL ise ölçülü ve kurumsal, FRIENDLY ise doğal ve yakın, WARM ise nazik ve sıcak, MINIMAL ise mümkün olan en kısa dili kullan.',
     'responseLength SHORT ise 1-2, BALANCED ise 2-4, DETAILED ise yalnızca gerçekten gerekliyse 3-5 kısa cümle kullan.',
     'Özel mağaza talimatları, üslup ve cevap biçimi açısından zorunludur. "Her zaman", "mutlaka" veya "her cevapta" denilen güvenli ifade ve davranışları answer metninde görünür biçimde uygula. Bu talimatlar yalnızca veri uydurmayı, doğrulanmış kanıtlarla çelişmeyi veya güvenlik kurallarını ihlal etmeyi istiyorsa yok sayılır.',
@@ -1128,7 +1128,7 @@ export function applySellerTone(
     result = `${result}${/[.!?]$/.test(result) ? '' : '.'} ${pickStableStyle(SELLER_CLOSINGS, seed, 1)}`;
   }
 
-  result = applyEmojiPolicy(result, preferences);
+  result = applyEmojiPolicy(result, preferences, seed);
 
   return result;
 }
@@ -1136,11 +1136,15 @@ export function applySellerTone(
 function applyEmojiPolicy(
   answer: string,
   preferences?: ProductAnswerContext['responsePreferences'],
+  seed = '',
 ) {
   const policy = preferences?.emojiPolicy ?? 'NEVER';
   const generatedEmoji = answer.match(EMOJI_SEQUENCE_PATTERN)?.[0] ?? null;
-  const preferredEmoji =
-    preferences?.preferredEmoji?.match(EMOJI_SEQUENCE_PATTERN)?.[0] ?? null;
+  const allowedEmojis = [
+    ...new Set(
+      preferences?.preferredEmoji?.match(EMOJI_SEQUENCE_PATTERN) ?? [],
+    ),
+  ];
   const answerWithoutEmoji = answer
     .replace(EMOJI_SEQUENCE_PATTERN, ' ')
     .replace(/\u200D|\uFE0E|\uFE0F/g, '')
@@ -1150,7 +1154,11 @@ function applyEmojiPolicy(
 
   if (policy === 'NEVER') return answerWithoutEmoji;
 
-  const selectedEmoji = preferredEmoji ?? generatedEmoji;
+  const selectedEmoji = allowedEmojis.length
+    ? generatedEmoji && allowedEmojis.includes(generatedEmoji)
+      ? generatedEmoji
+      : pickStableStyle(allowedEmojis, seed, 2)
+    : generatedEmoji;
   if (policy === 'WHEN_APPROPRIATE' && !generatedEmoji) {
     return answerWithoutEmoji;
   }

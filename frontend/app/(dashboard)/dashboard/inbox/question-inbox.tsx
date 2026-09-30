@@ -11,7 +11,9 @@ import {
 import {
   AlertCircleIcon,
   Cancel01Icon,
+  CancelSquareIcon,
   CheckmarkCircle01Icon,
+  CheckmarkSquare01Icon,
   InboxIcon,
   MoreHorizontalIcon,
   RefreshIcon,
@@ -97,65 +99,65 @@ const inboxFilters: Array<{
   value: ProductQuestionFilter
   label: string
 }> = [
-  { value: "PENDING", label: "Bekleyen" },
-  { value: "ANSWERED", label: "Yanıtlanan" },
-  { value: "IGNORED", label: "Engellenen" },
-]
+    { value: "PENDING", label: "Bekleyen" },
+    { value: "ANSWERED", label: "Yanıtlanan" },
+    { value: "IGNORED", label: "Engellenen" },
+  ]
 
 const pendingStateOptions: Array<{
   value: PendingQuestionState
   label: string
   dotClassName: string
 }> = [
-  { value: "WAITING", label: "Yanıt bekliyor", dotClassName: "bg-blue-500" },
-  {
-    value: "DRAFT_QUEUED",
-    label: "Taslak kuyruğunda",
-    dotClassName: "bg-violet-500",
-  },
-  {
-    value: "DRAFT_PROCESSING",
-    label: "Taslak hazırlanıyor",
-    dotClassName: "bg-violet-500",
-  },
-  {
-    value: "REVIEW_REQUIRED",
-    label: "İnceleme bekliyor",
-    dotClassName: "bg-orange-500",
-  },
-  {
-    value: "READY_TO_SEND",
-    label: "Gönderime hazır",
-    dotClassName: "bg-teal-500",
-  },
-  {
-    value: "SEND_QUEUED",
-    label: "Gönderim kuyruğunda",
-    dotClassName: "bg-sky-500",
-  },
-  { value: "SENDING", label: "Gönderiliyor", dotClassName: "bg-sky-500" },
-  {
-    value: "BLOCKED_QUOTA",
-    label: "Kota bekliyor",
-    dotClassName: "bg-amber-500",
-  },
-  {
-    value: "BLOCKED_SUBSCRIPTION",
-    label: "Abonelik bekliyor",
-    dotClassName: "bg-amber-500",
-  },
-  {
-    value: "DRAFT_FAILED",
-    label: "Taslak hatası",
-    dotClassName: "bg-red-500",
-  },
-  { value: "SEND_FAILED", label: "Gönderilemedi", dotClassName: "bg-red-500" },
-  {
-    value: "SEND_REVIEW",
-    label: "Teslimat kontrolü",
-    dotClassName: "bg-amber-500",
-  },
-]
+    { value: "WAITING", label: "Yanıt bekliyor", dotClassName: "bg-blue-500" },
+    {
+      value: "DRAFT_QUEUED",
+      label: "Taslak kuyruğunda",
+      dotClassName: "bg-violet-500",
+    },
+    {
+      value: "DRAFT_PROCESSING",
+      label: "Taslak hazırlanıyor",
+      dotClassName: "bg-violet-500",
+    },
+    {
+      value: "REVIEW_REQUIRED",
+      label: "İnceleme bekliyor",
+      dotClassName: "bg-orange-500",
+    },
+    {
+      value: "READY_TO_SEND",
+      label: "Gönderime hazır",
+      dotClassName: "bg-teal-500",
+    },
+    {
+      value: "SEND_QUEUED",
+      label: "Gönderim kuyruğunda",
+      dotClassName: "bg-sky-500",
+    },
+    { value: "SENDING", label: "Gönderiliyor", dotClassName: "bg-sky-500" },
+    {
+      value: "BLOCKED_QUOTA",
+      label: "Kota bekliyor",
+      dotClassName: "bg-amber-500",
+    },
+    {
+      value: "BLOCKED_SUBSCRIPTION",
+      label: "Abonelik bekliyor",
+      dotClassName: "bg-amber-500",
+    },
+    {
+      value: "DRAFT_FAILED",
+      label: "Taslak hatası",
+      dotClassName: "bg-red-500",
+    },
+    { value: "SEND_FAILED", label: "Gönderilemedi", dotClassName: "bg-red-500" },
+    {
+      value: "SEND_REVIEW",
+      label: "Teslimat kontrolü",
+      dotClassName: "bg-amber-500",
+    },
+  ]
 
 export function QuestionInbox({
   storeId,
@@ -518,24 +520,39 @@ export function QuestionInbox({
   }
 
   function changePendingState(state: PendingQuestionState, checked: boolean) {
-    const selectedStates = new Set(pendingStates)
+    const selectedStates = new Set(
+      parsePendingStates(
+        new URL(window.location.href).searchParams.get("pending")
+      )
+    )
 
     if (checked) {
       selectedStates.add(state)
-    } else if (selectedStates.size > 1) {
+    } else {
       selectedStates.delete(state)
     }
 
+    changePendingStates([...selectedStates])
+  }
+
+  function changePendingStates(states: PendingQuestionState[]) {
+    const selectedStates = new Set(states)
     const orderedStates = PENDING_QUESTION_STATES.filter((item) =>
       selectedStates.has(item)
     )
-    const params = new URLSearchParams(window.location.search)
-    params.set(
-      "pending",
-      orderedStates.map((item) => item.toLowerCase()).join(",")
-    )
+    const url = new URL(window.location.href)
+    if (orderedStates.length === PENDING_QUESTION_STATES.length) {
+      url.searchParams.delete("pending")
+    } else {
+      url.searchParams.set(
+        "pending",
+        orderedStates.length
+          ? orderedStates.map((item) => item.toLowerCase()).join(",")
+          : "none"
+      )
+    }
 
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+    window.history.replaceState(null, "", url)
   }
 
   const refreshCurrentList = useCallback(
@@ -809,7 +826,45 @@ export function QuestionInbox({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" sideOffset={6} className="w-64">
-              <DropdownMenuLabel>Bekleyen durumları</DropdownMenuLabel>
+              <DropdownMenuLabel className="flex items-center justify-between gap-2 py-0!">
+                <span>Bekleyen durumlar</span>
+                <span className="flex items-center">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Tümünü seç"
+                        onClick={() =>
+                          changePendingStates([...PENDING_QUESTION_STATES])
+                        }
+                        className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                      >
+                        <HugeiconsIcon
+                          icon={CheckmarkSquare01Icon}
+                          className="size-4"
+                        />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Tümünü seç</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Tümünü kaldır"
+                        onClick={() => changePendingStates([])}
+                        className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                      >
+                        <HugeiconsIcon
+                          icon={CancelSquareIcon}
+                          className="size-4"
+                        />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Tümünü kaldır</TooltipContent>
+                  </Tooltip>
+                </span>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               {pendingStateOptions.map((item) => {
                 const checked = pendingStates.includes(item.value)
@@ -818,7 +873,6 @@ export function QuestionInbox({
                   <DropdownMenuCheckboxItem
                     key={item.value}
                     checked={checked}
-                    disabled={checked && pendingStates.length === 1}
                     onCheckedChange={(nextChecked) =>
                       changePendingState(item.value, nextChecked === true)
                     }
@@ -845,17 +899,15 @@ export function QuestionInbox({
                   type="button"
                   onClick={() => changeFilter(item.value)}
                   aria-pressed={isActive}
-                  className={`relative flex items-center justify-center gap-1.5 px-2 py-2.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset ${
-                    isActive
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  className={`relative flex items-center justify-center gap-1.5 px-2 py-2.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset ${isActive
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                    }`}
                 >
                   <span>{item.label}</span>
                   <span
-                    className={`text-[10px] tabular-nums ${
-                      isActive ? "text-primary" : "text-muted-foreground/75"
-                    }`}
+                    className={`text-[10px] tabular-nums ${isActive ? "text-primary" : "text-muted-foreground/75"
+                      }`}
                   >
                     {count}
                   </span>
@@ -920,10 +972,14 @@ export function QuestionInbox({
               <HugeiconsIcon icon={Search01Icon} className="size-4" />
             </span>
             <p className="mt-3 text-sm font-medium text-foreground">
-              Sonuç bulunamadı
+              {filter === "PENDING" && pendingStates.length === 0
+                ? "Durum seçilmedi"
+                : "Sonuç bulunamadı"}
             </p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Arama ifadenizi veya durum filtresini değiştirin.
+              {filter === "PENDING" && pendingStates.length === 0
+                ? "Görüntülemek için bekleyen durumlardan en az birini seçin."
+                : "Arama ifadenizi veya durum filtresini değiştirin."}
             </p>
           </div>
         )}
@@ -1071,10 +1127,10 @@ export function QuestionInbox({
               description={
                 activeQuestionSummary
                   ? `${providerName(
-                      activeQuestionSummary.connection.providerKey
-                    )} · ${inboxDateFormatter.format(
-                      new Date(activeQuestionSummary.externalCreatedAt)
-                    )}`
+                    activeQuestionSummary.connection.providerKey
+                  )} · ${inboxDateFormatter.format(
+                    new Date(activeQuestionSummary.externalCreatedAt)
+                  )}`
                   : "Soru detayları"
               }
               bodyClassName="px-0 py-0"
@@ -1117,10 +1173,10 @@ function listItemFromDetail(
     connection: question.connection,
     product: question.product
       ? {
-          id: question.product.id,
-          title: question.product.title,
-          imageUrl: question.product.images[0]?.url ?? null,
-        }
+        id: question.product.id,
+        title: question.product.title,
+        imageUrl: question.product.images[0]?.url ?? null,
+      }
       : null,
     answerDelivery: question.answerDelivery
       ? { status: question.answerDelivery.status }
@@ -1188,6 +1244,7 @@ function parseQuestionFilter(value: string | null): ProductQuestionFilter {
 
 function parsePendingStates(value: string | null): PendingQuestionState[] {
   if (!value) return [...PENDING_QUESTION_STATES]
+  if (value === "none") return []
 
   const requestedStates = new Set(
     value

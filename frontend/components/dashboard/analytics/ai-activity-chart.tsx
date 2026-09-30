@@ -85,12 +85,10 @@ export function AiActivityChart({
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 id={`${id}-title`} className="text-sm font-semibold">
-            Günlere göre hareket
+            {granularity === "month"
+              ? "Aylara göre hareket"
+              : "Günlere göre hareket"}
           </h2>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            {granularity === "month" ? "Aylık" : "Günlük"} üretilen taslak ve
-            müşteriye ulaşan AI yanıtı
-          </p>
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
           <span className="flex items-center gap-2 text-muted-foreground">

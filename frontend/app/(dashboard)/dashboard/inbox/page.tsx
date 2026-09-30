@@ -48,6 +48,7 @@ function parsePendingStates(
 ): PendingQuestionState[] {
   const rawValue = Array.isArray(value) ? value[0] : value
   if (!rawValue) return [...PENDING_QUESTION_STATES]
+  if (rawValue === "none") return []
 
   const requested = new Set(
     rawValue

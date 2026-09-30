@@ -5,63 +5,67 @@ export function KnowledgeBaseSettingsSkeleton() {
     <div
       role="status"
       aria-label="Bilgi tabanı yükleniyor"
-      className="mx-auto w-full max-w-[1440px] px-5 py-7 sm:px-8 sm:py-9 lg:px-10"
+      className="mx-auto w-full max-w-[1280px] px-5 py-7 sm:px-8 sm:py-9 lg:px-10"
     >
       <span className="sr-only">Bilgi tabanı yükleniyor…</span>
-
-      <header className="flex items-start gap-3 border-b border-border pb-6">
-        <Skeleton className="size-10 shrink-0 rounded-xl" />
-        <div className="min-w-0 flex-1 space-y-3">
-          <div className="flex items-center gap-2.5">
-            <Skeleton className="h-7 w-32" />
-            <Skeleton className="h-6 w-24 rounded-full" />
+      <header className="flex items-start gap-4 border-b border-border pb-7">
+        <Skeleton className="size-11 shrink-0 rounded-xl" />
+        <div className="min-w-0 flex-1 space-y-2.5">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-7 w-36" />
+            <Skeleton className="h-5 w-24 rounded-full" />
           </div>
-          <Skeleton className="h-4 w-full max-w-2xl" />
-          <Skeleton className="h-4 w-3/5 max-w-lg" />
+          <Skeleton className="h-4 w-full max-w-xl" />
         </div>
       </header>
 
-      <div className="mt-6 grid gap-6">
-        <div className="rounded-xl border border-border bg-card shadow-xs">
-          <div className="flex flex-col gap-4 border-b border-border p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">
+      <div className="mt-7 grid items-start gap-8 lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-10">
+        <div className="flex gap-2 overflow-hidden lg:flex-col">
+          {Array.from({ length: 3 }, (_, index) => (
+            <Skeleton
+              key={index}
+              className="h-10 w-40 shrink-0 rounded-lg lg:w-full"
+            />
+          ))}
+        </div>
+        <div className="min-w-0 space-y-12">
+          <section className="space-y-4">
             <div className="space-y-2">
-              <Skeleton className="h-5 w-44" />
-              <Skeleton className="h-3.5 w-full max-w-md sm:w-96" />
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-full max-w-lg" />
             </div>
-            <Skeleton className="h-8 w-44 rounded-lg" />
-          </div>
-          <div className="space-y-6 p-5 sm:p-6">
-            <KnowledgeFieldSkeleton />
-            <div className="grid gap-5 md:grid-cols-2">
-              {Array.from({ length: 4 }, (_, index) => (
-                <KnowledgeFieldSkeleton key={index} />
+            <div className="overflow-hidden rounded-xl border border-border bg-card">
+              {[1, 2, 3].map((group) => (
+                <div key={group}>
+                  <div className="border-b border-border bg-muted/20 px-5 py-3">
+                    <Skeleton className="h-3 w-28" />
+                  </div>
+                  {Array.from({ length: group === 2 ? 4 : 1 }, (_, index) => (
+                    <div
+                      key={index}
+                      className="flex items-start justify-between gap-4 border-b border-border/70 px-5 py-4"
+                    >
+                      <div className="w-full max-w-md space-y-2">
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-3 w-64 max-w-full" />
+                        <Skeleton className="h-4 w-52 max-w-full" />
+                      </div>
+                      <Skeleton className="h-8 w-20 shrink-0 rounded-md" />
+                    </div>
+                  ))}
+                </div>
               ))}
             </div>
-            <KnowledgeFieldSkeleton />
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-card p-5 shadow-xs sm:p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-2">
-              <Skeleton className="h-5 w-36" />
-              <Skeleton className="h-3.5 w-80 max-w-full" />
+          </section>
+          <section className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-8 w-24 rounded-md" />
             </div>
-            <Skeleton className="h-8 w-24 rounded-lg" />
-          </div>
-          <Skeleton className="mt-6 h-28 w-full rounded-lg" />
+            <Skeleton className="h-28 w-full rounded-xl" />
+          </section>
         </div>
       </div>
-    </div>
-  )
-}
-
-function KnowledgeFieldSkeleton() {
-  return (
-    <div className="space-y-2">
-      <Skeleton className="h-4 w-36" />
-      <Skeleton className="h-3 w-4/5" />
-      <Skeleton className="h-28 w-full rounded-lg" />
     </div>
   )
 }

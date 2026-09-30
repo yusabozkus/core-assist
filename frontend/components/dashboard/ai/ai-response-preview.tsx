@@ -1,68 +1,30 @@
-import {
-  AiSparklesIcon,
-  CheckmarkCircle01Icon,
-  Message01Icon,
-  ShieldCheckIcon,
-} from "@hugeicons/core-free-icons"
+import { AiSparklesIcon, Message01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
-import { Badge } from "@/components/ui/badge"
-import type { AiAutomationMode, StoreKnowledge } from "@/types/knowledge"
-
-const toneLabels = {
-  PROFESSIONAL: "Profesyonel",
-  FRIENDLY: "Samimi",
-  WARM: "Sıcak",
-  MINIMAL: "Doğrudan",
-} as const
-
-const lengthLabels = {
-  SHORT: "Kısa",
-  BALANCED: "Dengeli",
-  DETAILED: "Detaylı",
-} as const
-
-const automationLabels: Record<AiAutomationMode, string> = {
-  OFF: "Manuel",
-  SHADOW: "Otomatik taslak",
-  SAFE_AUTO: "Güvenli otomatik",
-}
+import { getPreferredEmojis } from "@/lib/emoji-preferences"
+import type { StoreKnowledge } from "@/types/knowledge"
 
 export function AiResponsePreview({
   profile,
-  automationMode,
 }: {
   profile: StoreKnowledge["profile"]
-  automationMode: AiAutomationMode
 }) {
   const answer = createPreviewAnswer(profile)
 
   return (
-    <aside className="overflow-hidden rounded-xl border border-border bg-card shadow-xs lg:sticky lg:top-5">
-      <header className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <HugeiconsIcon icon={AiSparklesIcon} className="size-4" />
-          </span>
-          <div>
-            <h2 className="text-sm font-semibold tracking-[-0.01em]">
-              Yanıt önizlemesi
-            </h2>
-            <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-              Tercihleriniz anında uygulanır.
-            </p>
-          </div>
-        </div>
-        <Badge variant="success" className="h-6 gap-1.5 px-2 text-[10px]">
-          <span className="size-1.5 rounded-full bg-current" />
-          Canlı
-        </Badge>
+    <aside className="overflow-hidden rounded-xl border border-border bg-card shadow-xs xl:sticky xl:top-6">
+      <header className="border-b border-border px-5 py-4">
+        <h3 className="text-sm font-semibold tracking-[-0.01em]">
+          Örnek yanıt
+        </h3>
+        <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
+          Seçimlerinizin metne etkisini burada görün.
+        </p>
       </header>
 
       <div className="bg-muted/25 px-4 py-5 sm:px-5">
-        <div className="mb-5 flex items-center justify-between gap-3 border-b border-border/70 pb-3 text-[11px] text-muted-foreground">
-          <span>%100 Pamuk Basic Tişört</span>
-          <span className="font-medium text-foreground">Regular fit</span>
+        <div className="mb-5 border-b border-border/70 pb-3 text-xs text-muted-foreground">
+          Örnek ürün · Regular fit tişört
         </div>
 
         <div className="space-y-4">
@@ -81,82 +43,17 @@ export function AiResponsePreview({
               <HugeiconsIcon icon={AiSparklesIcon} className="size-3.5" />
               AI taslağı
             </p>
-            <p className="max-w-[94%] rounded-xl rounded-bl-sm border border-primary/15 bg-primary/7 px-3.5 py-3 text-sm leading-6 text-foreground">
+            <p
+              aria-live="polite"
+              className="max-w-[94%] rounded-xl rounded-bl-sm border border-primary/15 bg-primary/7 px-3.5 py-3 text-sm leading-6 text-foreground"
+            >
               {answer}
             </p>
           </div>
         </div>
       </div>
-
-      <div className="grid grid-cols-2 border-t border-border text-xs">
-        <PreviewValue label="Ton" value={toneLabels[profile.tone]} />
-        <PreviewValue
-          label="Uzunluk"
-          value={lengthLabels[profile.responseLength]}
-          bordered
-        />
-        <PreviewValue
-          label="Mesaj yapısı"
-          value={messageStructureLabel(profile)}
-          topBordered
-        />
-        <PreviewValue
-          label="Otomasyon"
-          value={automationLabels[automationMode]}
-          bordered
-          topBordered
-        />
-      </div>
-
-      <footer className="flex items-start gap-2.5 border-t border-border bg-background px-5 py-3.5 text-xs leading-5 text-muted-foreground">
-        <HugeiconsIcon
-          icon={
-            automationMode === "SAFE_AUTO" || automationMode === "SHADOW"
-              ? ShieldCheckIcon
-              : CheckmarkCircle01Icon
-          }
-          className="mt-0.5 size-4 shrink-0 text-primary"
-        />
-        {automationMode === "SAFE_AUTO"
-          ? `Yalnızca en az %${Math.round(profile.minimumAutoSendConfidence * 100)} güvene ve yeterli kanıta sahip yanıtlar otomatik gönderilir.`
-          : automationMode === "SHADOW"
-            ? "AI yeni sorulara otomatik taslak hazırlar; müşteriye gönderim için onayınızı bekler."
-            : "Gerçek yanıt ürün kanıtlarıyla oluşturulur; bu alan iletişim biçimini gösterir."}
-      </footer>
     </aside>
   )
-}
-
-function PreviewValue({
-  label,
-  value,
-  bordered = false,
-  topBordered = false,
-}: {
-  label: string
-  value: string
-  bordered?: boolean
-  topBordered?: boolean
-}) {
-  return (
-    <div
-      className={`px-4 py-3 ${bordered ? "border-l border-border" : ""} ${topBordered ? "border-t border-border" : ""}`}
-    >
-      <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-        {label}
-      </p>
-      <p className="mt-1 truncate font-medium text-foreground">{value}</p>
-    </div>
-  )
-}
-
-function messageStructureLabel(profile: StoreKnowledge["profile"]) {
-  if (profile.greetingEnabled && profile.closingEnabled) {
-    return "Selamlama + kapanış"
-  }
-  if (profile.greetingEnabled) return "Yalnızca selamlama"
-  if (profile.closingEnabled) return "Yalnızca kapanış"
-  return "Doğrudan cevap"
 }
 
 function createPreviewAnswer(profile: StoreKnowledge["profile"]) {
@@ -169,7 +66,9 @@ function createPreviewAnswer(profile: StoreKnowledge["profile"]) {
     profile.emojiPolicy === "ALWAYS" ||
     (profile.emojiPolicy === "WHEN_APPROPRIATE" &&
       (profile.tone === "FRIENDLY" || profile.tone === "WARM"))
-  const emoji = shouldUseEmoji ? ` ${profile.preferredEmoji || "🙂"}` : ""
+  const emoji = shouldUseEmoji
+    ? ` ${getPreferredEmojis(profile.preferredEmoji)[0] || "🙂"}`
+    : ""
   const closing = profile.closingEnabled
     ? profile.tone === "WARM"
       ? " Güzel günlerde kullanmanızı dileriz."
@@ -191,9 +90,11 @@ function createPreviewAnswer(profile: StoreKnowledge["profile"]) {
     body = "ürün bol değil, regular kalıptır."
   }
 
+  if (profile.responseLength !== "SHORT") {
+    body += " Standart bir görünüm için kendi bedeninizi tercih edebilirsiniz."
+  }
   if (profile.responseLength === "DETAILED") {
-    body +=
-      " Kendi bedeninizi tercih ederek standart bir görünüm elde edebilirsiniz."
+    body += " Regular kalıp vücuda çok dar veya çok bol oturmaz."
   }
 
   const resolvedBody = greeting

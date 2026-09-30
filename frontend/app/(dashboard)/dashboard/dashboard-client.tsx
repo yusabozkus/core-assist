@@ -35,19 +35,10 @@ import { getDashboardOverview } from "@/lib/api/dashboard"
 import { cn } from "@/lib/utils"
 import type { DashboardOverview, DashboardRange } from "@/types/dashboard"
 
-function SectionHeading({
-  title,
-  description,
-}: {
-  title: string
-  description: string
-}) {
+function SectionHeading({ title }: { title: string }) {
   return (
     <div className="border-l-2 border-primary/50 pl-3">
       <h2 className="text-base font-semibold tracking-tight">{title}</h2>
-      <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
-        {description}
-      </p>
     </div>
   )
 }
@@ -253,27 +244,18 @@ export function DashboardClient({
         >
           <DashboardPlanUsage />
           <section className="space-y-4">
-            <SectionHeading
-              title="Operasyon özeti"
-              description="Gelen soru hacmini, yanıtlananları ve şu anda müdahale gerektiren işleri birlikte görün."
-            />
+            <SectionHeading title="Operasyon özeti" />
             <DashboardMetrics data={data} />
           </section>
           <section className="space-y-4 border-t border-border pt-7">
-            <SectionHeading
-              title="Soru operasyonu"
-              description="Gelen ve yanıtlanan soruların zaman içindeki akışını, mevcut iş kuyruğuyla birlikte değerlendirin."
-            />
+            <SectionHeading title="Soru operasyonu" />
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,1fr)]">
               <QuestionVolumeChart data={data} />
               <DashboardQueue data={data} />
             </div>
           </section>
           <section className="space-y-4 border-t border-border pt-7">
-            <SectionHeading
-              title="Öncelikli işler"
-              description="İnsan kontrolü bekleyen soruları, satış kanallarının durumunu ve katalog uyarılarını tek alanda takip edin."
-            />
+            <SectionHeading title="Öncelikli işler" />
             <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,1fr)]">
               <PriorityQuestions data={data} />
               <div className="grid min-w-0 gap-5">
@@ -282,21 +264,14 @@ export function DashboardClient({
               </div>
             </div>
           </section>
-          <section className="space-y-4 border-t border-border pt-7">
-            <SectionHeading
-              title="Katalog görünümü"
-              description={`Son ${data.period.days} günde en çok müşteri ilgisi alan ürünleri inceleyin.`}
-            />
+          <div className="border-t border-border pt-7">
             <DashboardCatalog
               data={data}
               onSelectProduct={setSelectedProductId}
             />
-          </section>
+          </div>
           <section className="space-y-4 border-t border-border pt-7">
-            <SectionHeading
-              title="Hızlı erişim"
-              description="Sık kullandığınız yönetim ve analiz ekranlarına doğrudan geçin."
-            />
+            <SectionHeading title="Hızlı erişim" />
             <DashboardShortcuts />
           </section>
           <footer className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted-foreground">

@@ -107,12 +107,9 @@ export function PerformanceOverview({ data }: { data: AiPerformance }) {
             <HugeiconsIcon icon={state.icon} className="size-4.5" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-              Bu dönemin kısa özeti
-            </p>
             <h2
               id="performance-overview-title"
-              className="mt-1.5 text-base font-semibold tracking-tight"
+              className="text-base font-semibold tracking-tight"
             >
               {state.title}
             </h2>

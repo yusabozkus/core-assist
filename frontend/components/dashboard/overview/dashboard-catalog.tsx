@@ -23,9 +23,6 @@ export function DashboardCatalog({
           <h2 id="popular-title" className="text-sm font-semibold">
             En çok sorulan ürünler
           </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Son {data.period.days} gündeki müşteri ilgisi
-          </p>
         </div>
         <Link
           href={APP_ROUTES.dashboard.catalog.products}

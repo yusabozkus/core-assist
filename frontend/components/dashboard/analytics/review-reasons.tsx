@@ -53,9 +53,6 @@ export function ReviewReasons({ data }: { data: AiPerformance }) {
           {formatCount(data.draftDecisions.needsReview)} taslak
         </span>
       </header>
-      <p className="mt-1 text-xs leading-5 text-muted-foreground">
-        AI’ın kullanıcıya bıraktığı taslaklarda en sık karşılaşılan nedenler
-      </p>
       {reasons.length ? (
         <div className="mt-5">
           <ChartContainer

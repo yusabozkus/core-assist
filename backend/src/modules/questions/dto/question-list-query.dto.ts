@@ -1,7 +1,6 @@
 import { Transform, Type, type TransformFnParams } from 'class-transformer';
 import {
   ArrayMaxSize,
-  ArrayMinSize,
   IsBoolean,
   IsArray,
   IsEnum,
@@ -79,7 +78,6 @@ export class QuestionListQueryDto {
   status: QuestionListStatusFilter = QuestionListStatusFilter.PENDING;
 
   @IsArray()
-  @ArrayMinSize(1)
   @ArrayMaxSize(ALL_PENDING_QUESTION_STATES.length)
   @IsEnum(PendingQuestionStateFilter, { each: true })
   @Transform(parsePendingStates)

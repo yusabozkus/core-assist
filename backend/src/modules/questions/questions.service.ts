@@ -568,6 +568,7 @@ function questionStatusWhere(
 ): Prisma.ProductQuestionWhereInput {
   switch (status) {
     case QuestionListStatusFilter.PENDING:
+      if (pendingStates.length === 0) return { id: { in: [] } };
       return {
         status: {
           in: [ProductQuestionStatus.PENDING, ProductQuestionStatus.DRAFTED],

@@ -50,9 +50,6 @@ export function DraftOutcomes({ data }: { data: AiPerformance }) {
       <h2 id="draft-outcomes-title" className="text-sm font-semibold">
         Taslakların ilk kararı
       </h2>
-      <p className="mt-1 text-xs text-muted-foreground">
-        Bilgi ve güven kontrollerinden sonraki dağılım
-      </p>
       <div className="relative mx-auto my-5 size-44">
         <ChartContainer
           config={chartConfig}

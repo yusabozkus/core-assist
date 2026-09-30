@@ -119,9 +119,6 @@ export function DashboardPlanUsage() {
         <div className="border-t border-border bg-muted/[0.16] p-5 sm:p-6 xl:border-t-0 xl:border-l">
           <div>
             <h3 className="text-sm font-semibold">Plan kapasitesi</h3>
-            <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
-              Çalışma alanındaki mevcut kullanım
-            </p>
           </div>
 
           {usage.capacity ? (

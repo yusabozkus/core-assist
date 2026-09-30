@@ -7,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
+import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import {
   FeedbackBanner,
   KnowledgeTextarea,
@@ -40,13 +41,13 @@ export function ChannelOverrideCard({
     key: Exclude<keyof ChannelKnowledgeOverride, "providerKey">,
     nextValue: string
   ) => onChange({ ...value, [key]: nextValue })
-  const isCustomized = [
+  const customizedCount = [
     value.shippingPolicy,
     value.returnPolicy,
     value.exchangePolicy,
     value.warrantyPolicy,
     value.additionalInformation,
-  ].some((item) => Boolean(item?.trim()))
+  ].filter((item) => Boolean(item?.trim())).length
 
   return (
     <Collapsible className="group/channel-card">
@@ -56,18 +57,22 @@ export function ChannelOverrideCard({
             type="button"
             className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-muted/35 sm:px-6"
           >
+            <ProviderLogo
+              provider={providerKey}
+              className="size-9 shrink-0 rounded-lg"
+              sizes="36px"
+            />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="font-semibold tracking-[-0.015em]">
                   {formatProvider(providerKey)}
                 </h3>
-                <Badge variant={isCustomized ? "success" : "secondary"}>
-                  {isCustomized ? "Özelleştirildi" : "Genel ayarlar"}
+                <Badge variant={customizedCount ? "success" : "secondary"}>
+                  {customizedCount
+                    ? `${customizedCount} özel bilgi`
+                    : "Genel bilgi kullanılıyor"}
                 </Badge>
               </div>
-              <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">
-                Bu pazaryerine özel kargo, iade, değişim ve garanti koşulları
-              </p>
             </div>
             <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground">
               <HugeiconsIcon
@@ -81,10 +86,6 @@ export function ChannelOverrideCard({
         <CollapsibleContent>
           <div className="space-y-5 border-t border-border p-5 sm:p-6">
             <FeedbackBanner feedback={feedback} />
-            <p className="rounded-lg border border-border bg-muted/25 px-3.5 py-3 text-xs leading-5 text-muted-foreground">
-              Yalnızca genel mağaza bilgisinden farklı olan koşulları girin. Boş
-              bıraktığınız alanlarda genel bilgi kullanılmaya devam eder.
-            </p>
             <div className="grid gap-5 md:grid-cols-2">
               <KnowledgeTextarea
                 label="Kargo istisnası"
