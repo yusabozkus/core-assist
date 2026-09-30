@@ -13,11 +13,11 @@ export default async function AuthContinuePage() {
     redirect(APP_ROUTES.login)
   }
 
-  await requireCompletedOnboarding()
-
   if (access.status === "authorized") {
     redirect(APP_ROUTES.admin.root)
   }
+
+  await requireCompletedOnboarding()
 
   redirect(APP_ROUTES.dashboard.root)
 }

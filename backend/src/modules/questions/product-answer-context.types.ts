@@ -21,10 +21,12 @@ export type ProductAnswerEvidenceSource =
   | 'TITLE'
   | 'SIZE_GUIDE'
   | 'PLATFORM_GUIDANCE'
+  | 'CUSTOMER_INPUT'
   | 'STORE_KNOWLEDGE'
   | 'CHANNEL_OVERRIDE'
   | 'FAQ'
-  | 'MERCHANT_VERIFIED';
+  | 'MERCHANT_VERIFIED'
+  | 'CATALOG_STATE';
 
 export type ProductAnswerEvidence = {
   id: string;
@@ -69,6 +71,8 @@ export type ProductAnswerSizeGuideContext = {
 
 export type ProductAnswerSizeGuideData = {
   title?: string;
+  audience?: string;
+  measurementBasis?: 'BODY' | 'GARMENT' | 'MIXED' | 'UNKNOWN';
   unit: 'CM' | 'INCH' | 'MIXED' | 'UNKNOWN';
   headers: string[];
   rows: Array<{
@@ -128,6 +132,7 @@ export type ProductAnswerContext = {
   relevantAttributes: Array<{ name: string; value: string }>;
   relevantDescription: string | null;
   evidence: ProductAnswerEvidence[];
+  sizeGuideIssues?: string[];
   heightWeightSizeRecommendation?: HeightWeightSizeRecommendation;
   responsePreferences?: {
     automationMode: 'OFF' | 'SHADOW' | 'SAFE_AUTO';

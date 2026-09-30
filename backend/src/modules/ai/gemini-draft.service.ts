@@ -13,6 +13,13 @@ import {
 import { GeminiClientService } from './gemini-client.service';
 import { getUnlistedAvailabilitySize } from '../questions/unlisted-size-availability';
 import { isCustomerMeasurementGap } from '../questions/customer-measurement-gap';
+import {
+  classifyShrinkageQuestion,
+  isExplicitGarmentWidthQuestion,
+  parseCustomerBodyMeasurements,
+  resolveProductAnswerAdvice,
+  rowMatchesSize,
+} from '../questions/product-answer-advice';
 
 const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
 const PRODUCT_ANSWER_FACTS: ProductAnswerFact[] = [
@@ -67,12 +74,14 @@ export class GeminiDraftService extends AiDraftGenerator {
       const raw = await this.client.generate({
         model: this.model,
         prompt,
-        thinkingLevel: 'minimal',
+        thinkingLevel: 'low',
         allowedEstimatedSizes:
           context.heightWeightSizeRecommendation?.status ===
             'ESTIMATE_ALLOWED' &&
-          context.requestedFacts.length === 1 &&
-          context.requestedFacts[0] === 'SIZE'
+          context.requestedFacts.includes('SIZE') &&
+          context.requestedFacts.every(
+            (fact) => fact === 'SIZE' || fact === 'FIT',
+          )
             ? context.heightWeightSizeRecommendation.recommendedSizes
             : undefined,
       });
@@ -157,6 +166,7 @@ function createPrompt(context: ProductAnswerContext) {
     inventoryFreshness: context.inventoryFreshness,
     inventoryVerification: context.inventoryVerification,
     heightWeightSizeRecommendation: context.heightWeightSizeRecommendation,
+    resolvedGuidance: resolveProductAnswerAdvice(context),
     product: {
       title: context.product.title,
       brand: context.product.brand,
@@ -190,7 +200,8 @@ function createPrompt(context: ProductAnswerContext) {
     'responsePreferences.approvedAnswerExamples daha önce insan tarafından gönderilmiş cevap örnekleridir. Bunları yalnızca mağazanın dili ve benzer sorulara yaklaşımı için kullan; eski stok, fiyat, kampanya veya teslimat bilgisini güncel gerçek kabul etme. Yeni cevapta gerçek bilgi olarak yalnızca catalogEvidence kullan.',
     'Mağaza adına birinci çoğul şahısla konuşabilirsin: "ürünümüz", "öneririz", "dileriz" gibi doğal satıcı ifadeleri kullan. Yapay, aşırı resmî veya robotik bir dil kullanma.',
     'Her cevapta aynı kalıbı tekrarlamak zorunda değilsin; selamlama ve kapanışı doğal biçimde çeşitlendir, fakat profesyonel mağaza tonunu koru.',
-    'Yalnızca aşağıdaki doğrulanmış bilgi kaynaklarını kullan. Bilgi uydurma veya genel internet bilgisini gerçekmiş gibi sunma. Tek istisna: heightWeightSizeRecommendation.status ESTIMATE_ALLOWED ise mağazanın açık tercihiyle, listelenen bedenler arasından açıkça tahmini bir beden önerebilirsin; bunu doğrulanmış beden tablosu eşleşmesi gibi sunma.',
+    'Yalnızca verilen bilgi kaynaklarını kullan. Bilgi uydurma. resolvedGuidance varsa bu sunucunun kanıtlarla çözdüğü yanıttır; içeriğini koru, eksik ürün bilgisi icat etme. GENERAL_CARE_GUIDANCE ürüne özel garanti değil, materyale dayalı koşullu bakım bilgisidir. heightWeightSizeRecommendation.status ESTIMATE_ALLOWED ise listelenen bedenlerden açıkça tahmini bir beden önerebilirsin; doğrulanmış tablo eşleşmesi gibi sunma.',
+    'CUSTOMER_INPUT yalnızca müşterinin kendi beyanıdır; ürün özelliği kanıtı değildir. Sıralı sayılar ve ardından gelen ölçü adlarını aynı sırayla eşleştir. Pantolonda bel/basen, üst giyimde göğüs/bel ölçülerini değerlendir. EU beden karşılığı veya iç bacak uzunluğu vücut çevresi değildir.',
     'Kaynak önceliği şöyledir: güncel VARIANT/ATTRIBUTE/TITLE/SIZE_GUIDE verileri, ilgili kanala ait CHANNEL_OVERRIDE, STORE_KNOWLEDGE ve FAQ. Mağaza bilgisi veya geçmiş cevaplar güncel stok, fiyat, renk ya da varyant verisini geçersiz kılamaz.',
     'Her olumlu ürün iddiasını evidence listesindeki en az bir kayıtla destekle ve kullandığın kayıtların id alanlarını usedEvidenceIds alanına yaz.',
     'Bir evidence kaydı sorulan iddiayı açıkça desteklemiyorsa o kaydı kanıt olarak kullanma.',
@@ -207,10 +218,13 @@ function createPrompt(context: ProductAnswerContext) {
     'Status DISABLED, MISSING_INPUT, GUIDE_UNAVAILABLE, NO_MATCH veya AMBIGUOUS ise kesin beden seçme. Net önerinin neden verilemediğini doğal biçimde açıkla. Müşterinin henüz paylaşmadığı boy, kilo, bel veya basen ölçüsü mağazanın öğreteceği eksik ürün bilgisi değildir. Yalnızca güvenli ölçü karşılaştırması veya müşteriden bilgi isteme yanıtı veriyorsan bu müşteri verilerini missingInformation alanına yazma.',
     'ESTIMATE_ALLOWED dışında beden veya ölçü önerisini yalnızca beden tablosunda açıkça bulunan ölçü ya da sunucunun doğruladığı boy-kilo eşleşmesine dayandır; tabloda olmayan bir eşleşmeyi hesaplama veya tahmin etme.',
     'Müşteri beden tablosunun nerede olduğunu soruyorsa bu bir ürün ölçüsü sorusu değildir. PLATFORM_GUIDANCE kanıtındaki konumu doğrudan tarif et; ölçü bilgisi eksikmiş gibi cevap verme.',
+    'CATALOG_STATE kanıtı yalnızca o ürünün mevcut katalog durumunu doğrular. Beden tablosu görünmüyorsa bunu söyleyebilirsin; bu kanıttan beden veya santimetre değeri çıkarma.',
     'Ürün eni, düz zeminde ölçülen giysi genişliğidir; beden tablosundaki göğüs çevresi ise vücut çevresidir. Göğüs çevresini ikiye bölerek ürün eni üretme ve bu iki ölçüyü birbirinin yerine kullanma.',
+    'Müşteri yalnızca göğüs genişliği diyorsa tablodaki göğüs çevresini adını açıkça belirterek paylaşabilirsin. Özellikle düz zeminde en istiyorsa çevre ölçüsünü en diye cevaplama.',
     'Ribana veya "rikla/riklalı" sorusu kumaşın ribanalı dokuda olup olmadığını sorar; bunu likra ile karıştırma. Düz dokuma kanıtı varsa ürünün ribanalı olmadığını söyleyebilirsin.',
     'Likra veya esneklik sorusunda yalnızca bileşimde likra/elastan bulunmasına ya da açık esneklik bilgisine dayan. %100 pamuk bileşimi varsa likra/elastan içermediğini söyleyebilirsin.',
     'Esneklik sorusunda Materyal Bileşeni kanıtında elastan oranı varsa soruyu doğrudan yanıtla: elastan içerdiği için kumaşın esneklik sağladığını ve doğrulanmış oranı söyle. Esneklik bilgisini eksik sayma.',
+    'Denim farklı gramajlarda üretilebilir. Yalnızca "denim" bilgisine bakıp bu ürünün kesin olarak ince, orta veya kalın olduğunu söyleme. Ürüne özel kalınlık/gramaj kanıtı varsa onu kullan; yoksa materyali belirtip kesin sınıflandırma yapma.',
     'Renk kimliği sorusu stok veya varyant bulunabilirliği sorusu değildir. VARIANT ya da ATTRIBUTE kanıtında ürün rengi varsa rengi doğrudan söyle; "belirtilmedi" veya "istediğiniz renk mevcut değil" deme.',
     'Müşteri iki renk arasında soruyor fakat kanıttaki ürün rengi ikisinden de farklıysa "Her ikisi de değil; ürün ... renktedir." biçiminde gerçek rengi açıkça belirt.',
     'TITLE ve ürün kimliği kanıtları ürünün ne olduğunu belirlemek için geçerli kanıttır. Tek ürün ilanında paket kapsamı kanıtı varsa başlıkta yer almayan ek parçanın dahil olmadığını doğrudan söyle; bunun için ayrıca "belirtilmedi" deme.',
@@ -388,6 +402,26 @@ function parseAndValidate(
     };
   }
 
+  const advice = resolveProductAnswerAdvice(context);
+  if (scope === 'IN_SCOPE' && advice) {
+    return {
+      ...advice,
+      answer: applySellerTone(
+        advice.answer,
+        context.questionId,
+        context.responsePreferences,
+      ),
+      interpretation,
+      scope: 'IN_SCOPE',
+      detectedFacts: context.requestedFacts,
+      answerability: 'FULL',
+      decision: 'DRAFT',
+      usedFacts: context.requestedFacts,
+      missingInformation: [],
+      risks: [],
+    };
+  }
+
   const recommendation = context.heightWeightSizeRecommendation;
   const asksModelInformation = /\b(?:manken|model)[a-z]*\b/.test(
     normalizeText(context.question),
@@ -468,10 +502,11 @@ function parseAndValidate(
   }
   if (
     recommendation?.status === 'ESTIMATE_ALLOWED' &&
-    context.requestedFacts.every((fact) => fact === 'SIZE') &&
+    context.requestedFacts.includes('SIZE') &&
+    context.requestedFacts.every((fact) => fact === 'SIZE' || fact === 'FIT') &&
     !asksModelInformation &&
-    detectedFacts.length === 1 &&
-    detectedFacts[0] === 'SIZE'
+    detectedFacts.includes('SIZE') &&
+    detectedFacts.every((fact) => fact === 'SIZE' || fact === 'FIT')
   ) {
     const estimatedSize = resolveEstimatedSize(
       value.estimatedSize,
@@ -491,25 +526,37 @@ function parseAndValidate(
       );
       const readyForSend =
         confidence >= 0.8 &&
+        (!context.requestedFacts.includes('FIT') ||
+          hasCatalogEvidenceForFact(context, 'FIT')) &&
+        !context.sizeGuideIssues?.length &&
         customerMeasurementsOnly &&
         ((answerability === 'FULL' && decision === 'DRAFT') ||
           (answerability === 'PARTIAL' && missingInformation.length > 0));
       return {
+        responseKind: 'SIZE_ESTIMATE',
         answer: applySellerTone(
-          `Paylaştığınız boy ve kiloya göre ${estimatedSize} beden size uygun olabilir; bu yalnızca tahmini bir öneridir. Ürünün kalıbı ve kişisel ölçüler sonucu değiştirebilir.`,
+          `${context.requestedFacts.includes('FIT') ? fitDescription(context) : ''}Paylaştığınız boy ve kiloya göre ${estimatedSize} beden size uygun olabilir; bu yalnızca tahmini bir öneridir. Ürünün kalıbı ve kişisel ölçüler sonucu değiştirebilir.`,
           context.questionId,
           context.responsePreferences,
         ),
         interpretation: 'Boy ve kiloya göre tahmini beden önerisi',
         scope: 'IN_SCOPE',
-        detectedFacts: ['SIZE'],
+        detectedFacts: context.requestedFacts,
         answerability: readyForSend ? 'FULL' : 'PARTIAL',
         decision: readyForSend ? 'DRAFT' : 'NEEDS_REVIEW',
         confidence: readyForSend
           ? Math.max(0.85, Math.min(confidence, 0.9))
           : Math.min(confidence, 0.85),
-        usedFacts: ['SIZE'],
-        usedEvidenceIds: ['variant-sizes'],
+        usedFacts: context.requestedFacts,
+        usedEvidenceIds: [
+          'variant-sizes',
+          ...context.evidence
+            .filter(
+              (item) =>
+                context.requestedFacts.includes('FIT') && item.fact === 'FIT',
+            )
+            .map((item) => item.id),
+        ],
         missingInformation: readyForSend
           ? []
           : [...new Set([...missingInformation, measurementConfirmation])],
@@ -584,7 +631,11 @@ function parseAndValidate(
     ...new Set(
       usedEvidenceIds
         .map((id) => id.trim())
-        .filter((id) => evidenceById.has(id)),
+        .filter(
+          (id) =>
+            evidenceById.has(id) &&
+            evidenceById.get(id)?.source !== 'CUSTOMER_INPUT',
+        ),
     ),
   ];
   const usedFacts = [
@@ -890,7 +941,9 @@ function resolveEstimatedSize(
 }
 
 function extractAffirmedSizeClaims(answer: string) {
-  const sizePattern = '(?:xxxs|xxs|xs|s|m|l|xl|xxl|xxxl|[2-9]xl|\\d{2,3})';
+  // A bare 150 in "150 kg" is weight, not a numeric apparel size.
+  const sizePattern =
+    '(?:xxxs|xxs|xs|s|m|l|xl|xxl|xxxl|[2-9]xl|\\d{2,3}(?=\\s*beden(?:i|in)?\\b))';
   const positivePattern = '(?:uygun|olur|olabilir|oneri|oner|tercih|tahmin)';
   const claims: string[] = [];
 
@@ -979,7 +1032,7 @@ export function applySellerTone(
       normalizedWithOpening,
     )
   ) {
-    result = `${result} ${pickStableStyle(SELLER_CLOSINGS, seed, 1)}`;
+    result = `${result}${/[.!?]$/.test(result) ? '' : '.'} ${pickStableStyle(SELLER_CLOSINGS, seed, 1)}`;
   }
 
   result = applyEmojiPolicy(result, preferences);
@@ -1031,10 +1084,13 @@ function inferMissingInformation(
   const question = normalizeText(context.question);
   const catalog = normalizeText(
     context.evidence
+      .filter((evidence) => evidence.source !== 'CUSTOMER_INPUT')
       .flatMap((evidence) => [evidence.label, evidence.value])
       .join(' '),
   );
-  const missing: string[] = [];
+  const missing: string[] = requestedFacts.includes('SIZE')
+    ? [...(context.sizeGuideIssues ?? [])]
+    : [];
 
   const missingLabels: Partial<
     Record<ProductAnswerContext['requestedFacts'][number], string>
@@ -1060,6 +1116,29 @@ function inferMissingInformation(
   }
 
   if (requestedFacts.includes('SIZE')) {
+    if (
+      isPersonalSizeRecommendationQuestion(context.question) &&
+      !(context.product.sizeGuides?.length ?? 0) &&
+      !['ESTIMATE_ALLOWED', 'MATCHED'].includes(
+        context.heightWeightSizeRecommendation?.status ?? '',
+      )
+    ) {
+      missing.push('Kişiye uygun beden seçimi için doğrulanmış beden tablosu');
+    }
+    const asksBodyMeasurements =
+      Object.keys(parseCustomerBodyMeasurements(context.question).values)
+        .length > 0 ||
+      (context.requestedSize && /gogus|bel|basen|kalca/.test(question));
+    if (
+      asksBodyMeasurements &&
+      !context.evidence.some(
+        (item) =>
+          item.fact === 'SIZE' &&
+          ['SIZE_GUIDE', 'MERCHANT_VERIFIED'].includes(item.source),
+      )
+    ) {
+      missing.push('Ürüne uygun doğrulanmış beden ve ölçü tablosu');
+    }
     const recommendation = context.heightWeightSizeRecommendation;
     if (
       recommendation &&
@@ -1080,6 +1159,44 @@ function inferMissingInformation(
         AMBIGUOUS: 'Boy ve kiloya uyan tek bir beden eşleşmesi',
       };
       missing.push(labels[recommendation.status]);
+    }
+  }
+
+  const exactPropertyGap = missingExactProductMeasurement(context);
+  if (exactPropertyGap) missing.push(exactPropertyGap);
+
+  if (
+    /\b(?:kalinlik|kalin|ince|gramaj)\b/.test(question) &&
+    /kumas|pantolon|urun|materyal|ince mi|kalin mi|orta kalin/.test(question) &&
+    !hasVerifiedFabricThickness(context)
+  ) {
+    missing.push('Ürünün doğrulanmış kumaş kalınlığı veya gramajı');
+  }
+
+  if (requestedFacts.includes('CARE')) {
+    const shrinkage = classifyShrinkageQuestion(context.question);
+    if (shrinkage.asksShrinkage) {
+      const verified = context.evidence.some((item) => {
+        if (
+          !['ATTRIBUTE', 'DESCRIPTION', 'MERCHANT_VERIFIED'].includes(
+            item.source,
+          )
+        )
+          return false;
+        const fact = normalizeText(`${item.label} ${item.value}`);
+        return shrinkage.asksExactOutcome
+          ? /cekme (?:orani|payi) \d/.test(fact)
+          : /cekme yapmaz|cekmez|on cekme|sanfor|cekme yapar|ceker|kuculur|daralir/.test(
+              fact,
+            );
+      });
+      if (!verified) {
+        missing.push(
+          shrinkage.asksExactOutcome
+            ? 'Ürünün doğrulanmış çekme oranı'
+            : 'Ürünün çekme davranışına ilişkin doğrulanmış bilgi',
+        );
+      }
     }
   }
 
@@ -1133,6 +1250,92 @@ function inferMissingInformation(
   }
 
   return missing;
+}
+
+function missingExactProductMeasurement(context: ProductAnswerContext) {
+  const question = normalizeText(context.question);
+  const wantsExact = /kac|olcusu|uzunlugu|boyu|cm|santim|gsm|gramaj/.test(
+    question,
+  );
+  if (!wantsExact) return null;
+  const kind = /gsm|gramaj|gram metrekare/.test(question)
+    ? 'GSM'
+    : /paca(?:nin)? (?:boyu|uzunlugu|olcusu)|paca boy/.test(question)
+      ? 'HEM_LENGTH'
+      : /(?:pantolon|urun|giysi|elbise|gomlek|tisort) (?:boyu|uzunlugu)|toplam boy/.test(
+            question,
+          )
+        ? 'PRODUCT_LENGTH'
+        : null;
+  if (!kind) return null;
+  const namePattern =
+    kind === 'GSM'
+      ? /gsm|gramaj|gram metrekare/
+      : kind === 'HEM_LENGTH'
+        ? /paca (?:boyu|uzunlugu|olcusu)|ic bacak/
+        : /urun boyu|toplam boy|pantolon boyu|^boy$|uzunluk/;
+  const unitPattern =
+    kind === 'GSM'
+      ? /\d+(?:[,.]\d+)?\s*(?:gsm|g\s*\/\s*m[²2]|gr\s*\/\s*m[²2])/i
+      : /\d+(?:[,.]\d+)?\s*(?:cm|santim(?:etre)?)/i;
+  if (
+    context.product.attributes.some(
+      (item) =>
+        namePattern.test(normalizeText(item.name)) &&
+        unitPattern.test(item.value),
+    ) ||
+    context.evidence.some(
+      (item) =>
+        item.source === 'MERCHANT_VERIFIED' &&
+        namePattern.test(normalizeText(item.label)) &&
+        unitPattern.test(item.value),
+    )
+  )
+    return null;
+  if (
+    kind !== 'GSM' &&
+    context.product.sizeGuides?.some(
+      (guide) =>
+        guide.structuredData?.measurementBasis === 'GARMENT' &&
+        guide.structuredData.unit === 'CM' &&
+        guide.structuredData.rows.some(
+          (row) =>
+            (!context.requestedSize ||
+              rowMatchesSize(row.label, context.requestedSize)) &&
+            row.measurements.some(
+              (measurement) =>
+                namePattern.test(normalizeText(measurement.name)) &&
+                /\d/.test(measurement.value),
+            ),
+        ),
+    )
+  )
+    return null;
+  return kind === 'GSM'
+    ? 'Ürünün doğrulanmış kumaş gramajı (GSM)'
+    : kind === 'HEM_LENGTH'
+      ? 'Ürünün doğrulanmış paça boyu ölçüsü'
+      : 'Ürünün doğrulanmış boy ölçüsü';
+}
+
+function hasVerifiedFabricThickness(context: ProductAnswerContext) {
+  const hasValue = (value: string) =>
+    /^(?:ince|orta|kalin|orta kalinlik|orta kalin|ince kumas|kalin kumas)$/.test(
+      normalizeText(value),
+    ) || /\d+(?:[,.]\d+)?\s*(?:gsm|g\s*\/\s*m[²2])/i.test(value);
+  return (
+    context.product.attributes.some(
+      (item) =>
+        /kalinlik|gramaj|gsm/.test(normalizeText(item.name)) &&
+        hasValue(item.value),
+    ) ||
+    context.evidence.some(
+      (item) =>
+        item.source === 'MERCHANT_VERIFIED' &&
+        /kalinlik|gramaj|gsm/.test(normalizeText(item.label)) &&
+        hasValue(item.value),
+    )
+  );
 }
 
 function isResolvedMissingInformation(
@@ -1201,6 +1404,21 @@ function isResolvedMissingInformation(
     return true;
   }
 
+  if (
+    /kalinlik|ince|kalin/.test(normalizedItem) &&
+    hasVerifiedFabricThickness(context)
+  ) {
+    return true;
+  }
+
+  if (
+    /gsm|gramaj/.test(normalizedItem) &&
+    /gsm|gramaj/.test(normalizeText(context.question)) &&
+    !missingExactProductMeasurement(context)
+  ) {
+    return true;
+  }
+
   return false;
 }
 
@@ -1208,7 +1426,13 @@ function hasCatalogEvidenceForFact(
   context: ProductAnswerContext,
   fact: ProductAnswerFact,
 ) {
-  if (context.evidence.some((evidence) => evidence.fact === fact)) return true;
+  if (
+    context.evidence.some(
+      (evidence) =>
+        evidence.fact === fact && evidence.source !== 'CUSTOMER_INPUT',
+    )
+  )
+    return true;
 
   const attributes = normalizeText(
     context.product.attributes
@@ -1262,7 +1486,19 @@ function isSizeGuideLocationQuestion(question: string) {
 }
 
 function isGarmentWidthQuestion(question: string) {
-  return /(?:^| )(?:en|eni|genislik|genisligi)(?: |$)/.test(question);
+  return isExplicitGarmentWidthQuestion(question);
+}
+
+function fitDescription(context: ProductAnswerContext) {
+  const fit = context.evidence.find((item) => item.fact === 'FIT');
+  if (!fit) return '';
+  const value = normalizeText(fit.value);
+  if (/boxy/.test(value))
+    return 'Ürün boxy, yani bol ve kutu formunda kesimlidir. ';
+  if (/oversize/.test(value)) return 'Ürün oversize, yani bol kesimlidir. ';
+  if (/regular/.test(value)) return 'Ürün regular, yani standart kesimlidir. ';
+  if (/slim/.test(value)) return 'Ürün slim, yani dar kesimlidir. ';
+  return `Ürünün kalıp bilgisi: ${fit.value}. `;
 }
 
 function hasPriceContradiction(
@@ -1290,8 +1526,18 @@ function hasPriceContradiction(
 
 function hasUnsupportedClaim(answer: string, context: ProductAnswerContext) {
   const normalizedAnswer = normalizeText(answer);
+  if (
+    (context.product.sizeGuides?.length ?? 0) > 0 &&
+    /beden tablosu.{0,65}(?:yok|bulunmuyor|gorunmuyor|yer almiyor)/.test(
+      normalizedAnswer,
+    )
+  )
+    return true;
   const normalizedEvidence = normalizeText(
-    context.evidence.map((evidence) => evidence.value).join(' '),
+    context.evidence
+      .filter((evidence) => evidence.source !== 'CUSTOMER_INPUT')
+      .map((evidence) => evidence.value)
+      .join(' '),
   );
   const checks: Array<{ claim: RegExp; evidence: RegExp }> = [
     { claim: /hakiki deri/, evidence: /hakiki deri/ },

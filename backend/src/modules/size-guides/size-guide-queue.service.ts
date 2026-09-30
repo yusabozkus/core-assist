@@ -16,6 +16,10 @@ import type {
   SizeGuideExtractionJobData,
 } from './size-guide.types';
 import { SizeGuideDispatcher } from './size-guide.types';
+import {
+  getSizeGuideScope,
+  SIZE_GUIDE_EXTRACTION_VERSION,
+} from './size-guide-scope';
 
 @Injectable()
 export class SizeGuideQueueService extends SizeGuideDispatcher {
@@ -32,12 +36,37 @@ export class SizeGuideQueueService extends SizeGuideDispatcher {
   async register(input: RegisterSizeGuideInput) {
     const existing = await this.prisma.productSizeGuide.findUnique({
       where: { externalProductId: input.externalProductId },
-      select: { id: true, sourceUrl: true, status: true, failureReason: true },
+      select: {
+        id: true,
+        sourceUrl: true,
+        status: true,
+        failureReason: true,
+        structuredData: true,
+      },
     });
     const sourceChanged = existing?.sourceUrl !== input.sizeGuide.sourceUrl;
     const stoppedForBilling =
       existing?.failureReason === BILLING_SYNC_STOPPED_MESSAGE;
     const structuredData = input.sizeGuide.structuredData;
+    const product = !structuredData
+      ? await this.prisma.product.findUnique({
+          where: { id: input.productId },
+          select: {
+            title: true,
+            category: true,
+            attributes: { select: { name: true, value: true } },
+          },
+        })
+      : null;
+    const scopeKey = product ? getSizeGuideScope(product).key : null;
+    const saved = existing?.structuredData;
+    const extractionOutdated =
+      !structuredData &&
+      existing?.status === SizeGuideStatus.READY &&
+      (!saved ||
+        typeof saved !== 'object' ||
+        Array.isArray(saved) ||
+        saved.extractionContext !== scopeKey);
 
     const guide = await this.prisma.productSizeGuide.upsert({
       where: { externalProductId: input.externalProductId },
@@ -57,7 +86,7 @@ export class SizeGuideQueueService extends SizeGuideDispatcher {
         analyzedAt: structuredData ? new Date() : null,
       },
       update:
-        sourceChanged || structuredData
+        sourceChanged || structuredData || extractionOutdated
           ? {
               productId: input.productId,
               sourceUrl: input.sizeGuide.sourceUrl,
@@ -82,7 +111,9 @@ export class SizeGuideQueueService extends SizeGuideDispatcher {
 
     if (
       structuredData ||
-      (!sourceChanged && guide.status === SizeGuideStatus.READY) ||
+      (!sourceChanged &&
+        !extractionOutdated &&
+        guide.status === SizeGuideStatus.READY) ||
       guide.status === SizeGuideStatus.PROCESSING ||
       (!sourceChanged &&
         guide.status === SizeGuideStatus.FAILED &&
@@ -92,7 +123,9 @@ export class SizeGuideQueueService extends SizeGuideDispatcher {
     }
 
     const sourceHash = createHash('sha256')
-      .update(input.sizeGuide.sourceUrl)
+      .update(
+        `${input.sizeGuide.sourceUrl}:${scopeKey ?? SIZE_GUIDE_EXTRACTION_VERSION}`,
+      )
       .digest('hex')
       .slice(0, 12);
     const jobId = `size-guide-${guide.id}-${sourceHash}`;

@@ -10,7 +10,6 @@ import {
   getAdminAccess,
   getAdminHeaderSummaryOrUnavailable,
 } from "@/lib/admin-access.server"
-import { requireCompletedOnboarding } from "@/lib/require-onboarding.server"
 
 export const dynamic = "force-dynamic"
 
@@ -24,8 +23,6 @@ export default async function AdminLayout({
       `${APP_ROUTES.login}?returnTo=${encodeURIComponent(APP_ROUTES.admin.root)}`
     )
   }
-
-  await requireCompletedOnboarding()
 
   if (access.status === "forbidden") {
     redirect(APP_ROUTES.dashboard.root)

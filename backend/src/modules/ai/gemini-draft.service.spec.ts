@@ -65,6 +65,13 @@ function context(question: string): ProductAnswerContext {
     relevantDescription: null,
     evidence: [
       {
+        id: 'customer-size-input',
+        fact: 'SIZE',
+        label: 'Müşteri ölçüleri',
+        value: question,
+        source: 'CUSTOMER_INPUT',
+      },
+      {
         id: 'variant-sizes',
         fact: 'SIZE',
         label: 'Listelenen bedenler',
@@ -200,13 +207,11 @@ void test('missing customer height gets safe clarification without a merchant kn
       missingInformation: ['Müşterinin boy bilgisi'],
     }),
   );
-  assert.equal(
-    eligibility(noGuideDraft, noGuideContext).policy.eligible,
-    false,
-  );
+  assert.equal(eligibility(noGuideDraft, noGuideContext).policy.eligible, true);
+  assert.doesNotMatch(noGuideDraft.answer, /beden tablosu/);
 
   const disabledContext = context(answerContext.question);
-  disabledContext.evidence.push(answerContext.evidence[1]);
+  disabledContext.evidence.push(answerContext.evidence.at(-1)!);
   disabledContext.heightWeightSizeRecommendation = {
     ...answerContext.heightWeightSizeRecommendation,
     status: 'DISABLED',

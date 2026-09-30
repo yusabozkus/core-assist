@@ -13,6 +13,7 @@ import {
   SizeGuideStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
+import { isSizeGuideCompatible } from '../size-guides/size-guide-scope';
 import {
   getInventoryFreshnessCutoff,
   getInventoryFreshnessMaxAgeMs,
@@ -22,6 +23,10 @@ import {
   applyHeightWeightSizeRecommendation,
   parseProductAnswerSizeGuideData,
 } from './height-weight-size-recommendation';
+import {
+  isExplicitGarmentWidthQuestion,
+  isSizeGuideAvailabilityQuestion,
+} from './product-answer-advice';
 import type {
   ProductAnswerContext,
   ProductAnswerEvidence,
@@ -51,6 +56,12 @@ const MATERIAL_PATTERNS = [
   'likrali',
   'elastan',
   'esnek',
+  'kalinlik',
+  'kalin mi',
+  'ince mi',
+  'orta kalin',
+  'gramaj',
+  'gsm',
 ];
 const DURABILITY_PATTERNS = [
   'kararma',
@@ -74,7 +85,11 @@ const SIZE_PATTERNS = [
   'kiloyum',
   'kilo',
   'gogus',
+  'gogsum',
   'bel olc',
+  'belim',
+  'basen',
+  'kalcam',
   'beden tablosu',
   'b den tablo',
   'kac cm',
@@ -118,6 +133,13 @@ const CARE_PATTERNS = [
   'utulen',
   'kurutma',
   'cekme yap',
+  'ceker mi',
+  'cekiyor',
+  'cekme olur',
+  'kucul',
+  'kisalir',
+  'daralir',
+  'daraliyor',
 ];
 const PRODUCT_CODE_PATTERNS = [
   'urun kodu',
@@ -128,9 +150,6 @@ const PRODUCT_CODE_PATTERNS = [
 const PRODUCT_INFO_PATTERNS = [
   'astar',
   'ic goster',
-  'olcu',
-  'boyu',
-  'uzunluk',
   'hacim',
   'cep',
   'aski',
@@ -763,6 +782,13 @@ export function analyzeProductQuestion(input: {
   additionalRequestedFacts?: ProductAnswerFact[];
 }): ProductAnswerContext {
   const normalizedQuestion = normalizeSearchValue(input.question);
+  const compatibleGuides = (input.product.sizeGuides ?? []).filter((guide) =>
+    isSizeGuideCompatible(
+      input.product,
+      guide.structuredData ?? { title: guide.normalizedText.split('\n')[0] },
+    ),
+  );
+  const product = { ...input.product, sizeGuides: compatibleGuides };
   const variants = input.product.variants;
   const availableColors = uniqueValues(
     variants.map((variant) => variant.color),
@@ -836,9 +862,35 @@ export function analyzeProductQuestion(input: {
     requestedSize,
     matchedColor,
     matchedSize,
-    sizeGuides: input.product.sizeGuides ?? [],
+    sizeGuides: compatibleGuides,
     normalizedQuestion,
   });
+  if (
+    requestedFacts.length === 1 &&
+    requestedFacts[0] === 'SIZE' &&
+    isSizeGuideAvailabilityQuestion(input.question) &&
+    compatibleGuides.length === 0 &&
+    (input.product.sizeGuides?.length ?? 0) === 0
+  ) {
+    evidence.push({
+      id: 'product-size-guide-unavailable',
+      fact: 'SIZE',
+      label: 'Ürün beden tablosunun mevcut durumu',
+      value:
+        'Bu ürünün katalog bilgilerinde şu anda beden tablosu yer almıyor.',
+      source: 'CATALOG_STATE',
+      confidence: 1,
+    });
+  }
+  if (requestedFacts.includes('SIZE')) {
+    evidence.push({
+      id: 'customer-size-input',
+      fact: 'SIZE',
+      label: 'Müşterinin paylaştığı ölçü bilgisi (ürün özelliği değildir)',
+      value: input.question,
+      source: 'CUSTOMER_INPUT',
+    });
+  }
 
   return {
     questionId: input.questionId,
@@ -850,7 +902,11 @@ export function analyzeProductQuestion(input: {
     requestedSize,
     matchedColor,
     matchedSize,
-    product: input.product,
+    product,
+    sizeGuideIssues:
+      compatibleGuides.length < (input.product.sizeGuides?.length ?? 0)
+        ? ['Ürünün cinsiyet ve yaş grubuna uygun beden tablosu']
+        : [],
     matchingVariants,
     inventoryFreshness,
     relevantAttributes,
@@ -1022,6 +1078,9 @@ const ATTRIBUTE_PATTERNS_BY_FACT: Record<ProductAnswerFact, string[]> = {
     'elastan',
     'likra',
     'ribana',
+    'kalinlik',
+    'gramaj',
+    'gsm',
   ],
   DURABILITY: [
     'kararma',
@@ -1216,6 +1275,24 @@ function createEvidence(input: {
   const semanticAttributes = selectSemanticProductAttributes(
     input.productAttributes,
   );
+  // Include related material/fit/care facts even when the question uses different words.
+  for (const fact of ['MATERIAL', 'FIT', 'CARE'] as const) {
+    const attributes = semanticAttributes.filter((attribute) =>
+      attributePatternsForFact(fact).some((pattern) =>
+        normalizeSearchValue(attribute.name).includes(pattern),
+      ),
+    );
+    if (attributes.length)
+      evidence.push({
+        id: `catalog-${fact.toLowerCase()}`,
+        fact,
+        label: fact,
+        value: attributes
+          .map((attribute) => `${attribute.name}: ${attribute.value}`)
+          .join('; '),
+        source: 'ATTRIBUTE',
+      });
+  }
   if (semanticAttributes.length > 0) {
     evidence.push({
       id: 'catalog-attributes',
@@ -1361,15 +1438,14 @@ function createEvidence(input: {
     }
 
     for (const guide of input.requestedFacts.includes('SIZE')
-      ? input.sizeGuides.slice(0, 2)
+      ? input.sizeGuides
+          .filter(
+            (item) =>
+              !isExplicitGarmentWidthQuestion(input.normalizedQuestion) ||
+              item.structuredData?.measurementBasis === 'GARMENT',
+          )
+          .slice(0, 2)
       : []) {
-      if (
-        isProductWidthQuestion(input.normalizedQuestion) &&
-        !containsProductWidthMeasurement(guide.normalizedText)
-      ) {
-        continue;
-      }
-
       evidence.push({
         id: `size-guide-${guide.id}`,
         fact: 'SIZE',
@@ -1552,17 +1628,6 @@ function sizeGuideLocationForProvider(providerKey: string) {
   }
 
   return 'Ürün sayfasındaki beden seçenekleri bölümünde yer alan Beden Tablosu bağlantısından açılır.';
-}
-
-function isProductWidthQuestion(normalizedQuestion: string) {
-  return /(?:^| )(?:en|eni|genislik|genisligi)(?: |$)/.test(normalizedQuestion);
-}
-
-function containsProductWidthMeasurement(normalizedText: string) {
-  const normalized = normalizeSearchValue(normalizedText);
-  return /(?:^| )(?:urun eni|beden eni|en olcusu|genislik)(?: |$)/.test(
-    normalized,
-  );
 }
 
 export function extractProductCode(title: string) {

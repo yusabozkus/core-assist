@@ -71,6 +71,8 @@ const SIZE_GUIDE_RESPONSE_SCHEMA = {
   additionalProperties: false,
   required: [
     'title',
+    'audience',
+    'measurementBasis',
     'unit',
     'headers',
     'rows',
@@ -80,6 +82,14 @@ const SIZE_GUIDE_RESPONSE_SCHEMA = {
   ],
   properties: {
     title: { type: 'string' },
+    audience: {
+      type: 'string',
+      enum: ['MEN', 'WOMEN', 'BOYS', 'GIRLS', 'BABY', 'UNISEX', 'UNKNOWN'],
+    },
+    measurementBasis: {
+      type: 'string',
+      enum: ['BODY', 'GARMENT', 'MIXED', 'UNKNOWN'],
+    },
     unit: { type: 'string', enum: ['CM', 'INCH', 'MIXED', 'UNKNOWN'] },
     headers: { type: 'array', items: { type: 'string' } },
     rows: {
@@ -150,7 +160,7 @@ export class GeminiClientService {
         model: request.model,
         input: request.prompt,
         generation_config: {
-          max_output_tokens: 700,
+          max_output_tokens: 3_072,
           thinking_level: request.thinkingLevel,
         },
         response_format: {
@@ -189,8 +199,8 @@ export class GeminiClientService {
           },
         ],
         generation_config: {
-          max_output_tokens: 2_000,
-          thinking_level: 'minimal',
+          max_output_tokens: 12_000,
+          thinking_level: 'medium',
         },
         response_format: {
           type: 'text',

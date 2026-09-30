@@ -67,8 +67,12 @@ export function evaluateAutoSendEligibility({
   );
   const validatedHeightWeightRecommendation =
     allowHeightWeightRecommendation &&
-    requestedFacts.length === 1 &&
-    requestedFacts[0] === 'SIZE' &&
+    requestedFacts.includes('SIZE') &&
+    requestedFacts.every((fact) => fact === 'SIZE' || fact === 'FIT') &&
+    (draft.responseKind === 'SIZE_ESTIMATE' ||
+      draft.usedEvidenceIds.some((id) =>
+        id.startsWith('height-weight-size-'),
+      )) &&
     draft.answerability === 'FULL' &&
     draft.usedEvidenceIds.some(
       (id) => id === 'variant-sizes' || id.startsWith('height-weight-size-'),

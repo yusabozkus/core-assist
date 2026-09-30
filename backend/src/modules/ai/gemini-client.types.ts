@@ -1,5 +1,7 @@
 export type GeminiSizeGuideExtraction = {
   title: string;
+  audience?: string;
+  measurementBasis?: 'BODY' | 'GARMENT' | 'MIXED' | 'UNKNOWN';
   unit: 'CM' | 'INCH' | 'MIXED' | 'UNKNOWN';
   headers: string[];
   rows: Array<{

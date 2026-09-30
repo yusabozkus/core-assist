@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Prisma } from '../../generated/prisma/client';
 import { SizeGuideStatus } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { BillingSubscriptionService } from '../billing/billing-subscription.service';
@@ -10,6 +9,13 @@ import { GeminiClientService } from '../ai/gemini-client.service';
 import { DEFAULT_SIZE_GUIDE_MODEL } from './size-guide.constants';
 import { SizeGuideImageService } from './size-guide-image.service';
 import { formatNormalizedSizeGuide } from './size-guide-queue.service';
+import {
+  getSizeGuideScope,
+  isSizeGuideCompatible,
+  SIZE_GUIDE_EXTRACTION_VERSION,
+  type SizeGuideProduct,
+} from './size-guide-scope';
+import { separateIndependentLengthTable } from './size-guide-normalization';
 
 @Injectable()
 export class SizeGuideWorkerService {
@@ -33,7 +39,14 @@ export class SizeGuideWorkerService {
         id: true,
         sourceUrl: true,
         status: true,
-        product: { select: { title: true, category: true, storeId: true } },
+        product: {
+          select: {
+            title: true,
+            category: true,
+            storeId: true,
+            attributes: { select: { name: true, value: true } },
+          },
+        },
       },
     });
 
@@ -48,23 +61,30 @@ export class SizeGuideWorkerService {
         guide.product.storeId,
         BILLING_SYNC_STOPPED_MESSAGE,
       );
-      const cached = await this.prisma.productSizeGuide.findFirst({
-        where: {
-          id: { not: guide.id },
-          sourceUrl: guide.sourceUrl,
-          status: SizeGuideStatus.READY,
-          normalizedText: { not: null },
-          structuredData: { not: Prisma.DbNull },
-        },
-        orderBy: { analyzedAt: 'desc' },
-        select: {
-          rawText: true,
-          normalizedText: true,
-          structuredData: true,
-          confidence: true,
-          analyzedAt: true,
-        },
-      });
+      const scope = getSizeGuideScope(guide.product);
+      const cached =
+        scope.audience === 'UNKNOWN'
+          ? null
+          : await this.prisma.productSizeGuide.findFirst({
+              where: {
+                id: { not: guide.id },
+                sourceUrl: guide.sourceUrl,
+                status: SizeGuideStatus.READY,
+                normalizedText: { not: null },
+                structuredData: {
+                  path: ['extractionContext'],
+                  equals: getSizeGuideScope(guide.product).key,
+                },
+              },
+              orderBy: { analyzedAt: 'desc' },
+              select: {
+                rawText: true,
+                normalizedText: true,
+                structuredData: true,
+                confidence: true,
+                analyzedAt: true,
+              },
+            });
       if (cached?.normalizedText && cached.structuredData) {
         await this.prisma.productSizeGuide.update({
           where: { id: guide.id },
@@ -86,15 +106,22 @@ export class SizeGuideWorkerService {
         guide.product.storeId,
         BILLING_SYNC_STOPPED_MESSAGE,
       );
-      const extraction = await this.gemini.extractSizeGuide({
-        model: this.model,
-        imageBase64: image.bytes.toString('base64'),
-        mimeType: image.mimeType,
-        prompt: createExtractionPrompt(
-          guide.product.title,
-          guide.product.category,
-        ),
-      });
+      const extraction = separateIndependentLengthTable(
+        await this.gemini.extractSizeGuide({
+          model: this.model,
+          imageBase64: image.bytes.toString('base64'),
+          mimeType: image.mimeType,
+          prompt: createExtractionPrompt(guide.product),
+        }),
+      );
+      if (!isSizeGuideCompatible(guide.product, extraction)) {
+        throw new Error(
+          'Seçilen beden tablosu ürünün cinsiyet/yaş grubuyla uyuşmuyor.',
+        );
+      }
+      if (scope.audience !== 'UNKNOWN' && extraction.audience === 'UNKNOWN') {
+        throw new Error('Beden tablosunun hedef kitlesi doğrulanamadı.');
+      }
       const normalizedText = formatNormalizedSizeGuide(extraction);
 
       await this.prisma.productSizeGuide.update({
@@ -103,7 +130,11 @@ export class SizeGuideWorkerService {
           status: SizeGuideStatus.READY,
           rawText: extraction.rawText.slice(0, 20_000),
           normalizedText,
-          structuredData: extraction,
+          structuredData: {
+            ...extraction,
+            extractionVersion: SIZE_GUIDE_EXTRACTION_VERSION,
+            extractionContext: getSizeGuideScope(guide.product).key,
+          },
           confidence: Math.max(0, Math.min(1, extraction.confidence)),
           failureReason: null,
           analyzedAt: new Date(),
@@ -131,15 +162,21 @@ export class SizeGuideWorkerService {
   }
 }
 
-function createExtractionPrompt(title: string, category: string | null) {
+export function createExtractionPrompt(product: SizeGuideProduct) {
+  const scope = getSizeGuideScope(product);
   return [
-    'Bu görseldeki beden veya ölçü tablosunu eksiksiz ve yalnızca görünen verilere dayanarak yapılandır.',
+    'Bu görselde birden fazla cinsiyet/yaş grubu tablosu olabilir. Görselin tamamını incele, ürünün hedef kitlesine uygun bölümü seç ve yalnızca o bölümü eksiksiz yapılandır. İlk görünen tabloyu varsayılan seçme.',
+    `Gerekli hedef kitle: ${scope.audience}; ürün grubu: ${scope.section}. title alanında seçtiğin bölümün başlığını aynen koru. audience bu bölümün hedef kitlesi olmalıdır.`,
+    'Örneğin ürün erkek tişört ise Kadın Giyim veya çocuk bölümünü alma; Erkek Giyim bölümünü al. Erkek pantolon için Erkek Alt Giyim bölümünü al.',
+    'measurementBasis alanı vücut ölçüleri için BODY, giysinin düz zemindeki fiziksel ölçüleri için GARMENT, karışık ise MIXED, belirlenemiyorsa UNKNOWN olmalıdır. Vücut göğüs çevresini ürün eni diye kaydetme.',
     'Satır ve sütun değerlerini tahmin etme, yuvarlama veya dönüştürme.',
+    'Ayrı Boy/İç Boy uzunluk tablosu beden tablosunun yanında duruyorsa aynı satır hizası aynı beden ilişkisi demek değildir. Bağımsız uzunluk eşleşmelerini notes alanına yaz; beden satırlarına dağıtma.',
     'Bir hücre okunamıyorsa değeri boş bırak; beden tablosunda olmayan ölçüleri ekleme.',
     'Türkçe sütun adlarını görseldeki anlamı koruyarak yaz.',
     'headers alanına yalnızca ölçü sütunlarını yaz; beden, size veya numara sütununu ekleme.',
-    'rawText alanına görselde okunabilen beden tablosu metnini düz metin olarak aktar.',
-    `Ürün: ${title}`,
-    `Kategori: ${category ?? 'Belirtilmemiş'}`,
+    'rawText alanına yalnızca SEÇİLEN bölümün metnini aktar; diğer tabloları veya tekrarları ekleme.',
+    `Ürün: ${product.title}`,
+    `Kategori: ${product.category ?? 'Belirtilmemiş'}`,
+    `Özellikler: ${JSON.stringify(product.attributes.filter((item) => /cinsiyet|yaş|yas|gender/i.test(item.name)))}`,
   ].join('\n');
 }

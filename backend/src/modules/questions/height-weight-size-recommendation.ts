@@ -187,6 +187,15 @@ export function parseProductAnswerSizeGuideData(
 
   return {
     ...(typeof value.title === 'string' ? { title: value.title } : {}),
+    ...(typeof value.audience === 'string' ? { audience: value.audience } : {}),
+    ...(['BODY', 'GARMENT', 'MIXED', 'UNKNOWN'].includes(
+      String(value.measurementBasis),
+    )
+      ? {
+          measurementBasis: value.measurementBasis as
+            'BODY' | 'GARMENT' | 'MIXED' | 'UNKNOWN',
+        }
+      : {}),
     unit: value.unit,
     headers: value.headers,
     rows,
@@ -373,7 +382,7 @@ function isNonBodyMeasurement(name: string) {
   return (
     /^(?:tr|eu|tr eu|uk|us|uk us|it|beden|size|numara|kanvas)(?: cm)?$/.test(
       name,
-    ) || /uzunluk|ic bacak|urun boyu|giysi boyu/.test(name)
+    ) || /karsiligi|uzunluk|ic bacak|ic boy|urun boyu|giysi boyu/.test(name)
   );
 }
 

@@ -63,6 +63,11 @@ function createAppAuth(
       accountLinking: {
         // An email match alone must not merge Google and Microsoft identities.
         disableImplicitLinking: true,
+        // Linking is initiated from an authenticated account settings page.
+        // Microsoft often omits a verified-email claim even for a valid OAuth identity.
+        trustedProviders: ['microsoft'],
+        // A user may own Google and Microsoft identities with different emails.
+        allowDifferentEmails: true,
       },
     },
     user: {
