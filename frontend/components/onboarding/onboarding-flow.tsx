@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft01Icon,
@@ -36,8 +37,21 @@ import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { APP_ROUTES } from "@/constants/site"
-import { getChannelSyncRun } from "@/lib/api/channels"
-import { completeOnboarding, provisionOnboarding } from "@/lib/api/onboarding"
+import {
+  configureChannelConnection,
+  createChannelConnection,
+  getChannelConnections,
+  getChannelSyncRun,
+  syncChannelCatalog,
+} from "@/lib/api/channels"
+import { updateStoreKnowledge } from "@/lib/api/knowledge"
+import {
+  completeAdditionalStoreOnboarding,
+  completeOnboarding,
+  provisionOnboarding,
+} from "@/lib/api/onboarding"
+import { createStore, updateStore } from "@/lib/api/stores"
+import { selectActiveStore } from "@/app/(dashboard)/dashboard/actions"
 import { signOutCurrentUser } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 import type { AuthUser } from "@/types/auth"
@@ -258,6 +272,7 @@ async function waitForCatalogSync(
 type OnboardingFlowProps = {
   user: AuthUser
   initialStatus: OnboardingStatus
+  mode?: "initial" | "additionalStore"
 }
 
 function getInitialStep(status: OnboardingStatus) {
@@ -322,8 +337,13 @@ function OnboardingUserAvatar({
   )
 }
 
-export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
+export function OnboardingFlow({
+  user,
+  initialStatus,
+  mode = "initial",
+}: OnboardingFlowProps) {
   const router = useRouter()
+  const isAdditionalStore = mode === "additionalStore"
   const initialStep = getInitialStep(initialStatus)
   const [currentStep, setCurrentStep] = React.useState(initialStep)
   const [direction, setDirection] = React.useState(1)
@@ -364,6 +384,10 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
   const [provisionedStore, setProvisionedStore] =
     React.useState<OnboardingResource | null>(
       initialStatus.stage === "PREFERENCES" ? initialStatus.store : null
+    )
+  const [createdAdditionalStore, setCreatedAdditionalStore] =
+    React.useState<OnboardingResource | null>(
+      isAdditionalStore ? initialStatus.store : null
     )
 
   const [storeName, setStoreName] = React.useState(
@@ -407,13 +431,13 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
         ? Boolean(selectedChannel && channelCredentialsComplete)
         : currentStep === 3
           ? Boolean(inventoryPolicy)
-        : currentStep === 4
-          ? Boolean(provisionedStore)
-          : Boolean(
-              provisionedStore &&
+          : currentStep === 4
+            ? Boolean(provisionedStore)
+            : Boolean(
+                provisionedStore &&
                 profileDraft.shippingPolicy?.trim() &&
                 profileDraft.returnPolicy?.trim()
-            )
+              )
 
   React.useEffect(() => {
     const catalogSync = initialStatus.catalogSync
@@ -495,7 +519,8 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
       step < 1 ||
       step > STEPS.length ||
       step > furthestStep ||
-      (provisionedStore && step < 4)
+      (provisionedStore && step < 4) ||
+      (createdAdditionalStore && step < 2)
     ) {
       return
     }
@@ -539,7 +564,12 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
   }
 
   const handleBack = () => {
-    if (currentStep <= 1 || (provisionedStore && currentStep <= 4)) return
+    if (
+      currentStep <= 1 ||
+      (provisionedStore && currentStep <= 4) ||
+      (createdAdditionalStore && currentStep <= 2)
+    )
+      return
 
     setDirection(-1)
     setCurrentStep((step) => step - 1)
@@ -570,6 +600,70 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
     setSubmitError(null)
 
     try {
+      if (isAdditionalStore) {
+        let store = createdAdditionalStore
+        if (!store) {
+          const created = await createStore({
+            name: storeName.trim(),
+            inventoryPolicy,
+          })
+          store = created
+          setCreatedAdditionalStore(store)
+          window.history.replaceState(
+            null,
+            "",
+            `${APP_ROUTES.storeOnboarding}?storeId=${encodeURIComponent(store.id)}`
+          )
+        }
+
+        if (store.inventoryPolicy !== inventoryPolicy) {
+          store = await updateStore(store.id, { inventoryPolicy })
+          setCreatedAdditionalStore(store)
+        }
+
+        await updateStoreKnowledge(store.id, {
+          brandDescription: profileDraft.brandDescription?.trim() || null,
+          tone: profileDraft.tone,
+          responseLength: profileDraft.responseLength,
+        })
+        const connections = await getChannelConnections(store.id)
+        const existing = connections.find(
+          (connection) => connection.providerKey === selectedChannel
+        )
+        const connection = existing
+          ? await configureChannelConnection(store.id, existing.id, {
+              environment: "PRODUCTION",
+              credentials,
+            })
+          : await createChannelConnection(store.id, {
+              providerKey: selectedChannel,
+              environment: "PRODUCTION",
+              credentials,
+            })
+        const catalogSync = await syncChannelCatalog(store.id, connection.id)
+        const controller = new AbortController()
+        syncAbortControllerRef.current = controller
+        const syncRun = await waitForCatalogSync(
+          store.id,
+          catalogSync.syncRunId,
+          (nextProgress) => setSyncProgress(nextProgress),
+          controller.signal
+        )
+        setSyncProgress(100)
+        setIsCatalogSyncContinuing(syncRun.status === "RUNNING")
+        setCatalogImportSummary(
+          syncRun.productsSkipped > 0
+            ? {
+                processed: syncRun.productsProcessed,
+                skipped: syncRun.productsSkipped,
+              }
+            : null
+        )
+        setProvisionedStore(store)
+        advanceToStep(4)
+        return
+      }
+
       const result = await provisionOnboarding({
         storeName: storeName.trim(),
         selectedChannel: selectedChannel.toUpperCase() as OnboardingChannel,
@@ -623,7 +717,10 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
     setSubmitError(null)
 
     try {
-      const result = await completeOnboarding({
+      const completeStore = isAdditionalStore
+        ? completeAdditionalStoreOnboarding
+        : completeOnboarding
+      const result = await completeStore({
         storeId: provisionedStore.id,
         inventoryPolicy,
         tone: profileDraft.tone,
@@ -631,6 +728,9 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
         shippingPolicy: profileDraft.shippingPolicy?.trim() ?? "",
         returnPolicy: profileDraft.returnPolicy?.trim() ?? "",
       })
+      if (isAdditionalStore) {
+        await selectActiveStore(provisionedStore.id)
+      }
       router.replace(result.nextPath)
       router.refresh()
     } catch (error: unknown) {
@@ -648,10 +748,16 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
       <div className="grid min-h-dvh bg-background lg:grid-cols-[310px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
         <aside className="commerce-panel-grid hidden min-h-dvh flex-col bg-[#10251e] px-7 py-8 text-white lg:flex xl:px-9">
           <AppLogo
-            href={APP_ROUTES.onboarding}
+            href={
+              isAdditionalStore
+                ? APP_ROUTES.dashboard.root
+                : APP_ROUTES.onboarding
+            }
             className="[&_span]:text-[#91aa9e]"
             showIcon
-            description="İlk kurulum"
+            description={
+              isAdditionalStore ? "Yeni mağaza kurulumu" : "İlk kurulum"
+            }
             fullDark
           />
 
@@ -660,7 +766,9 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
               Yaklaşık 3 dakika
             </p>
             <h1 className="mt-4 text-3xl leading-[1.15] font-semibold tracking-[-0.04em]">
-              Mağazanızı birlikte hazırlayalım.
+              {isAdditionalStore
+                ? "Yeni mağazanızı birlikte hazırlayalım."
+                : "Mağazanızı birlikte hazırlayalım."}
             </h1>
           </div>
 
@@ -669,7 +777,9 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
               const isActive = step.id === currentStep
               const isCompleted = step.id < currentStep
               const isReachable =
-                step.id <= furthestStep && (!provisionedStore || step.id >= 4)
+                step.id <= furthestStep &&
+                (!provisionedStore || step.id >= 4) &&
+                (!createdAdditionalStore || step.id >= 2)
 
               return (
                 <button
@@ -783,6 +893,11 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
             </div>
 
             <div className="flex min-w-0 items-center justify-end gap-2">
+              {isAdditionalStore ? (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href={APP_ROUTES.dashboard.root}>Panele dön</Link>
+                </Button>
+              ) : null}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -841,6 +956,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                         />
                       ) : currentStep === 1 ? (
                         <StoreStep
+                          additionalStore={isAdditionalStore}
                           storeName={storeName}
                           setStoreName={setStoreName}
                           brandDescription={profileDraft.brandDescription ?? ""}
@@ -913,12 +1029,14 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                     disabled={
                       currentStep === 1 ||
                       (Boolean(provisionedStore) && currentStep <= 4) ||
+                      (Boolean(createdAdditionalStore) && currentStep <= 2) ||
                       isProvisioning ||
                       isSubmitting
                     }
                     className={
                       currentStep === 1 ||
-                      (provisionedStore && currentStep <= 4)
+                      (provisionedStore && currentStep <= 4) ||
+                      (createdAdditionalStore && currentStep <= 2)
                         ? "invisible"
                         : ""
                     }
@@ -947,7 +1065,9 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                     ) : currentStep === STEPS.length ? (
                       <>
                         <HugeiconsIcon icon={Rocket01Icon} className="size-4" />
-                        Kurulumu tamamla
+                        {isAdditionalStore
+                          ? "Mağazayı kullanmaya başla"
+                          : "Kurulumu tamamla"}
                       </>
                     ) : currentStep === 3 ? (
                       <>
@@ -1019,11 +1139,13 @@ function StepHeading({
 }
 
 function StoreStep({
+  additionalStore = false,
   storeName,
   setStoreName,
   brandDescription,
   setBrandDescription,
 }: {
+  additionalStore?: boolean
   storeName: string
   setStoreName: (value: string) => void
   brandDescription: string
@@ -1033,7 +1155,11 @@ function StoreStep({
     <div>
       <StepHeading
         eyebrow="Mağaza bilgileri"
-        title="AI hangi mağaza için çalışacak?"
+        title={
+          additionalStore
+            ? "Yeni mağazanızın adı ne olsun?"
+            : "AI hangi mağaza için çalışacak?"
+        }
         description="Mağazanızı adlandırın ve AI'ın marka bağlamını anlayabilmesi için kısa bir açıklama ekleyin."
       />
 
@@ -1618,8 +1744,8 @@ function ShippingReturnsStep({
             id="onboarding-shipping-help"
             className="mt-2 text-xs leading-5 text-muted-foreground"
           >
-            Yalnızca müşterileriniz için geçerli ve doğrulayabildiğiniz bilgileri
-            girin.
+            Yalnızca müşterileriniz için geçerli ve doğrulayabildiğiniz
+            bilgileri girin.
           </p>
         </div>
 
@@ -1644,8 +1770,8 @@ function ShippingReturnsStep({
             id="onboarding-return-help"
             className="mt-2 text-xs leading-5 text-muted-foreground"
           >
-            Pazaryerlerine göre farklı kurallarınız varsa bunları daha sonra kanal
-            bazında düzenleyebilirsiniz.
+            Pazaryerlerine göre farklı kurallarınız varsa bunları daha sonra
+            kanal bazında düzenleyebilirsiniz.
           </p>
         </div>
       </div>

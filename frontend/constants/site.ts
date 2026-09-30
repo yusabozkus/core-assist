@@ -22,6 +22,7 @@ export const APP_ROUTES = {
   authContinue: "/auth/continue",
   register: "/register",
   onboarding: "/onboarding",
+  storeOnboarding: "/stores/new",
   checkout: "/checkout",
   admin: {
     root: "/admin",

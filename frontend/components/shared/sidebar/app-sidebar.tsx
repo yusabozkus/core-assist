@@ -82,6 +82,7 @@ export function AppSidebar({
           key={activeShopId ?? "no-active-store"}
           shops={shops}
           activeShopId={activeShopId}
+          canManageStores={canManageBilling}
         />
       </SidebarHeader>
 

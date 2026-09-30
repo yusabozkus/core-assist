@@ -69,3 +69,29 @@ export const getOnboardingStatus = cache(
     return status as OnboardingStatus
   }
 )
+
+export async function getAdditionalStoreOnboardingStatus(
+  storeId: string
+): Promise<OnboardingStatus | null> {
+  const cookie = (await headers()).get("cookie")
+  if (!cookie) return null
+
+  const response = await fetchServerApi(
+    `/onboarding/stores/${encodeURIComponent(storeId)}/status`,
+    { cookie, timeoutMs: ONBOARDING_STATUS_REQUEST_TIMEOUT_MS }
+  )
+  if (
+    response.status === 400 ||
+    response.status === 401 ||
+    response.status === 403 ||
+    response.status === 404
+  ) {
+    return null
+  }
+  if (!response.ok) {
+    throw new OnboardingStatusUnavailableError(
+      new Error(`Store onboarding status failed with ${response.status}`)
+    )
+  }
+  return (await response.json()) as OnboardingStatus
+}

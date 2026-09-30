@@ -10,5 +10,6 @@ export type StoreSummary = {
   inventoryPolicy: InventoryPolicy | null
   status: StoreStatus
   createdAt: string
+  setupComplete?: boolean
   accessLevel?: StoreAccessLevel
 }
