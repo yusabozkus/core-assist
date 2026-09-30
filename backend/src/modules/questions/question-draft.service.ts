@@ -390,7 +390,7 @@ export class QuestionDraftService {
   }
 }
 
-function markInventoryAsUnverified(
+export function markInventoryAsUnverified(
   context: ProductAnswerContext,
 ): ProductAnswerContext {
   return {
@@ -444,7 +444,7 @@ function applyVerifiedInventory(
   };
 }
 
-function applyInventoryFreshnessGuard(
+export function applyInventoryFreshnessGuard(
   draft: AiDraftResult,
   context: ProductAnswerContext,
 ): AiDraftResult {

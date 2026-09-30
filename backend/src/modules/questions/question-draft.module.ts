@@ -1,6 +1,7 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { AiModule } from '../ai/ai.module';
+import { AuthModule } from '../auth/auth.module';
 import { BillingModule } from '../billing/billing.module';
 import { InventoryVerificationModule } from '../inventory-verification/inventory-verification.module';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -18,10 +19,14 @@ import { QuestionDraftService } from './question-draft.service';
 import { QuestionReplyDecisionService } from './question-reply-decision.service';
 import { DraftExecutionService } from './draft-execution.service';
 import { QuestionResponsePolicyService } from './question-response-policy.service';
+import { AiTestController } from './ai-test.controller';
+import { AiTestService } from './ai-test.service';
 
 @Module({
+  controllers: [AiTestController],
   imports: [
     AiModule,
+    AuthModule,
     BillingModule,
     InventoryVerificationModule,
     NotificationsModule,
@@ -30,6 +35,7 @@ import { QuestionResponsePolicyService } from './question-response-policy.servic
     BullModule.registerQueue({ name: QUESTION_DRAFT_QUEUE }),
   ],
   providers: [
+    AiTestService,
     DraftExecutionService,
     ProductAnswerContextService,
     QuestionDraftService,

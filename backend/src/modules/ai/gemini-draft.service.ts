@@ -12,6 +12,7 @@ import {
 } from './ai-draft.types';
 import { GeminiClientService } from './gemini-client.service';
 import { getUnlistedAvailabilitySize } from '../questions/unlisted-size-availability';
+import { isAmbientWearQuestion } from '../questions/ambient-wear-question';
 import { isCustomerMeasurementGap } from '../questions/customer-measurement-gap';
 import {
   classifyShrinkageQuestion,
@@ -105,6 +106,7 @@ export class GeminiDraftService extends AiDraftGenerator {
 }
 
 function createPrompt(context: ProductAnswerContext) {
+  const ambientWearQuestion = isAmbientWearQuestion(context.question);
   const recommendation = context.heightWeightSizeRecommendation;
   const independentSizeEstimate =
     recommendation?.status === 'ESTIMATE_ALLOWED' &&
@@ -117,7 +119,7 @@ function createPrompt(context: ProductAnswerContext) {
   const modelQuestion = independentSizeEstimate
     ? `${recommendation.customerHeightCm} cm boy ve ${recommendation.customerWeightKg} kg için bu ürünün ${context.requestedFacts.includes('FIT') ? 'kalıbına göre ' : ''}hangi bedeni tahmini olarak önerirsiniz?`
     : context.question;
-  const modelEvidence = independentSizeEstimate
+  const baseModelEvidence = independentSizeEstimate
     ? context.evidence
         .filter(
           (item) =>
@@ -140,6 +142,15 @@ function createPrompt(context: ProductAnswerContext) {
             : item,
         )
     : context.evidence;
+  const modelEvidence = ambientWearQuestion
+    ? baseModelEvidence.filter(
+        (item) =>
+          item.fact !== 'CARE' &&
+          item.source !== 'VARIANT' &&
+          item.id !== 'catalog-attributes' &&
+          !/\b(?:yikama|bakim|kurutma|utu)\b/.test(normalizeText(item.label)),
+      )
+    : baseModelEvidence;
   const normalizedQuestion = normalizeText(modelQuestion);
   const storeInstructions =
     context.responsePreferences?.instructions
@@ -183,6 +194,7 @@ function createPrompt(context: ProductAnswerContext) {
         context.requestedFacts.includes('COLOR') &&
         !context.requestedFacts.includes('STOCK'),
       asksFitComparison: context.requestedFacts.includes('FIT'),
+      asksAmbientWear: ambientWearQuestion,
       hasVerifiedColorEvidence: Boolean(verifiedColorEvidence),
       hasSingleProductPackageEvidence: Boolean(packageScopeEvidence),
     },
@@ -226,6 +238,7 @@ function createPrompt(context: ProductAnswerContext) {
     'Selamlama, teşekkür, kısa nezaket mesajı veya hem ürünle ilgili hem ilgisiz bölüm içeren karma bir soru OUT_OF_SCOPE sayılmamalıdır. Karma soruda yalnızca mağazanın kapsamındaki kısmı yanıtla.',
     'OUT_OF_SCOPE yalnızca açık ve güçlü bir sınıflandırma olduğunda seçilmelidir. Bu durumda answerability OUT_OF_SCOPE, detectedFacts boş, usedEvidenceIds boş, missingInformation boş ve decision DRAFT olmalıdır. confidence değeri cevabın doğruluğunu değil kapsam sınıflandırmasının kesinliğini göstermelidir.',
     'Sorudaki yazım hatalarını, günlük ifadeleri ve örtük niyeti anlamlandır; yalnızca birebir kelime eşleşmesi arama. Müşterinin asıl öğrenmek istediği noktayı cevapla.',
+    'Bir giysinin belirli hava sıcaklığında giyilip giyilemeyeceği soruluyorsa derece ortam sıcaklığıdır, yıkama derecesi değildir. Kullanım konforunu ürünün doğrulanmış kumaş ve kalınlık bilgileriyle, kesin konfor garantisi vermeden ve kişisel sıcaklık tercihini belirterek açıkla; yıkama talimatını cevap olarak kullanma.',
     'ruleHints yalnızca sunucu tarafındaki kaba ve eksik olabilecek sinyallerdir; nihai niyet kararı değildir. Soruyu bağımsız biçimde yorumla ve gerçek niyetleri detectedFacts alanında belirt.',
     'Önce sorunun kısa ve açık anlamını interpretation alanına yaz. Ardından bütün catalogEvidence kayıtlarını birlikte değerlendir; yalnızca sorudaki kelimeyle aynı etikete sahip kaydı arama.',
     'IN_SCOPE sorularda answerability FULL ise sorunun bütün bölümleri kanıtlarla yanıtlanabiliyor, PARTIAL ise yalnızca bir kısmı yanıtlanabiliyor, INSUFFICIENT ise sorunun ana kısmı için yeterli kanıt yok demektir.',
@@ -439,6 +452,38 @@ function parseAndValidate(
       confidence: 0.99,
       usedFacts: ['SIZE'],
       usedEvidenceIds: ['variant-sizes'],
+      missingInformation: [],
+      risks: [],
+    };
+  }
+
+  if (
+    isAmbientWearQuestion(context.question) &&
+    /\b(?:yika\w*|yikan\w*|kurut\w*|utu\w*)\b/.test(normalizeText(answer))
+  ) {
+    const materialEvidence = context.evidence.find(
+      (item) =>
+        item.fact === 'MATERIAL' &&
+        (item.source === 'ATTRIBUTE' || item.source === 'MERCHANT_VERIFIED'),
+    );
+    const mentionsCotton = Boolean(
+      materialEvidence &&
+      /\bpamuk\b/.test(normalizeText(materialEvidence.value)),
+    );
+    return {
+      answer: applySellerTone(
+        `${mentionsCotton ? 'Pamuk içeren bu ürünü' : 'Bu ürünü'} belirttiğiniz hava sıcaklığında kişisel sıcaklık konforunuza göre tercih edebilirsiniz.`,
+        context.questionId,
+        context.responsePreferences,
+      ),
+      interpretation: 'Ürünün belirtilen hava sıcaklığında giyilmesi',
+      scope: 'IN_SCOPE',
+      detectedFacts: ['MATERIAL', 'PRODUCT_INFO'],
+      answerability: 'FULL',
+      decision: 'DRAFT',
+      confidence: materialEvidence ? 0.9 : 0.85,
+      usedFacts: ['MATERIAL'],
+      usedEvidenceIds: [materialEvidence?.id ?? 'product-identity'],
       missingInformation: [],
       risks: [],
     };

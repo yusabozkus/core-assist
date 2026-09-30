@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -11,9 +12,11 @@ import {
   QuestionAnswerOrigin,
   QuestionAnswerStatus,
   SizeGuideStatus,
+  StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { isSizeGuideCompatible } from '../size-guides/size-guide-scope';
+import { isAmbientWearQuestion } from './ambient-wear-question';
 import {
   getInventoryFreshnessCutoff,
   getInventoryFreshnessMaxAgeMs,
@@ -195,6 +198,282 @@ const IGNORED_ATTRIBUTE_TOKENS = new Set([
 @Injectable()
 export class ProductAnswerContextService {
   constructor(private readonly prisma: PrismaService) {}
+
+  /** Builds the normal answer context without creating a marketplace question. */
+  async buildPreview(
+    storeId: string,
+    userId: string,
+    productId: string,
+    question: string,
+    requestedProviderKey?: string,
+  ): Promise<ProductAnswerContext> {
+    const [membership, product] = await Promise.all([
+      this.prisma.storeMember.findFirst({
+        where: {
+          storeId,
+          userId,
+          store: { status: StoreStatus.ACTIVE },
+        },
+        select: {
+          store: {
+            select: {
+              knowledgeProfile: {
+                select: {
+                  brandDescription: true,
+                  shippingPolicy: true,
+                  returnPolicy: true,
+                  exchangePolicy: true,
+                  warrantyPolicy: true,
+                  additionalInformation: true,
+                  tone: true,
+                  responseLength: true,
+                  greetingEnabled: true,
+                  closingEnabled: true,
+                  emojiPolicy: true,
+                  preferredEmoji: true,
+                  emojiEnabled: true,
+                  automationMode: true,
+                  minimumAutoSendConfidence: true,
+                  heightWeightSizeRecommendationEnabled: true,
+                },
+              },
+              knowledgeFaqs: {
+                where: { active: true },
+                orderBy: { position: 'asc' },
+                take: 12,
+                select: { question: true, answer: true },
+              },
+              aiInstructions: {
+                where: { active: true },
+                orderBy: { priority: 'asc' },
+                take: 20,
+                select: { content: true },
+              },
+              channelKnowledge: {
+                select: {
+                  providerKey: true,
+                  shippingPolicy: true,
+                  returnPolicy: true,
+                  exchangePolicy: true,
+                  warrantyPolicy: true,
+                  additionalInformation: true,
+                },
+              },
+              productQuestions: {
+                where: {
+                  status: ProductQuestionStatus.ANSWERED,
+                  answer: { not: null },
+                  answerDelivery: {
+                    is: {
+                      status: QuestionAnswerStatus.SENT,
+                      origin: QuestionAnswerOrigin.MANUAL,
+                    },
+                  },
+                },
+                orderBy: { answeredAt: 'desc' },
+                take: 12,
+                select: {
+                  question: true,
+                  answer: true,
+                  connection: { select: { providerKey: true } },
+                  answerDelivery: { select: { composition: true } },
+                },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.product.findFirst({
+        where: { id: productId, storeId, status: 'ACTIVE' },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          brand: true,
+          category: true,
+          attributes: {
+            orderBy: { name: 'asc' },
+            select: { name: true, value: true },
+          },
+          knowledgeFacts: {
+            where: { status: 'VERIFIED' },
+            orderBy: { verifiedAt: 'desc' },
+            take: 50,
+            select: {
+              id: true,
+              factType: true,
+              label: true,
+              value: true,
+              variant: { select: { sku: true, size: true, color: true } },
+            },
+          },
+          variants: {
+            orderBy: { createdAt: 'asc' },
+            select: {
+              title: true,
+              sku: true,
+              color: true,
+              size: true,
+              price: true,
+              currency: true,
+              stock: true,
+              status: true,
+              lastSyncedAt: true,
+              externalVariants: {
+                select: {
+                  externalProductId: true,
+                  price: true,
+                  currency: true,
+                  stock: true,
+                  status: true,
+                  lastSyncedAt: true,
+                },
+              },
+            },
+          },
+          sizeGuides: {
+            where: {
+              status: SizeGuideStatus.READY,
+              normalizedText: { not: null },
+            },
+            orderBy: { analyzedAt: 'desc' },
+            select: {
+              id: true,
+              sourceUrl: true,
+              normalizedText: true,
+              structuredData: true,
+              confidence: true,
+              externalProductId: true,
+            },
+          },
+          externalProducts: {
+            select: {
+              id: true,
+              connection: { select: { providerKey: true } },
+            },
+          },
+          questions: {
+            where: {
+              status: ProductQuestionStatus.ANSWERED,
+              answer: { not: null },
+              answerDelivery: {
+                is: {
+                  status: QuestionAnswerStatus.SENT,
+                  origin: QuestionAnswerOrigin.MANUAL,
+                },
+              },
+            },
+            orderBy: { answeredAt: 'desc' },
+            take: 5,
+            select: {
+              question: true,
+              answer: true,
+              connection: { select: { providerKey: true } },
+            },
+          },
+        },
+      }),
+    ]);
+
+    if (!membership || !product) {
+      throw new NotFoundException(
+        'Ürün bulunamadı veya mağazaya erişiminiz yok.',
+      );
+    }
+
+    const providers = [
+      ...new Set(
+        product.externalProducts.map((item) => item.connection.providerKey),
+      ),
+    ];
+    if (requestedProviderKey && !providers.includes(requestedProviderKey)) {
+      throw new BadRequestException('Seçilen ürün bu kanalda bulunmuyor.');
+    }
+    const providerKey = requestedProviderKey || providers[0] || 'unknown';
+    const externalProductIds = new Set(
+      product.externalProducts
+        .filter((item) => item.connection.providerKey === providerKey)
+        .map((item) => item.id),
+    );
+    const variants = product.variants.flatMap((variant) => {
+      const channelVariant = variant.externalVariants.find((item) =>
+        externalProductIds.has(item.externalProductId),
+      );
+      if (externalProductIds.size > 0 && !channelVariant) return [];
+      const stock = channelVariant?.stock ?? variant.stock;
+      return [
+        {
+          title: variant.title,
+          sku: variant.sku,
+          color: variant.color,
+          size: variant.size,
+          price: Number(channelVariant?.price ?? variant.price),
+          currency: channelVariant?.currency ?? variant.currency,
+          stock,
+          status:
+            channelVariant &&
+            channelVariant.status !== ExternalEntityStatus.ACTIVE
+              ? ProductVariantStatus.UNAVAILABLE
+              : stock > 0
+                ? ProductVariantStatus.ACTIVE
+                : ProductVariantStatus.OUT_OF_STOCK,
+          lastSyncedAt:
+            (
+              channelVariant?.lastSyncedAt ?? variant.lastSyncedAt
+            )?.toISOString() ?? null,
+        },
+      ];
+    });
+    const context = applyVerifiedProductKnowledge(
+      analyzeProductQuestion({
+        questionId: 'ai-test-preview',
+        question,
+        providerKey,
+        product: {
+          id: product.id,
+          title: product.title,
+          description: product.description,
+          brand: product.brand,
+          category: product.category,
+          attributes: product.attributes,
+          variants,
+          sizeGuides: product.sizeGuides.flatMap((guide) => {
+            if (
+              !guide.normalizedText ||
+              (guide.externalProductId &&
+                !externalProductIds.has(guide.externalProductId))
+            )
+              return [];
+            return [
+              {
+                id: guide.id,
+                sourceUrl: guide.sourceUrl,
+                normalizedText: guide.normalizedText,
+                confidence: guide.confidence,
+                structuredData: parseProductAnswerSizeGuideData(
+                  guide.structuredData,
+                ),
+              },
+            ];
+          }),
+        },
+      }),
+      product.knowledgeFacts,
+    );
+    const approvedAnswerExamples = buildApprovedAnswerExamples({
+      providerKey,
+      productExamples: product.questions,
+      storeExamples: membership.store.productQuestions,
+    });
+    return applyHeightWeightSizeRecommendation(
+      applyStoreKnowledge(
+        context,
+        membership.store,
+        providerKey,
+        approvedAnswerExamples,
+      ),
+    );
+  }
 
   async build(
     storeId: string,
@@ -790,6 +1069,12 @@ export function analyzeProductQuestion(input: {
   );
   const product = { ...input.product, sizeGuides: compatibleGuides };
   const variants = input.product.variants;
+  const requestedFacts = [
+    ...new Set([
+      ...detectRequestedFacts(normalizedQuestion),
+      ...(input.additionalRequestedFacts ?? []),
+    ]),
+  ];
   const availableColors = uniqueValues(
     variants.map((variant) => variant.color),
   );
@@ -807,9 +1092,14 @@ export function analyzeProductQuestion(input: {
     (!colorIdentityQuestion || isStockQuestion(normalizedQuestion)
       ? (mentionedColors[0] ?? null)
       : null);
+  const mentionsTemperature = /\b\d{1,3}(?: \d{1,3})? (?:derece\w*|c)\b/.test(
+    normalizedQuestion,
+  );
   const requestedSize =
-    findMention(normalizedQuestion, availableSizes) ??
-    findGenericSizeMention(normalizedQuestion);
+    mentionsTemperature && !requestedFacts.includes('SIZE')
+      ? null
+      : (findGenericSizeMention(normalizedQuestion) ??
+        findMention(normalizedQuestion, availableSizes));
   const matchedColor = findEquivalentValue(requestedColor, availableColors);
   const matchedSize = findEquivalentValue(requestedSize, availableSizes);
   const matchingVariants = variants.filter((variant) => {
@@ -821,12 +1111,6 @@ export function analyzeProductQuestion(input: {
       (!matchedSize || sameValue(variant.size, matchedSize))
     );
   });
-  const requestedFacts = [
-    ...new Set([
-      ...detectRequestedFacts(normalizedQuestion),
-      ...(input.additionalRequestedFacts ?? []),
-    ]),
-  ];
   const inventoryFreshness = evaluateInventoryFreshness(
     matchingVariants.length > 0 ? matchingVariants : variants,
   );
@@ -950,6 +1234,7 @@ function evaluateInventoryFreshness(
 
 function detectRequestedFacts(normalizedQuestion: string): ProductAnswerFact[] {
   const facts: ProductAnswerFact[] = [];
+  const ambientWearQuestion = isAmbientWearQuestion(normalizedQuestion);
 
   if (isStockQuestion(normalizedQuestion)) {
     facts.push('STOCK');
@@ -957,6 +1242,9 @@ function detectRequestedFacts(normalizedQuestion: string): ProductAnswerFact[] {
   if (includesAny(normalizedQuestion, PRICE_PATTERNS)) facts.push('PRICE');
   if (includesAny(normalizedQuestion, MATERIAL_PATTERNS)) {
     facts.push('MATERIAL');
+  }
+  if (ambientWearQuestion) {
+    facts.push('MATERIAL', 'PRODUCT_INFO');
   }
   if (includesAny(normalizedQuestion, DURABILITY_PATTERNS)) {
     facts.push('DURABILITY');
@@ -980,7 +1268,9 @@ function detectRequestedFacts(normalizedQuestion: string): ProductAnswerFact[] {
   }
   if (isColorQuestion(normalizedQuestion)) facts.push('COLOR');
   if (includesAny(normalizedQuestion, FIT_PATTERNS)) facts.push('FIT');
-  if (includesAny(normalizedQuestion, CARE_PATTERNS)) facts.push('CARE');
+  if (!ambientWearQuestion && includesAny(normalizedQuestion, CARE_PATTERNS)) {
+    facts.push('CARE');
+  }
   if (includesAny(normalizedQuestion, PRODUCT_CODE_PATTERNS)) {
     facts.push('PRODUCT_CODE');
   }
