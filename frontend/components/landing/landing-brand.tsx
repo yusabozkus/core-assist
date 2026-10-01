@@ -22,13 +22,7 @@ export function LandingBrand({
         className
       )}
     >
-      <div className="flex flex-row items-center justify-center gap-4">
-        {/* <Image
-          src={'/logo/icon.png'}
-          alt="Core Asistan Logo"
-          width={40}
-          height={40}
-        /> */}
+      <div className="flex flex-row items-center justify-center gap-4 -ml-2">
         <Image
           src={'/logo/text.png'}
           alt="Core Asistan Logo"

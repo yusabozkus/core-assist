@@ -26,6 +26,7 @@ import { DataRetentionModule } from './modules/data-retention/data-retention.mod
 import { ContactModule } from './modules/contact/contact.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { RuntimeModule } from './infrastructure/runtime/runtime.module';
+import { LandingDemoModule } from './modules/landing-demo/landing-demo.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { RuntimeModule } from './infrastructure/runtime/runtime.module';
     SupportModule,
     DataRetentionModule,
     ContactModule,
+    LandingDemoModule,
     AdminModule,
   ],
   controllers: [AppController],

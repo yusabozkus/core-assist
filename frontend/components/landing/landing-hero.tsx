@@ -1,12 +1,13 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import Link from "next/link"
 import { ArrowDown01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react"
 
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
+import { LandingAiDemoDialog } from "@/components/landing/landing-ai-demo-dialog"
 import { QuestionDemo } from "@/components/landing/question-demo"
 import { BILLING_TRIAL } from "@/constants/billing"
 import { APP_ROUTES } from "@/constants/site"
@@ -14,6 +15,7 @@ import styles from "./landing.module.css"
 
 export function LandingHero() {
   const sectionRef = useRef<HTMLElement>(null)
+  const [demoOpen, setDemoOpen] = useState(false)
   const reduceMotion = useReducedMotion()
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -52,22 +54,26 @@ export function LandingHero() {
               kontrolünüzde.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-5">
-              <Link href={APP_ROUTES.login} className={styles.primaryLink}>
-                Ücretsiz deneyin
+              <button
+                type="button"
+                onClick={() => setDemoOpen(true)}
+                className={styles.primaryLink}
+              >
+                Demoyu deneyin
                 <span className={styles.linkArrow}>
                   <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" />
                 </span>
-              </Link>
-              <a
-                href="#workflow"
+              </button>
+              <Link
+                href={APP_ROUTES.login}
                 className="group inline-flex items-center gap-2 border-b border-[#b6c1b2] pb-1 text-[13px] font-medium transition-[color,transform] active:translate-y-0.5 active:text-[#245d46]"
               >
-                Akışı keşfedin
+                Ücretsiz deneyin
                 <HugeiconsIcon
-                  icon={ArrowDown01Icon}
-                  className="size-3.5 transition-transform group-hover:translate-y-0.5 group-active:translate-y-1"
+                  icon={ArrowRight01Icon}
+                  className="size-3.5 transition-transform group-hover:translate-x-0.5 group-active:translate-x-1"
                 />
-              </a>
+              </Link>
             </div>
             <p className="mt-4 text-xs text-[#7b867b]">
               Kart gerektirmeden {BILLING_TRIAL.days} gün ücretsiz deneme
@@ -108,6 +114,7 @@ export function LandingHero() {
           </span>
         </div>
       </div>
+      <LandingAiDemoDialog open={demoOpen} onOpenChange={setDemoOpen} />
     </section>
   )
 }
