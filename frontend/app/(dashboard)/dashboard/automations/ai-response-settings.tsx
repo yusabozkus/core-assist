@@ -523,10 +523,7 @@ function SettingsSection({
       data-response-tour-section={tourId}
       className="scroll-mt-6 overflow-hidden rounded-2xl border border-border bg-card shadow-xs"
     >
-      <header
-        data-response-tour-header={tourId}
-        className="flex flex-col gap-4 border-b border-border px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6"
-      >
+      <header className="flex flex-col gap-4 border-b border-border px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
             <h2 className="text-base font-semibold tracking-[-0.015em]">

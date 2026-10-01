@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 
 import { getServerCatalogProducts } from "@/lib/api/catalog.server"
-import { getOperationalStoreContext } from "@/lib/stores/active-store"
+import { getManagedOperationalStoreContext } from "@/lib/stores/active-store"
 
 import { AiTestClient } from "./ai-test-client"
 
@@ -15,7 +15,7 @@ export default async function AiTestPage() {
     notFound()
   }
 
-  const { activeStore } = await getOperationalStoreContext()
+  const { activeStore } = await getManagedOperationalStoreContext()
   const initialPage = await getServerCatalogProducts(activeStore.id)
 
   return (

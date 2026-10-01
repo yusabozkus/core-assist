@@ -30,6 +30,7 @@ import {
 import { selectActiveStore } from "@/app/(dashboard)/dashboard/actions"
 import { APP_ROUTES } from "@/constants/site"
 import { getTeamAccessLabel } from "@/lib/team"
+import { canManageStore } from "@/lib/dashboard-access"
 import type { StoreSummary } from "@/types/store"
 
 export type SidebarShop = StoreSummary
@@ -81,7 +82,11 @@ export function ShopSwitcher({
       try {
         await selectActiveStore(shop.id)
         if (shop.status === "INACTIVE") {
-          router.replace(APP_ROUTES.dashboard.settings.root)
+          router.replace(
+            canManageStore(shop.accessLevel)
+              ? APP_ROUTES.dashboard.settings.root
+              : APP_ROUTES.dashboard.settings.profile
+          )
         }
         router.refresh()
       } catch {
@@ -130,7 +135,7 @@ export function ShopSwitcher({
           >
             <DropdownMenuLabel className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
               <span>Mağazalar</span>
-              {storeCapacity ? (
+              {mayManageStore && storeCapacity ? (
                 <span
                   className="font-medium tabular-nums"
                   aria-label={`${storeCapacity.used} / ${storeCapacity.limit} mağaza`}
@@ -159,7 +164,7 @@ export function ShopSwitcher({
                     {shop.status === "INACTIVE"
                       ? "Arşivlenmiş"
                       : shop.setupComplete === false
-                          ? mayManageStore
+                        ? mayManageStore
                           ? "Kuruluma devam et"
                           : "Kurulum sürüyor"
                         : shop.id === selectedShopId
@@ -176,21 +181,13 @@ export function ShopSwitcher({
               </DropdownMenuItem>
             ))}
 
-            <DropdownMenuSeparator />
+            {mayManageStore ? <DropdownMenuSeparator /> : null}
             {selectionError ? (
               <p className="px-2 py-1 text-xs text-destructive" role="alert">
                 {selectionError}
               </p>
             ) : null}
-              {!mayManageStore ? (
-              <DropdownMenuItem disabled className="gap-2 p-2">
-                <span>
-                  {isStoreLimitReached
-                    ? "Mağaza limiti dolu · yöneticinize başvurun"
-                    : "Mağaza eklemek için yönetici yetkisi gerekir"}
-                </span>
-              </DropdownMenuItem>
-            ) : (
+            {mayManageStore ? (
               <DropdownMenuItem asChild className="gap-2 p-2">
                 <Link
                   href={
@@ -200,17 +197,19 @@ export function ShopSwitcher({
                   }
                 >
                   <div className="flex size-7 items-center justify-center rounded-lg border bg-background">
-                      <HugeiconsIcon
-                        icon={isStoreLimitReached ? ArrowUpRight01Icon : PlusSignIcon}
-                        className="size-3.5"
-                      />
+                    <HugeiconsIcon
+                      icon={
+                        isStoreLimitReached ? ArrowUpRight01Icon : PlusSignIcon
+                      }
+                      className="size-3.5"
+                    />
                   </div>
                   <span>
                     {isStoreLimitReached ? "Planı yükselt" : "Mağaza ekle"}
                   </span>
                 </Link>
               </DropdownMenuItem>
-            )}
+            ) : null}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

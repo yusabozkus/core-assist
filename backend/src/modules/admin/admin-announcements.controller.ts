@@ -6,6 +6,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
@@ -14,7 +15,10 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { AdminGuard } from './admin.guard';
 import { AdminActionOriginGuard } from './admin-action-origin.guard';
 import { AdminAnnouncementsService } from './admin-announcements.service';
-import { PreviewAdminAnnouncementDto } from './dto/admin-announcement.dto';
+import {
+  AdminAnnouncementsQueryDto,
+  PreviewAdminAnnouncementDto,
+} from './dto/admin-announcement.dto';
 
 @Controller('admin/announcements')
 @UseGuards(AuthGuard, AdminGuard)
@@ -22,8 +26,8 @@ export class AdminAnnouncementsController {
   constructor(private readonly announcements: AdminAnnouncementsService) {}
 
   @Get()
-  list() {
-    return this.announcements.list();
+  list(@Query() query: AdminAnnouncementsQueryDto) {
+    return this.announcements.list(query);
   }
 
   @Post('preview')

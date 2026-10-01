@@ -1,11 +1,11 @@
 import { getServerStoreKnowledge } from "@/lib/api/knowledge.server"
-import { getOperationalStoreContext } from "@/lib/stores/active-store"
+import { getManagedOperationalStoreContext } from "@/lib/stores/active-store"
 import { KnowledgeBaseSettings } from "./knowledge-base-settings"
 
 export const dynamic = "force-dynamic"
 
 export default async function KnowledgeBasePage() {
-  const { activeStore } = await getOperationalStoreContext()
+  const { activeStore } = await getManagedOperationalStoreContext()
   const knowledge = await getServerStoreKnowledge(activeStore.id)
 
   return (

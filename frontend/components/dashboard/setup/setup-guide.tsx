@@ -191,6 +191,33 @@ export function SetupGuide({
     setPreviewState(next)
   }
 
+  function markPreviewVisit(actionId: GuideAction["id"]) {
+    if (!previewState) return
+    if (actionId === "CHANNELS") {
+      savePreviewState({ ...previewState, channelsVisited: true })
+    } else if (actionId === "TEAM") {
+      savePreviewState({ ...previewState, teamVisited: true })
+    } else if (actionId === "STORE") {
+      savePreviewState({ ...previewState, storeVisited: true })
+    } else if (actionId === "FAQ") {
+      savePreviewState({ ...previewState, faqVisited: true })
+    } else if (actionId === "INBOX") {
+      savePreviewState({ ...previewState, inboxVisited: true })
+    }
+  }
+
+  function handleStepLink(actionId: GuideAction["id"]) {
+    markPreviewVisit(actionId)
+    if (
+      actionId === "FAQ" &&
+      pathname === APP_ROUTES.dashboard.automations.knowledge
+    ) {
+      window.requestAnimationFrame(() =>
+        document.getElementById("faq")?.scrollIntoView({ block: "start" })
+      )
+    }
+  }
+
   useEffect(() => {
     if (!previewState) return
     let next: SetupGuidePreviewState | null = null
@@ -441,19 +468,34 @@ export function SetupGuide({
               <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
             </button>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setVisibleBubbleKey(null)
-              setLastOpenedActionId(nextAction.id)
-              setOpen(true)
-              void refresh()
-            }}
-            className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            Rehberi aç
-            <HugeiconsIcon icon={ArrowRight01Icon} className="size-3" />
-          </button>
+          {nextAction.href ? (
+            <Link
+              href={nextAction.href}
+              onClick={() => {
+                setVisibleBubbleKey(null)
+                setLastOpenedActionId(nextAction.id)
+                handleStepLink(nextAction.id)
+              }}
+              className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Beni oraya götür
+              <HugeiconsIcon icon={ArrowRight01Icon} className="size-3" />
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setVisibleBubbleKey(null)
+                setLastOpenedActionId(nextAction.id)
+                setOpen(true)
+                void refresh()
+              }}
+              className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Rehberi aç
+              <HugeiconsIcon icon={ArrowRight01Icon} className="size-3" />
+            </button>
+          )}
         </div>
       ) : null}
 
@@ -612,34 +654,7 @@ export function SetupGuide({
                     <Link
                       href={nextAction.href}
                       onClick={() => {
-                        if (previewState) {
-                          if (nextAction.id === "CHANNELS") {
-                            savePreviewState({
-                              ...previewState,
-                              channelsVisited: true,
-                            })
-                          } else if (nextAction.id === "TEAM") {
-                            savePreviewState({
-                              ...previewState,
-                              teamVisited: true,
-                            })
-                          } else if (nextAction.id === "STORE") {
-                            savePreviewState({
-                              ...previewState,
-                              storeVisited: true,
-                            })
-                          } else if (nextAction.id === "FAQ") {
-                            savePreviewState({
-                              ...previewState,
-                              faqVisited: true,
-                            })
-                          } else if (nextAction.id === "INBOX") {
-                            savePreviewState({
-                              ...previewState,
-                              inboxVisited: true,
-                            })
-                          }
-                        }
+                        handleStepLink(nextAction.id)
                         setOpen(false)
                       }}
                       className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring"

@@ -4,7 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Notification01Icon } from "@hugeicons/core-free-icons"
+import {
+  CheckmarkCircle01Icon,
+  Notification01Icon,
+  RefreshIcon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { NotificationListItem } from "@/components/dashboard/notifications/notification-list-item"
@@ -16,12 +20,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { APP_ROUTES } from "@/constants/site"
 import {
   announceNotificationsChanged,
   getNotifications,
   getNotificationStreamUrl,
   getUnreadNotificationCount,
+  markAllNotificationsAsRead,
   markNotificationAsRead,
   NOTIFICATIONS_CHANGED_EVENT,
 } from "@/lib/api/notifications"
@@ -45,6 +55,7 @@ export function NotificationCenter({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [markingAll, setMarkingAll] = useState(false)
   const listRequestRef = useRef<AbortController | null>(null)
   const openRef = useRef(false)
   const toastRequestsRef = useRef(new Set<AbortController>())
@@ -95,6 +106,25 @@ export function NotificationCenter({
     setOpen(nextOpen)
     if (nextOpen) void refreshList()
     else listRequestRef.current?.abort()
+  }
+
+  async function handleMarkAllAsRead() {
+    if (markingAll || unreadCount === 0) return
+    setMarkingAll(true)
+
+    try {
+      await markAllNotificationsAsRead(storeId)
+      const readAt = new Date().toISOString()
+      setItems((current) =>
+        current.map((item) => (item.readAt ? item : { ...item, readAt }))
+      )
+      setUnreadCount(0)
+      announceNotificationsChanged(storeId)
+    } catch {
+      toast.error("Bildirimler okundu olarak işaretlenemedi.")
+    } finally {
+      setMarkingAll(false)
+    }
   }
 
   const handleSelect = useCallback(
@@ -334,13 +364,35 @@ export function NotificationCenter({
             sideOffset={8}
             className="w-[25rem] gap-0 overflow-hidden rounded-2xl p-0"
           >
-            <div className="border-b border-border px-4 py-3.5">
-              <h2 className="text-sm font-semibold">Bildirimler</h2>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">
-                {unreadCount
-                  ? `${unreadCount} okunmamış bildiriminiz var`
-                  : "Yeni bildiriminiz yok"}
-              </p>
+            <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3.5">
+              <div>
+                <h2 className="text-sm font-semibold">Bildirimler</h2>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  {unreadCount
+                    ? `${unreadCount} okunmamış bildiriminiz var`
+                    : "Yeni bildiriminiz yok"}
+                </p>
+              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => void handleMarkAllAsRead()}
+                    aria-label="Tümünü okundu olarak işaretle"
+                    aria-disabled={markingAll || unreadCount === 0}
+                    aria-busy={markingAll}
+                    className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none aria-disabled:cursor-not-allowed aria-disabled:opacity-40"
+                  >
+                    <HugeiconsIcon
+                      icon={markingAll ? RefreshIcon : CheckmarkCircle01Icon}
+                      className={cn("size-4", markingAll && "animate-spin")}
+                    />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" sideOffset={6}>
+                  Tümünü okundu olarak işaretle
+                </TooltipContent>
+              </Tooltip>
             </div>
             <div className="themed-scrollbar max-h-[min(28rem,calc(100vh-10rem))] divide-y divide-border overflow-y-auto">
               {loading && items.length === 0 ? (
@@ -375,7 +427,7 @@ export function NotificationCenter({
             <Link
               href={href}
               onClick={() => handleOpenChange(false)}
-              className="flex h-11 items-center justify-center border-t border-border text-xs font-medium text-primary transition-colors hover:bg-muted/50"
+              className="flex h-9 items-center justify-center border-t border-border px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-muted/50"
             >
               Tüm bildirimleri görüntüle
             </Link>

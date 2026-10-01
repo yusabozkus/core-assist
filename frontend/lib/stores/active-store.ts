@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { cache } from "react"
 
 import { APP_ROUTES } from "@/constants/site"
+import { canManageStore } from "@/lib/dashboard-access"
 import { getServerStores } from "@/lib/api/stores.server"
 import type { StoreSummary } from "@/types/store"
 
@@ -39,8 +40,32 @@ export async function getOperationalStoreContext(): Promise<
   }
 
   if (context.activeStore.status !== "ACTIVE") {
-    redirect(APP_ROUTES.dashboard.settings.root)
+    redirect(
+      canManageStore(context.activeStore.accessLevel)
+        ? APP_ROUTES.dashboard.settings.root
+        : APP_ROUTES.dashboard.settings.profile
+    )
   }
 
   return context as ActiveStoreContext & { activeStore: StoreSummary }
+}
+
+export async function requireStoreManagementAccess() {
+  const { activeStore } = await getActiveStoreContext()
+
+  if (!activeStore) redirect(APP_ROUTES.onboarding)
+  if (!canManageStore(activeStore.accessLevel)) {
+    redirect(
+      activeStore.status === "ACTIVE"
+        ? APP_ROUTES.dashboard.root
+        : APP_ROUTES.dashboard.settings.profile
+    )
+  }
+
+  return activeStore
+}
+
+export async function getManagedOperationalStoreContext() {
+  await requireStoreManagementAccess()
+  return getOperationalStoreContext()
 }

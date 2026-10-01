@@ -22,8 +22,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { APP_ROUTES } from "@/constants/site"
+import { canAccessDashboardPage } from "@/lib/dashboard-access"
 import { cn } from "@/lib/utils"
 import type { StoreBillingUsageOverview } from "@/types/billing"
+import type { StoreAccessLevel } from "@/types/store"
 import type {
   SupportTicketDetail,
   SupportTicketList,
@@ -172,11 +174,13 @@ const planSupport: Record<
 export function SupportCenter({
   storeId,
   storeName,
+  accessLevel,
   initialView,
   initialTickets,
 }: {
   storeId: string | null
   storeName: string | null
+  accessLevel?: StoreAccessLevel
   initialView: "help" | "tickets"
   initialTickets: SupportTicketList
 }) {
@@ -402,7 +406,12 @@ export function SupportCenter({
                         <p className="text-sm leading-6 text-muted-foreground">
                           {article.answer}
                         </p>
-                        {article.action ? (
+                        {article.action &&
+                        canAccessDashboardPage(
+                          article.action.href,
+                          accessLevel,
+                          usage?.canManageBilling
+                        ) ? (
                           <Button
                             asChild
                             variant="link"

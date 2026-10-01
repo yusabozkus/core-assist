@@ -13,19 +13,19 @@ import { Button } from "@/components/ui/button"
 
 const responseSettingsSteps = [
   {
-    targets: ['[data-response-tour-header="automation"]'],
+    targets: ['[data-response-tour-section="automation"]'],
     title: "Sorular nasıl işlensin?",
     description:
       "Yeni sorularda AI'ın yalnızca siz istediğinizde mi çalışacağını, taslak mı hazırlayacağını, yoksa güvenli yanıtları otomatik mi göndereceğini seçin.",
   },
   {
-    targets: ['[data-response-tour-header="behavior"]'],
+    targets: ['[data-response-tour-section="behavior"]'],
     title: "Yanıtlar nasıl yazılsın?",
     description:
       "Üslubu, uzunluğu ve mesaj yapısını belirleyin. Aynı bölümdeki örnek yanıt değişikliklerin nasıl görüneceğini gösterir.",
   },
   {
-    targets: ['[data-response-tour-header="instructions"]'],
+    targets: ['[data-response-tour-section="instructions"]'],
     title: "Özel AI talimatları",
     description:
       "Mağazanıza özgü ek kuralları buraya yazın. Bu bölüm isteğe bağlıdır; örneğin kesin teslimat tarihi sözü verilmemesini belirtebilirsiniz.",

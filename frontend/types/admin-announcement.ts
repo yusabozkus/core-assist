@@ -33,4 +33,10 @@ export type AnnouncementPreview = AdminAnnouncement & {
 export type AnnouncementList = {
   items: AdminAnnouncement[]
   emailAvailable: boolean
+  pagination: {
+    page: number
+    pageSize: number
+    total: number
+    totalPages: number
+  }
 }

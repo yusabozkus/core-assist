@@ -28,6 +28,7 @@ export default async function SupportPage({
     <SupportCenter
       storeId={activeStore?.id ?? null}
       storeName={activeStore?.name ?? null}
+      accessLevel={activeStore?.accessLevel}
       initialView={initialView}
       initialTickets={initialTickets}
     />

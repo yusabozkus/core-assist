@@ -18,6 +18,7 @@ import { getOnboardingStatus } from "@/lib/api/onboarding.server"
 import { getDashboardSyncState } from "@/lib/channels/sync-state"
 import { getCurrentUser } from "@/lib/server-auth"
 import { getActiveStoreContext } from "@/lib/stores/active-store"
+import { canManageStore } from "@/lib/dashboard-access"
 import { Toaster } from "@/components/ui/sonner"
 
 export const dynamic = "force-dynamic"
@@ -44,8 +45,9 @@ export default async function DashboardLayout({
     redirect(APP_ROUTES.onboarding)
   }
 
+  const mayManageStore = canManageStore(activeStore.accessLevel)
   const [connections, billingWorkspaces, billingUsage] = await Promise.all([
-    activeStore.status === "ACTIVE"
+    activeStore.status === "ACTIVE" && mayManageStore
       ? getServerChannelConnections(activeStore.id).catch(() => null)
       : [],
     getServerBillingWorkspaces().catch(() => []),
@@ -82,14 +84,15 @@ export default async function DashboardLayout({
               storeId={activeStore.id}
               syncState={syncState}
               isStoreArchived={activeStore.status === "INACTIVE"}
+              accessLevel={activeStore.accessLevel}
             />
             <div className="min-h-0 flex-1 overflow-y-auto bg-background">
               {children}
             </div>
             {activeStore.status === "ACTIVE" ? (
-              <MobileBottomNavigation />
+              <MobileBottomNavigation accessLevel={activeStore.accessLevel} />
             ) : null}
-            {activeStore.status === "ACTIVE" ? (
+            {activeStore.status === "ACTIVE" && mayManageStore ? (
               <SetupGuide
                 key={activeStore.id}
                 storeId={activeStore.id}

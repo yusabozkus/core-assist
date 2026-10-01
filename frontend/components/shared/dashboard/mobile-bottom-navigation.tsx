@@ -5,12 +5,21 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 import { MOBILE_DASHBOARD_TABS } from "@/constants/site"
+import { canAccessDashboardPage } from "@/lib/dashboard-access"
 import { cn } from "@/lib/utils"
+import type { StoreAccessLevel } from "@/types/store"
 
-export function MobileBottomNavigation() {
+export function MobileBottomNavigation({
+  accessLevel,
+}: {
+  accessLevel?: StoreAccessLevel
+}) {
   const pathname = usePathname()
+  const tabs = MOBILE_DASHBOARD_TABS.filter((tab) =>
+    canAccessDashboardPage(tab.href, accessLevel)
+  )
 
-  if (!MOBILE_DASHBOARD_TABS.some((tab) => tab.href === pathname)) {
+  if (!tabs.some((tab) => tab.href === pathname)) {
     return null
   }
 
@@ -19,8 +28,13 @@ export function MobileBottomNavigation() {
       aria-label="Mobil ana gezinme"
       className="z-30 shrink-0 border-t border-border/70 bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
     >
-      <div className="grid h-16 grid-cols-5">
-        {MOBILE_DASHBOARD_TABS.map((tab) => {
+      <div
+        className="grid h-16"
+        style={{
+          gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))`,
+        }}
+      >
+        {tabs.map((tab) => {
           const isActive = pathname === tab.href
 
           return (

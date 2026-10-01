@@ -32,8 +32,11 @@ import {
 } from "@/components/ui/tooltip"
 import { APP_ROUTES } from "@/constants/site"
 import { getDashboardOverview } from "@/lib/api/dashboard"
+import { canManageStore } from "@/lib/dashboard-access"
+import { canAccessDashboardPage } from "@/lib/dashboard-access"
 import { cn } from "@/lib/utils"
 import type { DashboardOverview, DashboardRange } from "@/types/dashboard"
+import type { StoreAccessLevel } from "@/types/store"
 
 function SectionHeading({ title }: { title: string }) {
   return (
@@ -46,11 +49,13 @@ function SectionHeading({ title }: { title: string }) {
 export function DashboardClient({
   storeId,
   storeName,
+  accessLevel,
   range,
   initialData,
 }: {
   storeId: string
   storeName: string
+  accessLevel?: StoreAccessLevel
   range: DashboardRange
   initialData: DashboardOverview | null
 }) {
@@ -70,6 +75,11 @@ export function DashboardClient({
   )
   const requestRef = useRef<AbortController | null>(null)
   const { refresh: refreshBillingUsage } = useBillingUsage()
+  const mayManageStore = canManageStore(accessLevel)
+  const canViewInbox = canAccessDashboardPage(
+    APP_ROUTES.dashboard.inbox,
+    accessLevel
+  )
 
   const refresh = useCallback(async () => {
     if (requestRef.current) return
@@ -158,12 +168,14 @@ export function DashboardClient({
             </TooltipTrigger>
             <TooltipContent>Genel bakışı güncelle</TooltipContent>
           </Tooltip>
-          <Button asChild size="sm" className="ml-auto sm:ml-1">
-            <Link href={APP_ROUTES.dashboard.inbox}>
-              Gelen kutusu
-              <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
-            </Link>
-          </Button>
+          {canViewInbox ? (
+            <Button asChild size="sm" className="ml-auto sm:ml-1">
+              <Link href={APP_ROUTES.dashboard.inbox}>
+                Gelen kutusu
+                <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
+              </Link>
+            </Button>
+          ) : null}
         </div>
       </header>
 
@@ -251,15 +263,23 @@ export function DashboardClient({
             <SectionHeading title="Soru operasyonu" />
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,1fr)]">
               <QuestionVolumeChart data={data} />
-              <DashboardQueue data={data} />
+              <DashboardQueue data={data} canManageStore={mayManageStore} />
             </div>
           </section>
           <section className="space-y-4 border-t border-border pt-7">
-            <SectionHeading title="Öncelikli işler" />
-            <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,1fr)]">
-              <PriorityQuestions data={data} />
+            <SectionHeading
+              title={canViewInbox ? "Öncelikli işler" : "Katalog durumu"}
+            />
+            <div
+              className={cn(
+                "grid items-stretch gap-5",
+                canViewInbox &&
+                  "xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,1fr)]"
+              )}
+            >
+              {canViewInbox ? <PriorityQuestions data={data} /> : null}
               <div className="grid min-w-0 gap-5">
-                <DashboardChannels data={data} />
+                {mayManageStore ? <DashboardChannels data={data} /> : null}
                 <CatalogHealth data={data} />
               </div>
             </div>
@@ -272,7 +292,7 @@ export function DashboardClient({
           </div>
           <section className="space-y-4 border-t border-border pt-7">
             <SectionHeading title="Hızlı erişim" />
-            <DashboardShortcuts />
+            <DashboardShortcuts accessLevel={accessLevel} />
           </section>
           <footer className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted-foreground">
             <span>

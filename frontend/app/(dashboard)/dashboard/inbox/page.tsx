@@ -1,6 +1,9 @@
 import { QuestionInbox } from "./question-inbox"
 import { getServerProductQuestions } from "@/lib/api/questions.server"
 import { getOperationalStoreContext } from "@/lib/stores/active-store"
+import { canAccessDashboardPage } from "@/lib/dashboard-access"
+import { APP_ROUTES } from "@/constants/site"
+import { redirect } from "next/navigation"
 import {
   PENDING_QUESTION_STATES,
   type PendingQuestionState,
@@ -19,6 +22,11 @@ export default async function InboxPage({
   }>
 }) {
   const { activeStore } = await getOperationalStoreContext()
+  if (
+    !canAccessDashboardPage(APP_ROUTES.dashboard.inbox, activeStore.accessLevel)
+  ) {
+    redirect(APP_ROUTES.dashboard.root)
+  }
   const params = await searchParams
   const initialFilter = parseQuestionFilter(params.status)
   const initialPendingStates = parsePendingStates(params.pending)

@@ -2,6 +2,7 @@ import { InventoryManagement } from "./inventory-management"
 import { getServerCatalogInventory } from "@/lib/api/catalog.server"
 import { getServerChannelConnections } from "@/lib/api/channels.server"
 import { getOperationalStoreContext } from "@/lib/stores/active-store"
+import { canManageStore } from "@/lib/dashboard-access"
 import type { InventorySort, InventoryStockFilter } from "@/types/inventory"
 
 export const dynamic = "force-dynamic"
@@ -32,6 +33,7 @@ export default async function InventoryPage({
       initialPage={initialPage}
       initialFilters={initialFilters}
       connections={connections}
+      canManageStore={canManageStore(activeStore.accessLevel)}
     />
   )
 }

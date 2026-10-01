@@ -40,6 +40,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { APP_ROUTES } from "@/constants/site"
+import { canManageStore } from "@/lib/dashboard-access"
 import { cn } from "@/lib/utils"
 import type { AiPerformance, AiPerformanceRange } from "@/types/ai-performance"
 import type { StoreSummary } from "@/types/store"
@@ -75,6 +76,7 @@ export function AnalyticsClient({
   const searchParams = useSearchParams()
   const [pending, startTransition] = useTransition()
   const { refresh: refreshBillingUsage } = useBillingUsage()
+  const mayManageStore = canManageStore(activeStore.accessLevel)
   const providers = [
     ...new Set([
       ...(performance?.availableProviders ?? []),
@@ -129,18 +131,27 @@ export function AnalyticsClient({
             gerektiğini ve otomasyonun sonucunu görün.
           </p>
         </div>
-        <div className="grid grid-cols-[minmax(0,1fr)_2.5rem] gap-2 sm:flex sm:shrink-0 sm:items-center">
-          <Button
-            asChild
-            size="sm"
-            variant="outline"
-            className="h-10 w-full bg-card sm:h-9 sm:w-auto"
-          >
-            <Link href={APP_ROUTES.dashboard.automations.root}>
-              <HugeiconsIcon icon={Settings02Icon} className="size-4" />
-              Yanıt ayarları
-            </Link>
-          </Button>
+        <div
+          className={cn(
+            "grid gap-2 sm:flex sm:shrink-0 sm:items-center",
+            mayManageStore
+              ? "grid-cols-[minmax(0,1fr)_2.5rem]"
+              : "grid-cols-[2.5rem]"
+          )}
+        >
+          {mayManageStore ? (
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="h-10 w-full bg-card sm:h-9 sm:w-auto"
+            >
+              <Link href={APP_ROUTES.dashboard.automations.root}>
+                <HugeiconsIcon icon={Settings02Icon} className="size-4" />
+                Yanıt ayarları
+              </Link>
+            </Button>
+          ) : null}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -338,8 +349,14 @@ export function AnalyticsClient({
           <section className="space-y-4 border-t border-border pt-7">
             <SectionHeading title="Otomasyon ve insan kontrolü" />
             <div className="grid items-stretch gap-5 lg:grid-cols-2">
-              <AutomationImpact data={performance} />
-              <ReviewReasons data={performance} />
+              <AutomationImpact
+                data={performance}
+                canManageStore={mayManageStore}
+              />
+              <ReviewReasons
+                data={performance}
+                canManageStore={mayManageStore}
+              />
             </div>
           </section>
           <section className="space-y-4 border-t border-border pt-7">

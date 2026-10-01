@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   ArrowRight01Icon,
   BookOpen02Icon,
@@ -100,6 +100,26 @@ export function KnowledgeBaseSettings({
   storeName,
   initialKnowledge,
 }: Props) {
+  useEffect(() => {
+    let frame = 0
+    const scrollToFaq = () => {
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(() => {
+        if (window.location.hash === "#faq") {
+          document.getElementById("faq")?.scrollIntoView({ block: "start" })
+        }
+      })
+    }
+    scrollToFaq()
+    const delayedScroll = window.setTimeout(scrollToFaq, 100)
+    window.addEventListener("hashchange", scrollToFaq)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.clearTimeout(delayedScroll)
+      window.removeEventListener("hashchange", scrollToFaq)
+    }
+  }, [])
+
   const [knowledge, setKnowledge] = useState(initialKnowledge)
   const [overrideDrafts, setOverrideDrafts] = useState(() =>
     createOverrideDrafts(initialKnowledge)
