@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { AiSparklesIcon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 
@@ -29,30 +29,30 @@ export function LandingDemoBubble({
             reducedMotion
               ? { opacity: 1, y: 0, scale: 1 }
               : {
-                opacity: 1,
-                y: [0, -5, 1, 0],
-                rotate: [0, 0.2, -0.15, 0],
-                scale: 1,
-              }
+                  opacity: 1,
+                  y: [0, -5, 1, 0],
+                  rotate: [0, 0.2, -0.15, 0],
+                  scale: 1,
+                }
           }
           exit={reducedMotion ? undefined : { opacity: 0, y: 8, scale: 0.98 }}
           transition={
             reducedMotion
               ? { duration: 0 }
               : {
-                opacity: { duration: 0.25, ease: "easeOut" },
-                scale: { duration: 0.25, ease: "easeOut" },
-                y: {
-                  duration: 5.4,
-                  ease: "easeInOut",
-                  repeat: Infinity,
-                },
-                rotate: {
-                  duration: 5.4,
-                  ease: "easeInOut",
-                  repeat: Infinity,
-                },
-              }
+                  opacity: { duration: 0.25, ease: "easeOut" },
+                  scale: { duration: 0.25, ease: "easeOut" },
+                  y: {
+                    duration: 5.4,
+                    ease: "easeInOut",
+                    repeat: Infinity,
+                  },
+                  rotate: {
+                    duration: 5.4,
+                    ease: "easeInOut",
+                    repeat: Infinity,
+                  },
+                }
           }
           className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-40 w-[240px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[22px] rounded-br-lg border border-[#d5e2ce] bg-[#fbfcf9] shadow-[0_12px_40px_-12px_rgba(23,47,36,0.28)] sm:right-2 sm:bottom-6 sm:w-[244px]"
         >

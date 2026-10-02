@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import Link from "next/link"
 
@@ -30,12 +30,24 @@ export function AppLogo({
   noLink?: boolean
   contentClassName?: string
 }) {
-
   const theme = useTheme().resolvedTheme
 
   if (noLink) {
-    return <AppLogoContent contentClassName={contentClassName} showIcon={showIcon} showText={showText} description={description} fullDark={fullDark} theme={theme} iconSize={iconSize} textWidth={textWidth} />
-  } else {
+    return (
+      <AppLogoContent
+        contentClassName={contentClassName}
+        showIcon={showIcon}
+        showText={showText}
+        description={description}
+        fullDark={fullDark}
+        theme={theme}
+        iconSize={iconSize}
+        textWidth={textWidth}
+      />
+    )
+  }
+
+  return (
     <Link
       href={href}
       aria-label="Core Asistan ana sayfa"
@@ -44,17 +56,54 @@ export function AppLogo({
         className
       )}
     >
-      <AppLogoContent contentClassName={contentClassName} showIcon={showIcon} showText={showText} description={description} fullDark={fullDark} theme={theme} iconSize={iconSize} textWidth={textWidth} />
+      <AppLogoContent
+        contentClassName={contentClassName}
+        showIcon={showIcon}
+        showText={showText}
+        description={description}
+        fullDark={fullDark}
+        theme={theme}
+        iconSize={iconSize}
+        textWidth={textWidth}
+      />
     </Link>
-  }
+  )
 }
 
-const AppLogoContent = ({ contentClassName, showIcon, showText, description, fullDark, theme, iconSize, textWidth }: any) => {
+type AppLogoContentProps = {
+  contentClassName?: string
+  showIcon?: boolean
+  showText?: boolean
+  description?: string
+  fullDark?: boolean
+  theme?: string
+  iconSize: number
+  textWidth: number
+}
+
+const AppLogoContent = ({
+  contentClassName,
+  showIcon,
+  showText,
+  description,
+  fullDark,
+  theme,
+  iconSize,
+  textWidth,
+}: AppLogoContentProps) => {
   return (
-    <div className={cn(contentClassName ? contentClassName : "flex flex-row items-center gap-3")}>
+    <div
+      className={cn(
+        contentClassName ? contentClassName : "flex flex-row items-center gap-3"
+      )}
+    >
       {showIcon && (
         <Image
-          src={fullDark || theme === "dark" ? "/logo/icon-dark.png" : "/logo/icon.png"}
+          src={
+            fullDark || theme === "dark"
+              ? "/logo/icon-dark.png"
+              : "/logo/icon.png"
+          }
           alt="Core Asistan Logo"
           width={iconSize}
           height={iconSize}
@@ -64,7 +113,11 @@ const AppLogoContent = ({ contentClassName, showIcon, showText, description, ful
       <div>
         {showText && (
           <Image
-            src={fullDark || theme === "dark" ? "/logo/text-dark.png" : "/logo/text.png"}
+            src={
+              fullDark || theme === "dark"
+                ? "/logo/text-dark.png"
+                : "/logo/text.png"
+            }
             alt="Core Asistan Logo"
             height={0}
             width={textWidth}
