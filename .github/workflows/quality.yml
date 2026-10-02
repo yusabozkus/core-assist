@@ -52,7 +52,9 @@ jobs:
       - run: npm audit --omit=dev
       - run: npm run db:generate
       - run: npm run check
-      - run: npm run test:integration
+      - name: Run available integration tests
+        if: ${{ hashFiles('backend/src/**/*.integration.spec.ts') != '' }}
+        run: npm run test:integration
 
   frontend:
     runs-on: ubuntu-latest
