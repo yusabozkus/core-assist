@@ -27,8 +27,9 @@ export function WorkflowReveal({
   const fallbackProgress = useMotionValue(1)
   const progress = contextProgress ?? fallbackProgress
   const reduceMotion = useReducedMotion()
-  const opacity = useTransform(progress, [at, at + 0.14], [0.12, 1])
-  const y = useTransform(progress, [at, at + 0.14], [distance, 0])
+  const opacity = useTransform(progress, [at, at + 0.14], [0.35, 1])
+  const offset = useTransform(progress, [at, at + 0.14], [distance, 0])
+  const y = useTransform(offset, (value) => Math.round(value))
 
   return (
     <motion.div

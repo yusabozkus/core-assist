@@ -6,13 +6,13 @@ import {
   ArrowRight01Icon,
   CheckmarkCircle01Icon,
   Database01Icon,
-  Link01Icon,
   Shield01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react"
 
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
+import { AppLogo } from "@/components/shared/brand/app-logo"
 import { cn } from "@/lib/utils"
 import { WorkflowProgressContext, WorkflowReveal } from "./workflow-reveal"
 import { ConnectionFlow, ConnectionReceiver } from "./connection-flow"
@@ -139,16 +139,18 @@ function WorkflowStage({
     target: rowRef,
     offset: ["start end", "end start"],
   })
-  const visualY = useTransform(scrollYProgress, [0, 0.45, 1], [72, 0, -40])
+  const visualOffset = useTransform(scrollYProgress, [0, 0.45, 1], [72, 0, -40])
+  const visualY = useTransform(visualOffset, (value) => Math.round(value))
+  // Keep the original entrance/exit motion, with a crisp reading phase at 1:1 scale.
   const visualScale = useTransform(
     scrollYProgress,
-    [0, 0.4, 1],
-    [0.94, 1, 0.98]
+    [0, 0.32, 0.72, 1],
+    [0.94, 1, 1, 0.98]
   )
   const visualRotate = useTransform(
     scrollYProgress,
-    [0, 0.5, 1],
-    isReversed ? [-4, 0, 1.5] : [4, 0, -1.5]
+    [0, 0.32, 0.72, 1],
+    isReversed ? [-4, 0, 0, 1.5] : [4, 0, 0, -1.5]
   )
   const markerScale = useTransform(
     scrollYProgress,
@@ -178,8 +180,8 @@ function WorkflowStage({
   )
   const sceneFocus = useTransform(
     scrollYProgress,
-    [0, 0.2, 0.48, 0.82, 1],
-    [0.7, 0.9, 1, 0.9, 0.72]
+    [0, 0.2, 0.82, 1],
+    [0.85, 1, 1, 0.85]
   )
   const titleColor = useTransform(
     scrollYProgress,
@@ -252,9 +254,10 @@ function WorkflowStage({
           viewport={{ once: true, amount: 0.35 }}
           transition={revealTransition}
         >
-          <p className="flex items-center gap-3 text-[10px] font-semibold tracking-[0.13em] text-[#6a786d] uppercase">
+          <p className="flex items-center gap-3 text-[11px] font-semibold tracking-[0.13em] text-[#6a786d] uppercase">
             <motion.span
               style={reduceMotion ? undefined : { color: accentColor }}
+              className="text-[#245d46]"
             >
               {step.number}
             </motion.span>
@@ -271,7 +274,7 @@ function WorkflowStage({
           <p className="mt-5 max-w-sm text-[14px] leading-7 text-[#6b776f]">
             {step.description}
           </p>
-          <p className="mt-6 flex max-w-sm items-start gap-2.5 text-[11px] leading-5 text-[#476451]">
+          <p className="mt-6 flex max-w-sm items-start gap-2.5 text-xs leading-5 text-[#476451]">
             <HugeiconsIcon
               icon={CheckmarkCircle01Icon}
               className="mt-0.5 size-3.5 shrink-0"
@@ -307,9 +310,9 @@ function WorkflowStage({
 
 function SceneCaption({ children }: { children: ReactNode }) {
   return (
-    <div className="mb-5 flex items-center justify-between gap-3 text-[9px] font-medium tracking-[0.04em] text-[#829084]">
+    <div className="mb-5 flex items-center justify-between gap-3 text-[11px] font-medium tracking-[0.04em] text-[#68766b]">
       <span>{children}</span>
-      <span className="rounded-full border border-[#d9dfd5] px-2 py-0.5 text-[8px]">
+      <span className="rounded-full border border-[#d9dfd5] px-2 py-0.5 text-[10px]">
         Örnek
       </span>
     </div>
@@ -337,10 +340,10 @@ function ConnectionScene() {
                 sizes="40px"
               />
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold text-[#263a2d] sm:text-xs">
+                <p className="text-xs font-semibold text-[#263a2d] sm:text-[13px]">
                   {provider.name}
                 </p>
-                <p className="mt-1 flex items-center gap-1 text-[8px] text-[#68826d] sm:text-[9px]">
+                <p className="mt-1 flex items-center gap-1 text-[10px] text-[#56715d] sm:text-[11px]">
                   <span className="size-1 rounded-full bg-[#558160]" />
                   Mağaza bağlandı
                 </p>
@@ -354,14 +357,21 @@ function ConnectionScene() {
         <div className="relative z-10 flex w-[32%] flex-col items-center">
           <ConnectionReceiver />
           <div className="flex size-20 items-center justify-center rounded-[23px] bg-[#245d46] text-white shadow-[0_12px_25px_-10px_#245d4670] sm:size-24">
-            <HugeiconsIcon icon={Link01Icon} className="size-8 sm:size-10" />
+            <AppLogo
+              showIcon
+              showText={false}
+              noLink
+              fullDark
+              iconSize={54}
+              contentClassName="flex items-center justify-center pb-2.5"
+            />
           </div>
           <p className="mt-3 text-xs font-semibold tracking-[-0.03em] text-[#182820]">
             Core Asistan
           </p>
         </div>
       </div>
-      <div className="mt-5 flex items-center gap-2 border-t border-[#dce3d7] pt-4 text-[10px] text-[#677961]">
+      <div className="mt-5 flex items-center gap-2 border-t border-[#dce3d7] pt-4 text-[11px] text-[#5c705e]">
         <HugeiconsIcon icon={Database01Icon} className="size-3.5" />
         Ürünler ve sorular aynı yere akıyor.
       </div>
@@ -398,7 +408,7 @@ function CatalogScene() {
             {["S", "M", "L", "XL"].map((size) => (
               <span
                 key={size}
-                className="flex size-6 items-center justify-center rounded-md bg-white/80 text-[8px] font-medium text-[#536249]"
+                className="flex size-7 items-center justify-center rounded-md bg-white/90 text-[10px] font-medium text-[#46583f]"
               >
                 {size}
               </span>
@@ -409,7 +419,7 @@ function CatalogScene() {
           <p className="text-[12px] leading-5 font-semibold text-[#293c2f] sm:text-sm">
             Slim Fit Polo Yaka Pamuklu Tişört
           </p>
-          <p className="mt-1 text-[9px] text-[#7d8b76]">
+          <p className="mt-1 text-[11px] text-[#6f7d69]">
             Ürün ve varyant bilgileri
           </p>
           <dl className="mt-4 divide-y divide-[#ced8c4]">
@@ -420,8 +430,10 @@ function CatalogScene() {
                 distance={10}
                 className="py-2.5 first:pt-0"
               >
-                <dt className="text-[8px] text-[#7c8a74]">{attribute.label}</dt>
-                <dd className="mt-0.5 text-[10px] font-medium text-[#3b513d]">
+                <dt className="text-[10px] text-[#6d7c66]">
+                  {attribute.label}
+                </dt>
+                <dd className="mt-0.5 text-xs font-medium text-[#344a37]">
                   {attribute.value}
                 </dd>
               </WorkflowReveal>
@@ -429,7 +441,7 @@ function CatalogScene() {
           </dl>
         </div>
       </div>
-      <div className="mt-5 flex items-center gap-2 rounded-lg bg-[#d6e2c6] px-3 py-2.5 text-[9px] font-medium text-[#4c6842]">
+      <div className="mt-5 flex items-center gap-2 rounded-lg bg-[#d6e2c6] px-3 py-2.5 text-[11px] font-medium text-[#405e38]">
         <HugeiconsIcon
           icon={CheckmarkCircle01Icon}
           className="size-3.5 shrink-0"
@@ -448,7 +460,7 @@ function AnswerScene() {
         at={0.1}
         className="ml-6 rounded-[18px] rounded-br-sm border border-[#dce3d6] bg-white p-4 shadow-[0_8px_22px_-14px_#18282030] sm:ml-14"
       >
-        <div className="mb-2.5 flex items-center gap-2 text-[9px] text-[#81907f]">
+        <div className="mb-2.5 flex items-center gap-2 text-[11px] text-[#6d7d6c]">
           <ProviderLogo
             provider="trendyol"
             className="size-5 rounded-md shadow-none"
@@ -471,7 +483,7 @@ function AnswerScene() {
         ].map((source) => (
           <span
             key={source.id}
-            className="flex items-center gap-1 rounded-full border border-[#dce4d4] px-2 py-1.5 text-[8px] font-medium text-[#6f8365]"
+            className="flex items-center gap-1 rounded-full border border-[#dce4d4] px-2.5 py-1.5 text-[10px] font-medium text-[#5d7557]"
           >
             <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-2.5" />
             {source.text}
@@ -482,7 +494,7 @@ function AnswerScene() {
         at={0.3}
         className="mr-4 rounded-[18px] rounded-bl-sm bg-[#245d46] p-5 text-white sm:mr-8 sm:p-6"
       >
-        <div className="flex items-center justify-between text-[9px] text-[#bdd4c6]">
+        <div className="flex items-center justify-between text-[11px] text-[#d0e2d5]">
           <span className="font-semibold tracking-[0.03em]">Core Asistan</span>
           <span>Yanıt taslağı</span>
         </div>
@@ -490,7 +502,7 @@ function AnswerScene() {
           Merhabalar, siyah XL seçeneğimiz şu anda stokta mevcut. Keyifli
           alışverişler dileriz.
         </p>
-        <div className="mt-4 flex items-center gap-2 border-t border-white/15 pt-3 text-[9px] text-[#c8ddb5]">
+        <div className="mt-4 flex items-center gap-2 border-t border-white/15 pt-3 text-[10px] text-[#d2e5c0]">
           <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-3" />
           Güncel stok bilgisiyle desteklendi
         </div>
@@ -511,7 +523,7 @@ function DecisionScene() {
           <p className="text-[13px] font-semibold text-[#263b2b]">
             Her yanıt ayrı değerlendirilir.
           </p>
-          <p className="mt-1 text-[10px] text-[#82907b]">
+          <p className="mt-1 text-[11px] text-[#71816d]">
             Kanıt, güncellik ve mağaza kuralları
           </p>
         </div>
@@ -523,7 +535,7 @@ function DecisionScene() {
           className="rounded-[16px] bg-[#d9eeae] p-4 sm:p-5"
         >
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold text-[#3d5629]">
+            <p className="text-xs font-semibold text-[#3d5629]">
               Bilgi doğrulandı
             </p>
             <HugeiconsIcon
@@ -531,10 +543,10 @@ function DecisionScene() {
               className="size-3.5 text-[#61853f]"
             />
           </div>
-          <p className="mt-2 text-[10px] leading-5 text-[#62784b]">
+          <p className="mt-2 text-[11px] leading-5 text-[#566f43]">
             “Siyah XL stokta var mı?”
           </p>
-          <p className="mt-3 flex items-center gap-1.5 text-[9px] font-semibold text-[#456b2d]">
+          <p className="mt-3 flex items-center gap-1.5 text-[10px] font-semibold text-[#3d6328]">
             <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-3.5" />
             Otomatik gönderildi
           </p>
@@ -545,15 +557,13 @@ function DecisionScene() {
           className="mt-3 rounded-[16px] border border-[#e2ddd0] bg-[#fbf7ee] p-4 sm:p-5"
         >
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold text-[#71634a]">
-              Bilgi eksik
-            </p>
+            <p className="text-xs font-semibold text-[#71634a]">Bilgi eksik</p>
             <span className="size-1.5 rounded-full bg-[#c4a463]" />
           </div>
-          <p className="mt-2 text-[10px] leading-5 text-[#978770]">
+          <p className="mt-2 text-[11px] leading-5 text-[#806f5b]">
             “Yıkamada rengi solar mı?”
           </p>
-          <p className="mt-3 text-[9px] font-semibold text-[#a08045]">
+          <p className="mt-3 text-[10px] font-semibold text-[#8a6c35]">
             İncelemeniz bekleniyor
           </p>
         </WorkflowReveal>

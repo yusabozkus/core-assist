@@ -66,7 +66,9 @@ export function LandingAiDemoDialog({ open, onOpenChange }: Props) {
   const [loadError, setLoadError] = useState("")
   const [loadAttempt, setLoadAttempt] = useState(0)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [view, setView] = useState<"chat" | "products">("products")
+  const [view, setView] = useState<"chat" | "products" | "intro">("products")
+  const [personalizationAcknowledged, setPersonalizationAcknowledged] =
+    useState(false)
   const [messagesByProduct, setMessagesByProduct] = useState<
     Record<string, Message[]>
   >({})
@@ -204,7 +206,7 @@ export function LandingAiDemoDialog({ open, onOpenChange }: Props) {
     setSelectedId(id)
     setQuestion("")
     setAnswerError("")
-    setView("chat")
+    setView(personalizationAcknowledged ? "chat" : "intro")
   }
 
   return (
@@ -218,17 +220,27 @@ export function LandingAiDemoDialog({ open, onOpenChange }: Props) {
         }
         onOpenChange(nextOpen)
       }}
-      title={view === "products" ? "Demo ürününü seçin" : "AI yanıt demosu"}
+      title={
+        view === "products"
+          ? "Demo ürününü seçin"
+          : view === "intro"
+            ? "Yanıtlar sizin tarzınıza uyum sağlar"
+            : "AI yanıt demosu"
+      }
       description={
         view === "products"
           ? "Örnek koleksiyondan bir ürünle başlayın."
-          : "Sorunuzu yazın, yanıtı canlı görün."
+          : view === "intro"
+            ? "Bu demo, örnek yanıt ayarlarıyla çalışır."
+            : "Sorunuzu yazın, yanıtı canlı görün."
       }
-      contentClassName={`p-0! text-[#193427] shadow-[0_32px_110px_-34px_rgba(17,45,31,0.4)] overscroll-contain transition-[max-width,height] duration-300 ease-out motion-reduce:transition-none ${view === "products" ? "h-[min(80svh,680px)] sm:h-[min(88svh,690px)] sm:max-w-[450px]!" : "h-[min(84svh,720px)] sm:h-[min(92svh,740px)] sm:max-w-[760px]!"}`}
+      contentClassName={`p-0! text-[#193427] shadow-[0_32px_110px_-34px_rgba(17,45,31,0.4)] overscroll-contain transition-[max-width,height] duration-300 ease-out motion-reduce:transition-none ${view === "products" ? "h-[min(80svh,680px)] sm:h-[min(88svh,690px)] sm:max-w-[450px]!" : view === "intro" ? "h-auto max-h-[84svh] sm:max-w-[480px]!" : "h-[min(84svh,720px)] sm:h-[min(92svh,740px)] sm:max-w-[760px]!"}`}
       scrollClassName={
-        view === "products"
-          ? "flex flex-col overflow-y-auto overscroll-contain sm:overflow-hidden!"
-          : "flex flex-col overflow-hidden! overscroll-contain"
+        view === "intro"
+          ? "flex flex-col overflow-y-auto overscroll-contain"
+          : view === "products"
+            ? "flex flex-col overflow-y-auto overscroll-contain sm:overflow-hidden!"
+            : "flex flex-col overflow-hidden! overscroll-contain"
       }
       headerClassName={`border-[#e4ebe4] bg-white px-4 pt-3 pb-2 sm:px-5 sm:py-4 ${view === "chat" ? "pr-24! sm:pr-48!" : "pr-14!"}`}
       titleClassName={
@@ -240,9 +252,11 @@ export function LandingAiDemoDialog({ open, onOpenChange }: Props) {
           : undefined
       }
       bodyClassName={
-        view === "products"
-          ? "flex min-h-0 flex-none flex-col overflow-visible! p-0! sm:flex-1 sm:overflow-hidden!"
-          : "flex min-h-0 flex-1 flex-col overflow-hidden! p-0!"
+        view === "intro"
+          ? "flex min-h-0 flex-none flex-col p-0!"
+          : view === "products"
+            ? "flex min-h-0 flex-none flex-col overflow-visible! p-0! sm:flex-1 sm:overflow-hidden!"
+            : "flex min-h-0 flex-1 flex-col overflow-hidden! p-0!"
       }
       headerActions={
         products.length > 0 && view === "chat" ? (
@@ -336,6 +350,42 @@ export function LandingAiDemoDialog({ open, onOpenChange }: Props) {
                     {usage.remaining}/{usage.limit} soru hakkı
                   </span>
                 ) : null}
+              </div>
+            </motion.div>
+          ) : view === "intro" ? (
+            <motion.div
+              key="intro"
+              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="px-5 py-6 sm:px-6"
+            >
+              <div className="mb-4 flex size-11 items-center justify-center rounded-2xl bg-[#eaf2e5] text-[#397653]">
+                <HugeiconsIcon icon={AiSparklesIcon} className="size-5" />
+              </div>
+              <p className="text-sm leading-6 text-[#405746]">
+                Core Asistan’ı kullanırken yapay zekanın yanıt tonunu, cevap
+                uzunluğunu, selamlama ve kapanış ifadelerini, emojileri ne zaman
+                kullanacağını siz belirleyebilirsiniz.
+              </p>
+              <p className="mt-3 text-sm leading-6 text-[#405746]">
+                Özel talimatlar ekleyerek yanıtları mağazanızın tarzına göre
+                kişiselleştirebilirsiniz. Burada gördüğünüz yanıtlar yalnızca
+                demoyu denemeniz için hazırlanır.
+              </p>
+              <div className="mt-6 flex justify-end">
+                <button
+                  type="button"
+                  autoFocus
+                  onClick={() => {
+                    setPersonalizationAcknowledged(true)
+                    setView("chat")
+                  }}
+                  className="inline-flex w-full items-center justify-center rounded-full bg-[#245b3e] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#33764f] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#367d52] sm:w-auto"
+                >
+                  Anladım
+                </button>
               </div>
             </motion.div>
           ) : product ? (
