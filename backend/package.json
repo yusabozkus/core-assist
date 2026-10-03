@@ -6,6 +6,16 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "test": "node scripts/run-tests.cjs unit",
+    "test:integration": "node scripts/run-tests.cjs integration",
+    "test:all": "npm test && npm run test:integration",
+    "check": "npm run lint && npm test && npm run build",
+    "test:runtime": "node --require ./scripts/register-email-tests.cjs --test src/infrastructure/runtime/runtime.spec.ts",
+    "test:production-guards": "node --require ./scripts/register-email-tests.cjs --test src/infrastructure/logging/http-logging.middleware.spec.ts src/modules/notifications/web-push-security.spec.ts",
+    "test:production-guards:integration": "node --require ./scripts/register-email-tests.cjs --test src/modules/questions/draft-execution.integration.spec.ts",
+    "test:question-delivery:integration": "node --require ./scripts/register-email-tests.cjs --test src/modules/question-answer/question-delivery.integration.spec.ts",
+    "repair:answer": "node dist/src/scripts/review-answer-delivery.js",
+    "test:auth": "node --require ./scripts/register-email-tests.cjs --test src/modules/auth/auth-runtime.config.spec.ts",
     "test:admin-announcements": "node --require ./scripts/register-email-tests.cjs --test src/modules/admin/admin-announcements.spec.ts",
     "test:admin-emails": "node --require ./scripts/register-email-tests.cjs --test src/modules/notifications/resend-webhook.policy.spec.ts src/modules/notifications/resend-email.service.spec.ts src/modules/admin/admin-emails.service.spec.ts src/modules/team/team-email.service.spec.ts",
     "test:admin-emails:integration": "node --require ./scripts/register-email-tests.cjs --test src/modules/admin/admin-emails.integration.spec.ts",
@@ -15,7 +25,8 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main.js",
-    "lint": "eslint \"src/**/*.ts\" --fix",
+    "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\" --max-warnings=0",
+    "lint:fix": "eslint \"src/**/*.ts\" \"test/**/*.ts\" --fix",
     "smoke:catalog-sync": "npm run build && node dist/src/scripts/catalog-sync-smoke.js",
     "smoke:question-sync": "npm run build && node dist/src/scripts/question-sync-smoke.js",
     "smoke:gemini": "npm run build && node dist/src/scripts/gemini-smoke.js",
@@ -35,15 +46,16 @@
     "db:studio": "prisma studio --port 5556"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1141.0",
     "@google/genai": "^2.19.0",
     "@nestjs/bullmq": "^12.0.0",
-    "@nestjs/common": "^11.0.1",
-    "@nestjs/core": "^11.0.1",
+    "@nestjs/common": "11.2.6",
+    "@nestjs/core": "11.2.6",
     "@nestjs/mapped-types": "*",
-    "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/platform-express": "11.2.6",
     "@paddle/paddle-node-sdk": "^3.10.0",
-    "@prisma/adapter-pg": "^7.9.1",
-    "@prisma/client": "^7.9.1",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
     "better-auth": "^1.7.2",
     "bullmq": "^6.3.2",
     "class-transformer": "^0.5.1",
@@ -51,10 +63,20 @@
     "dotenv": "^16.4.7",
     "ioredis": "^6.0.0",
     "pg": "^8.13.3",
-    "prisma": "^7.9.1",
+    "prisma": "7.10.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "sharp": "^0.35.5",
+    "tldts": "7.4.15",
     "web-push": "^3.6.7"
+  },
+  "overrides": {
+    "@prisma/config@7.10.0": {
+      "deepmerge-ts": "8.0.2"
+    },
+    "prisma@7.10.0": {
+      "mysql2": "3.24.4"
+    }
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -62,6 +84,7 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@types/express": "^5.0.0",
+    "@types/multer": "^2.2.0",
     "@types/node": "^24.0.0",
     "@types/pg": "^8.11.11",
     "@types/web-push": "^3.6.4",

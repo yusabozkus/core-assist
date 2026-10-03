@@ -169,7 +169,7 @@ export function QuestionDetail({
       </div>
 
       <QuestionAnswerComposer
-        key={question.id}
+        key={`${question.id}:${question.draftedAt ?? "pending"}`}
         storeId={storeId}
         question={question}
         onQuestionUpdated={onQuestionUpdated}

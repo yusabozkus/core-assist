@@ -1,3 +1,4 @@
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { DashboardHeader } from "@/components/shared/dashboard/dashboard-header"
@@ -5,6 +6,7 @@ import { MobileBottomNavigation } from "@/components/shared/dashboard/mobile-bot
 import { BillingPaymentIssueShell } from "@/components/dashboard/billing/billing-payment-issue-banner"
 import { BillingUsageProvider } from "@/components/dashboard/billing/billing-usage-provider"
 import { AppSidebar } from "@/components/shared/sidebar/app-sidebar"
+import { SetupGuide } from "@/components/dashboard/setup/setup-guide"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { APP_ROUTES } from "@/constants/site"
 import { getServerChannelConnections } from "@/lib/api/channels.server"
@@ -16,6 +18,7 @@ import { getOnboardingStatus } from "@/lib/api/onboarding.server"
 import { getDashboardSyncState } from "@/lib/channels/sync-state"
 import { getCurrentUser } from "@/lib/server-auth"
 import { getActiveStoreContext } from "@/lib/stores/active-store"
+import { canManageStore } from "@/lib/dashboard-access"
 import { Toaster } from "@/components/ui/sonner"
 
 export const dynamic = "force-dynamic"
@@ -42,14 +45,17 @@ export default async function DashboardLayout({
     redirect(APP_ROUTES.onboarding)
   }
 
+  const mayManageStore = canManageStore(activeStore.accessLevel)
   const [connections, billingWorkspaces, billingUsage] = await Promise.all([
-    activeStore.status === "ACTIVE"
+    activeStore.status === "ACTIVE" && mayManageStore
       ? getServerChannelConnections(activeStore.id).catch(() => null)
       : [],
     getServerBillingWorkspaces().catch(() => []),
     getServerStoreBillingUsage(activeStore.id).catch(() => null),
   ])
   const syncState = getDashboardSyncState(connections)
+  const sidebarDefaultOpen =
+    (await cookies()).get("sidebar_state")?.value !== "false"
 
   return (
     <BillingUsageProvider
@@ -58,7 +64,10 @@ export default async function DashboardLayout({
       initialUsage={billingUsage}
     >
       <BillingPaymentIssueShell workspaceId={billingWorkspaces[0]?.id}>
-        <SidebarProvider className="min-h-0 flex-1">
+        <SidebarProvider
+          defaultOpen={sidebarDefaultOpen}
+          className="min-h-0 flex-1"
+        >
           <AppSidebar
             variant="inset"
             user={{
@@ -75,12 +84,21 @@ export default async function DashboardLayout({
               storeId={activeStore.id}
               syncState={syncState}
               isStoreArchived={activeStore.status === "INACTIVE"}
+              accessLevel={activeStore.accessLevel}
             />
             <div className="min-h-0 flex-1 overflow-y-auto bg-background">
               {children}
             </div>
             {activeStore.status === "ACTIVE" ? (
-              <MobileBottomNavigation />
+              <MobileBottomNavigation accessLevel={activeStore.accessLevel} />
+            ) : null}
+            {activeStore.status === "ACTIVE" && mayManageStore ? (
+              <SetupGuide
+                key={activeStore.id}
+                storeId={activeStore.id}
+                userId={currentUser.user.id}
+                canManageTeam={billingWorkspaces.length > 0}
+              />
             ) : null}
             <Toaster
               position="top-center"

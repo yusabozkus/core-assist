@@ -371,7 +371,7 @@ export function AdminCustomerDetailView({
 
 function StoreRow({ store }: { store: AdminCustomerDetail["stores"][number] }) {
   return (
-    <div className="px-4 py-4 sm:px-5">
+    <div id={`store-${store.id}`} className="scroll-mt-4 px-4 py-4 sm:px-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">

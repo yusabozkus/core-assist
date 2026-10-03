@@ -50,6 +50,8 @@ export function InvitationAcceptance({
   async function switchAccount() {
     setSwitchingAccount(true)
     await authClient.signOut().catch(() => undefined)
+    // Account switching must discard the previous session's client/router cache.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.assign(loginHref)
   }
 

@@ -20,6 +20,8 @@ import { CredentialsEncryptionService } from '../channels/credentials-encryption
 import { ProviderRegistryService } from '../channels/providers/provider-registry.service';
 import { isProviderAuthenticationError } from '../channels/providers/connector-utils';
 import type { NormalizedProductQuestion } from '../channels/providers/question-connector';
+import { normalizeTrendyolQuestion } from '../channels/providers/trendyol.connector';
+import { normalizeHepsiburadaQuestion } from '../channels/providers/hepsiburada.connector';
 import { NotificationsService } from '../notifications/notifications.service';
 import { QuestionProductLinkService } from '../question-product-link/question-product-link.service';
 import { evaluateQuestionResponsePolicy } from '../questions/question-response-policy.service';
@@ -120,8 +122,18 @@ export class QuestionSyncWorkerService {
 
     let cursor: string | undefined;
     let batchCount = 0;
-    let questionsProcessed = 0;
+    let questionsProcessed = await this.replayStoredQuestions(
+      syncConnection,
+      automaticDraftsEnabled,
+    );
     let questionsUnchanged = 0;
+
+    if (questionsProcessed) {
+      await this.prisma.catalogSyncRun.updateMany({
+        where: { id: data.syncRunId, connectionId: syncConnection.id },
+        data: { questionsProcessed: { increment: questionsProcessed } },
+      });
+    }
 
     do {
       await this.billing.assertStoreAccess(
@@ -353,40 +365,105 @@ export class QuestionSyncWorkerService {
     });
   }
 
+  private async replayStoredQuestions(
+    connection: QuestionSyncConnection,
+    automaticDraftsEnabled: boolean,
+  ) {
+    let recovered = 0;
+    let cursor: string | undefined;
+    do {
+      const events = await this.prisma.incomingEvent.findMany({
+        where: {
+          connectionId: connection.id,
+          storeId: connection.storeId,
+          processingStatus: {
+            in: [
+              IncomingEventProcessingStatus.PENDING,
+              IncomingEventProcessingStatus.FAILED,
+            ],
+          },
+          question: { is: null },
+        },
+        orderBy: { id: 'asc' },
+        take: 100,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        select: { id: true, externalEventId: true, payload: true },
+      });
+      for (const event of events) {
+        await this.billing.assertStoreAccess(
+          connection.storeId,
+          BILLING_SYNC_STOPPED_MESSAGE,
+        );
+        if (
+          !event.payload ||
+          Array.isArray(event.payload) ||
+          typeof event.payload !== 'object'
+        )
+          continue;
+        const question =
+          connection.providerKey === 'trendyol'
+            ? normalizeTrendyolQuestion(event.payload)
+            : connection.providerKey === 'hepsiburada'
+              ? normalizeHepsiburadaQuestion(event.payload)
+              : null;
+        // Incomplete legacy/mock payloads must wait for a fresh provider fetch.
+        if (!question || question.externalId !== event.externalEventId)
+          continue;
+        const persisted = await this.persistQuestion(connection, question);
+        if (persisted?.isNew) recovered += 1;
+        if (
+          automaticDraftsEnabled &&
+          persisted?.status === ProductQuestionStatus.PENDING
+        ) {
+          await this.questionDrafts.enqueue(connection.storeId, persisted.id);
+        }
+      }
+      cursor = events.length === 100 ? events[events.length - 1].id : undefined;
+    } while (cursor);
+    return recovered;
+  }
+
   private async persistQuestion(
     connection: QuestionSyncConnection,
     question: NormalizedProductQuestion,
   ) {
-    let event: { id: string };
-
-    try {
-      event = await this.prisma.incomingEvent.create({
-        data: {
-          storeId: connection.storeId,
+    // An existing event is a receipt, not proof that its question was saved.
+    // An empty-update upsert can become a client-side read/create and race on
+    // first delivery. PostgreSQL ON CONFLICT DO NOTHING serializes the insert.
+    await this.prisma.incomingEvent.createMany({
+      data: {
+        storeId: connection.storeId,
+        connectionId: connection.id,
+        externalEventId: question.externalId,
+        eventType: IncomingEventType.PRODUCT_QUESTION,
+        externalCreatedAt: question.createdAt,
+        payload: question.rawPayload as Prisma.InputJsonValue,
+      },
+      skipDuplicates: true,
+    });
+    const event = await this.prisma.incomingEvent.findUniqueOrThrow({
+      where: {
+        connectionId_externalEventId: {
           connectionId: connection.id,
           externalEventId: question.externalId,
-          eventType: IncomingEventType.PRODUCT_QUESTION,
-          externalCreatedAt: question.createdAt,
-          payload: question.rawPayload as Prisma.InputJsonValue,
         },
-        select: { id: true },
-      });
-    } catch (error) {
-      if (isUniqueConstraintError(error)) {
-        if (connection.environment === 'SANDBOX') {
-          await this.prisma.productQuestion.updateMany({
-            where: {
-              connectionId: connection.id,
-              externalQuestionId: question.externalId,
-            },
-            data: {
-              externalCustomerId: question.externalCustomerId,
-              customerName: question.customerName,
-            },
-          });
-        }
+      },
+      select: { id: true },
+    });
 
-        const existingQuestion = await this.prisma.productQuestion.findUnique({
+    try {
+      const externalProduct = await this.productLinks.resolveExternalProduct(
+        connection.id,
+        question.externalProductId,
+      );
+      const responsePolicy = evaluateQuestionResponsePolicy(question.text);
+      const persisted = await this.prisma.$transaction(async (transaction) => {
+        // Serialize duplicates and legacy FAILED/PENDING events. A crash rolls
+        // back both question creation and event completion.
+        await transaction.$queryRaw`
+          SELECT "id" FROM "incoming_event" WHERE "id" = ${event.id} FOR UPDATE
+        `;
+        const existing = await transaction.productQuestion.findUnique({
           where: {
             connectionId_externalQuestionId: {
               connectionId: connection.id,
@@ -395,46 +472,40 @@ export class QuestionSyncWorkerService {
           },
           select: { id: true, status: true },
         });
-
-        if (existingQuestion) {
-          await this.productLinks.linkQuestionIfPossible(
-            connection.storeId,
-            existingQuestion.id,
-          );
+        if (existing) {
+          if (connection.environment === 'SANDBOX') {
+            await transaction.productQuestion.update({
+              where: { id: existing.id },
+              data: {
+                externalCustomerId: question.externalCustomerId,
+                customerName: question.customerName,
+              },
+            });
+          }
+          await transaction.incomingEvent.update({
+            where: { id: event.id },
+            data: {
+              processingStatus: IncomingEventProcessingStatus.PROCESSED,
+              processedAt: new Date(),
+              errorMessage: null,
+              ignoreReason: null,
+            },
+          });
+          return { ...existing, isNew: false };
         }
-
-        return existingQuestion
-          ? { ...existingQuestion, isNew: false as const }
-          : null;
-      }
-      throw error;
-    }
-
-    if (question.createdAt < connection.connectedAt) {
-      await this.prisma.incomingEvent.update({
-        where: { id: event.id },
-        data: {
-          processingStatus: IncomingEventProcessingStatus.IGNORED,
-          ignoreReason: 'Question predates the channel connection.',
-          processedAt: new Date(),
-        },
-      });
-      return null;
-    }
-
-    try {
-      const externalProduct = await this.productLinks.resolveExternalProduct(
-        connection.id,
-        question.externalProductId,
-      );
-      const responsePolicy = evaluateQuestionResponsePolicy(question.text);
-
-      const questionStatus =
-        responsePolicy.action === 'DO_NOT_REPLY'
-          ? ProductQuestionStatus.IGNORED
-          : ProductQuestionStatus.PENDING;
-      const [persistedQuestion] = await this.prisma.$transaction([
-        this.prisma.productQuestion.create({
+        if (question.createdAt < connection.connectedAt) {
+          await transaction.incomingEvent.update({
+            where: { id: event.id },
+            data: {
+              processingStatus: IncomingEventProcessingStatus.IGNORED,
+              ignoreReason: 'Question predates the channel connection.',
+              errorMessage: null,
+              processedAt: new Date(),
+            },
+          });
+          return null;
+        }
+        const created = await transaction.productQuestion.create({
           data: {
             storeId: connection.storeId,
             connectionId: connection.id,
@@ -449,23 +520,43 @@ export class QuestionSyncWorkerService {
             externalCustomerId: question.externalCustomerId,
             customerName: question.customerName,
             question: question.text,
-            status: questionStatus,
+            status:
+              responsePolicy.action === 'DO_NOT_REPLY'
+                ? ProductQuestionStatus.IGNORED
+                : ProductQuestionStatus.PENDING,
             externalCreatedAt: question.createdAt,
           },
           select: { id: true, status: true },
-        }),
-        this.prisma.incomingEvent.update({
+        });
+        await transaction.incomingEvent.update({
           where: { id: event.id },
           data: {
             processingStatus: IncomingEventProcessingStatus.PROCESSED,
             processedAt: new Date(),
+            errorMessage: null,
+            ignoreReason: null,
           },
-        }),
-      ]);
-      return { ...persistedQuestion, isNew: true as const };
+        });
+        return { ...created, isNew: true };
+      });
+      if (persisted && !persisted.isNew) {
+        await this.productLinks.linkQuestionIfPossible(
+          connection.storeId,
+          persisted.id,
+        );
+      }
+      return persisted;
     } catch (error) {
-      await this.prisma.incomingEvent.update({
-        where: { id: event.id },
+      await this.prisma.incomingEvent.updateMany({
+        where: {
+          id: event.id,
+          processingStatus: {
+            in: [
+              IncomingEventProcessingStatus.PENDING,
+              IncomingEventProcessingStatus.FAILED,
+            ],
+          },
+        },
         data: {
           processingStatus: IncomingEventProcessingStatus.FAILED,
           errorMessage:
@@ -478,13 +569,4 @@ export class QuestionSyncWorkerService {
       throw error;
     }
   }
-}
-
-function isUniqueConstraintError(error: unknown) {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 'P2002'
-  );
 }

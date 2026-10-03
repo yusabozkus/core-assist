@@ -33,6 +33,14 @@ export function QuestionStatus({
 
   const needsReview = status === "DRAFTED" && draftDecision === "NEEDS_REVIEW"
 
+  if (deliveryStatus === "REVIEW_REQUIRED") {
+    return (
+      <Badge variant="warning" className={cn("shrink-0", compactClassName)}>
+        Teslimat kontrolü
+      </Badge>
+    )
+  }
+
   if (deliveryStatus === "FAILED" && !needsReview) {
     return (
       <Badge

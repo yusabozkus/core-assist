@@ -236,9 +236,11 @@ function trendyolProductFromUrl(
     (variant, variantIndex) => {
       const price = asNumber(asRecord(variant.price).value);
       const value = asString(variant.value);
-      const itemNumber = String(
-        variant.itemNumber ?? `${productId}-${variantIndex}`,
-      );
+      const itemNumber =
+        asString(variant.itemNumber) ||
+        (typeof variant.itemNumber === 'number'
+          ? String(variant.itemNumber)
+          : `${productId}-${variantIndex}`);
       return {
         externalId: itemNumber,
         sku: `${code}-${value || variantIndex + 1}`,
@@ -326,7 +328,8 @@ function hepsiburadaImages(markdown: string): string[] {
   const urls = markdown.match(
     /https:\/\/productimages\.hepsiburada\.net\/s\/\d+\/(?:424-600|48-64)\/\d+\.(?:jpg|jpeg|png|webp)/gi,
   );
-  return unique((urls ?? []).map((url) => url.replace('/48-64/', '/424-600/')));
+  const matches: string[] = urls ? Array.from(urls) : [];
+  return unique(matches.map((url) => url.replace('/48-64/', '/424-600/')));
 }
 
 function hepsiburadaDescription(markdown: string, title: string): string {
@@ -406,17 +409,18 @@ function hepsiburadaProductFromMarkdown(
       ),
     ].at(-1)?.[1] ?? 'Erkek Giyim';
   const stockText = attributeValue(attributes, ['stok adedi']) ?? 'Stokta';
-  const variants: MockProductVariantSeed[] = (
-    sizes.length ? sizes : [null]
-  ).map((size, variantIndex) => ({
-    externalId: `${listingId}-${size ?? variantIndex + 1}`,
-    sku: `${code}-${size ?? variantIndex + 1}`,
-    barcode: null,
-    color,
-    size,
-    price,
-    stock: /yok|tükendi/i.test(stockText) ? 0 : 1,
-  }));
+  const variantSizes: Array<string | null> = sizes.length ? sizes : [null];
+  const variants: MockProductVariantSeed[] = variantSizes.map(
+    (size, variantIndex) => ({
+      externalId: `${listingId}-${size ?? variantIndex + 1}`,
+      sku: `${code}-${size ?? variantIndex + 1}`,
+      barcode: null,
+      color,
+      size,
+      price,
+      stock: /yok|tükendi/i.test(stockText) ? 0 : 1,
+    }),
+  );
 
   return {
     id: 2001 + index,

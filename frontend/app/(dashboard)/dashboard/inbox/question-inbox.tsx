@@ -11,7 +11,9 @@ import {
 import {
   AlertCircleIcon,
   Cancel01Icon,
+  CancelSquareIcon,
   CheckmarkCircle01Icon,
+  CheckmarkSquare01Icon,
   InboxIcon,
   MoreHorizontalIcon,
   RefreshIcon,
@@ -77,6 +79,7 @@ export type QuestionInboxProps = {
   initialPage: ProductQuestionPage
   initialFilter: ProductQuestionFilter
   initialPendingStates: PendingQuestionState[]
+  initialQuery: string
 }
 
 const PAGE_SIZE = 30
@@ -96,71 +99,80 @@ const inboxFilters: Array<{
   value: ProductQuestionFilter
   label: string
 }> = [
-  { value: "PENDING", label: "Bekleyen" },
-  { value: "ANSWERED", label: "Yanıtlanan" },
-  { value: "IGNORED", label: "Engellenen" },
-]
+    { value: "PENDING", label: "Bekleyen" },
+    { value: "ANSWERED", label: "Yanıtlanan" },
+    { value: "IGNORED", label: "Engellenen" },
+  ]
 
 const pendingStateOptions: Array<{
   value: PendingQuestionState
   label: string
   dotClassName: string
 }> = [
-  { value: "WAITING", label: "Yanıt bekliyor", dotClassName: "bg-blue-500" },
-  {
-    value: "DRAFT_QUEUED",
-    label: "Taslak kuyruğunda",
-    dotClassName: "bg-violet-500",
-  },
-  {
-    value: "DRAFT_PROCESSING",
-    label: "Taslak hazırlanıyor",
-    dotClassName: "bg-violet-500",
-  },
-  {
-    value: "REVIEW_REQUIRED",
-    label: "İnceleme bekliyor",
-    dotClassName: "bg-orange-500",
-  },
-  {
-    value: "READY_TO_SEND",
-    label: "Gönderime hazır",
-    dotClassName: "bg-teal-500",
-  },
-  {
-    value: "SEND_QUEUED",
-    label: "Gönderim kuyruğunda",
-    dotClassName: "bg-sky-500",
-  },
-  { value: "SENDING", label: "Gönderiliyor", dotClassName: "bg-sky-500" },
-  {
-    value: "BLOCKED_QUOTA",
-    label: "Kota bekliyor",
-    dotClassName: "bg-amber-500",
-  },
-  {
-    value: "BLOCKED_SUBSCRIPTION",
-    label: "Abonelik bekliyor",
-    dotClassName: "bg-amber-500",
-  },
-  {
-    value: "DRAFT_FAILED",
-    label: "Taslak hatası",
-    dotClassName: "bg-red-500",
-  },
-  { value: "SEND_FAILED", label: "Gönderilemedi", dotClassName: "bg-red-500" },
-]
+    { value: "WAITING", label: "Yanıt bekliyor", dotClassName: "bg-blue-500" },
+    {
+      value: "DRAFT_QUEUED",
+      label: "Taslak kuyruğunda",
+      dotClassName: "bg-violet-500",
+    },
+    {
+      value: "DRAFT_PROCESSING",
+      label: "Taslak hazırlanıyor",
+      dotClassName: "bg-violet-500",
+    },
+    {
+      value: "REVIEW_REQUIRED",
+      label: "İnceleme bekliyor",
+      dotClassName: "bg-orange-500",
+    },
+    {
+      value: "READY_TO_SEND",
+      label: "Gönderime hazır",
+      dotClassName: "bg-teal-500",
+    },
+    {
+      value: "SEND_QUEUED",
+      label: "Gönderim kuyruğunda",
+      dotClassName: "bg-sky-500",
+    },
+    { value: "SENDING", label: "Gönderiliyor", dotClassName: "bg-sky-500" },
+    {
+      value: "BLOCKED_QUOTA",
+      label: "Kota bekliyor",
+      dotClassName: "bg-amber-500",
+    },
+    {
+      value: "BLOCKED_SUBSCRIPTION",
+      label: "Abonelik bekliyor",
+      dotClassName: "bg-amber-500",
+    },
+    {
+      value: "DRAFT_FAILED",
+      label: "Taslak hatası",
+      dotClassName: "bg-red-500",
+    },
+    { value: "SEND_FAILED", label: "Gönderilemedi", dotClassName: "bg-red-500" },
+    {
+      value: "SEND_REVIEW",
+      label: "Teslimat kontrolü",
+      dotClassName: "bg-amber-500",
+    },
+  ]
 
 export function QuestionInbox({
   storeId,
   initialPage,
   initialFilter,
   initialPendingStates,
+  initialQuery,
 }: QuestionInboxProps) {
   const isDesktop = useIsDesktop()
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const selectedQuestionId = searchParams.get("question")
+  const query = searchParams.get("q") ?? ""
+  const searchQuery = query.trim()
   const filter = parseQuestionFilter(searchParams.get("status"))
   const pendingStateParam = searchParams.get("pending")
   const pendingStates = useMemo(
@@ -171,21 +183,17 @@ export function QuestionInbox({
   const [questions, setQuestions] = useState(initialPage.items)
   const [nextCursor, setNextCursor] = useState(initialPage.nextCursor)
   const [summary, setSummary] = useState(initialPage.summary)
-  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
-    searchParams.get("question")
-  )
   const [selectedQuestionSummary, setSelectedQuestionSummary] =
     useState<ProductQuestionListItem | null>(null)
   const [selectedQuestion, setSelectedQuestion] =
     useState<ProductQuestion | null>(null)
   const [isDetailLoading, setIsDetailLoading] = useState(
-    Boolean(searchParams.get("question"))
+    Boolean(selectedQuestionId)
   )
-  const [detailError, setDetailError] = useState<string | null>(null)
-  const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(
-    Boolean(searchParams.get("question"))
-  )
-  const [query, setQuery] = useState("")
+  const [detailError, setDetailError] = useState<{
+    questionId: string
+    message: string
+  } | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [listError, setListError] = useState<string | null>(null)
@@ -196,7 +204,7 @@ export function QuestionInbox({
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const listRequestIdRef = useRef(0)
   const lastListRequestKeyRef = useRef(
-    `${storeId}|${initialFilter}|${initialPendingStates.join(",")}|`
+    `${storeId}|${initialFilter}|${initialPendingStates.join(",")}|${initialQuery}`
   )
   const detailRequestIdRef = useRef(0)
   const detailAbortControllerRef = useRef<AbortController | null>(null)
@@ -205,6 +213,7 @@ export function QuestionInbox({
   const liveRefreshInFlightRef = useRef(false)
   const lastSummaryRefreshAtRef = useRef(0)
   const questionsRef = useRef(initialPage.items)
+  const selectedQuestionRef = useRef<ProductQuestion | null>(null)
   const selectedQuestionSummaryRef = useRef<ProductQuestionListItem | null>(
     null
   )
@@ -229,16 +238,25 @@ export function QuestionInbox({
     selectedQuestionSummaryRef.current = selectedQuestionSummary
   }, [selectedQuestionSummary])
 
+  useEffect(() => {
+    selectedQuestionRef.current = selectedQuestion
+  }, [selectedQuestion])
+
   const loadQuestionDetail = useCallback(
     async (questionId: string, force = false) => {
       detailAbortControllerRef.current?.abort()
       const requestId = ++detailRequestIdRef.current
       const cached = detailCacheRef.current.get(questionId)
+      const listQuestion = questionsRef.current.find(
+        (question) => question.id === questionId
+      )
 
       if (
         !force &&
         cached &&
-        Date.now() - cached.cachedAt < DETAIL_CACHE_TTL_MS
+        Date.now() - cached.cachedAt < DETAIL_CACHE_TTL_MS &&
+        (!listQuestion ||
+          !hasQuestionStateChanged(cached.question, listQuestion))
       ) {
         setSelectedQuestion(cached.question)
         setDetailError(null)
@@ -287,11 +305,13 @@ export function QuestionInbox({
           requestId === detailRequestIdRef.current &&
           !isAbortError(caughtError)
         ) {
-          setDetailError(
-            caughtError instanceof Error
-              ? caughtError.message
-              : "Soru detayları yüklenemedi."
-          )
+          setDetailError({
+            questionId,
+            message:
+              caughtError instanceof Error
+                ? caughtError.message
+                : "Soru detayları yüklenemedi.",
+          })
         }
         return null
       } finally {
@@ -307,30 +327,30 @@ export function QuestionInbox({
     return () => detailAbortControllerRef.current?.abort()
   }, [])
 
-  // Explicit overview links can open a question outside the first page.
-  // Ordinary inbox visits still start without an automatic selection.
-  const linkedQuestionId = searchParams.get("question")
+  // The selected question follows the URL, including direct links and back/forward.
   useEffect(() => {
-    if (!linkedQuestionId) return
+    if (!selectedQuestionId) {
+      detailAbortControllerRef.current?.abort()
+      detailRequestIdRef.current += 1
+      return
+    }
+
     let disposed = false
-    void loadQuestionDetail(linkedQuestionId).then((question) => {
+    void loadQuestionDetail(selectedQuestionId).then((question) => {
       if (!question || disposed) return
-      setSelectedQuestionId(question.id)
-      setSelectedQuestionSummary(
+      setSelectedQuestionSummary((current) =>
         listItemFromDetail(
-          {
-            ...question,
-            product: null,
-          },
+          current?.id === question.id
+            ? current
+            : { ...question, product: null },
           question
         )
       )
-      setIsMobileDetailOpen(true)
     })
     return () => {
       disposed = true
     }
-  }, [linkedQuestionId, loadQuestionDetail])
+  }, [selectedQuestionId, loadQuestionDetail])
 
   const refreshSelectedQuestion = useCallback(async () => {
     if (!selectedQuestionId || detailRefreshInFlightRef.current) return
@@ -344,7 +364,7 @@ export function QuestionInbox({
   }, [loadQuestionDetail, selectedQuestionId])
 
   useEffect(() => {
-    const normalizedQuery = query.trim()
+    const normalizedQuery = searchQuery
     const requestKey = `${storeId}|${filter}|${pendingStateKey}|${normalizedQuery}`
 
     if (requestKey === lastListRequestKeyRef.current) return
@@ -391,7 +411,14 @@ export function QuestionInbox({
       window.clearTimeout(timeoutId)
       controller.abort()
     }
-  }, [applyFirstPage, filter, pendingStateKey, pendingStates, query, storeId])
+  }, [
+    applyFirstPage,
+    filter,
+    pendingStateKey,
+    pendingStates,
+    searchQuery,
+    storeId,
+  ])
 
   const loadMore = useCallback(async () => {
     if (!nextCursor || isListLoading || isLoadingMore) return
@@ -404,7 +431,7 @@ export function QuestionInbox({
         cursor: nextCursor,
         limit: PAGE_SIZE,
         status: filter,
-        query,
+        query: searchQuery,
         pendingStates,
       })
 
@@ -427,7 +454,7 @@ export function QuestionInbox({
     isLoadingMore,
     nextCursor,
     pendingStates,
-    query,
+    searchQuery,
     storeId,
   ])
 
@@ -449,17 +476,37 @@ export function QuestionInbox({
   }, [isDesktop, isListLoading, loadMore, nextCursor])
 
   function selectQuestion(question: ProductQuestionListItem) {
-    setSelectedQuestionId(question.id)
-    setSelectedQuestionSummary(question)
-    void loadQuestionDetail(question.id)
-
-    if (isDesktop === false) {
-      setIsMobileDetailOpen(true)
+    const url = new URL(window.location.href)
+    if (url.searchParams.get("question") === question.id) {
+      return
     }
+
+    url.searchParams.set("question", question.id)
+    setSelectedQuestionSummary(question)
+    setSelectedQuestion(null)
+    setIsDetailLoading(true)
+    window.history.pushState(null, "", url)
+  }
+
+  function changeQuery(value: string) {
+    const url = new URL(window.location.href)
+    if (value) {
+      url.searchParams.set("q", value)
+    } else {
+      url.searchParams.delete("q")
+    }
+    window.history.replaceState(null, "", url)
+  }
+
+  function closeMobileDetail() {
+    const url = new URL(window.location.href)
+    if (!url.searchParams.has("question")) return
+    url.searchParams.delete("question")
+    window.history.pushState(null, "", url)
   }
 
   function changeFilter(nextFilter: ProductQuestionFilter) {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(window.location.search)
     if (nextFilter === "PENDING") {
       params.delete("status")
     } else {
@@ -473,29 +520,44 @@ export function QuestionInbox({
   }
 
   function changePendingState(state: PendingQuestionState, checked: boolean) {
-    const selectedStates = new Set(pendingStates)
+    const selectedStates = new Set(
+      parsePendingStates(
+        new URL(window.location.href).searchParams.get("pending")
+      )
+    )
 
     if (checked) {
       selectedStates.add(state)
-    } else if (selectedStates.size > 1) {
+    } else {
       selectedStates.delete(state)
     }
 
+    changePendingStates([...selectedStates])
+  }
+
+  function changePendingStates(states: PendingQuestionState[]) {
+    const selectedStates = new Set(states)
     const orderedStates = PENDING_QUESTION_STATES.filter((item) =>
       selectedStates.has(item)
     )
-    const params = new URLSearchParams(searchParams.toString())
-    params.set(
-      "pending",
-      orderedStates.map((item) => item.toLowerCase()).join(",")
-    )
+    const url = new URL(window.location.href)
+    if (orderedStates.length === PENDING_QUESTION_STATES.length) {
+      url.searchParams.delete("pending")
+    } else {
+      url.searchParams.set(
+        "pending",
+        orderedStates.length
+          ? orderedStates.map((item) => item.toLowerCase()).join(",")
+          : "none"
+      )
+    }
 
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+    window.history.replaceState(null, "", url)
   }
 
   const refreshCurrentList = useCallback(
     async ({ includeSummary = false }: { includeSummary?: boolean } = {}) => {
-      if (liveRefreshInFlightRef.current) return
+      if (liveRefreshInFlightRef.current) return false
 
       liveRefreshInFlightRef.current = true
       try {
@@ -507,7 +569,7 @@ export function QuestionInbox({
         const requestOptions = {
           limit: refreshLimit,
           status: filter,
-          query: query.trim(),
+          query: searchQuery,
           pendingStates,
         } as const
         let page: ProductQuestionListSlice
@@ -521,6 +583,20 @@ export function QuestionInbox({
           page = pageWithSummary
         } else {
           page = await getProductQuestionUpdates(storeId, requestOptions)
+        }
+
+        let selectedDetailChanged = false
+        for (const question of page.items) {
+          const cached = detailCacheRef.current.get(question.id)
+          if (cached && hasQuestionStateChanged(cached.question, question)) {
+            detailCacheRef.current.delete(question.id)
+          }
+          if (
+            selectedQuestionRef.current?.id === question.id &&
+            hasQuestionStateChanged(selectedQuestionRef.current, question)
+          ) {
+            selectedDetailChanged = true
+          }
         }
 
         setQuestions((currentQuestions) => {
@@ -551,13 +627,15 @@ export function QuestionInbox({
           selectedQuestionSummaryRef.current = nextQuestion
           return nextQuestion
         })
+        return selectedDetailChanged
       } catch {
         // Senkronizasyon arka planda sürerken mevcut liste korunur.
+        return false
       } finally {
         liveRefreshInFlightRef.current = false
       }
     },
-    [filter, pendingStates, query, storeId]
+    [filter, pendingStates, searchQuery, storeId]
   )
 
   useEffect(() => {
@@ -566,7 +644,7 @@ export function QuestionInbox({
     let cycleInFlight = false
 
     async function refreshLiveState() {
-      const activeRequestKey = `${storeId}|${filter}|${pendingStateKey}|${query.trim()}`
+      const activeRequestKey = `${storeId}|${filter}|${pendingStateKey}|${searchQuery}`
       if (
         document.visibilityState !== "visible" ||
         isListLoading ||
@@ -580,9 +658,12 @@ export function QuestionInbox({
         Date.now() - lastSummaryRefreshAtRef.current >=
         SUMMARY_REFRESH_INTERVAL_MS
 
-      await refreshCurrentList({ includeSummary })
+      const selectedDetailChanged = await refreshCurrentList({ includeSummary })
 
-      if (isQuestionProcessing(selectedQuestionSummaryRef.current)) {
+      if (
+        selectedDetailChanged ||
+        isQuestionProcessing(selectedQuestionSummaryRef.current)
+      ) {
         await refreshSelectedQuestion()
       }
     }
@@ -631,7 +712,7 @@ export function QuestionInbox({
     isListLoading,
     isLoadingMore,
     pendingStateKey,
-    query,
+    searchQuery,
     refreshCurrentList,
     refreshSelectedQuestion,
     storeId,
@@ -664,7 +745,12 @@ export function QuestionInbox({
     })
   }
 
-  if (initialPage.summary.total === 0 && summary.total === 0) {
+  if (
+    !initialQuery &&
+    !searchQuery &&
+    initialPage.summary.total === 0 &&
+    summary.total === 0
+  ) {
     return (
       <div className="h-full min-h-0 w-full">
         <EmptyInbox onSync={syncQuestions} isSyncing={isSyncing} />
@@ -682,7 +768,7 @@ export function QuestionInbox({
         <div className="flex items-center gap-2">
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => changeQuery(event.target.value)}
             placeholder="Müşteri, ürün veya soru ara"
             aria-label="Gelen kutusunda ara"
             icon={<HugeiconsIcon icon={Search01Icon} className="size-4" />}
@@ -690,7 +776,7 @@ export function QuestionInbox({
               query ? (
                 <button
                   type="button"
-                  onClick={() => setQuery("")}
+                  onClick={() => changeQuery("")}
                   aria-label="Aramayı temizle"
                   className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
@@ -740,7 +826,45 @@ export function QuestionInbox({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" sideOffset={6} className="w-64">
-              <DropdownMenuLabel>Bekleyen durumları</DropdownMenuLabel>
+              <DropdownMenuLabel className="flex items-center justify-between gap-2 py-0!">
+                <span>Bekleyen durumlar</span>
+                <span className="flex items-center">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Tümünü seç"
+                        onClick={() =>
+                          changePendingStates([...PENDING_QUESTION_STATES])
+                        }
+                        className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                      >
+                        <HugeiconsIcon
+                          icon={CheckmarkSquare01Icon}
+                          className="size-4"
+                        />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Tümünü seç</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Tümünü kaldır"
+                        onClick={() => changePendingStates([])}
+                        className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                      >
+                        <HugeiconsIcon
+                          icon={CancelSquareIcon}
+                          className="size-4"
+                        />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Tümünü kaldır</TooltipContent>
+                  </Tooltip>
+                </span>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               {pendingStateOptions.map((item) => {
                 const checked = pendingStates.includes(item.value)
@@ -749,7 +873,6 @@ export function QuestionInbox({
                   <DropdownMenuCheckboxItem
                     key={item.value}
                     checked={checked}
-                    disabled={checked && pendingStates.length === 1}
                     onCheckedChange={(nextChecked) =>
                       changePendingState(item.value, nextChecked === true)
                     }
@@ -776,17 +899,15 @@ export function QuestionInbox({
                   type="button"
                   onClick={() => changeFilter(item.value)}
                   aria-pressed={isActive}
-                  className={`relative flex items-center justify-center gap-1.5 px-2 py-2.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset ${
-                    isActive
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  className={`relative flex items-center justify-center gap-1.5 px-2 py-2.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset ${isActive
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                    }`}
                 >
                   <span>{item.label}</span>
                   <span
-                    className={`text-[10px] tabular-nums ${
-                      isActive ? "text-primary" : "text-muted-foreground/75"
-                    }`}
+                    className={`text-[10px] tabular-nums ${isActive ? "text-primary" : "text-muted-foreground/75"
+                      }`}
                   >
                     {count}
                   </span>
@@ -851,10 +972,14 @@ export function QuestionInbox({
               <HugeiconsIcon icon={Search01Icon} className="size-4" />
             </span>
             <p className="mt-3 text-sm font-medium text-foreground">
-              Sonuç bulunamadı
+              {filter === "PENDING" && pendingStates.length === 0
+                ? "Durum seçilmedi"
+                : "Sonuç bulunamadı"}
             </p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Arama ifadenizi veya durum filtresini değiştirin.
+              {filter === "PENDING" && pendingStates.length === 0
+                ? "Görüntülemek için bekleyen durumlardan en az birini seçin."
+                : "Arama ifadenizi veya durum filtresini değiştirin."}
             </p>
           </div>
         )}
@@ -862,11 +987,18 @@ export function QuestionInbox({
     </aside>
   )
   function renderQuestionDetail() {
-    if (isDetailLoading) {
+    const activeDetailError =
+      detailError?.questionId === selectedQuestionId
+        ? detailError.message
+        : null
+    if (
+      isDetailLoading ||
+      (selectedQuestion?.id !== selectedQuestionId && !activeDetailError)
+    ) {
       return <QuestionDetailSkeleton showHeader={false} />
     }
 
-    if (selectedQuestion) {
+    if (selectedQuestion?.id === selectedQuestionId) {
       return (
         <QuestionDetail
           storeId={storeId}
@@ -891,7 +1023,7 @@ export function QuestionInbox({
             Soru detayları yüklenemedi
           </p>
           <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-            {detailError ??
+            {activeDetailError ??
               "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin."}
           </p>
           {selectedQuestionId ? (
@@ -900,7 +1032,7 @@ export function QuestionInbox({
               size="sm"
               variant="outline"
               className="mt-4"
-              onClick={() => void loadQuestionDetail(selectedQuestionId)}
+              onClick={() => void loadQuestionDetail(selectedQuestionId, true)}
             >
               <HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
               Tekrar dene
@@ -929,6 +1061,11 @@ export function QuestionInbox({
       </div>
     </div>
   )
+  const activeQuestionSummary =
+    selectedQuestionSummary?.id === selectedQuestionId
+      ? selectedQuestionSummary
+      : (questions.find((question) => question.id === selectedQuestionId) ??
+        null)
 
   return (
     <div className="h-full min-h-0 w-full bg-background px-0 lg:px-6">
@@ -960,38 +1097,40 @@ export function QuestionInbox({
           {questionListPanel}
           {selectedQuestionId ? (
             <ResponsiveDialog
-              open={isMobileDetailOpen}
-              onOpenChange={setIsMobileDetailOpen}
+              open
+              onOpenChange={(open) => {
+                if (!open) closeMobileDetail()
+              }}
               title={
                 <span className="flex min-w-0 items-center gap-2">
                   <span className="truncate">
-                    {selectedQuestionSummary?.customerName ??
+                    {activeQuestionSummary?.customerName ??
                       "Pazaryeri müşterisi"}
                   </span>
-                  {selectedQuestionSummary && (
+                  {activeQuestionSummary && (
                     <QuestionStatus
-                      status={selectedQuestionSummary.status}
+                      status={activeQuestionSummary.status}
                       deliveryStatus={
-                        selectedQuestionSummary.answerDelivery?.status
+                        activeQuestionSummary.answerDelivery?.status
                       }
                       draftProcessingStatus={
-                        selectedQuestionSummary.draftProcessingStatus
+                        activeQuestionSummary.draftProcessingStatus
                       }
-                      draftDecision={selectedQuestionSummary.draftDecision}
+                      draftDecision={activeQuestionSummary.draftDecision}
                       draftAnswerability={
-                        selectedQuestionSummary.draftAnswerability
+                        activeQuestionSummary.draftAnswerability
                       }
                     />
                   )}
                 </span>
               }
               description={
-                selectedQuestionSummary
+                activeQuestionSummary
                   ? `${providerName(
-                      selectedQuestionSummary.connection.providerKey
-                    )} · ${inboxDateFormatter.format(
-                      new Date(selectedQuestionSummary.externalCreatedAt)
-                    )}`
+                    activeQuestionSummary.connection.providerKey
+                  )} · ${inboxDateFormatter.format(
+                    new Date(activeQuestionSummary.externalCreatedAt)
+                  )}`
                   : "Soru detayları"
               }
               bodyClassName="px-0 py-0"
@@ -1027,19 +1166,26 @@ function listItemFromDetail(
     question: question.question,
     status: question.status,
     draftDecision: question.draftDecision,
+    draftAnswerability: question.draftAnswerability,
     draftProcessingStatus: question.draftProcessingStatus,
     externalCreatedAt: question.externalCreatedAt,
+    updatedAt: question.updatedAt,
     connection: question.connection,
     product: question.product
       ? {
-          id: question.product.id,
-          title: question.product.title,
-          imageUrl: question.product.images[0]?.url ?? null,
-        }
+        id: question.product.id,
+        title: question.product.title,
+        imageUrl: question.product.images[0]?.url ?? null,
+      }
       : null,
     answerDelivery: question.answerDelivery
       ? { status: question.answerDelivery.status }
       : null,
+    draftAttempts: question.draftAttempts.slice(0, 1).map((attempt) => ({
+      automationMode: attempt.automationMode,
+      autoSendEligible: attempt.autoSendEligible,
+      appliedConfidenceThreshold: attempt.appliedConfidenceThreshold,
+    })),
   }
 }
 
@@ -1063,6 +1209,20 @@ function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === "AbortError"
 }
 
+function hasQuestionStateChanged(
+  current: ProductQuestion | ProductQuestionListItem,
+  next: ProductQuestionListItem
+) {
+  return (
+    current.updatedAt !== next.updatedAt ||
+    current.status !== next.status ||
+    current.draftDecision !== next.draftDecision ||
+    current.draftAnswerability !== next.draftAnswerability ||
+    current.draftProcessingStatus !== next.draftProcessingStatus ||
+    current.answerDelivery?.status !== next.answerDelivery?.status
+  )
+}
+
 function isQuestionProcessing(question: ProductQuestionListItem | null) {
   return (
     question?.draftProcessingStatus === "QUEUED" ||
@@ -1084,6 +1244,7 @@ function parseQuestionFilter(value: string | null): ProductQuestionFilter {
 
 function parsePendingStates(value: string | null): PendingQuestionState[] {
   if (!value) return [...PENDING_QUESTION_STATES]
+  if (value === "none") return []
 
   const requestedStates = new Set(
     value

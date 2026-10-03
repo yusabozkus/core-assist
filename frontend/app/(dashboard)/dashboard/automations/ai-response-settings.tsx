@@ -1,18 +1,17 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { useCallback, useEffect, useState, type ReactNode } from "react"
+import { useSearchParams } from "next/navigation"
 import {
   AiSparklesIcon,
-  ArrowDown01Icon,
   CheckmarkCircle01Icon,
   PlusSignIcon,
   RefreshIcon,
-  Settings02Icon,
-  WorkflowSquare01Icon,
 } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { HugeiconsIcon } from "@hugeicons/react"
 
 import { AiResponsePreview } from "@/components/dashboard/ai/ai-response-preview"
+import { ResponseSettingsTour } from "@/components/dashboard/setup/response-settings-tour"
 import { AutomationModeSelector } from "@/components/dashboard/ai/automation-mode-selector"
 import { ResponseBehaviorControls } from "@/components/dashboard/ai/response-behavior-controls"
 import {
@@ -23,11 +22,6 @@ import {
 } from "@/components/dashboard/ai/settings-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
@@ -52,6 +46,8 @@ export function AiResponseSettings({
     initialKnowledge.profile.automationMode
   )
   const [instructionDialogOpen, setInstructionDialogOpen] = useState(false)
+  const [tourOpen, setTourOpen] = useState(false)
+  const searchParams = useSearchParams()
   const [autoReplyConfirmationOpen, setAutoReplyConfirmationOpen] =
     useState(false)
   const [instructionDraft, setInstructionDraft] = useState("")
@@ -69,6 +65,20 @@ export function AiResponseSettings({
       knowledge.profile.minimumAutoSendConfidence
   const isSaving = isSavingBehavior || isSavingAutomation || isSavingInstruction
   const hasUnsavedChanges = behaviorHasChanges || automationHasChanges
+
+  useEffect(() => {
+    if (searchParams.get("setupGuideTour") !== "1") return
+    const url = new URL(window.location.href)
+    url.searchParams.delete("setupGuideTour")
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${url.pathname}${url.search}${url.hash}`
+    )
+    window.requestAnimationFrame(() => setTourOpen(true))
+  }, [searchParams])
+
+  const closeTour = useCallback(() => setTourOpen(false), [])
 
   function updateProfile<Key extends keyof StoreKnowledge["profile"]>(
     key: Key,
@@ -94,7 +104,10 @@ export function AiResponseSettings({
         preferredEmoji: profile.preferredEmoji,
       })
       setKnowledge(updated)
-      setProfileDraft(updated.profile)
+      setProfileDraft((current) => ({
+        ...updated.profile,
+        minimumAutoSendConfidence: current.minimumAutoSendConfidence,
+      }))
       setBehaviorFeedback({
         type: "success",
         message: "Yanıt davranışı kaydedildi.",
@@ -107,7 +120,10 @@ export function AiResponseSettings({
   }
 
   function requestAutomationModeSave() {
-    if (automationModeDraft === "SAFE_AUTO") {
+    if (
+      automationModeDraft === "SAFE_AUTO" &&
+      knowledge.profile.automationMode !== "SAFE_AUTO"
+    ) {
       setAutoReplyConfirmationOpen(true)
       return
     }
@@ -197,7 +213,7 @@ export function AiResponseSettings({
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-5 py-7 sm:px-8 sm:py-9 lg:px-10">
+    <div className="mx-auto w-full max-w-[1280px] px-5 py-7 sm:px-8 sm:py-9 lg:px-10">
       <header className="flex flex-col gap-5 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2.5">
@@ -209,56 +225,67 @@ export function AiResponseSettings({
             </Badge>
           </div>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Müşteri yanıtlarının çalışma ve iletişim biçimini yönetin.
+            Soruların nasıl işleneceğini, yanıtların nasıl yazılacağını ve
+            mağazanıza özel kuralları buradan belirleyin.
           </p>
         </div>
 
-        <SaveState isSaving={isSaving} hasUnsavedChanges={hasUnsavedChanges} />
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setTourOpen(true)}
+          >
+            <HugeiconsIcon icon={AiSparklesIcon} className="size-4" />
+            Kısa tur
+          </Button>
+          <SaveState
+            isSaving={isSaving}
+            hasUnsavedChanges={hasUnsavedChanges}
+          />
+        </div>
       </header>
 
-      <div className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_23rem]">
-        <main className="min-w-0 overflow-hidden rounded-xl border border-border bg-card shadow-xs">
-          <SettingsSection
-            icon={AiSparklesIcon}
-            title="Yanıt otomasyonu"
-            description="Her yeni soruda uygulanacak akışı seçin."
-            defaultOpen
-            changed={automationHasChanges}
-            action={
-              <Button
-                size="sm"
-                variant={automationHasChanges ? "default" : "outline"}
-                onClick={requestAutomationModeSave}
-                disabled={isSavingAutomation || !automationHasChanges}
-              >
-                <HugeiconsIcon
-                  icon={
-                    isSavingAutomation ? RefreshIcon : CheckmarkCircle01Icon
-                  }
-                  className={cn("size-4", isSavingAutomation && "animate-spin")}
-                />
-                Otomasyonu kaydet
-              </Button>
-            }
-          >
-            <FeedbackBanner feedback={automationFeedback} />
-            <AutomationModeSelector
-              value={automationModeDraft}
-              onChange={(value) => {
-                setAutomationModeDraft(value)
-                setAutomationFeedback(undefined)
-              }}
-            />
-            <div className="border-t border-border pt-5">
+      <main className="mt-7 space-y-6">
+        <SettingsSection
+          tourId="automation"
+          title="Sorular nasıl işlensin?"
+          description="AI'ın yeni bir soru geldiğinde ne yapacağını seçin."
+          changed={automationHasChanges}
+          action={
+            <Button
+              size="sm"
+              variant={automationHasChanges ? "default" : "outline"}
+              onClick={requestAutomationModeSave}
+              disabled={isSavingAutomation || !automationHasChanges}
+            >
+              <HugeiconsIcon
+                icon={isSavingAutomation ? RefreshIcon : CheckmarkCircle01Icon}
+                className={cn("size-4", isSavingAutomation && "animate-spin")}
+              />
+              Otomasyonu kaydet
+            </Button>
+          }
+        >
+          <FeedbackBanner feedback={automationFeedback} />
+          <AutomationModeSelector
+            value={automationModeDraft}
+            onChange={(value) => {
+              setAutomationModeDraft(value)
+              setAutomationFeedback(undefined)
+            }}
+          />
+          {automationModeDraft === "SAFE_AUTO" ? (
+            <div className="mt-6 border-t border-border pt-5">
               <div className="flex items-start justify-between gap-5">
                 <div>
                   <p className="text-sm font-medium text-foreground">
                     Minimum otomatik gönderim güveni
                   </p>
                   <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
-                    Bu değer mağaza genelindeki alt sınırdır. Beden, stok ve
-                    garanti gibi riskli konularda sistem daha yüksek bir eşik
-                    uygulayabilir.
+                    Yalnızca güvenli otomatik modda geçerlidir. Riskli konularda
+                    sistem daha yüksek bir eşik uygulayabilir.
                   </p>
                 </div>
                 <Badge variant="outline" className="shrink-0 tabular-nums">
@@ -288,13 +315,14 @@ export function AiResponseSettings({
                 <span>%99</span>
               </div>
             </div>
-          </SettingsSection>
+          ) : null}
+        </SettingsSection>
 
+        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_23rem]">
           <SettingsSection
-            icon={Settings02Icon}
-            title="Yanıt biçimi"
-            description="Cevapların müşteriye nasıl sunulacağını belirleyin."
-            defaultOpen
+            tourId="behavior"
+            title="Yanıtlar nasıl yazılsın?"
+            description="Üslubu, uzunluğu ve mesaj düzenini seçin. Örnek yanıt seçimlerinizle birlikte değişir."
             changed={behaviorHasChanges}
             action={
               <Button
@@ -317,67 +345,62 @@ export function AiResponseSettings({
               onChange={updateProfile}
             />
           </SettingsSection>
+          <AiResponsePreview profile={profileDraft} />
+        </div>
 
-          <SettingsSection
-            icon={WorkflowSquare01Icon}
-            title="Özel AI talimatları"
-            description="Mağazanıza özgü kalıcı davranış kuralları ekleyin."
-            badge={`${knowledge.instructions.length} kural`}
-            last
-            action={
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setInstructionFeedback(undefined)
-                  setInstructionDialogOpen(true)
-                }}
-                disabled={isSavingInstruction}
-              >
-                <HugeiconsIcon icon={PlusSignIcon} className="size-4" />
-                Talimat ekle
-              </Button>
-            }
-          >
-            <FeedbackBanner feedback={instructionFeedback} />
-            {knowledge.instructions.length > 0 ? (
-              <div className="divide-y divide-border border-y border-border">
-                {knowledge.instructions.map((instruction, index) => (
-                  <CollectionItem
-                    key={`${instruction.content}-${index}`}
-                    title={`Kural ${String(index + 1).padStart(2, "0")}`}
-                    description={instruction.content}
-                    hierarchy="content-first"
-                    onRemove={() => removeInstruction(index)}
-                    isRemoving={removingInstruction === index}
-                    removeConfirmation={{
-                      title: "Talimatı silmek istediğinize emin misiniz?",
-                      description:
-                        "Bu talimat kalıcı olarak silinecek ve yeni AI taslaklarında artık uygulanmayacaktır. Bu işlem geri alınamaz.",
-                      cancelLabel: "Vazgeç",
-                      confirmLabel: "Evet, sil",
-                    }}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="border-y border-dashed border-border py-8 text-center">
-                <p className="text-sm font-medium text-foreground">
-                  Henüz özel talimat bulunmuyor
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  AI’ın mağazanıza özgü davranması için ilk kuralınızı ekleyin.
-                </p>
-              </div>
-            )}
-          </SettingsSection>
-        </main>
-
-        <AiResponsePreview
-          profile={profileDraft}
-          automationMode={automationModeDraft}
-        />
-      </div>
+        <SettingsSection
+          tourId="instructions"
+          title="Özel AI talimatları"
+          description="Yalnızca mağazanıza özgü ek davranış kurallarını burada tanımlayın."
+          badge={`${knowledge.instructions.length} kural`}
+          action={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setInstructionFeedback(undefined)
+                setInstructionDialogOpen(true)
+              }}
+              disabled={isSavingInstruction}
+            >
+              <HugeiconsIcon icon={PlusSignIcon} className="size-4" />
+              Talimat ekle
+            </Button>
+          }
+        >
+          <FeedbackBanner feedback={instructionFeedback} />
+          {knowledge.instructions.length > 0 ? (
+            <div className="divide-y divide-border border-y border-border">
+              {knowledge.instructions.map((instruction, index) => (
+                <CollectionItem
+                  key={`${instruction.content}-${index}`}
+                  title={`Kural ${String(index + 1).padStart(2, "0")}`}
+                  description={instruction.content}
+                  hierarchy="content-first"
+                  onRemove={() => removeInstruction(index)}
+                  isRemoving={removingInstruction === index}
+                  removeConfirmation={{
+                    title: "Talimatı silmek istediğinize emin misiniz?",
+                    description:
+                      "Bu talimat kalıcı olarak silinecek ve yeni AI taslaklarında artık uygulanmayacaktır. Bu işlem geri alınamaz.",
+                    cancelLabel: "Vazgeç",
+                    confirmLabel: "Evet, sil",
+                  }}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="border-y border-dashed border-border py-8 text-center">
+              <p className="text-sm font-medium text-foreground">
+                Henüz özel talimat bulunmuyor
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                AI’ın mağazanıza özgü davranması için ilk kuralınızı ekleyin.
+              </p>
+            </div>
+          )}
+        </SettingsSection>
+      </main>
 
       <ResponsiveDialog
         open={autoReplyConfirmationOpen}
@@ -472,80 +495,60 @@ export function AiResponseSettings({
           </SettingsField>
         </div>
       </ResponsiveDialog>
+
+      {tourOpen ? <ResponseSettingsTour onClose={closeTour} /> : null}
     </div>
   )
 }
 
 function SettingsSection({
-  icon,
+  tourId,
   title,
   description,
   badge,
   changed = false,
   action,
   children,
-  defaultOpen = false,
-  last = false,
 }: {
-  icon: IconSvgElement
+  tourId: string
   title: string
   description: string
   badge?: string
   changed?: boolean
   action: ReactNode
   children: ReactNode
-  defaultOpen?: boolean
-  last?: boolean
 }) {
   return (
-    <Collapsible
-      defaultOpen={defaultOpen}
-      className={cn("group/section", !last && "border-b border-border")}
+    <section
+      data-response-tour-section={tourId}
+      className="scroll-mt-6 overflow-hidden rounded-2xl border border-border bg-card shadow-xs"
     >
-      <section>
-        <header className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">
-          <CollapsibleTrigger asChild>
-            <button
-              type="button"
-              className="flex min-w-0 flex-1 items-start gap-3 text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:outline-none"
-            >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/8 text-primary">
-                <HugeiconsIcon icon={icon} className="size-4" />
+      <header className="flex flex-col gap-4 border-b border-border px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+            <h2 className="text-base font-semibold tracking-[-0.015em]">
+              {title}
+            </h2>
+            {badge ? (
+              <Badge variant="secondary" className="h-5 text-[10px]">
+                {badge}
+              </Badge>
+            ) : null}
+            {changed ? (
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-amber-700 dark:text-amber-400">
+                <span className="size-1.5 rounded-full bg-current" />
+                Kaydedilmedi
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="font-semibold tracking-[-0.015em]">
-                    {title}
-                  </span>
-                  {badge ? (
-                    <Badge variant="secondary" className="h-5 text-[10px]">
-                      {badge}
-                    </Badge>
-                  ) : null}
-                  {changed ? (
-                    <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
-                      <span className="size-1.5 rounded-full bg-current" />
-                      Kaydedilmedi
-                    </span>
-                  ) : null}
-                </span>
-                <span className="mt-1 block max-w-2xl text-sm leading-5 text-muted-foreground">
-                  {description}
-                </span>
-              </span>
-              <HugeiconsIcon
-                icon={ArrowDown01Icon}
-                className="mt-2 size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]/section:rotate-180"
-              />
-            </button>
-          </CollapsibleTrigger>
-          <div className="shrink-0 pl-12 sm:pl-0">{action}</div>
-        </header>
-        <CollapsibleContent>
-          <div className="space-y-4 px-5 pb-6 sm:px-6">{children}</div>
-        </CollapsibleContent>
-      </section>
-    </Collapsible>
+            ) : null}
+          </div>
+          <p className="mt-1 max-w-2xl text-sm leading-5 text-muted-foreground">
+            {description}
+          </p>
+        </div>
+        <div className="shrink-0">{action}</div>
+      </header>
+      <div className="space-y-4 px-5 py-6 sm:px-6">{children}</div>
+    </section>
   )
 }
 

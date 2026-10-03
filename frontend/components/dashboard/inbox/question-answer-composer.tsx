@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useTransition } from "react"
+import Link from "next/link"
 import {
   AlertCircleIcon,
   CheckmarkCircle01Icon,
@@ -45,7 +46,7 @@ export function QuestionAnswerComposer({
 }: QuestionAnswerComposerProps) {
   const delivery = question.answerDelivery
   const [answer, setAnswer] = useState(
-    delivery?.status === "FAILED"
+    delivery?.status === "FAILED" || delivery?.status === "REVIEW_REQUIRED"
       ? delivery.answer
       : question.status === "DRAFTED"
         ? (question.answer ?? "")
@@ -80,6 +81,33 @@ export function QuestionAnswerComposer({
     )
     return () => window.clearTimeout(timeoutId)
   }, [draftRetrySeconds])
+
+  if (delivery?.status === "REVIEW_REQUIRED") {
+    return (
+      <div className="shrink-0 border-t border-border bg-background px-4 py-4 sm:px-6 lg:px-8">
+        <div
+          className="mx-auto max-w-5xl rounded-xl border border-amber-500/25 bg-amber-500/5 p-4"
+          role="status"
+        >
+          <p className="text-sm font-semibold">Teslimat kontrolü gerekli</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Cevabın pazaryerine ulaşıp ulaşmadığı doğrulanamadı. Mükerrer cevap
+            oluşmaması için yeniden gönderim durduruldu. Pazaryerindeki soruyu
+            kontrol edip destek ekibine bildirin.
+          </p>
+          <p className="mt-3 rounded-lg border border-border bg-background p-3 text-sm whitespace-pre-wrap">
+            {delivery.answer}
+          </p>
+          <Link
+            href="/dashboard/support"
+            className="mt-3 inline-block text-sm font-medium underline underline-offset-4"
+          >
+            Destek talebi oluştur
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   if (question.status === "IGNORED" || policyBlocked) {
     return (

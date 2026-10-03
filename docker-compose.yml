@@ -9,7 +9,7 @@ services:
       POSTGRES_DB: core_assist
     ports:
       # Port 5432 ve 5433 sisteminizde meşgul olduğu için 5434 portu kullanıldı
-      - "5434:5432"
+      - "127.0.0.1:5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -18,7 +18,7 @@ services:
     container_name: core-assist-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
 

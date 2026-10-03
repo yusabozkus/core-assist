@@ -23,20 +23,22 @@ const modeLabels = {
   SAFE_AUTO: "Otomatik gönderim",
 }
 
-export function DashboardQueue({ data }: { data: DashboardOverview }) {
+export function DashboardQueue({
+  data,
+  canManageStore,
+}: {
+  data: DashboardOverview
+  canManageStore: boolean
+}) {
   return (
     <section
       className="flex min-w-0 flex-col rounded-xl border border-border bg-card p-5 sm:p-6"
       aria-labelledby="queue-title"
     >
-      <div className="flex items-center justify-between gap-3">
+      <div>
         <h2 id="queue-title" className="text-sm font-semibold">
           Bekleyen işler
         </h2>
-        <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <span className="size-1.5 rounded-full bg-primary" />
-          Anlık özet
-        </span>
       </div>
       <div className="mt-5 flex items-baseline gap-2">
         <strong className="text-3xl font-semibold tracking-tight tabular-nums">
@@ -65,21 +67,25 @@ export function DashboardQueue({ data }: { data: DashboardOverview }) {
           </div>
         ))}
       </div>
-      <Link
-        href={APP_ROUTES.dashboard.automations.root}
-        className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-4 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <span>
-          <span className="mb-1 block text-[10px] text-muted-foreground">
-            Yanıt modu
+      {canManageStore ? (
+        <Link
+          href={APP_ROUTES.dashboard.automations.root}
+          className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-4 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <span>
+            <span className="mb-1 block text-[10px] text-muted-foreground">
+              Yanıt modu
+            </span>
+            <span className="font-medium">
+              {modeLabels[data.automationMode]}
+            </span>
           </span>
-          <span className="font-medium">{modeLabels[data.automationMode]}</span>
-        </span>
-        <HugeiconsIcon
-          icon={ArrowRight01Icon}
-          className="size-4 text-muted-foreground"
-        />
-      </Link>
+          <HugeiconsIcon
+            icon={ArrowRight01Icon}
+            className="size-4 text-muted-foreground"
+          />
+        </Link>
+      ) : null}
     </section>
   )
 }

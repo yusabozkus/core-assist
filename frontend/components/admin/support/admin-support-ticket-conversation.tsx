@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft01Icon,
@@ -20,6 +21,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
@@ -33,9 +41,20 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { getSupportCategoryLabel } from "@/components/dashboard/support/support-ticket-presentation"
+import {
+  SupportImageAttachments,
+  SupportImagePicker,
+  SupportImagePreviews,
+  handleSupportImagePaste,
+  isLongSupportMessage,
+  useSupportImageSelection,
+  visibleSupportMessageBody,
+} from "@/components/dashboard/support/support-image-attachments"
+import { APP_ROUTES } from "@/constants/site"
 import { useIsDesktop } from "@/hooks/use-desktop"
 import {
   addAdminSupportMessage,
+  addAdminSupportImageMessage,
   getAdminSupportTicket,
   updateAdminSupportAssignee,
   updateAdminSupportStatus,
@@ -71,6 +90,8 @@ export function AdminSupportTicketConversation({
   const [ticket, setTicket] = useState(initialTicket)
   const [referenceTime] = useState(() => Date.now())
   const [message, setMessage] = useState("")
+  const { images, addImages, removeImage, clearImages } =
+    useSupportImageSelection()
   const [visibility, setVisibility] = useState<"PUBLIC" | "INTERNAL">("PUBLIC")
   const [pendingAction, setPendingAction] = useState<
     "message" | "status" | "assignee" | null
@@ -151,6 +172,28 @@ export function AdminSupportTicketConversation({
   }, [message])
 
   useEffect(() => {
+    function toggleComposerMode(event: KeyboardEvent) {
+      if (
+        !["KeyS", "KeyN"].includes(event.code) ||
+        !event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        event.repeat
+      ) {
+        return
+      }
+
+      event.preventDefault()
+      if (mutationPendingRef.current) return
+      setVisibility((current) => (current === "PUBLIC" ? "INTERNAL" : "PUBLIC"))
+    }
+
+    window.addEventListener("keydown", toggleComposerMode, true)
+    return () => window.removeEventListener("keydown", toggleComposerMode, true)
+  }, [])
+
+  useEffect(() => {
     const intervalId = window.setInterval(
       () => void refreshTicket(),
       POLL_INTERVAL_MS
@@ -186,7 +229,8 @@ export function AdminSupportTicketConversation({
   async function submitMessage() {
     const value = message.trim()
     if (
-      value.length < 2 ||
+      value.length === 1 ||
+      (value.length === 0 && images.length === 0) ||
       pendingAction ||
       mutationPendingRef.current ||
       publicReplyDisabled
@@ -199,8 +243,18 @@ export function AdminSupportTicketConversation({
     mutationPendingRef.current = true
     cancelPendingRefresh()
     try {
-      setTicket(await addAdminSupportMessage(ticket.id, value, visibility))
+      setTicket(
+        images.length
+          ? await addAdminSupportImageMessage(
+              ticket.id,
+              value,
+              visibility,
+              images.map((image) => image.file)
+            )
+          : await addAdminSupportMessage(ticket.id, value, visibility)
+      )
       setMessage("")
+      clearImages()
     } catch (caughtError) {
       setMessageError(
         caughtError instanceof Error
@@ -281,50 +335,6 @@ export function AdminSupportTicketConversation({
 
   return (
     <div className="flex min-h-svh flex-col bg-background lg:h-[calc(100svh-1rem)] lg:min-h-0 lg:overflow-hidden">
-      <header className="sticky top-0 z-20 shrink-0 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-sm sm:px-7">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 lg:flex-row lg:items-center">
-          <div className="flex min-w-0 flex-1 items-start gap-3">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="mt-0.5 shrink-0"
-              onClick={() => router.back()}
-              aria-label="Destek taleplerine dön"
-            >
-              <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
-            </Button>
-
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-semibold tracking-wide text-muted-foreground">
-                  {ticket.code}
-                </span>
-                <Badge
-                  variant="outline"
-                  className={cn("px-2 py-0 text-[10px]", status.className)}
-                >
-                  {status.label}
-                </Badge>
-                <span
-                  className={cn("text-[10px] font-medium", priority.className)}
-                >
-                  {priority.label} öncelik
-                </span>
-              </div>
-              <h1 className="mt-1.5 truncate text-lg font-semibold tracking-tight sm:text-xl">
-                {ticket.subject}
-              </h1>
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-                <span>
-                  {formatAdminSupportDate(ticket.createdAt)} tarihinde açıldı
-                </span>
-                <span>{ticket.messageCount} mesaj</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <TicketPanelLayout
         isDesktop={Boolean(isDesktop)}
         inspector={
@@ -340,55 +350,99 @@ export function AdminSupportTicketConversation({
         }
       >
         <section className="flex min-h-[620px] min-w-0 flex-1 flex-col lg:min-h-0">
+          <header className="shrink-0 border-b border-border bg-background px-4 py-2.5 sm:px-8 sm:py-3 lg:flex lg:h-20 lg:items-center">
+            <div className="flex w-full min-w-0 items-start gap-2.5">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="shrink-0"
+                onClick={() => router.back()}
+                aria-label="Destek taleplerine dön"
+              >
+                <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
+              </Button>
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                  <div className="min-w-0">
+                    <h1 className="truncate text-base font-semibold tracking-tight sm:text-lg">
+                      {ticket.subject}
+                    </h1>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="text-[10px] font-semibold tracking-wide text-muted-foreground">
+                        {ticket.code}
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "px-2 py-0 text-[10px]",
+                          status.className
+                        )}
+                      >
+                        {status.label}
+                      </Badge>
+                      <span
+                        className={cn(
+                          "text-[10px] font-medium",
+                          priority.className
+                        )}
+                      >
+                        {priority.label} öncelik
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap justify-end gap-x-3 text-right text-[10px] leading-4 text-muted-foreground sm:flex-col sm:items-end sm:gap-0">
+                    <span className="font-medium text-foreground">
+                      {ticket.messageCount} mesaj
+                    </span>
+                    <span>
+                      {formatAdminSupportDate(ticket.createdAt)} tarihinde
+                      açıldı
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </header>
           <main
             ref={messagesViewportRef}
             className="themed-scrollbar min-h-0 flex-1 overflow-y-auto px-4 py-7 sm:px-8"
           >
-            <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
+            <div className="mx-auto flex w-full max-w-4xl flex-col gap-5">
               {ticket.messages.map((item) => (
-                <AdminMessageBubble key={item.id} message={item} />
+                <AdminMessageBubble
+                  key={item.id}
+                  message={item}
+                  ticketId={ticket.id}
+                />
               ))}
             </div>
           </main>
 
-          <footer className="sticky bottom-0 z-10 shrink-0 bg-background/95 px-4 pt-3 pb-5 backdrop-blur-sm sm:px-8 sm:pb-7 lg:static">
-            <div className="mx-auto w-full max-w-5xl">
-              <div className="mb-2 flex items-center justify-between gap-3 px-1">
-                <div className="flex rounded-lg bg-muted p-0.5">
-                  <ComposerModeButton
-                    active={visibility === "PUBLIC"}
-                    onClick={() => setVisibility("PUBLIC")}
-                  >
-                    Kullanıcıya yanıt
-                  </ComposerModeButton>
-                  <ComposerModeButton
-                    active={visibility === "INTERNAL"}
-                    onClick={() => setVisibility("INTERNAL")}
-                  >
-                    Dahili not
-                  </ComposerModeButton>
-                </div>
-                <span className="hidden text-[10px] text-muted-foreground sm:block">
-                  Ctrl + Enter ile gönder
-                </span>
-              </div>
-
-              {publicReplyDisabled ? (
-                <p className="mb-2 px-1 text-[11px] text-amber-700 dark:text-amber-400">
-                  Kullanıcıya yanıt vermek için talebi yeniden açın. Dahili not
-                  eklemeye devam edebilirsiniz.
-                </p>
-              ) : null}
-
+          <footer className="sticky bottom-0 z-10 shrink-0 bg-transparent px-4 pb-[max(0.375rem,env(safe-area-inset-bottom))] sm:px-8 sm:pb-[max(0.875rem,env(safe-area-inset-bottom))] lg:static">
+            <div className="mx-auto w-full max-w-4xl">
               <div
                 className={cn(
-                  "overflow-hidden rounded-2xl border bg-card shadow-sm transition-[border-color,box-shadow] focus-within:shadow-md",
+                  "relative rounded-2xl border bg-card shadow-sm transition-[border-color,box-shadow] focus-within:shadow-md",
                   visibility === "INTERNAL"
                     ? "border-amber-500/30 focus-within:border-amber-500/50"
                     : "border-border focus-within:border-primary/35"
                 )}
               >
-                <div className="relative">
+                <div className="pointer-events-none absolute inset-x-0 bottom-full z-20 flex flex-col gap-2 pb-2">
+                  {publicReplyDisabled ? (
+                    <p className="w-fit max-w-full rounded-md bg-background/95 px-2 py-1 text-[11px] text-amber-700 shadow-sm dark:text-amber-400">
+                      Kullanıcıya yanıt vermek için talebi yeniden açın. Dahili
+                      not eklemeye devam edebilirsiniz.
+                    </p>
+                  ) : null}
+                  <SupportImagePreviews
+                    images={images}
+                    onRemove={removeImage}
+                    disabled={Boolean(pendingAction) || publicReplyDisabled}
+                    floating={false}
+                  />
+                </div>
+                <div className="relative overflow-hidden rounded-2xl">
                   <Textarea
                     ref={messageInputRef}
                     value={message}
@@ -396,6 +450,9 @@ export function AdminSupportTicketConversation({
                     rows={2}
                     disabled={Boolean(pendingAction) || publicReplyDisabled}
                     onChange={(event) => setMessage(event.target.value)}
+                    onPaste={(event) =>
+                      handleSupportImagePaste(event, addImages, setMessageError)
+                    }
                     onKeyDown={(event) => {
                       if (
                         event.key === "Enter" &&
@@ -414,9 +471,71 @@ export function AdminSupportTicketConversation({
                   />
 
                   <div className="pointer-events-none absolute inset-x-px bottom-px flex items-end justify-between gap-3 bg-gradient-to-t from-card via-card/95 to-transparent px-3 pt-6 pb-3">
-                    <span className="text-[10px] text-muted-foreground tabular-nums">
-                      {message.length}/5000
-                    </span>
+                    <div className="pointer-events-auto flex items-center gap-1">
+                      <SupportImagePicker
+                        count={images.length}
+                        onSelect={addImages}
+                        onError={setMessageError}
+                        disabled={Boolean(pendingAction) || publicReplyDisabled}
+                      />
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            disabled={Boolean(pendingAction)}
+                            aria-label={`Yanıt türü: ${visibility === "INTERNAL" ? "Dahili not" : "Kullanıcıya yanıt"}. Değiştir`}
+                            aria-keyshortcuts="Alt+S Alt+N"
+                            title={`${visibility === "INTERNAL" ? "Dahili not" : "Kullanıcıya yanıt"} · Alt+S veya Alt+N ile değiştir`}
+                            className={cn(
+                              "flex h-8 items-center gap-1.5 rounded-lg px-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-50",
+                              visibility === "INTERNAL" &&
+                                "text-amber-600 dark:text-amber-400"
+                            )}
+                          >
+                            <HugeiconsIcon
+                              icon={
+                                visibility === "INTERNAL"
+                                  ? NoteIcon
+                                  : CustomerSupportIcon
+                              }
+                              className="size-4.5"
+                            />
+                            <span className="text-xs font-medium whitespace-nowrap">
+                              {visibility === "INTERNAL"
+                                ? "Dahili not"
+                                : "Kullanıcıya yanıt"}
+                            </span>
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          side="top"
+                          align="start"
+                          sideOffset={10}
+                        >
+                          <DropdownMenuRadioGroup
+                            value={visibility}
+                            onValueChange={(value) =>
+                              setVisibility(value as "PUBLIC" | "INTERNAL")
+                            }
+                          >
+                            <DropdownMenuRadioItem value="PUBLIC">
+                              <HugeiconsIcon
+                                icon={CustomerSupportIcon}
+                                className="size-4"
+                              />
+                              Kullanıcıya yanıt
+                            </DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="INTERNAL">
+                              <HugeiconsIcon
+                                icon={NoteIcon}
+                                className="size-4"
+                              />
+                              Dahili not
+                            </DropdownMenuRadioItem>
+                          </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                     <Button
                       type="button"
                       size="sm"
@@ -428,7 +547,8 @@ export function AdminSupportTicketConversation({
                       disabled={
                         Boolean(pendingAction) ||
                         publicReplyDisabled ||
-                        message.trim().length < 2
+                        message.trim().length === 1 ||
+                        (message.trim().length === 0 && images.length === 0)
                       }
                       onClick={() => void submitMessage()}
                     >
@@ -480,14 +600,21 @@ function TicketPanelLayout({
   if (!isDesktop) {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="shrink-0 border-b border-border">{inspector}</div>
+        <details className="shrink-0 border-b border-border">
+          <summary className="cursor-pointer px-4 py-2.5 text-xs font-medium text-muted-foreground marker:text-muted-foreground">
+            Talep bilgileri ve işlemler
+          </summary>
+          <div className="h-[min(60svh,32rem)] border-t border-border">
+            {inspector}
+          </div>
+        </details>
         {children}
       </div>
     )
   }
 
   return (
-    <div className="mx-auto min-h-0 w-full max-w-[1440px] flex-1 overflow-hidden">
+    <div className="min-h-0 w-full flex-1 overflow-hidden">
       <ResizablePanelGroup
         id="admin-support-ticket-layout"
         orientation="horizontal"
@@ -502,9 +629,9 @@ function TicketPanelLayout({
         />
         <ResizablePanel
           id="ticket-inspector"
-          defaultSize="22rem"
-          minSize="17rem"
-          maxSize="30rem"
+          defaultSize="19rem"
+          minSize="14rem"
+          maxSize="27rem"
           groupResizeBehavior="preserve-pixel-size"
         >
           {inspector}
@@ -536,8 +663,16 @@ function TicketInspector({
     new Date(ticket.firstResponseDueAt).getTime() < referenceTime
 
   return (
-    <aside className="themed-scrollbar h-full overflow-y-auto bg-muted/12">
-      <section className="border-b border-border p-5">
+    <aside className="themed-scrollbar h-full min-w-0 overflow-y-auto bg-muted/12">
+      <div className="sticky top-0 z-10 shrink-0 border-b border-border bg-background px-4 py-2.5 sm:py-3 lg:flex lg:h-20 lg:flex-col lg:justify-center">
+        <h2 className="text-base font-semibold tracking-tight sm:text-lg">
+          Talep bilgileri
+        </h2>
+        <p className="mt-0.5 text-[10px] text-muted-foreground">
+          Müşteri ve işlemler
+        </p>
+      </div>
+      <section className="border-b border-border p-4">
         <p className="text-[9px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
           Müşteri
         </p>
@@ -549,9 +684,18 @@ function TicketInspector({
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">
-              {ticket.createdBy?.name ?? "Silinmiş kullanıcı"}
-            </p>
+            {ticket.createdBy ? (
+              <Link
+                href={APP_ROUTES.admin.customer(ticket.workspace.id)}
+                className="block truncate text-sm font-semibold underline-offset-2 transition-colors hover:text-primary hover:underline focus-visible:text-primary focus-visible:underline"
+              >
+                {ticket.createdBy.name}
+              </Link>
+            ) : (
+              <p className="truncate text-sm font-semibold">
+                Silinmiş kullanıcı
+              </p>
+            )}
             {ticket.createdBy?.email ? (
               <a
                 href={`mailto:${ticket.createdBy.email}`}
@@ -569,7 +713,7 @@ function TicketInspector({
         </div>
       </section>
 
-      <section className="border-b border-border p-5">
+      <section className="border-b border-border p-4">
         <p className="text-[9px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
           İşlem
         </p>
@@ -623,7 +767,7 @@ function TicketInspector({
         ) : null}
       </section>
 
-      <section className="p-5">
+      <section className="p-4">
         <p className="text-[9px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
           Talep ayrıntıları
         </p>
@@ -631,6 +775,11 @@ function TicketInspector({
           <InspectorDetail
             label="Mağaza"
             value={ticket.store?.name ?? "Mağaza bulunmuyor"}
+            href={
+              ticket.store
+                ? `${APP_ROUTES.admin.customer(ticket.workspace.id)}#store-${ticket.store.id}`
+                : undefined
+            }
             icon={Store01Icon}
           />
           <InspectorDetail
@@ -666,7 +815,19 @@ function TicketInspector({
   )
 }
 
-function AdminMessageBubble({ message }: { message: AdminSupportMessage }) {
+function AdminMessageBubble({
+  message,
+  ticketId,
+}: {
+  message: AdminSupportMessage
+  ticketId: string
+}) {
+  const visibleBody = visibleSupportMessageBody(
+    message.body,
+    message.attachments
+  )
+  const hasImages = message.attachments.length > 0
+  const expanded = isLongSupportMessage(visibleBody)
   if (message.isInternal) {
     return (
       <div className="mx-auto w-full max-w-2xl rounded-xl border border-amber-500/25 bg-amber-500/7 px-4 py-3">
@@ -677,9 +838,38 @@ function AdminMessageBubble({ message }: { message: AdminSupportMessage }) {
             {formatAdminSupportDate(message.createdAt)}
           </span>
         </div>
-        <p className="mt-2 text-sm leading-5 whitespace-pre-wrap">
-          {message.body}
-        </p>
+        {visibleBody && hasImages ? (
+          <div
+            className={cn(
+              "mt-2 max-w-full overflow-hidden rounded-xl border border-amber-500/25",
+              expanded ? "w-[min(36rem,85vw)]" : "w-[min(20rem,75vw)]"
+            )}
+          >
+            <SupportImageAttachments
+              ticketId={ticketId}
+              attachments={message.attachments}
+              admin
+              embedded
+              expanded={expanded}
+            />
+            <p className="px-3.5 py-2.5 text-sm leading-5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+              {visibleBody}
+            </p>
+          </div>
+        ) : visibleBody ? (
+          <p className="mt-2 text-sm leading-5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+            {visibleBody}
+          </p>
+        ) : null}
+        {!visibleBody && hasImages ? (
+          <div className="mt-2">
+            <SupportImageAttachments
+              ticketId={ticketId}
+              attachments={message.attachments}
+              admin
+            />
+          </div>
+        ) : null}
       </div>
     )
   }
@@ -719,16 +909,53 @@ function AdminMessageBubble({ message }: { message: AdminSupportMessage }) {
           <span className={isSupport ? "ml-auto" : undefined}>{name}</span>
           <span>{formatAdminSupportDate(message.createdAt)}</span>
         </div>
-        <div
-          className={cn(
-            "rounded-2xl border px-3.5 py-2.5 text-left text-sm leading-5 whitespace-pre-wrap",
-            isSupport
-              ? "rounded-br-md border-primary/15 bg-primary text-primary-foreground"
-              : "rounded-bl-md border-border bg-card text-foreground shadow-xs"
-          )}
-        >
-          {message.body}
-        </div>
+        {visibleBody && hasImages ? (
+          <div
+            className={cn(
+              "max-w-full overflow-hidden rounded-2xl border text-left",
+              expanded ? "w-[min(36rem,85vw)]" : "w-[min(20rem,75vw)]",
+              isSupport
+                ? "rounded-br-md border-primary/15"
+                : "rounded-bl-md border-border shadow-xs"
+            )}
+          >
+            <SupportImageAttachments
+              ticketId={ticketId}
+              attachments={message.attachments}
+              admin
+              embedded
+              expanded={expanded}
+            />
+            <div
+              className={cn(
+                "px-3.5 py-2.5 text-sm leading-5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap",
+                isSupport
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-foreground"
+              )}
+            >
+              {visibleBody}
+            </div>
+          </div>
+        ) : visibleBody ? (
+          <div
+            className={cn(
+              "rounded-2xl border px-3.5 py-2.5 text-left text-sm leading-5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap",
+              isSupport
+                ? "rounded-br-md border-primary/15 bg-primary text-primary-foreground"
+                : "rounded-bl-md border-border bg-card text-foreground shadow-xs"
+            )}
+          >
+            {visibleBody}
+          </div>
+        ) : null}
+        {!visibleBody && hasImages ? (
+          <SupportImageAttachments
+            ticketId={ticketId}
+            attachments={message.attachments}
+            admin
+          />
+        ) : null}
       </div>
       {isSupport ? (
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -736,29 +963,6 @@ function AdminMessageBubble({ message }: { message: AdminSupportMessage }) {
         </span>
       ) : null}
     </div>
-  )
-}
-
-function ComposerModeButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "rounded-md px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors",
-        active && "bg-card text-foreground shadow-xs"
-      )}
-    >
-      {children}
-    </button>
   )
 }
 
@@ -784,12 +988,14 @@ function TicketControl({
 function InspectorDetail({
   label,
   value,
+  href,
   danger = false,
   mono = false,
   icon,
 }: {
   label: string
   value: string
+  href?: string
   danger?: boolean
   mono?: boolean
   icon?: IconSvgElement
@@ -812,7 +1018,16 @@ function InspectorDetail({
             danger && "text-destructive"
           )}
         >
-          {value}
+          {href ? (
+            <Link
+              href={href}
+              className="underline-offset-2 transition-colors hover:text-primary hover:underline focus-visible:text-primary focus-visible:underline"
+            >
+              {value}
+            </Link>
+          ) : (
+            value
+          )}
         </dd>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import "server-only"
+import { fetchServerApi } from "@/lib/api/server-fetch"
 
 import { headers } from "next/headers"
 import { cache } from "react"
@@ -10,12 +11,6 @@ import type {
 } from "@/types/question"
 
 const QUESTIONS_REQUEST_TIMEOUT_MS = 8_000
-
-const apiUrl = (
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4001"
-).replace(/\/$/, "")
 
 export const getServerProductQuestions = cache(
   async (
@@ -42,20 +37,13 @@ export const getServerProductQuestions = cache(
     })
 
     if (query?.trim()) searchParams.set("query", query.trim())
-    if (pendingStates?.length) {
+    if (pendingStates) {
       searchParams.set("pendingStates", pendingStates.join(","))
     }
 
-    const response = await fetch(
-      `${apiUrl}/stores/${storeId}/questions?${searchParams.toString()}`,
-      {
-        cache: "no-store",
-        headers: {
-          Accept: "application/json",
-          cookie,
-        },
-        signal: AbortSignal.timeout(QUESTIONS_REQUEST_TIMEOUT_MS),
-      }
+    const response = await fetchServerApi(
+      `/stores/${storeId}/questions?${searchParams.toString()}`,
+      { cookie, timeoutMs: QUESTIONS_REQUEST_TIMEOUT_MS }
     )
 
     if (!response.ok) {

@@ -194,6 +194,7 @@ export type WorkspaceWhereInput = {
   invitations?: Prisma.WorkspaceInvitationListRelationFilter
   supportTickets?: Prisma.SupportTicketListRelationFilter
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordListRelationFilter
+  aiDraftLease?: Prisma.XOR<Prisma.AiDraftLeaseNullableScalarRelationFilter, Prisma.AiDraftLeaseWhereInput> | null
 }
 
 export type WorkspaceOrderByWithRelationInput = {
@@ -214,6 +215,7 @@ export type WorkspaceOrderByWithRelationInput = {
   invitations?: Prisma.WorkspaceInvitationOrderByRelationAggregateInput
   supportTickets?: Prisma.SupportTicketOrderByRelationAggregateInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordOrderByRelationAggregateInput
+  aiDraftLease?: Prisma.AiDraftLeaseOrderByWithRelationInput
 }
 
 export type WorkspaceWhereUniqueInput = Prisma.AtLeast<{
@@ -237,6 +239,7 @@ export type WorkspaceWhereUniqueInput = Prisma.AtLeast<{
   invitations?: Prisma.WorkspaceInvitationListRelationFilter
   supportTickets?: Prisma.SupportTicketListRelationFilter
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordListRelationFilter
+  aiDraftLease?: Prisma.XOR<Prisma.AiDraftLeaseNullableScalarRelationFilter, Prisma.AiDraftLeaseWhereInput> | null
 }, "id" | "ownerId">
 
 export type WorkspaceOrderByWithAggregationInput = {
@@ -278,6 +281,7 @@ export type WorkspaceCreateInput = {
   invitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateInput = {
@@ -297,6 +301,7 @@ export type WorkspaceUncheckedCreateInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceUpdateInput = {
@@ -316,6 +321,7 @@ export type WorkspaceUpdateInput = {
   invitations?: Prisma.WorkspaceInvitationUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateInput = {
@@ -335,6 +341,7 @@ export type WorkspaceUncheckedUpdateInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceCreateManyInput = {
@@ -424,6 +431,20 @@ export type WorkspaceUncheckedUpdateOneWithoutOwnerNestedInput = {
   delete?: Prisma.WorkspaceWhereInput | boolean
   connect?: Prisma.WorkspaceWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.WorkspaceUpdateToOneWithWhereWithoutOwnerInput, Prisma.WorkspaceUpdateWithoutOwnerInput>, Prisma.WorkspaceUncheckedUpdateWithoutOwnerInput>
+}
+
+export type WorkspaceCreateNestedOneWithoutAiDraftLeaseInput = {
+  create?: Prisma.XOR<Prisma.WorkspaceCreateWithoutAiDraftLeaseInput, Prisma.WorkspaceUncheckedCreateWithoutAiDraftLeaseInput>
+  connectOrCreate?: Prisma.WorkspaceCreateOrConnectWithoutAiDraftLeaseInput
+  connect?: Prisma.WorkspaceWhereUniqueInput
+}
+
+export type WorkspaceUpdateOneRequiredWithoutAiDraftLeaseNestedInput = {
+  create?: Prisma.XOR<Prisma.WorkspaceCreateWithoutAiDraftLeaseInput, Prisma.WorkspaceUncheckedCreateWithoutAiDraftLeaseInput>
+  connectOrCreate?: Prisma.WorkspaceCreateOrConnectWithoutAiDraftLeaseInput
+  upsert?: Prisma.WorkspaceUpsertWithoutAiDraftLeaseInput
+  connect?: Prisma.WorkspaceWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.WorkspaceUpdateToOneWithWhereWithoutAiDraftLeaseInput, Prisma.WorkspaceUpdateWithoutAiDraftLeaseInput>, Prisma.WorkspaceUncheckedUpdateWithoutAiDraftLeaseInput>
 }
 
 export type WorkspaceCreateNestedOneWithoutMembersInput = {
@@ -598,6 +619,7 @@ export type WorkspaceCreateWithoutOwnerInput = {
   invitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateWithoutOwnerInput = {
@@ -616,6 +638,7 @@ export type WorkspaceUncheckedCreateWithoutOwnerInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceCreateOrConnectWithoutOwnerInput = {
@@ -650,11 +673,105 @@ export type WorkspaceUpdateWithoutOwnerInput = {
   invitations?: Prisma.WorkspaceInvitationUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateWithoutOwnerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  members?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutWorkspaceNestedInput
+  stores?: Prisma.StoreUncheckedUpdateManyWithoutWorkspaceNestedInput
+  billingSubscription?: Prisma.BillingSubscriptionUncheckedUpdateOneWithoutWorkspaceNestedInput
+  billingUsagePeriods?: Prisma.BillingUsagePeriodUncheckedUpdateManyWithoutWorkspaceNestedInput
+  billingUsageEvents?: Prisma.BillingUsageEventUncheckedUpdateManyWithoutWorkspaceNestedInput
+  billingCheckouts?: Prisma.BillingCheckoutUncheckedUpdateManyWithoutWorkspaceNestedInput
+  billingPlanChanges?: Prisma.BillingPlanChangeUncheckedUpdateManyWithoutWorkspaceNestedInput
+  billingTransactionReferences?: Prisma.BillingTransactionReferenceUncheckedUpdateManyWithoutWorkspaceNestedInput
+  invitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutWorkspaceNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutWorkspaceNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedUpdateOneWithoutWorkspaceNestedInput
+}
+
+export type WorkspaceCreateWithoutAiDraftLeaseInput = {
+  id?: string
+  name: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  owner: Prisma.UserCreateNestedOneWithoutOwnedWorkspaceInput
+  members?: Prisma.WorkspaceMemberCreateNestedManyWithoutWorkspaceInput
+  stores?: Prisma.StoreCreateNestedManyWithoutWorkspaceInput
+  billingSubscription?: Prisma.BillingSubscriptionCreateNestedOneWithoutWorkspaceInput
+  billingUsagePeriods?: Prisma.BillingUsagePeriodCreateNestedManyWithoutWorkspaceInput
+  billingUsageEvents?: Prisma.BillingUsageEventCreateNestedManyWithoutWorkspaceInput
+  billingCheckouts?: Prisma.BillingCheckoutCreateNestedManyWithoutWorkspaceInput
+  billingPlanChanges?: Prisma.BillingPlanChangeCreateNestedManyWithoutWorkspaceInput
+  billingTransactionReferences?: Prisma.BillingTransactionReferenceCreateNestedManyWithoutWorkspaceInput
+  invitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutWorkspaceInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutWorkspaceInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutWorkspaceInput
+}
+
+export type WorkspaceUncheckedCreateWithoutAiDraftLeaseInput = {
+  id?: string
+  name: string
+  ownerId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  members?: Prisma.WorkspaceMemberUncheckedCreateNestedManyWithoutWorkspaceInput
+  stores?: Prisma.StoreUncheckedCreateNestedManyWithoutWorkspaceInput
+  billingSubscription?: Prisma.BillingSubscriptionUncheckedCreateNestedOneWithoutWorkspaceInput
+  billingUsagePeriods?: Prisma.BillingUsagePeriodUncheckedCreateNestedManyWithoutWorkspaceInput
+  billingUsageEvents?: Prisma.BillingUsageEventUncheckedCreateNestedManyWithoutWorkspaceInput
+  billingCheckouts?: Prisma.BillingCheckoutUncheckedCreateNestedManyWithoutWorkspaceInput
+  billingPlanChanges?: Prisma.BillingPlanChangeUncheckedCreateNestedManyWithoutWorkspaceInput
+  billingTransactionReferences?: Prisma.BillingTransactionReferenceUncheckedCreateNestedManyWithoutWorkspaceInput
+  invitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutWorkspaceInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutWorkspaceInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutWorkspaceInput
+}
+
+export type WorkspaceCreateOrConnectWithoutAiDraftLeaseInput = {
+  where: Prisma.WorkspaceWhereUniqueInput
+  create: Prisma.XOR<Prisma.WorkspaceCreateWithoutAiDraftLeaseInput, Prisma.WorkspaceUncheckedCreateWithoutAiDraftLeaseInput>
+}
+
+export type WorkspaceUpsertWithoutAiDraftLeaseInput = {
+  update: Prisma.XOR<Prisma.WorkspaceUpdateWithoutAiDraftLeaseInput, Prisma.WorkspaceUncheckedUpdateWithoutAiDraftLeaseInput>
+  create: Prisma.XOR<Prisma.WorkspaceCreateWithoutAiDraftLeaseInput, Prisma.WorkspaceUncheckedCreateWithoutAiDraftLeaseInput>
+  where?: Prisma.WorkspaceWhereInput
+}
+
+export type WorkspaceUpdateToOneWithWhereWithoutAiDraftLeaseInput = {
+  where?: Prisma.WorkspaceWhereInput
+  data: Prisma.XOR<Prisma.WorkspaceUpdateWithoutAiDraftLeaseInput, Prisma.WorkspaceUncheckedUpdateWithoutAiDraftLeaseInput>
+}
+
+export type WorkspaceUpdateWithoutAiDraftLeaseInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  owner?: Prisma.UserUpdateOneRequiredWithoutOwnedWorkspaceNestedInput
+  members?: Prisma.WorkspaceMemberUpdateManyWithoutWorkspaceNestedInput
+  stores?: Prisma.StoreUpdateManyWithoutWorkspaceNestedInput
+  billingSubscription?: Prisma.BillingSubscriptionUpdateOneWithoutWorkspaceNestedInput
+  billingUsagePeriods?: Prisma.BillingUsagePeriodUpdateManyWithoutWorkspaceNestedInput
+  billingUsageEvents?: Prisma.BillingUsageEventUpdateManyWithoutWorkspaceNestedInput
+  billingCheckouts?: Prisma.BillingCheckoutUpdateManyWithoutWorkspaceNestedInput
+  billingPlanChanges?: Prisma.BillingPlanChangeUpdateManyWithoutWorkspaceNestedInput
+  billingTransactionReferences?: Prisma.BillingTransactionReferenceUpdateManyWithoutWorkspaceNestedInput
+  invitations?: Prisma.WorkspaceInvitationUpdateManyWithoutWorkspaceNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutWorkspaceNestedInput
+  emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutWorkspaceNestedInput
+}
+
+export type WorkspaceUncheckedUpdateWithoutAiDraftLeaseInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  ownerId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.WorkspaceMemberUncheckedUpdateManyWithoutWorkspaceNestedInput
@@ -686,6 +803,7 @@ export type WorkspaceCreateWithoutMembersInput = {
   invitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateWithoutMembersInput = {
@@ -704,6 +822,7 @@ export type WorkspaceUncheckedCreateWithoutMembersInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceCreateOrConnectWithoutMembersInput = {
@@ -738,6 +857,7 @@ export type WorkspaceUpdateWithoutMembersInput = {
   invitations?: Prisma.WorkspaceInvitationUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateWithoutMembersInput = {
@@ -756,6 +876,7 @@ export type WorkspaceUncheckedUpdateWithoutMembersInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceCreateWithoutInvitationsInput = {
@@ -774,6 +895,7 @@ export type WorkspaceCreateWithoutInvitationsInput = {
   billingTransactionReferences?: Prisma.BillingTransactionReferenceCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateWithoutInvitationsInput = {
@@ -792,6 +914,7 @@ export type WorkspaceUncheckedCreateWithoutInvitationsInput = {
   billingTransactionReferences?: Prisma.BillingTransactionReferenceUncheckedCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceCreateOrConnectWithoutInvitationsInput = {
@@ -826,6 +949,7 @@ export type WorkspaceUpdateWithoutInvitationsInput = {
   billingTransactionReferences?: Prisma.BillingTransactionReferenceUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateWithoutInvitationsInput = {
@@ -844,6 +968,7 @@ export type WorkspaceUncheckedUpdateWithoutInvitationsInput = {
   billingTransactionReferences?: Prisma.BillingTransactionReferenceUncheckedUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceCreateWithoutBillingSubscriptionInput = {
@@ -862,6 +987,7 @@ export type WorkspaceCreateWithoutBillingSubscriptionInput = {
   invitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateWithoutBillingSubscriptionInput = {
@@ -880,6 +1006,7 @@ export type WorkspaceUncheckedCreateWithoutBillingSubscriptionInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceCreateOrConnectWithoutBillingSubscriptionInput = {
@@ -914,6 +1041,7 @@ export type WorkspaceUpdateWithoutBillingSubscriptionInput = {
   invitations?: Prisma.WorkspaceInvitationUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateWithoutBillingSubscriptionInput = {
@@ -932,6 +1060,7 @@ export type WorkspaceUncheckedUpdateWithoutBillingSubscriptionInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceCreateWithoutBillingTransactionReferencesInput = {
@@ -950,6 +1079,7 @@ export type WorkspaceCreateWithoutBillingTransactionReferencesInput = {
   invitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateWithoutBillingTransactionReferencesInput = {
@@ -968,6 +1098,7 @@ export type WorkspaceUncheckedCreateWithoutBillingTransactionReferencesInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceCreateOrConnectWithoutBillingTransactionReferencesInput = {
@@ -1002,6 +1133,7 @@ export type WorkspaceUpdateWithoutBillingTransactionReferencesInput = {
   invitations?: Prisma.WorkspaceInvitationUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateWithoutBillingTransactionReferencesInput = {
@@ -1020,6 +1152,7 @@ export type WorkspaceUncheckedUpdateWithoutBillingTransactionReferencesInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceCreateWithoutBillingCheckoutsInput = {
@@ -1038,6 +1171,7 @@ export type WorkspaceCreateWithoutBillingCheckoutsInput = {
   invitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateWithoutBillingCheckoutsInput = {
@@ -1056,6 +1190,7 @@ export type WorkspaceUncheckedCreateWithoutBillingCheckoutsInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceCreateOrConnectWithoutBillingCheckoutsInput = {
@@ -1090,6 +1225,7 @@ export type WorkspaceUpdateWithoutBillingCheckoutsInput = {
   invitations?: Prisma.WorkspaceInvitationUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateWithoutBillingCheckoutsInput = {
@@ -1108,6 +1244,7 @@ export type WorkspaceUncheckedUpdateWithoutBillingCheckoutsInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceCreateWithoutBillingPlanChangesInput = {
@@ -1126,6 +1263,7 @@ export type WorkspaceCreateWithoutBillingPlanChangesInput = {
   invitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateWithoutBillingPlanChangesInput = {
@@ -1144,6 +1282,7 @@ export type WorkspaceUncheckedCreateWithoutBillingPlanChangesInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceCreateOrConnectWithoutBillingPlanChangesInput = {
@@ -1178,6 +1317,7 @@ export type WorkspaceUpdateWithoutBillingPlanChangesInput = {
   invitations?: Prisma.WorkspaceInvitationUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateWithoutBillingPlanChangesInput = {
@@ -1196,6 +1336,7 @@ export type WorkspaceUncheckedUpdateWithoutBillingPlanChangesInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceCreateWithoutBillingUsagePeriodsInput = {
@@ -1214,6 +1355,7 @@ export type WorkspaceCreateWithoutBillingUsagePeriodsInput = {
   invitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateWithoutBillingUsagePeriodsInput = {
@@ -1232,6 +1374,7 @@ export type WorkspaceUncheckedCreateWithoutBillingUsagePeriodsInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceCreateOrConnectWithoutBillingUsagePeriodsInput = {
@@ -1266,6 +1409,7 @@ export type WorkspaceUpdateWithoutBillingUsagePeriodsInput = {
   invitations?: Prisma.WorkspaceInvitationUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateWithoutBillingUsagePeriodsInput = {
@@ -1284,6 +1428,7 @@ export type WorkspaceUncheckedUpdateWithoutBillingUsagePeriodsInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceCreateWithoutBillingUsageEventsInput = {
@@ -1302,6 +1447,7 @@ export type WorkspaceCreateWithoutBillingUsageEventsInput = {
   invitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateWithoutBillingUsageEventsInput = {
@@ -1320,6 +1466,7 @@ export type WorkspaceUncheckedCreateWithoutBillingUsageEventsInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceCreateOrConnectWithoutBillingUsageEventsInput = {
@@ -1354,6 +1501,7 @@ export type WorkspaceUpdateWithoutBillingUsageEventsInput = {
   invitations?: Prisma.WorkspaceInvitationUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateWithoutBillingUsageEventsInput = {
@@ -1372,6 +1520,7 @@ export type WorkspaceUncheckedUpdateWithoutBillingUsageEventsInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceCreateWithoutStoresInput = {
@@ -1390,6 +1539,7 @@ export type WorkspaceCreateWithoutStoresInput = {
   invitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateWithoutStoresInput = {
@@ -1408,6 +1558,7 @@ export type WorkspaceUncheckedCreateWithoutStoresInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceCreateOrConnectWithoutStoresInput = {
@@ -1442,6 +1593,7 @@ export type WorkspaceUpdateWithoutStoresInput = {
   invitations?: Prisma.WorkspaceInvitationUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateWithoutStoresInput = {
@@ -1460,6 +1612,7 @@ export type WorkspaceUncheckedUpdateWithoutStoresInput = {
   invitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceCreateWithoutSupportTicketsInput = {
@@ -1478,6 +1631,7 @@ export type WorkspaceCreateWithoutSupportTicketsInput = {
   billingTransactionReferences?: Prisma.BillingTransactionReferenceCreateNestedManyWithoutWorkspaceInput
   invitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateWithoutSupportTicketsInput = {
@@ -1496,6 +1650,7 @@ export type WorkspaceUncheckedCreateWithoutSupportTicketsInput = {
   billingTransactionReferences?: Prisma.BillingTransactionReferenceUncheckedCreateNestedManyWithoutWorkspaceInput
   invitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutWorkspaceInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceCreateOrConnectWithoutSupportTicketsInput = {
@@ -1530,6 +1685,7 @@ export type WorkspaceUpdateWithoutSupportTicketsInput = {
   billingTransactionReferences?: Prisma.BillingTransactionReferenceUpdateManyWithoutWorkspaceNestedInput
   invitations?: Prisma.WorkspaceInvitationUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateWithoutSupportTicketsInput = {
@@ -1548,6 +1704,7 @@ export type WorkspaceUncheckedUpdateWithoutSupportTicketsInput = {
   billingTransactionReferences?: Prisma.BillingTransactionReferenceUncheckedUpdateManyWithoutWorkspaceNestedInput
   invitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutWorkspaceNestedInput
   emailDeliveryRecords?: Prisma.EmailDeliveryRecordUncheckedUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceCreateWithoutEmailDeliveryRecordsInput = {
@@ -1566,6 +1723,7 @@ export type WorkspaceCreateWithoutEmailDeliveryRecordsInput = {
   billingTransactionReferences?: Prisma.BillingTransactionReferenceCreateNestedManyWithoutWorkspaceInput
   invitations?: Prisma.WorkspaceInvitationCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceUncheckedCreateWithoutEmailDeliveryRecordsInput = {
@@ -1584,6 +1742,7 @@ export type WorkspaceUncheckedCreateWithoutEmailDeliveryRecordsInput = {
   billingTransactionReferences?: Prisma.BillingTransactionReferenceUncheckedCreateNestedManyWithoutWorkspaceInput
   invitations?: Prisma.WorkspaceInvitationUncheckedCreateNestedManyWithoutWorkspaceInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutWorkspaceInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedCreateNestedOneWithoutWorkspaceInput
 }
 
 export type WorkspaceCreateOrConnectWithoutEmailDeliveryRecordsInput = {
@@ -1618,6 +1777,7 @@ export type WorkspaceUpdateWithoutEmailDeliveryRecordsInput = {
   billingTransactionReferences?: Prisma.BillingTransactionReferenceUpdateManyWithoutWorkspaceNestedInput
   invitations?: Prisma.WorkspaceInvitationUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUpdateOneWithoutWorkspaceNestedInput
 }
 
 export type WorkspaceUncheckedUpdateWithoutEmailDeliveryRecordsInput = {
@@ -1636,6 +1796,7 @@ export type WorkspaceUncheckedUpdateWithoutEmailDeliveryRecordsInput = {
   billingTransactionReferences?: Prisma.BillingTransactionReferenceUncheckedUpdateManyWithoutWorkspaceNestedInput
   invitations?: Prisma.WorkspaceInvitationUncheckedUpdateManyWithoutWorkspaceNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutWorkspaceNestedInput
+  aiDraftLease?: Prisma.AiDraftLeaseUncheckedUpdateOneWithoutWorkspaceNestedInput
 }
 
 
@@ -1768,6 +1929,7 @@ export type WorkspaceSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   invitations?: boolean | Prisma.Workspace$invitationsArgs<ExtArgs>
   supportTickets?: boolean | Prisma.Workspace$supportTicketsArgs<ExtArgs>
   emailDeliveryRecords?: boolean | Prisma.Workspace$emailDeliveryRecordsArgs<ExtArgs>
+  aiDraftLease?: boolean | Prisma.Workspace$aiDraftLeaseArgs<ExtArgs>
   _count?: boolean | Prisma.WorkspaceCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["workspace"]>
 
@@ -1811,6 +1973,7 @@ export type WorkspaceInclude<ExtArgs extends runtime.Types.Extensions.InternalAr
   invitations?: boolean | Prisma.Workspace$invitationsArgs<ExtArgs>
   supportTickets?: boolean | Prisma.Workspace$supportTicketsArgs<ExtArgs>
   emailDeliveryRecords?: boolean | Prisma.Workspace$emailDeliveryRecordsArgs<ExtArgs>
+  aiDraftLease?: boolean | Prisma.Workspace$aiDraftLeaseArgs<ExtArgs>
   _count?: boolean | Prisma.WorkspaceCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type WorkspaceIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1835,6 +1998,7 @@ export type $WorkspacePayload<ExtArgs extends runtime.Types.Extensions.InternalA
     invitations: Prisma.$WorkspaceInvitationPayload<ExtArgs>[]
     supportTickets: Prisma.$SupportTicketPayload<ExtArgs>[]
     emailDeliveryRecords: Prisma.$EmailDeliveryRecordPayload<ExtArgs>[]
+    aiDraftLease: Prisma.$AiDraftLeasePayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2248,6 +2412,7 @@ export interface Prisma__WorkspaceClient<T, Null = never, ExtArgs extends runtim
   invitations<T extends Prisma.Workspace$invitationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Workspace$invitationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkspaceInvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   supportTickets<T extends Prisma.Workspace$supportTicketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Workspace$supportTicketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportTicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   emailDeliveryRecords<T extends Prisma.Workspace$emailDeliveryRecordsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Workspace$emailDeliveryRecordsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EmailDeliveryRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  aiDraftLease<T extends Prisma.Workspace$aiDraftLeaseArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Workspace$aiDraftLeaseArgs<ExtArgs>>): Prisma.Prisma__AiDraftLeaseClient<runtime.Types.Result.GetResult<Prisma.$AiDraftLeasePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2939,6 +3104,25 @@ export type Workspace$emailDeliveryRecordsArgs<ExtArgs extends runtime.Types.Ext
   take?: number
   skip?: number
   distinct?: Prisma.EmailDeliveryRecordScalarFieldEnum | Prisma.EmailDeliveryRecordScalarFieldEnum[]
+}
+
+/**
+ * Workspace.aiDraftLease
+ */
+export type Workspace$aiDraftLeaseArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AiDraftLease
+   */
+  select?: Prisma.AiDraftLeaseSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AiDraftLease
+   */
+  omit?: Prisma.AiDraftLeaseOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AiDraftLeaseInclude<ExtArgs> | null
+  where?: Prisma.AiDraftLeaseWhereInput
 }
 
 /**

@@ -30,11 +30,21 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   getSupportTicket,
   replyToSupportTicket,
+  replyWithSupportImages,
   updateSupportTicketStatus,
 } from "@/lib/api/support"
 import { NOTIFICATIONS_CHANGED_EVENT } from "@/lib/api/notifications"
 import { cn, getInitials } from "@/lib/utils"
 import type { SupportMessage, SupportTicketDetail } from "@/types/support"
+import {
+  SupportImageAttachments,
+  SupportImagePicker,
+  SupportImagePreviews,
+  handleSupportImagePaste,
+  isLongSupportMessage,
+  useSupportImageSelection,
+  visibleSupportMessageBody,
+} from "./support-image-attachments"
 import {
   getSupportCategoryLabel,
   SUPPORT_STATUS,
@@ -50,6 +60,8 @@ export function SupportTicketConversation({
 }) {
   const [ticket, setTicket] = useState(initialTicket)
   const [message, setMessage] = useState("")
+  const { images, addImages, removeImage, clearImages } =
+    useSupportImageSelection()
   const [pendingAction, setPendingAction] = useState<"reply" | "status" | null>(
     null
   )
@@ -166,16 +178,29 @@ export function SupportTicketConversation({
 
   async function submitReply() {
     const value = message.trim()
-    if (value.length < 2 || isPending || mutationPendingRef.current) return
+    if (
+      value.length === 1 ||
+      (value.length === 0 && images.length === 0) ||
+      isPending ||
+      mutationPendingRef.current
+    )
+      return
 
     setError(null)
     setPendingAction("reply")
     mutationPendingRef.current = true
     cancelPendingRefresh()
     try {
-      const nextTicket = await replyToSupportTicket(ticket.id, value)
+      const nextTicket = images.length
+        ? await replyWithSupportImages(
+            ticket.id,
+            value,
+            images.map((image) => image.file)
+          )
+        : await replyToSupportTicket(ticket.id, value)
       setTicket(nextTicket)
       setMessage("")
+      clearImages()
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -219,7 +244,7 @@ export function SupportTicketConversation({
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col sm:min-h-[620px]">
-      <header className="shrink-0 border-b border-border px-4 py-3 sm:px-8 sm:pt-7 sm:pb-5 lg:px-10">
+      <header className="shrink-0 border-b border-border px-4 py-3 sm:px-8 lg:px-10">
         <div className="mx-auto flex w-full max-w-[1080px] min-w-0 items-center gap-2.5 sm:items-start sm:gap-4">
           <Button
             asChild
@@ -343,12 +368,16 @@ export function SupportTicketConversation({
       >
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 sm:gap-6">
           {ticket.messages.map((item) => (
-            <SupportMessageBubble key={item.id} message={item} />
+            <SupportMessageBubble
+              key={item.id}
+              message={item}
+              ticketId={ticket.id}
+            />
           ))}
         </div>
       </main>
 
-      <footer className="shrink-0 bg-background px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-8 sm:pt-3 sm:pb-7">
+      <footer className="shrink-0 bg-background px-3 pb-[max(0.375rem,env(safe-area-inset-bottom))] sm:px-8 sm:pb-[max(0.875rem,env(safe-area-inset-bottom))]">
         <div className="mx-auto w-full max-w-4xl">
           {isResolved ? (
             <div className="mb-2 flex items-center gap-2 text-[11px] text-muted-foreground">
@@ -357,8 +386,13 @@ export function SupportTicketConversation({
             </div>
           ) : null}
 
-          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-[border-color,box-shadow] focus-within:border-primary/35 focus-within:shadow-md">
-            <div className="relative">
+          <div className="relative rounded-2xl border border-border bg-card shadow-sm transition-[border-color,box-shadow] focus-within:border-primary/35 focus-within:shadow-md">
+            <SupportImagePreviews
+              images={images}
+              onRemove={removeImage}
+              disabled={isResolved || isPending}
+            />
+            <div className="relative overflow-hidden rounded-2xl">
               <Textarea
                 ref={messageInputRef}
                 value={message}
@@ -366,6 +400,9 @@ export function SupportTicketConversation({
                 rows={2}
                 disabled={isResolved || isPending}
                 onChange={(event) => setMessage(event.target.value)}
+                onPaste={(event) =>
+                  handleSupportImagePaste(event, addImages, setError)
+                }
                 onKeyDown={(event) => {
                   if (
                     event.key === "Enter" &&
@@ -384,9 +421,12 @@ export function SupportTicketConversation({
               />
 
               <div className="pointer-events-none absolute inset-x-px bottom-px flex items-end justify-between gap-2 bg-gradient-to-t from-card via-card/95 to-transparent px-2.5 pt-5 pb-2.5 sm:gap-3 sm:px-3 sm:pt-6 sm:pb-3">
-                <span className="text-[10px] text-muted-foreground tabular-nums">
-                  {message.length}/5000
-                </span>
+                <SupportImagePicker
+                  count={images.length}
+                  onSelect={addImages}
+                  onError={setError}
+                  disabled={isResolved || isPending}
+                />
                 <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2">
                   <Button
                     type="button"
@@ -426,7 +466,10 @@ export function SupportTicketConversation({
                     size="sm"
                     className="h-8 gap-1 px-2 text-xs sm:h-9 sm:gap-2 sm:px-3 sm:text-sm"
                     disabled={
-                      isResolved || isPending || message.trim().length < 2
+                      isResolved ||
+                      isPending ||
+                      message.trim().length === 1 ||
+                      (message.trim().length === 0 && images.length === 0)
                     }
                     onClick={() => void submitReply()}
                   >
@@ -455,7 +498,13 @@ export function SupportTicketConversation({
   )
 }
 
-function SupportMessageBubble({ message }: { message: SupportMessage }) {
+function SupportMessageBubble({
+  message,
+  ticketId,
+}: {
+  message: SupportMessage
+  ticketId: string
+}) {
   if (message.authorType === "SYSTEM") {
     return (
       <div className="flex justify-center py-1">
@@ -467,6 +516,12 @@ function SupportMessageBubble({ message }: { message: SupportMessage }) {
   }
 
   const isCustomer = message.authorType === "CUSTOMER"
+  const visibleBody = visibleSupportMessageBody(
+    message.body,
+    message.attachments
+  )
+  const hasImages = message.attachments.length > 0
+  const expanded = isLongSupportMessage(visibleBody)
   const name = isCustomer
     ? (message.author?.name ?? "Ekip üyesi")
     : (message.author?.name ?? "Destek ekibi")
@@ -499,16 +554,51 @@ function SupportMessageBubble({ message }: { message: SupportMessage }) {
             </>
           )}
         </div>
-        <div
-          className={cn(
-            "rounded-2xl px-3.5 py-2.5 text-left text-sm leading-5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap",
-            isCustomer
-              ? "rounded-br-md border border-border/70 bg-secondary text-secondary-foreground"
-              : "rounded-bl-md border border-border bg-card text-foreground shadow-sm"
-          )}
-        >
-          {message.body}
-        </div>
+        {visibleBody && hasImages ? (
+          <div
+            className={cn(
+              "max-w-full overflow-hidden rounded-2xl border text-left",
+              expanded ? "w-[min(36rem,85vw)]" : "w-[min(20rem,75vw)]",
+              isCustomer
+                ? "rounded-br-md border-border/70"
+                : "rounded-bl-md border-border shadow-sm"
+            )}
+          >
+            <SupportImageAttachments
+              ticketId={ticketId}
+              attachments={message.attachments}
+              embedded
+              expanded={expanded}
+            />
+            <div
+              className={cn(
+                "px-3.5 py-2.5 text-sm leading-5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap",
+                isCustomer
+                  ? "bg-secondary text-secondary-foreground"
+                  : "bg-card text-foreground"
+              )}
+            >
+              {visibleBody}
+            </div>
+          </div>
+        ) : visibleBody ? (
+          <div
+            className={cn(
+              "rounded-2xl px-3.5 py-2.5 text-left text-sm leading-5 [overflow-wrap:anywhere] break-words whitespace-pre-wrap",
+              isCustomer
+                ? "rounded-br-md border border-border/70 bg-secondary text-secondary-foreground"
+                : "rounded-bl-md border border-border bg-card text-foreground shadow-sm"
+            )}
+          >
+            {visibleBody}
+          </div>
+        ) : null}
+        {!visibleBody && hasImages ? (
+          <SupportImageAttachments
+            ticketId={ticketId}
+            attachments={message.attachments}
+          />
+        ) : null}
       </div>
       {isCustomer ? (
         <Avatar className="size-8 shrink-0">

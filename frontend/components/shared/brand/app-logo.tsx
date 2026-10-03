@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import Link from "next/link"
 
@@ -15,7 +15,9 @@ export function AppLogo({
   description,
   iconSize = 40,
   textWidth = 140,
-  fullDark
+  fullDark,
+  noLink,
+  contentClassName,
 }: {
   href?: string
   className?: string
@@ -25,9 +27,25 @@ export function AppLogo({
   iconSize?: number
   textWidth?: number
   fullDark?: boolean
+  noLink?: boolean
+  contentClassName?: string
 }) {
-
   const theme = useTheme().resolvedTheme
+
+  if (noLink) {
+    return (
+      <AppLogoContent
+        contentClassName={contentClassName}
+        showIcon={showIcon}
+        showText={showText}
+        description={description}
+        fullDark={fullDark}
+        theme={theme}
+        iconSize={iconSize}
+        textWidth={textWidth}
+      />
+    )
+  }
 
   return (
     <Link
@@ -38,31 +56,78 @@ export function AppLogo({
         className
       )}
     >
-      <div className="flex flex-row items-center gap-3">
-        {showIcon && (
+      <AppLogoContent
+        contentClassName={contentClassName}
+        showIcon={showIcon}
+        showText={showText}
+        description={description}
+        fullDark={fullDark}
+        theme={theme}
+        iconSize={iconSize}
+        textWidth={textWidth}
+      />
+    </Link>
+  )
+}
+
+type AppLogoContentProps = {
+  contentClassName?: string
+  showIcon?: boolean
+  showText?: boolean
+  description?: string
+  fullDark?: boolean
+  theme?: string
+  iconSize: number
+  textWidth: number
+}
+
+const AppLogoContent = ({
+  contentClassName,
+  showIcon,
+  showText,
+  description,
+  fullDark,
+  theme,
+  iconSize,
+  textWidth,
+}: AppLogoContentProps) => {
+  return (
+    <div
+      className={cn(
+        contentClassName ? contentClassName : "flex flex-row items-center gap-3"
+      )}
+    >
+      {showIcon && (
+        <Image
+          src={
+            fullDark || theme === "dark"
+              ? "/logo/icon-dark.png"
+              : "/logo/icon.png"
+          }
+          alt="Core Asistan Logo"
+          width={iconSize}
+          height={iconSize}
+          className="mt-2"
+        />
+      )}
+      <div>
+        {showText && (
           <Image
-            src={fullDark ||theme === "dark" ? "/logo/icon-dark.png" : "/logo/icon.png"}
+            src={
+              fullDark || theme === "dark"
+                ? "/logo/text-dark.png"
+                : "/logo/text.png"
+            }
             alt="Core Asistan Logo"
-            width={iconSize}
-            height={iconSize}
-            className="mt-2"
+            height={0}
+            width={textWidth}
+            className="-ml-1"
           />
         )}
-        <div>
-          {showText && (
-            <Image
-              src={fullDark || theme === "dark" ? "/logo/text-dark.png" : "/logo/text.png"}
-              alt="Core Asistan Logo"
-              height={0}
-              width={textWidth}
-              className="-ml-1"
-            />
-          )}
-          <span className="-mt-1 block text-[9px] leading-none font-semibold tracking-[0.15em] text-muted-foreground uppercase">
-            {description}
-          </span>
-        </div>
+        <span className="-mt-1 block text-[9px] leading-none font-semibold tracking-[0.15em] text-muted-foreground uppercase">
+          {description}
+        </span>
       </div>
-    </Link>
+    </div>
   )
 }

@@ -27,16 +27,19 @@ import {
 import { GlobalSearch } from "@/components/shared/dashboard/global-search"
 import { NotificationCenter } from "@/components/shared/dashboard/notification-center"
 import { getChannelConnections } from "@/lib/api/channels"
+import { canAccessDashboardPage, canManageStore } from "@/lib/dashboard-access"
 import {
   getDashboardSyncState,
   type DashboardSyncState,
 } from "@/lib/channels/sync-state"
 import { cn } from "@/lib/utils"
+import type { StoreAccessLevel } from "@/types/store"
 
 type DashboardHeaderProps = {
   storeId?: string
   syncState: DashboardSyncState
   isStoreArchived?: boolean
+  accessLevel?: StoreAccessLevel
 }
 
 const SYNC_STATE_DETAILS: Record<
@@ -73,6 +76,7 @@ export function DashboardHeader({
   storeId,
   syncState,
   isStoreArchived = false,
+  accessLevel,
 }: DashboardHeaderProps) {
   const pathname = usePathname()
 
@@ -86,6 +90,7 @@ export function DashboardHeader({
       storeId={storeId}
       syncState={syncState}
       isStoreArchived={isStoreArchived}
+      accessLevel={accessLevel}
     />
   )
 }
@@ -94,9 +99,13 @@ function DashboardHeaderContent({
   storeId,
   syncState,
   isStoreArchived = false,
+  accessLevel,
 }: DashboardHeaderProps) {
   const pathname = usePathname()
-  const breadcrumbs = getDashboardBreadcrumbs(pathname)
+  const breadcrumbs = getDashboardBreadcrumbs(pathname).filter((item) =>
+    canAccessDashboardPage(item.url, accessLevel)
+  )
+  const mayManageStore = canManageStore(accessLevel)
   const currentPage = breadcrumbs.at(-1)
   const mobileBackHref =
     isStoreArchived ||
@@ -109,7 +118,7 @@ function DashboardHeaderContent({
   const [liveSyncState, setLiveSyncState] = useState(syncState)
 
   useEffect(() => {
-    if (isStoreArchived || !storeId) return
+    if (isStoreArchived || !storeId || !mayManageStore) return
     const activeStoreId = storeId
 
     let disposed = false
@@ -145,7 +154,7 @@ function DashboardHeaderContent({
       controller?.abort()
       if (timeoutId) window.clearTimeout(timeoutId)
     }
-  }, [isStoreArchived, pathname, storeId])
+  }, [isStoreArchived, mayManageStore, pathname, storeId])
 
   useEffect(() => {
     if (isStoreArchived || !storeId) return
@@ -280,7 +289,9 @@ function DashboardHeaderContent({
                 </Button>
               ) : null}
 
-              {storeId ? <SyncStatusLink state={liveSyncState} /> : null}
+              {storeId && mayManageStore ? (
+                <SyncStatusLink state={liveSyncState} />
+              ) : null}
 
               <NotificationCenter storeId={storeId} />
             </>
@@ -291,6 +302,7 @@ function DashboardHeaderContent({
       {!isStoreArchived && storeId ? (
         <GlobalSearch
           storeId={storeId}
+          accessLevel={accessLevel}
           open={isSearchOpen}
           onOpenChange={setIsSearchOpen}
         />

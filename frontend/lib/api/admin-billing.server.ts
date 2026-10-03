@@ -1,4 +1,5 @@
 import "server-only"
+import { fetchServerApi } from "@/lib/api/server-fetch"
 
 import { headers } from "next/headers"
 
@@ -7,12 +8,6 @@ import type {
   AdminBillingList,
   AdminBillingQuery,
 } from "@/types/admin-billing"
-
-const apiUrl = (
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4001"
-).replace(/\/$/, "")
 
 export class AdminBillingNotFoundError extends Error {
   constructor() {
@@ -41,11 +36,7 @@ async function adminBillingServerFetch<T>(path: string) {
   if (!cookie)
     throw new Error("Admin billing requires an authenticated session.")
 
-  const response = await fetch(`${apiUrl}${path}`, {
-    cache: "no-store",
-    headers: { Accept: "application/json", cookie },
-    signal: AbortSignal.timeout(10_000),
-  })
+  const response = await fetchServerApi(path, { cookie })
   if (response.status === 404) throw new AdminBillingNotFoundError()
   if (!response.ok) {
     throw new Error(`Admin billing request failed with ${response.status}.`)

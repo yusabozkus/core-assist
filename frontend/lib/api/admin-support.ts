@@ -31,6 +31,21 @@ export function addAdminSupportMessage(
   )
 }
 
+export function addAdminSupportImageMessage(
+  ticketId: string,
+  message: string,
+  visibility: "PUBLIC" | "INTERNAL",
+  images: File[]
+) {
+  const body = new FormData()
+  if (message) body.append("message", message)
+  body.append("visibility", visibility)
+  for (const image of images) body.append("images", image)
+  return apiFetch<AdminSupportTicketDetail>(`${ticketPath(ticketId)}/image-messages`, {
+    method: "POST", body,
+  })
+}
+
 export function updateAdminSupportStatus(
   ticketId: string,
   status: SupportTicketStatus

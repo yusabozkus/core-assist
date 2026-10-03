@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   AiEmojiPolicy,
   AiResponseLength,
@@ -73,6 +77,8 @@ export class OnboardingService {
               knowledgeProfile: {
                 select: {
                   brandDescription: true,
+                  shippingPolicy: true,
+                  returnPolicy: true,
                   tone: true,
                   responseLength: true,
                 },
@@ -160,6 +166,121 @@ export class OnboardingService {
           type: connection.type,
           status: connection.status,
         })) ?? [],
+      catalogSync: latestCatalogSync
+        ? {
+            syncRunId: latestCatalogSync.id,
+            connectionId: latestCatalogSync.connectionId,
+            providerKey: latestCatalogSync.providerKey,
+            status: latestCatalogSync.status,
+            stage: latestCatalogSync.stage,
+            progress: latestCatalogSync.progress,
+            productsProcessed: latestCatalogSync.productsProcessed,
+            productsSkipped: latestCatalogSync.productsSkipped,
+            errorMessage: latestCatalogSync.errorMessage,
+          }
+        : null,
+    };
+  }
+
+  async getAdditionalStoreStatus(userId: string, storeId: string) {
+    const store = await this.prisma.store.findFirst({
+      where: {
+        id: storeId,
+        members: {
+          some: { userId, role: { in: [StoreRole.OWNER, StoreRole.ADMIN] } },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        inventoryPolicy: true,
+        knowledgeProfile: {
+          select: {
+            brandDescription: true,
+            shippingPolicy: true,
+            returnPolicy: true,
+            tone: true,
+            responseLength: true,
+          },
+        },
+        channelConnections: {
+          where: { removedAt: null },
+          select: {
+            ...channelConnectionSelect,
+            credentialsEncrypted: true,
+            syncRuns: {
+              where: { kind: CatalogSyncKind.FULL },
+              orderBy: { startedAt: 'desc' },
+              take: 1,
+              select: {
+                id: true,
+                status: true,
+                stage: true,
+                progress: true,
+                productsProcessed: true,
+                productsSkipped: true,
+                errorMessage: true,
+                startedAt: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!store)
+      throw new NotFoundException('Mağaza bulunamadı veya yetkiniz yok.');
+
+    const hasReadyCatalogSync = store.channelConnections.some((connection) => {
+      const syncRun = connection.syncRuns[0];
+      return (
+        connection.status === ChannelConnectionStatus.CONNECTED &&
+        connection.credentialsEncrypted !== null &&
+        syncRun !== undefined &&
+        (syncRun.status === CatalogSyncStatus.COMPLETED ||
+          (syncRun.status === CatalogSyncStatus.RUNNING &&
+            syncRun.productsProcessed > 0))
+      );
+    });
+    const latestCatalogSync = store.channelConnections
+      .flatMap((connection) =>
+        connection.syncRuns.map((syncRun) => ({
+          ...syncRun,
+          connectionId: connection.id,
+          providerKey: connection.providerKey,
+        })),
+      )
+      .sort(
+        (left, right) => right.startedAt.getTime() - left.startedAt.getTime(),
+      )[0];
+    const completed = Boolean(
+      hasReadyCatalogSync &&
+      store.knowledgeProfile?.shippingPolicy?.trim() &&
+      store.knowledgeProfile?.returnPolicy?.trim(),
+    );
+
+    return {
+      completed,
+      completedAt: null,
+      stage: completed
+        ? 'COMPLETED'
+        : hasReadyCatalogSync
+          ? 'PREFERENCES'
+          : latestCatalogSync?.status === CatalogSyncStatus.RUNNING
+            ? 'SYNCING'
+            : 'CHANNEL',
+      store: {
+        id: store.id,
+        name: store.name,
+        inventoryPolicy: store.inventoryPolicy,
+      },
+      profile: store.knowledgeProfile,
+      channelConnections: store.channelConnections.map((connection) => ({
+        id: connection.id,
+        providerKey: connection.providerKey,
+        type: connection.type,
+        status: connection.status,
+      })),
       catalogSync: latestCatalogSync
         ? {
             syncRunId: latestCatalogSync.id,
@@ -341,12 +462,31 @@ export class OnboardingService {
   }
 
   async complete(userId: string, dto: CompleteOnboardingDto) {
+    return this.completeStoreSetup(userId, dto, true);
+  }
+
+  async completeAdditionalStore(userId: string, dto: CompleteOnboardingDto) {
+    return this.completeStoreSetup(userId, dto, false);
+  }
+
+  private async completeStoreSetup(
+    userId: string,
+    dto: CompleteOnboardingDto,
+    initialOnboarding: boolean,
+  ) {
     return this.prisma.$transaction(async (transaction) => {
       const store = await transaction.store.findFirst({
         where: {
           id: dto.storeId,
           status: StoreStatus.ACTIVE,
-          members: { some: { userId } },
+          members: {
+            some: {
+              userId,
+              ...(initialOnboarding
+                ? {}
+                : { role: { in: [StoreRole.OWNER, StoreRole.ADMIN] } }),
+            },
+          },
           channelConnections: {
             some: {
               removedAt: null,
@@ -382,10 +522,14 @@ export class OnboardingService {
           storeId: store.id,
           tone: dto.tone,
           responseLength: dto.responseLength,
+          shippingPolicy: dto.shippingPolicy,
+          returnPolicy: dto.returnPolicy,
         },
         update: {
           tone: dto.tone,
           responseLength: dto.responseLength,
+          shippingPolicy: dto.shippingPolicy,
+          returnPolicy: dto.returnPolicy,
         },
       });
 
@@ -395,10 +539,12 @@ export class OnboardingService {
       });
 
       const completedAt = new Date();
-      await transaction.user.update({
-        where: { id: userId },
-        data: { onboardingCompletedAt: completedAt },
-      });
+      if (initialOnboarding) {
+        await transaction.user.update({
+          where: { id: userId },
+          data: { onboardingCompletedAt: completedAt },
+        });
+      }
 
       return {
         completed: true as const,

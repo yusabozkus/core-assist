@@ -4,6 +4,7 @@ import type {
   SupportTicketImpact,
   SupportTicketPriority,
   SupportTicketStatus,
+  SupportAttachment,
 } from "@/types/support"
 
 export type AdminSupportPerson = {
@@ -46,6 +47,7 @@ export type AdminSupportMessage = {
   authorType: SupportMessageAuthorType
   isInternal: boolean
   body: string
+  attachments: SupportAttachment[]
   createdAt: string
   author: AdminSupportPerson | null
 }

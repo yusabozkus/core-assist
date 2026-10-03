@@ -2,7 +2,6 @@ import Link from "next/link"
 import { AppLogo } from "@/components/shared/brand/app-logo"
 import { Button } from "@/components/ui/button"
 import { APP_ROUTES } from "@/constants/site"
-import Image from "next/image"
 
 export function BillingShellHeader() {
   return (

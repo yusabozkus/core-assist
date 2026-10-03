@@ -1,5 +1,6 @@
 import {
   AiBookIcon,
+  AiSparklesIcon,
   Analytics01Icon,
   Clock01Icon,
   BoxesIcon,
@@ -21,6 +22,7 @@ export const APP_ROUTES = {
   authContinue: "/auth/continue",
   register: "/register",
   onboarding: "/onboarding",
+  storeOnboarding: "/stores/new",
   checkout: "/checkout",
   admin: {
     root: "/admin",
@@ -67,6 +69,7 @@ export const APP_ROUTES = {
       knowledge: "/dashboard/automations/knowledge",
     },
     analytics: "/dashboard/analytics",
+    aiTest: "/dashboard/ai-test",
     activity: "/dashboard/activity",
     team: "/dashboard/team",
     support: "/dashboard/support",
@@ -211,6 +214,16 @@ export const DASHBOARD_NAVIGATION: DashboardNavigation = {
               url: APP_ROUTES.dashboard.automations.knowledge,
               icon: AiBookIcon,
             },
+            ...(process.env.NODE_ENV !== "production" ||
+            process.env.NEXT_PUBLIC_AI_TEST_ENABLED === "true"
+              ? [
+                  {
+                    title: "AI Test",
+                    url: APP_ROUTES.dashboard.aiTest,
+                    icon: AiSparklesIcon,
+                  },
+                ]
+              : []),
           ],
         },
       ],

@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation"
 import {
   Archive02Icon,
   Delete02Icon,
@@ -7,8 +6,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { Badge } from "@/components/ui/badge"
-import { APP_ROUTES } from "@/constants/site"
-import { getActiveStoreContext } from "@/lib/stores/active-store"
+import { requireStoreManagementAccess } from "@/lib/stores/active-store"
 import { StoreArchiveAction } from "./store-archive-action"
 import { StoreDeleteAction } from "./store-delete-action"
 import { StoreNameForm } from "./store-name-form"
@@ -25,11 +23,7 @@ const dateFormatter = new Intl.DateTimeFormat("tr-TR", {
 })
 
 export default async function SettingsPage() {
-  const { activeStore } = await getActiveStoreContext()
-
-  if (!activeStore) {
-    redirect(APP_ROUTES.onboarding)
-  }
+  const activeStore = await requireStoreManagementAccess()
 
   return (
     <div className="mx-auto w-full max-w-[1120px] px-5 py-8 sm:px-8 sm:py-10 lg:px-10">

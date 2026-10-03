@@ -1,5 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import webPush from 'web-push';
+import {
+  MAX_PUSH_SUBSCRIPTIONS_PER_USER,
+  sendSafeWebPush,
+} from './web-push-security';
 import type { Prisma } from '../../generated/prisma/client';
 import {
   NotificationType,
@@ -266,6 +270,7 @@ export class NotificationDeliveryService {
           },
         },
         webPushSubscriptions: {
+          take: MAX_PUSH_SUBSCRIPTIONS_PER_USER,
           select: { id: true, endpoint: true, p256dh: true, auth: true },
         },
       },
@@ -511,13 +516,12 @@ export class NotificationDeliveryService {
     await Promise.all(
       subscriptions.map(async (subscription) => {
         try {
-          await webPush.sendNotification(
+          await sendSafeWebPush(
             {
               endpoint: subscription.endpoint,
               keys: { p256dh: subscription.p256dh, auth: subscription.auth },
             },
             payload,
-            { TTL: 300 },
           );
         } catch (error) {
           const statusCode = readStatusCode(error);

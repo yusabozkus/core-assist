@@ -1,6 +1,9 @@
 import { QuestionInbox } from "./question-inbox"
 import { getServerProductQuestions } from "@/lib/api/questions.server"
 import { getOperationalStoreContext } from "@/lib/stores/active-store"
+import { canAccessDashboardPage } from "@/lib/dashboard-access"
+import { APP_ROUTES } from "@/constants/site"
+import { redirect } from "next/navigation"
 import {
   PENDING_QUESTION_STATES,
   type PendingQuestionState,
@@ -15,16 +18,25 @@ export default async function InboxPage({
   searchParams: Promise<{
     status?: string | string[]
     pending?: string | string[]
+    q?: string | string[]
   }>
 }) {
   const { activeStore } = await getOperationalStoreContext()
+  if (
+    !canAccessDashboardPage(APP_ROUTES.dashboard.inbox, activeStore.accessLevel)
+  ) {
+    redirect(APP_ROUTES.dashboard.root)
+  }
   const params = await searchParams
   const initialFilter = parseQuestionFilter(params.status)
   const initialPendingStates = parsePendingStates(params.pending)
+  const initialQuery =
+    (Array.isArray(params.q) ? params.q[0] : params.q)?.trim() ?? ""
 
   const initialPage = await getServerProductQuestions(activeStore.id, {
     status: initialFilter,
     pendingStates: initialPendingStates,
+    query: initialQuery,
   })
 
   return (
@@ -34,6 +46,7 @@ export default async function InboxPage({
       initialPage={initialPage}
       initialFilter={initialFilter}
       initialPendingStates={initialPendingStates}
+      initialQuery={initialQuery}
     />
   )
 }
@@ -43,6 +56,7 @@ function parsePendingStates(
 ): PendingQuestionState[] {
   const rawValue = Array.isArray(value) ? value[0] : value
   if (!rawValue) return [...PENDING_QUESTION_STATES]
+  if (rawValue === "none") return []
 
   const requested = new Set(
     rawValue

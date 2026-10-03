@@ -16,7 +16,7 @@ import { QUESTION_SYNC_DISPATCHER } from '../modules/question-sync/question-sync
 import type { QuestionSyncDispatcher } from '../modules/question-sync/question-sync.types';
 import { QUESTION_ANSWER_DISPATCHER } from '../modules/question-answer/question-answer.constants';
 import type { QuestionAnswerDispatcher } from '../modules/question-answer/question-answer.types';
-import { MOCK_PRODUCTS_PER_PROVIDER } from '../modules/channels/providers/mock-catalog.connector';
+import { MOCK_TRENDYOL_PRODUCTS } from '../modules/channels/providers/mock-catalog.connector';
 import {
   MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER,
   MOCK_TRENDYOL_QUESTIONS,
@@ -174,7 +174,7 @@ async function run() {
     ]);
 
     if (
-      products !== MOCK_PRODUCTS_PER_PROVIDER ||
+      products !== MOCK_TRENDYOL_PRODUCTS ||
       events !==
         MOCK_TRENDYOL_QUESTIONS + MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER ||
       ignoredEvents !== MOCK_HISTORICAL_QUESTIONS_PER_PROVIDER ||

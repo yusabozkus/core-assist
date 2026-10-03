@@ -34,7 +34,13 @@ const shortLabels: Record<string, string> = {
   HIGH_RISK_INTENT: "Hassas konu",
 }
 
-export function ReviewReasons({ data }: { data: AiPerformance }) {
+export function ReviewReasons({
+  data,
+  canManageStore,
+}: {
+  data: AiPerformance
+  canManageStore: boolean
+}) {
   const reasons = data.reviewReasons.slice(0, 5)
   const chartData = reasons.map((reason) => ({
     ...reason,
@@ -53,9 +59,6 @@ export function ReviewReasons({ data }: { data: AiPerformance }) {
           {formatCount(data.draftDecisions.needsReview)} taslak
         </span>
       </header>
-      <p className="mt-1 text-xs leading-5 text-muted-foreground">
-        AI’ın kullanıcıya bıraktığı taslaklarda en sık karşılaşılan nedenler
-      </p>
       {reasons.length ? (
         <div className="mt-5">
           <ChartContainer
@@ -133,13 +136,15 @@ export function ReviewReasons({ data }: { data: AiPerformance }) {
           <p className="max-w-64 text-[10px] leading-4 text-muted-foreground">
             Bir taslakta birden fazla neden bulunabilir.
           </p>
-          <Link
-            href={APP_ROUTES.dashboard.automations.knowledge}
-            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-primary hover:underline"
-          >
-            Eksik bilgileri tamamla
-            <HugeiconsIcon icon={ArrowRight01Icon} className="size-3" />
-          </Link>
+          {canManageStore ? (
+            <Link
+              href={APP_ROUTES.dashboard.automations.knowledge}
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-primary hover:underline"
+            >
+              Eksik bilgileri tamamla
+              <HugeiconsIcon icon={ArrowRight01Icon} className="size-3" />
+            </Link>
+          ) : null}
         </div>
       </div>
     </section>

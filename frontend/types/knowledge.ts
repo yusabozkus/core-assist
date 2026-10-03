@@ -40,6 +40,7 @@ export type StoreKnowledge = {
     closingEnabled: boolean
     heightWeightSizeRecommendationEnabled: boolean
     emojiPolicy: AiEmojiPolicy
+    // Space-separated allowed emojis; existing single-emoji values remain valid.
     preferredEmoji: string | null
   }
   faqs: KnowledgeFaq[]

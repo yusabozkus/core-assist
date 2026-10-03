@@ -34,6 +34,7 @@ import {
   type DashboardNavigationItem,
 } from "@/constants/site"
 import { isPathActive } from "@/lib/utils"
+import { canAccessDashboardPage } from "@/lib/dashboard-access"
 import { ShopSwitcher, type SidebarShop } from "./shop-switcher"
 import { SidebarUser, type SidebarUserData } from "./sidebar-user"
 import { SidebarUsageAlert } from "./sidebar-usage-alert"
@@ -67,9 +68,21 @@ export function AppSidebar({
   const primaryItems = [overview, ...DASHBOARD_NAVIGATION.primaryItems]
   const activeShop = shops.find((shop) => shop.id === activeShopId)
   const isStoreArchived = activeShop?.status === "INACTIVE"
-  const footerItems = DASHBOARD_NAVIGATION.footerItems.filter(
-    (item) => item.url !== APP_ROUTES.dashboard.team || canManageBilling
+  const footerItems = DASHBOARD_NAVIGATION.footerItems.filter((item) =>
+    canAccessDashboardPage(item.url, activeShop?.accessLevel, canManageBilling)
   )
+  const navGroups = DASHBOARD_NAVIGATION.navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) =>
+        canAccessDashboardPage(
+          item.url,
+          activeShop?.accessLevel,
+          canManageBilling
+        )
+      ),
+    }))
+    .filter((group) => group.items.length > 0)
   const settingsItem = [
     ...DASHBOARD_NAVIGATION.footerItems,
     ...DASHBOARD_NAVIGATION.navGroups.flatMap((group) => group.items),
@@ -82,6 +95,7 @@ export function AppSidebar({
           key={activeShopId ?? "no-active-store"}
           shops={shops}
           activeShopId={activeShopId}
+          canManageStores={canManageBilling}
         />
       </SidebarHeader>
 
@@ -90,7 +104,11 @@ export function AppSidebar({
           <SidebarGroup>
             <SidebarGroupLabel>Arşivlenmiş mağaza</SidebarGroupLabel>
             <SidebarMenu>
-              {settingsItem ? (
+              {settingsItem &&
+              canAccessDashboardPage(
+                settingsItem.url,
+                activeShop?.accessLevel
+              ) ? (
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
@@ -157,7 +175,7 @@ export function AppSidebar({
               </SidebarMenu>
             </SidebarGroup>
 
-            {DASHBOARD_NAVIGATION.navGroups.map((group) => (
+            {navGroups.map((group) => (
               <SidebarGroup
                 key={group.label}
                 className={
@@ -276,7 +294,7 @@ export function AppSidebar({
                       onClick={closeMobileMenu}
                       aria-current={isActive ? "page" : undefined}
                     >
-                      <HugeiconsIcon icon={item.icon} />
+                      <HugeiconsIcon strokeWidth={2} icon={item.icon} />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>

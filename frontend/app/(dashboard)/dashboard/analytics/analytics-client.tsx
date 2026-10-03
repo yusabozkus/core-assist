@@ -40,6 +40,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { APP_ROUTES } from "@/constants/site"
+import { canManageStore } from "@/lib/dashboard-access"
 import { cn } from "@/lib/utils"
 import type { AiPerformance, AiPerformanceRange } from "@/types/ai-performance"
 import type { StoreSummary } from "@/types/store"
@@ -51,19 +52,10 @@ const ranges: Array<{ value: AiPerformanceRange; label: string }> = [
   { value: "ALL", label: "Tüm zamanlar" },
 ]
 
-function SectionHeading({
-  title,
-  description,
-}: {
-  title: string
-  description: string
-}) {
+function SectionHeading({ title }: { title: string }) {
   return (
     <div className="border-l-2 border-primary/50 pl-3">
       <h2 className="text-base font-semibold tracking-tight">{title}</h2>
-      <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
-        {description}
-      </p>
     </div>
   )
 }
@@ -84,6 +76,7 @@ export function AnalyticsClient({
   const searchParams = useSearchParams()
   const [pending, startTransition] = useTransition()
   const { refresh: refreshBillingUsage } = useBillingUsage()
+  const mayManageStore = canManageStore(activeStore.accessLevel)
   const providers = [
     ...new Set([
       ...(performance?.availableProviders ?? []),
@@ -138,18 +131,27 @@ export function AnalyticsClient({
             gerektiğini ve otomasyonun sonucunu görün.
           </p>
         </div>
-        <div className="grid grid-cols-[minmax(0,1fr)_2.5rem] gap-2 sm:flex sm:shrink-0 sm:items-center">
-          <Button
-            asChild
-            size="sm"
-            variant="outline"
-            className="h-10 w-full bg-card sm:h-9 sm:w-auto"
-          >
-            <Link href={APP_ROUTES.dashboard.automations.root}>
-              <HugeiconsIcon icon={Settings02Icon} className="size-4" />
-              Yanıt ayarları
-            </Link>
-          </Button>
+        <div
+          className={cn(
+            "grid gap-2 sm:flex sm:shrink-0 sm:items-center",
+            mayManageStore
+              ? "grid-cols-[minmax(0,1fr)_2.5rem]"
+              : "grid-cols-[2.5rem]"
+          )}
+        >
+          {mayManageStore ? (
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="h-10 w-full bg-card sm:h-9 sm:w-auto"
+            >
+              <Link href={APP_ROUTES.dashboard.automations.root}>
+                <HugeiconsIcon icon={Settings02Icon} className="size-4" />
+                Yanıt ayarları
+              </Link>
+            </Button>
+          ) : null}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -331,17 +333,11 @@ export function AnalyticsClient({
             <AiQuotaIndicator className="h-full" />
           </div>
           <section className="space-y-3 sm:space-y-4">
-            <SectionHeading
-              title="Öne çıkan metrikler"
-              description="AI üretimi, gönderim ve inceleme sonuçları."
-            />
+            <SectionHeading title="Öne çıkan metrikler" />
             <AnalyticsSummary data={performance} />
           </section>
           <section className="space-y-4 border-t border-border pt-7">
-            <SectionHeading
-              title="Taslak akışı"
-              description="Taslakların zaman içindeki değişimini ve güven kontrollerinden sonra verilen ilk kararı görün."
-            />
+            <SectionHeading title="Taslak akışı" />
             <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.8fr)_minmax(18rem,1fr)]">
               <AiActivityChart
                 trend={performance.trend}
@@ -351,20 +347,20 @@ export function AnalyticsClient({
             </div>
           </section>
           <section className="space-y-4 border-t border-border pt-7">
-            <SectionHeading
-              title="Otomasyon ve insan kontrolü"
-              description="Hangi yanıtların otomatik ilerlediğini ve diğer taslakların neden ekibe bırakıldığını inceleyin."
-            />
+            <SectionHeading title="Otomasyon ve insan kontrolü" />
             <div className="grid items-stretch gap-5 lg:grid-cols-2">
-              <AutomationImpact data={performance} />
-              <ReviewReasons data={performance} />
+              <AutomationImpact
+                data={performance}
+                canManageStore={mayManageStore}
+              />
+              <ReviewReasons
+                data={performance}
+                canManageStore={mayManageStore}
+              />
             </div>
           </section>
           <section className="space-y-4 border-t border-border pt-7">
-            <SectionHeading
-              title="Kanal ve soru türü analizi"
-              description="Pazaryerleri arasındaki sonuçları karşılaştırın ve AI'ın hangi soru türlerinde daha fazla kontrole ihtiyaç duyduğunu bulun."
-            />
+            <SectionHeading title="Kanal ve soru türü analizi" />
             <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(0,2fr)]">
               <ProviderComparison providers={performance.providers} />
               <IntentAnalysis intents={performance.intents} />
@@ -374,11 +370,7 @@ export function AnalyticsClient({
             activity={performance.recentActivity}
             timezone={performance.timezone}
           />
-          <footer className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[10px] leading-5 text-muted-foreground">
-            <span>
-              Taslaklar oluşturulma, yanıtlar gönderilme tarihine göre
-              hesaplanır.
-            </span>
+          <footer className="pt-1 text-right text-[10px] leading-5 text-muted-foreground">
             <span>
               Son güncelleme{" "}
               {new Date(performance.generatedAt).toLocaleTimeString("tr-TR", {

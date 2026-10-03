@@ -39,6 +39,10 @@ import {
   RemoveWebPushSubscriptionDto,
   SaveWebPushSubscriptionDto,
 } from './dto/web-push-subscription.dto';
+import {
+  MAX_PUSH_SUBSCRIPTIONS_PER_USER,
+  validatePushSubscription,
+} from './web-push-security';
 
 export type StoreNotificationInput = {
   storeId: string;
@@ -357,19 +361,55 @@ export class NotificationsService {
       );
     }
 
-    await this.prisma.webPushSubscription.upsert({
-      where: { endpoint: body.endpoint },
-      create: {
-        userId,
-        endpoint: body.endpoint,
-        p256dh: body.keys.p256dh,
-        auth: body.keys.auth,
-      },
-      update: {
-        userId,
-        p256dh: body.keys.p256dh,
-        auth: body.keys.auth,
-      },
+    validatePushSubscription(body);
+    await this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "user" WHERE "id" = ${userId} FOR UPDATE`;
+      const existing = await tx.webPushSubscription.findUnique({
+        where: { endpoint: body.endpoint },
+        select: { userId: true },
+      });
+      if (existing && existing.userId !== userId) {
+        throw new BadRequestException(
+          'Bu tarayıcının mevcut bildirim aboneliğini kaldırıp yeniden deneyin.',
+        );
+      }
+      if (
+        !existing &&
+        (await tx.webPushSubscription.count({ where: { userId } })) >=
+          MAX_PUSH_SUBSCRIPTIONS_PER_USER
+      ) {
+        throw new BadRequestException(
+          'En fazla 10 tarayıcı bildirim aboneliği oluşturabilirsiniz.',
+        );
+      }
+      if (existing) {
+        await tx.webPushSubscription.update({
+          where: { endpoint: body.endpoint, userId },
+          data: { p256dh: body.keys.p256dh, auth: body.keys.auth },
+        });
+      } else {
+        // A concurrent registration by another user must not overwrite keys.
+        try {
+          await tx.webPushSubscription.create({
+            data: {
+              userId,
+              endpoint: body.endpoint,
+              p256dh: body.keys.p256dh,
+              auth: body.keys.auth,
+            },
+          });
+        } catch (error) {
+          if (
+            error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === 'P2002'
+          ) {
+            throw new BadRequestException(
+              'Tarayıcı aboneliği değişti. Aboneliği kaldırıp yeniden deneyin.',
+            );
+          }
+          throw error;
+        }
+      }
     });
 
     return { subscribed: true };

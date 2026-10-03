@@ -521,7 +521,7 @@ function normalizeInventoryProduct(
   return normalizedVariants;
 }
 
-function normalizeTrendyolQuestion(
+export function normalizeTrendyolQuestion(
   item: Record<string, unknown>,
 ): ProductQuestionBatch['questions'][number] | null {
   const externalId = firstString(item, ['id', 'questionId']);

@@ -89,6 +89,7 @@ type InventoryManagementProps = {
   initialPage: InventoryPage
   initialFilters: InventoryFilters
   connections: ChannelConnection[]
+  canManageStore: boolean
 }
 
 export function InventoryManagement({
@@ -97,6 +98,7 @@ export function InventoryManagement({
   initialPage,
   initialFilters,
   connections,
+  canManageStore,
 }: InventoryManagementProps) {
   const pathname = usePathname()
   const [query, setQuery] = useState(initialFilters.query)
@@ -412,23 +414,25 @@ export function InventoryManagement({
           </div>
         </div>
 
-        <Button
-          type="button"
-          onClick={handleInventorySync}
-          disabled={connectedChannels.length === 0 || isSyncing}
-          className="w-full sm:w-auto"
-          title={
-            connectedChannels.length === 0
-              ? "Önce bir pazaryeri bağlantısı kurun"
-              : undefined
-          }
-        >
-          <HugeiconsIcon
-            icon={RefreshIcon}
-            className={`size-4 ${isSyncing ? "animate-spin" : ""}`}
-          />
-          {isSyncing ? "Stoklar kontrol ediliyor" : "Stokları güncelle"}
-        </Button>
+        {canManageStore ? (
+          <Button
+            type="button"
+            onClick={handleInventorySync}
+            disabled={connectedChannels.length === 0 || isSyncing}
+            className="w-full sm:w-auto"
+            title={
+              connectedChannels.length === 0
+                ? "Önce bir pazaryeri bağlantısı kurun"
+                : undefined
+            }
+          >
+            <HugeiconsIcon
+              icon={RefreshIcon}
+              className={`size-4 ${isSyncing ? "animate-spin" : ""}`}
+            />
+            {isSyncing ? "Stoklar kontrol ediliyor" : "Stokları güncelle"}
+          </Button>
+        ) : null}
       </header>
 
       {isSyncing || syncError || message ? (
@@ -457,7 +461,10 @@ export function InventoryManagement({
       </div>
 
       {initialPage.summary.variants === 0 ? (
-        <EmptyInventory hasConnectedChannel={connectedChannels.length > 0} />
+        <EmptyInventory
+          hasConnectedChannel={connectedChannels.length > 0}
+          canManageStore={canManageStore}
+        />
       ) : (
         <>
           <div className="mt-8 space-y-4">
@@ -731,8 +738,10 @@ export function InventoryManagement({
 
 function EmptyInventory({
   hasConnectedChannel,
+  canManageStore,
 }: {
   hasConnectedChannel: boolean
+  canManageStore: boolean
 }) {
   return (
     <div className="mt-6 flex min-h-72 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 text-center">
@@ -743,15 +752,19 @@ function EmptyInventory({
         Stok kaydı bulunmuyor
       </h2>
       <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-        {hasConnectedChannel
-          ? "Bağlı pazaryerindeki ürünleri senkronize ederek stok kayıtlarını oluşturun."
-          : "Stokları takip etmek için önce Trendyol veya Hepsiburada bağlantısı kurun."}
+        {canManageStore
+          ? hasConnectedChannel
+            ? "Bağlı pazaryerindeki ürünleri senkronize ederek stok kayıtlarını oluşturun."
+            : "Stokları takip etmek için önce Trendyol veya Hepsiburada bağlantısı kurun."
+          : "Mağaza stok kayıtları henüz oluşturulmadı."}
       </p>
-      <Button asChild variant="outline" className="mt-5 w-full sm:w-auto">
-        <Link href={APP_ROUTES.dashboard.channels.root}>
-          Satış kanallarına git
-        </Link>
-      </Button>
+      {canManageStore ? (
+        <Button asChild variant="outline" className="mt-5 w-full sm:w-auto">
+          <Link href={APP_ROUTES.dashboard.channels.root}>
+            Satış kanallarına git
+          </Link>
+        </Button>
+      ) : null}
     </div>
   )
 }

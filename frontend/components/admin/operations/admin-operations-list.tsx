@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useTransition } from "react"
+import { useCallback, useEffect, useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -54,6 +54,7 @@ import {
 
 const ALL = "ALL"
 const LIVE_REFRESH_MS = 5_000
+const SEARCH_DEBOUNCE_MS = 400
 
 export function AdminOperationsListView({
   data,
@@ -88,21 +89,51 @@ export function AdminOperationsListView({
     return () => window.clearInterval(intervalId)
   }, [hasLiveWork, retryingRunId, router])
 
-  function navigate(changes: Partial<AdminOperationsQuery>) {
-    const nextQuery: AdminOperationsQuery = {
-      ...query,
-      ...changes,
-      page: changes.page ?? 1,
+  const navigate = useCallback(
+    (changes: Partial<AdminOperationsQuery>) => {
+      const nextQuery: AdminOperationsQuery = {
+        ...query,
+        ...changes,
+        page: changes.page ?? 1,
+      }
+      const params = toSearchParams(nextQuery)
+      startTransition(() => {
+        router.replace(
+          params.size
+            ? `${APP_ROUTES.admin.operations}?${params.toString()}`
+            : APP_ROUTES.admin.operations,
+          { scroll: false }
+        )
+      })
+    },
+    [query, router]
+  )
+
+  useEffect(() => {
+    const syncSearchFromHistory = () => {
+      setSearch(new URLSearchParams(window.location.search).get("q") ?? "")
     }
-    const params = toSearchParams(nextQuery)
-    startTransition(() => {
-      router.replace(
-        params.size
-          ? `${APP_ROUTES.admin.operations}?${params.toString()}`
-          : APP_ROUTES.admin.operations
-      )
-    })
-  }
+    window.addEventListener("popstate", syncSearchFromHistory)
+    return () => window.removeEventListener("popstate", syncSearchFromHistory)
+  }, [])
+
+  useEffect(() => {
+    const term = search.trim()
+    if (isNavigating || term === (query.q ?? "")) return
+    if (term === (new URLSearchParams(window.location.search).get("q") ?? "")) {
+      return
+    }
+    if (term.length > 0 && term.length < 3) {
+      if (query.q) navigate({ q: undefined })
+      return
+    }
+
+    const timeoutId = window.setTimeout(
+      () => navigate({ q: term || undefined }),
+      SEARCH_DEBOUNCE_MS
+    )
+    return () => window.clearTimeout(timeoutId)
+  }, [isNavigating, navigate, query.q, search])
 
   async function retryRun(run: AdminOperation) {
     if (!run.canRetry || retryingRunId) return
@@ -240,21 +271,27 @@ export function AdminOperationsListView({
       <section className="mt-5">
         <div className="mb-3 flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-sm font-semibold">Worker kuyrukları</h2>
+            <h2 className="text-sm font-semibold">Worker hizmetleri</h2>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Aktif yük ve son 24 saatte tamamlanamayan işler. Ayrıntı için bir
-              kuyruğu seçin.
+              Bekleyen ve çalışan işleri, worker durumunu ve son hataları
+              izleyin. Ayrıntı için bir kuyruğu seçin.
             </p>
           </div>
           <span className="text-[10px] text-muted-foreground">
             {data.queues.length} kuyruk
           </span>
         </div>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-          {data.queues.map((queue) => (
-            <QueueCard key={queue.key} queue={queue} />
-          ))}
-        </div>
+        {data.queues.length ? (
+          <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-5">
+            {data.queues.map((queue) => (
+              <QueueCard key={queue.key} queue={queue} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-border bg-card px-5 py-8 text-center text-xs text-muted-foreground">
+            Kuyruk bilgisi bulunamadı.
+          </div>
+        )}
       </section>
 
       <section className="mt-6">
@@ -265,20 +302,15 @@ export function AdminOperationsListView({
             hataları yukarıdaki kuyruk ayrıntılarında gösterilir.
           </p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-            <form
-              className="flex min-w-0 flex-1 items-center gap-2"
-              onSubmit={(event) => {
-                event.preventDefault()
-                navigate({ q: search.trim() || undefined })
-              }}
-            >
+        <div className="space-y-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1 sm:max-w-2xl">
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Mağaza, çalışma alanı, e-posta, sağlayıcı veya işlem kimliği ara..."
                 aria-label="Operasyonlarda ara"
+                maxLength={120}
                 icon={<HugeiconsIcon icon={Search01Icon} className="size-4" />}
                 endIcon={
                   search ? (
@@ -295,136 +327,135 @@ export function AdminOperationsListView({
                     </button>
                   ) : null
                 }
-                className="h-10 min-w-0 flex-1 bg-background shadow-none"
+                className="h-10 min-w-0 bg-card"
               />
-              <Button type="submit" size="sm" variant="outline">
-                Ara
-              </Button>
-            </form>
-
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap xl:justify-end">
-              <FilterSelect
-                label="Durum"
-                value={query.status ?? ALL}
-                options={Object.entries(ADMIN_OPERATION_STATUS).map(
-                  ([value, item]) => ({ value, label: item.label })
-                )}
-                onValueChange={(value) =>
-                  navigate({
-                    status:
-                      value === ALL ? undefined : (value as SyncHistoryStatus),
-                  })
-                }
-              />
-              <FilterSelect
-                label="İşlem"
-                value={query.kind ?? ALL}
-                options={ADMIN_OPERATION_KINDS}
-                onValueChange={(value) =>
-                  navigate({
-                    kind:
-                      value === ALL ? undefined : (value as SyncHistoryKind),
-                  })
-                }
-              />
-              <FilterSelect
-                label="Sağlayıcı"
-                value={query.provider ?? ALL}
-                options={data.providers.map((provider) => ({
-                  value: provider,
-                  label: adminOperationProviderLabel(provider),
-                }))}
-                onValueChange={(value) =>
-                  navigate({ provider: value === ALL ? undefined : value })
-                }
-              />
-              <FilterSelect
-                label="Sorun"
-                value={query.issue ?? ALL}
-                options={[
-                  { value: "STALE", label: "Takılmış işlem" },
-                  { value: "CONNECTION", label: "Kanal sorunu" },
-                ]}
-                onValueChange={(value) =>
-                  navigate({
-                    issue:
-                      value === ALL
-                        ? undefined
-                        : (value as NonNullable<AdminOperationsQuery["issue"]>),
-                  })
-                }
-              />
-              <FilterSelect
-                label="Dönem"
-                value={query.period ?? ALL}
-                options={[
-                  { value: "24H", label: "Son 24 saat" },
-                  { value: "7D", label: "Son 7 gün" },
-                  { value: "30D", label: "Son 30 gün" },
-                ]}
-                onValueChange={(value) =>
-                  navigate({
-                    period:
-                      value === ALL
-                        ? undefined
-                        : (value as NonNullable<
-                            AdminOperationsQuery["period"]
-                          >),
-                  })
-                }
-              />
-              <FilterSelect
-                label="Ortam"
-                value={query.environment ?? ALL}
-                options={[
-                  { value: "PRODUCTION", label: "Canlı" },
-                  { value: "SANDBOX", label: "Sandbox" },
-                ]}
-                onValueChange={(value) =>
-                  navigate({
-                    environment:
-                      value === ALL
-                        ? undefined
-                        : (value as IntegrationEnvironment),
-                  })
-                }
-              />
-              <FilterSelect
-                label="Sıralama"
-                value={query.order ?? "NEWEST"}
-                options={[
-                  { value: "NEWEST", label: "En yeni" },
-                  { value: "OLDEST", label: "En eski" },
-                ]}
-                includeAll={false}
-                onValueChange={(value) =>
-                  navigate({
-                    order: value as NonNullable<AdminOperationsQuery["order"]>,
-                  })
-                }
-              />
+              {search.trim().length > 0 && search.trim().length < 3 ? (
+                <p className="mt-1.5 text-[11px] text-muted-foreground">
+                  Aramak için en az 3 karakter yazın.
+                </p>
+              ) : null}
             </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="self-end sm:self-center"
+              disabled={!hasFilters && !search.trim()}
+              onClick={() => {
+                setSearch("")
+                startTransition(() =>
+                  router.replace(APP_ROUTES.admin.operations, { scroll: false })
+                )
+              }}
+            >
+              Filtreleri temizle
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+            <FilterSelect
+              label="Durum"
+              value={query.status ?? ALL}
+              options={Object.entries(ADMIN_OPERATION_STATUS).map(
+                ([value, item]) => ({ value, label: item.label })
+              )}
+              onValueChange={(value) =>
+                navigate({
+                  status:
+                    value === ALL ? undefined : (value as SyncHistoryStatus),
+                })
+              }
+            />
+            <FilterSelect
+              label="İşlem"
+              value={query.kind ?? ALL}
+              options={ADMIN_OPERATION_KINDS}
+              onValueChange={(value) =>
+                navigate({
+                  kind: value === ALL ? undefined : (value as SyncHistoryKind),
+                })
+              }
+            />
+            <FilterSelect
+              label="Sağlayıcı"
+              value={query.provider ?? ALL}
+              options={data.providers.map((provider) => ({
+                value: provider,
+                label: adminOperationProviderLabel(provider),
+              }))}
+              onValueChange={(value) =>
+                navigate({ provider: value === ALL ? undefined : value })
+              }
+            />
+            <FilterSelect
+              label="Sorun"
+              value={query.issue ?? ALL}
+              options={[
+                { value: "STALE", label: "Takılmış işlem" },
+                { value: "CONNECTION", label: "Kanal sorunu" },
+              ]}
+              onValueChange={(value) =>
+                navigate({
+                  issue:
+                    value === ALL
+                      ? undefined
+                      : (value as NonNullable<AdminOperationsQuery["issue"]>),
+                })
+              }
+            />
+            <FilterSelect
+              label="Dönem"
+              value={query.period ?? ALL}
+              options={[
+                { value: "24H", label: "Son 24 saat" },
+                { value: "7D", label: "Son 7 gün" },
+                { value: "30D", label: "Son 30 gün" },
+              ]}
+              onValueChange={(value) =>
+                navigate({
+                  period:
+                    value === ALL
+                      ? undefined
+                      : (value as NonNullable<AdminOperationsQuery["period"]>),
+                })
+              }
+            />
+            <FilterSelect
+              label="Ortam"
+              value={query.environment ?? ALL}
+              options={[
+                { value: "PRODUCTION", label: "Canlı" },
+                { value: "SANDBOX", label: "Sandbox" },
+              ]}
+              onValueChange={(value) =>
+                navigate({
+                  environment:
+                    value === ALL
+                      ? undefined
+                      : (value as IntegrationEnvironment),
+                })
+              }
+            />
+            <FilterSelect
+              label="Sıralama"
+              value={query.order ?? "NEWEST"}
+              options={[
+                { value: "NEWEST", label: "En yeni" },
+                { value: "OLDEST", label: "En eski" },
+              ]}
+              includeAll={false}
+              onValueChange={(value) =>
+                navigate({
+                  order: value as NonNullable<AdminOperationsQuery["order"]>,
+                })
+              }
+            />
           </div>
 
           {hasFilters ? (
-            <div className="mt-3 flex items-center justify-between border-t border-border/70 pt-3">
-              <p className="text-[11px] text-muted-foreground">
-                {data.pagination.total} işlem filtreyle eşleşiyor.
-              </p>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setSearch("")
-                  startTransition(() =>
-                    router.replace(APP_ROUTES.admin.operations)
-                  )
-                }}
-              >
-                Filtreleri temizle
-              </Button>
-            </div>
+            <p className="text-[11px] text-muted-foreground" role="status">
+              {data.pagination.total} işlem filtreyle eşleşiyor.
+            </p>
           ) : null}
         </div>
 
@@ -598,15 +629,7 @@ function OperationRow({
 }
 
 function QueueCard({ queue }: { queue: AdminOperationQueue }) {
-  const backlog = queue.counts.waiting + queue.counts.active
-  const unhealthy =
-    !queue.available ||
-    queue.paused ||
-    queue.counts.overdue > 0 ||
-    queue.workerUnavailable ||
-    queue.waitingAgeExceeded ||
-    queue.activeDurationExceeded
-  const hasRecentFailure = queue.recentFailuresLast24Hours > 0
+  const status = getQueueCardStatus(queue)
   const retainedOldFailures = Math.max(
     0,
     queue.counts.failed - queue.recentFailuresLast24Hours
@@ -615,86 +638,134 @@ function QueueCard({ queue }: { queue: AdminOperationQueue }) {
   return (
     <Link
       href={APP_ROUTES.admin.operationQueue(queue.key)}
-      className="group rounded-xl border border-border bg-card px-3 py-3 text-left shadow-xs transition-colors hover:border-primary/25 hover:bg-muted/20 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      className="group flex min-w-0 flex-col rounded-xl border border-border bg-card p-4 text-left shadow-xs transition-colors hover:border-primary/35 hover:bg-muted/20 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       aria-label={`${queue.label} kuyruğunun ayrıntılarını aç`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-[11px] leading-4 font-semibold">{queue.label}</p>
-        <div className="flex items-center gap-1.5">
-          <span
-            className={cn(
-              "size-1.5 shrink-0 rounded-full bg-emerald-500",
-              backlog > 0 && "bg-amber-500",
-              (unhealthy || hasRecentFailure) && "bg-destructive"
-            )}
-          />
-          <HugeiconsIcon
-            icon={ArrowRight01Icon}
-            className="size-3 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-          />
-        </div>
+      <div className="flex min-w-0 items-start justify-between gap-2">
+        <p className="min-w-0 text-xs leading-5 font-semibold">{queue.label}</p>
+        <HugeiconsIcon
+          icon={ArrowRight01Icon}
+          className="mt-0.5 size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+        />
       </div>
-      <div className="mt-3 flex items-end justify-between gap-2">
+      <Badge
+        variant="outline"
+        className={cn("mt-2 w-fit px-2 py-0 text-[10px]", status.className)}
+      >
+        {status.label}
+      </Badge>
+
+      <dl className="mt-4 grid grid-cols-2 gap-2 rounded-lg bg-muted/40 px-3 py-2.5">
         <div>
-          <p className="text-lg font-semibold tabular-nums">
-            {queue.available ? backlog : "—"}
-          </p>
-          <p className="text-[9px] text-muted-foreground">
-            {queue.available ? "aktif yük" : "bilgi alınamadı"}
-          </p>
+          <dt className="text-[10px] text-muted-foreground">Bekleyen</dt>
+          <dd className="mt-0.5 text-sm font-semibold tabular-nums">
+            {queue.available ? queue.counts.waiting : "—"}
+          </dd>
         </div>
-        <div className="text-right text-[9px] leading-4 text-muted-foreground">
-          {queue.available ? (
-            <>
-              <p>{queue.counts.active} çalışıyor</p>
-              <p>
-                {queue.workerCount === null
-                  ? "Worker ölçülemedi"
-                  : `${queue.workerCount} worker`}
-              </p>
-            </>
-          ) : null}
-          {queue.counts.overdue > 0 ? (
-            <p className="font-medium text-destructive">
-              {queue.counts.overdue} süre aştı
-            </p>
-          ) : null}
-          {queue.available ? (
-            <p
-              className={cn(hasRecentFailure && "font-medium text-destructive")}
-            >
-              Son 24 saat: {queue.recentFailuresLast24Hours} hata
-            </p>
-          ) : null}
+        <div>
+          <dt className="text-[10px] text-muted-foreground">Çalışan</dt>
+          <dd className="mt-0.5 text-sm font-semibold tabular-nums">
+            {queue.available ? queue.counts.active : "—"}
+          </dd>
         </div>
+      </dl>
+
+      <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-0.5 pt-3 text-[10px] text-muted-foreground">
+        <span>
+          {queue.available
+            ? queue.workerCount === null
+              ? "Worker ölçülemedi"
+              : `${queue.workerCount} worker`
+            : "Worker bilgisi yok"}
+        </span>
+        <span aria-hidden="true">·</span>
+        <span
+          className={cn(
+            queue.recentFailuresLast24Hours > 0 &&
+              "font-medium text-destructive"
+          )}
+        >
+          {queue.available
+            ? `24 saatte ${queue.recentFailuresLast24Hours} hata`
+            : "Hata bilgisi yok"}
+        </span>
       </div>
+      {status.detail ? (
+        <p
+          className={cn(
+            "mt-2 border-t border-border/70 pt-2 text-[10px] leading-4",
+            queue.paused
+              ? "text-amber-700 dark:text-amber-300"
+              : "text-destructive"
+          )}
+        >
+          {status.detail}
+        </p>
+      ) : null}
       {retainedOldFailures > 0 ? (
-        <p className="mt-2 border-t border-border/70 pt-2 text-[9px] text-muted-foreground">
-          Redis’te {retainedOldFailures} geçmiş hata kaydı
-        </p>
-      ) : null}
-      {!queue.available || queue.paused ? (
-        <p className="mt-2 border-t border-border pt-2 text-[9px] font-medium text-destructive">
-          {!queue.available
-            ? `Kuyruk bilgisi alınamadı${queue.errorCode ? ` · ${queue.errorCode}` : ""}`
-            : "Kuyruk duraklatıldı"}
-        </p>
-      ) : null}
-      {queue.available &&
-      !queue.paused &&
-      (queue.workerUnavailable ||
-        queue.waitingAgeExceeded ||
-        queue.activeDurationExceeded) ? (
-        <p className="mt-2 border-t border-border pt-2 text-[9px] font-medium text-destructive">
-          {queue.workerUnavailable
-            ? "Aktif worker bulunamadı"
-            : queue.waitingAgeExceeded
-              ? `En eski iş ${formatAdminOperationDuration(queue.oldestWaitingAgeMs ?? 0)} bekliyor`
-              : `Bir iş ${formatAdminOperationDuration(queue.longestActiveAgeMs ?? 0)} süredir çalışıyor`}
+        <p className="mt-2 text-[10px] text-muted-foreground">
+          {retainedOldFailures} eski hata kaydı
         </p>
       ) : null}
     </Link>
   )
+}
+
+function getQueueCardStatus(queue: AdminOperationQueue) {
+  const dangerClass = "border-destructive/25 bg-destructive/8 text-destructive"
+  if (!queue.available)
+    return {
+      label: "Erişilemiyor",
+      className: dangerClass,
+      detail: queue.errorCode
+        ? `Kuyruk bilgisi alınamadı · ${queue.errorCode}`
+        : "Kuyruk bilgisi alınamadı",
+    }
+  if (queue.paused)
+    return {
+      label: "Duraklatıldı",
+      className:
+        "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+      detail: "Kuyruk duraklatıldı",
+    }
+  if (queue.workerUnavailable)
+    return {
+      label: "Worker yok",
+      className: dangerClass,
+      detail: "Aktif worker bulunamadı",
+    }
+  if (queue.waitingAgeExceeded)
+    return {
+      label: "Bekleme takıldı",
+      className: dangerClass,
+      detail: `En eski iş ${formatAdminOperationDuration(queue.oldestWaitingAgeMs ?? 0)} bekliyor`,
+    }
+  if (queue.activeDurationExceeded)
+    return {
+      label: "İşlem takıldı",
+      className: dangerClass,
+      detail: `Bir iş ${formatAdminOperationDuration(queue.longestActiveAgeMs ?? 0)} süredir çalışıyor`,
+    }
+  if (queue.counts.overdue > 0)
+    return {
+      label: "Süre aşımı",
+      className: dangerClass,
+      detail: `${queue.counts.overdue} zamanlanmış işin süresi aşıldı`,
+    }
+  if (queue.recentFailuresLast24Hours > 0)
+    return { label: "İnceleme gerekli", className: dangerClass, detail: null }
+  if (queue.counts.waiting + queue.counts.active > 0)
+    return {
+      label: "Çalışıyor",
+      className: "border-primary/25 bg-primary/8 text-primary",
+      detail: null,
+    }
+  return {
+    label: "Sağlıklı",
+    className:
+      "border-emerald-500/25 bg-emerald-500/8 text-emerald-700 dark:text-emerald-300",
+    detail: null,
+  }
 }
 
 function SummaryMetric({

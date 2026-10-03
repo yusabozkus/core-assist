@@ -161,8 +161,20 @@ model Workspace {
   invitations                  WorkspaceInvitation[]
   supportTickets               SupportTicket[]
   emailDeliveryRecords         EmailDeliveryRecord[]
+  aiDraftLease                 AiDraftLease?
 
   @@map("workspace")
+}
+
+model AiDraftLease {
+  workspaceId String @id
+  questionId  String
+  token       String
+  expiresAt   DateTime
+  startedAt   DateTime
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("ai_draft_lease")
 }
 
 model WorkspaceMember {
@@ -1179,6 +1191,7 @@ enum QuestionReplyDecision {
 enum QuestionAnswerStatus {
   QUEUED
   PROCESSING
+  REVIEW_REQUIRED
   SENT
   FAILED
 }
@@ -1350,6 +1363,12 @@ model StoreMember {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
+  setupGuidePhase               String    @default("ESSENTIAL")
+  setupGuideAiSettingsVisitedAt DateTime?
+  setupGuideChannelsVisitedAt   DateTime?
+  setupGuideTeamVisitedAt       DateTime?
+  setupGuideFaqSkippedAt        DateTime?
+
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1487,10 +1506,25 @@ model SupportMessage {
 
   ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   author User?         @relation("SupportMessageAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
+  attachments SupportAttachment[]
 
   @@index([ticketId, createdAt])
   @@index([ticketId, isInternal, createdAt])
   @@map("support_message")
+}
+
+model SupportAttachment {
+  id          String         @id @default(uuid())
+  messageId   String
+  objectKey   String         @unique
+  contentType String
+  size        Int
+  createdAt   DateTime       @default(now())
+
+  message SupportMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("support_attachment")
 }
 
 enum NotificationType {

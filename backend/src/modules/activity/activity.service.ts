@@ -383,7 +383,7 @@ const settingLabels: Record<string, string> = {
   closingEnabled: 'Kapanış',
   heightWeightSizeRecommendationEnabled: 'Beden önerisi',
   emojiPolicy: 'Emoji kullanımı',
-  preferredEmoji: 'Tercih edilen emoji',
+  preferredEmoji: 'Kullanılabilecek emojiler',
   brandDescription: 'Marka bilgisi',
   shippingPolicy: 'Kargo politikası',
   returnPolicy: 'İade politikası',

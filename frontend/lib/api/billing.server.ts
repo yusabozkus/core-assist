@@ -1,4 +1,5 @@
 import "server-only"
+import { fetchServerApi } from "@/lib/api/server-fetch"
 
 import { headers } from "next/headers"
 import { cache } from "react"
@@ -8,12 +9,6 @@ import type {
   BillingSummary,
   StoreBillingUsageOverview,
 } from "@/types/billing"
-
-const apiUrl = (
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4001"
-).replace(/\/$/, "")
 
 export async function getServerBillingSummary(workspaceId: string) {
   return billingServerFetch<BillingSummary>(
@@ -42,11 +37,7 @@ async function billingServerFetch<T>(path: string) {
   const cookie = (await headers()).get("cookie")
   if (!cookie) throw new Error("Billing requires an authenticated session.")
 
-  const response = await fetch(`${apiUrl}${path}`, {
-    cache: "no-store",
-    headers: { Accept: "application/json", cookie },
-    signal: AbortSignal.timeout(10_000),
-  })
+  const response = await fetchServerApi(path, { cookie })
 
   if (!response.ok) {
     throw new Error(`Billing request failed with status ${response.status}.`)

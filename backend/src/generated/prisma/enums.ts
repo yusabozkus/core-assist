@@ -423,6 +423,7 @@ export type QuestionReplyDecision = (typeof QuestionReplyDecision)[keyof typeof 
 export const QuestionAnswerStatus = {
   QUEUED: 'QUEUED',
   PROCESSING: 'PROCESSING',
+  REVIEW_REQUIRED: 'REVIEW_REQUIRED',
   SENT: 'SENT',
   FAILED: 'FAILED'
 } as const

@@ -1,6 +1,6 @@
 import { SyncHistory } from "./sync-history"
 import { getServerChannelSyncHistory } from "@/lib/api/channels.server"
-import { getOperationalStoreContext } from "@/lib/stores/active-store"
+import { getManagedOperationalStoreContext } from "@/lib/stores/active-store"
 import type {
   SyncHistoryKindFilter,
   SyncHistoryOrder,
@@ -17,7 +17,7 @@ export default async function SyncHistoryPage({
 }: {
   searchParams: PageSearchParams
 }) {
-  const { activeStore } = await getOperationalStoreContext()
+  const { activeStore } = await getManagedOperationalStoreContext()
   const params = await searchParams
   const status = parseStatus(firstValue(params.status))
   const kind = parseKind(firstValue(params.kind))

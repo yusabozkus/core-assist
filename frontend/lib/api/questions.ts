@@ -38,7 +38,7 @@ export function getProductQuestions(
 
   if (cursor) searchParams.set("cursor", cursor)
   if (query?.trim()) searchParams.set("query", query.trim())
-  if (pendingStates?.length) {
+  if (pendingStates) {
     searchParams.set("pendingStates", pendingStates.join(","))
   }
 
@@ -67,7 +67,7 @@ export function getProductQuestionUpdates(
 
   if (cursor) searchParams.set("cursor", cursor)
   if (query?.trim()) searchParams.set("query", query.trim())
-  if (pendingStates?.length) {
+  if (pendingStates) {
     searchParams.set("pendingStates", pendingStates.join(","))
   }
 

@@ -767,7 +767,14 @@ export class ChannelsService {
           select: { id: true },
         },
         questionAnswers: {
-          where: { status: QuestionAnswerStatus.PROCESSING },
+          where: {
+            status: {
+              in: [
+                QuestionAnswerStatus.PROCESSING,
+                QuestionAnswerStatus.REVIEW_REQUIRED,
+              ],
+            },
+          },
           take: 1,
           select: { id: true },
         },

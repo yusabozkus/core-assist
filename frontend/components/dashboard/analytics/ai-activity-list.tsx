@@ -30,9 +30,6 @@ export function AiActivityList({
           <h2 id="ai-activity-title" className="text-sm font-semibold">
             Son AI işlemleri
           </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Taslağın son durumunu görün; ayrıntı için soruyu açın.
-          </p>
         </div>
         <Link
           href={APP_ROUTES.dashboard.inbox}

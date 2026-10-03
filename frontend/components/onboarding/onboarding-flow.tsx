@@ -23,21 +23,35 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { AnimatePresence, motion, MotionConfig } from "motion/react"
 
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
+import { AppLogo } from "@/components/shared/brand/app-logo"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { APP_ROUTES } from "@/constants/site"
-import { getChannelSyncRun } from "@/lib/api/channels"
-import { completeOnboarding, provisionOnboarding } from "@/lib/api/onboarding"
+import {
+  configureChannelConnection,
+  createChannelConnection,
+  getChannelConnections,
+  getChannelSyncRun,
+  syncChannelCatalog,
+} from "@/lib/api/channels"
+import { updateStoreKnowledge } from "@/lib/api/knowledge"
+import {
+  completeAdditionalStoreOnboarding,
+  completeOnboarding,
+  provisionOnboarding,
+} from "@/lib/api/onboarding"
+import { createStore, updateStore } from "@/lib/api/stores"
+import { selectActiveStore } from "@/app/(dashboard)/dashboard/actions"
 import { signOutCurrentUser } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 import type { AuthUser } from "@/types/auth"
@@ -77,6 +91,12 @@ const STEPS = [
     label: "AI yanıtları",
     description: "Yanıt tonunu ve uzunluğunu belirleyin",
     icon: Message01Icon,
+  },
+  {
+    id: 5,
+    label: "Kargo ve iade",
+    description: "Müşterilere uygulanacak kuralları ekleyin",
+    icon: Package01Icon,
   },
 ] as const
 
@@ -252,6 +272,7 @@ async function waitForCatalogSync(
 type OnboardingFlowProps = {
   user: AuthUser
   initialStatus: OnboardingStatus
+  mode?: "initial" | "additionalStore"
 }
 
 function getInitialStep(status: OnboardingStatus) {
@@ -280,8 +301,49 @@ function getInitials(name: string) {
   return `${parts[0][0]}${parts.at(-1)?.[0] ?? ""}`.toLocaleUpperCase("tr-TR")
 }
 
-export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
+function OnboardingUserAvatar({
+  user,
+  dark = false,
+}: {
+  user: AuthUser
+  dark?: boolean
+}) {
+  return (
+    <Avatar
+      className={cn(
+        "overflow-hidden rounded-xl after:rounded-xl",
+        dark ? "size-9 after:border-white/10" : "size-8"
+      )}
+    >
+      {user.image ? (
+        <AvatarImage
+          src={user.image}
+          alt={user.name}
+          referrerPolicy="no-referrer"
+          className="rounded-xl"
+        />
+      ) : null}
+      <AvatarFallback
+        className={cn(
+          "rounded-xl text-[10px] font-bold",
+          dark
+            ? "bg-white/10 text-[#d9e7e0]"
+            : "bg-secondary text-secondary-foreground"
+        )}
+      >
+        {getInitials(user.name)}
+      </AvatarFallback>
+    </Avatar>
+  )
+}
+
+export function OnboardingFlow({
+  user,
+  initialStatus,
+  mode = "initial",
+}: OnboardingFlowProps) {
   const router = useRouter()
+  const isAdditionalStore = mode === "additionalStore"
   const initialStep = getInitialStep(initialStatus)
   const [currentStep, setCurrentStep] = React.useState(initialStep)
   const [direction, setDirection] = React.useState(1)
@@ -323,6 +385,10 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
     React.useState<OnboardingResource | null>(
       initialStatus.stage === "PREFERENCES" ? initialStatus.store : null
     )
+  const [createdAdditionalStore, setCreatedAdditionalStore] =
+    React.useState<OnboardingResource | null>(
+      isAdditionalStore ? initialStatus.store : null
+    )
 
   const [storeName, setStoreName] = React.useState(
     initialStatus.store?.name ?? ""
@@ -332,6 +398,8 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
   >(() => ({
     ...INITIAL_AI_PROFILE,
     brandDescription: initialStatus.profile?.brandDescription ?? null,
+    shippingPolicy: initialStatus.profile?.shippingPolicy ?? null,
+    returnPolicy: initialStatus.profile?.returnPolicy ?? null,
     tone: initialStatus.profile?.tone ?? INITIAL_AI_PROFILE.tone,
     responseLength:
       initialStatus.profile?.responseLength ??
@@ -363,7 +431,13 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
         ? Boolean(selectedChannel && channelCredentialsComplete)
         : currentStep === 3
           ? Boolean(inventoryPolicy)
-          : Boolean(provisionedStore)
+          : currentStep === 4
+            ? Boolean(provisionedStore)
+            : Boolean(
+                provisionedStore &&
+                profileDraft.shippingPolicy?.trim() &&
+                profileDraft.returnPolicy?.trim()
+              )
 
   React.useEffect(() => {
     const catalogSync = initialStatus.catalogSync
@@ -445,7 +519,8 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
       step < 1 ||
       step > STEPS.length ||
       step > furthestStep ||
-      (provisionedStore && step < 4)
+      (provisionedStore && step < 4) ||
+      (createdAdditionalStore && step < 2)
     ) {
       return
     }
@@ -480,11 +555,21 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
       return
     }
 
+    if (currentStep === 4) {
+      advanceToStep(5)
+      return
+    }
+
     await connectChannelAndSyncCatalog()
   }
 
   const handleBack = () => {
-    if (currentStep <= 1 || provisionedStore) return
+    if (
+      currentStep <= 1 ||
+      (provisionedStore && currentStep <= 4) ||
+      (createdAdditionalStore && currentStep <= 2)
+    )
+      return
 
     setDirection(-1)
     setCurrentStep((step) => step - 1)
@@ -515,6 +600,70 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
     setSubmitError(null)
 
     try {
+      if (isAdditionalStore) {
+        let store = createdAdditionalStore
+        if (!store) {
+          const created = await createStore({
+            name: storeName.trim(),
+            inventoryPolicy,
+          })
+          store = created
+          setCreatedAdditionalStore(store)
+          window.history.replaceState(
+            null,
+            "",
+            `${APP_ROUTES.storeOnboarding}?storeId=${encodeURIComponent(store.id)}`
+          )
+        }
+
+        if (store.inventoryPolicy !== inventoryPolicy) {
+          store = await updateStore(store.id, { inventoryPolicy })
+          setCreatedAdditionalStore(store)
+        }
+
+        await updateStoreKnowledge(store.id, {
+          brandDescription: profileDraft.brandDescription?.trim() || null,
+          tone: profileDraft.tone,
+          responseLength: profileDraft.responseLength,
+        })
+        const connections = await getChannelConnections(store.id)
+        const existing = connections.find(
+          (connection) => connection.providerKey === selectedChannel
+        )
+        const connection = existing
+          ? await configureChannelConnection(store.id, existing.id, {
+              environment: "PRODUCTION",
+              credentials,
+            })
+          : await createChannelConnection(store.id, {
+              providerKey: selectedChannel,
+              environment: "PRODUCTION",
+              credentials,
+            })
+        const catalogSync = await syncChannelCatalog(store.id, connection.id)
+        const controller = new AbortController()
+        syncAbortControllerRef.current = controller
+        const syncRun = await waitForCatalogSync(
+          store.id,
+          catalogSync.syncRunId,
+          (nextProgress) => setSyncProgress(nextProgress),
+          controller.signal
+        )
+        setSyncProgress(100)
+        setIsCatalogSyncContinuing(syncRun.status === "RUNNING")
+        setCatalogImportSummary(
+          syncRun.productsSkipped > 0
+            ? {
+                processed: syncRun.productsProcessed,
+                skipped: syncRun.productsSkipped,
+              }
+            : null
+        )
+        setProvisionedStore(store)
+        advanceToStep(4)
+        return
+      }
+
       const result = await provisionOnboarding({
         storeName: storeName.trim(),
         selectedChannel: selectedChannel.toUpperCase() as OnboardingChannel,
@@ -562,18 +711,26 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
   }
 
   const handleFinish = async () => {
-    if (!provisionedStore) return
+    if (!provisionedStore || !canProceed) return
 
     setIsSubmitting(true)
     setSubmitError(null)
 
     try {
-      const result = await completeOnboarding({
+      const completeStore = isAdditionalStore
+        ? completeAdditionalStoreOnboarding
+        : completeOnboarding
+      const result = await completeStore({
         storeId: provisionedStore.id,
         inventoryPolicy,
         tone: profileDraft.tone,
         responseLength: profileDraft.responseLength,
+        shippingPolicy: profileDraft.shippingPolicy?.trim() ?? "",
+        returnPolicy: profileDraft.returnPolicy?.trim() ?? "",
       })
+      if (isAdditionalStore) {
+        await selectActiveStore(provisionedStore.id)
+      }
       router.replace(result.nextPath)
       router.refresh()
     } catch (error: unknown) {
@@ -590,31 +747,29 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
     <MotionConfig reducedMotion="user">
       <div className="grid min-h-dvh bg-background lg:grid-cols-[310px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
         <aside className="commerce-panel-grid hidden min-h-dvh flex-col bg-[#10251e] px-7 py-8 text-white lg:flex xl:px-9">
-          <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-white text-[#173c2e] shadow-sm">
-              <HugeiconsIcon icon={Layers01Icon} className="size-5" />
-            </span>
-            <div>
-              <p className="text-[15px] font-bold tracking-[-0.025em]">
-                Core Asistan
-              </p>
-              <p className="mt-0.5 text-[10px] font-medium tracking-[0.13em] text-[#91aa9e] uppercase">
-                İlk kurulum
-              </p>
-            </div>
-          </div>
+          <AppLogo
+            href={
+              isAdditionalStore
+                ? APP_ROUTES.dashboard.root
+                : APP_ROUTES.onboarding
+            }
+            className="[&_span]:text-[#91aa9e]"
+            showIcon
+            description={
+              isAdditionalStore ? "Yeni mağaza kurulumu" : "İlk kurulum"
+            }
+            fullDark
+          />
 
           <div className="mt-14">
             <p className="text-[11px] font-semibold tracking-[0.16em] text-[#9bc5b0] uppercase">
               Yaklaşık 3 dakika
             </p>
             <h1 className="mt-4 text-3xl leading-[1.15] font-semibold tracking-[-0.04em]">
-              Mağazanızı birlikte hazırlayalım.
+              {isAdditionalStore
+                ? "Yeni mağazanızı birlikte hazırlayalım."
+                : "Mağazanızı birlikte hazırlayalım."}
             </h1>
-            <p className="mt-4 text-sm leading-6 text-[#a9bdb3]">
-              Mağazanızı tanımlayacak, ilk pazaryerinizi bağlayacak ve AI’ın
-              müşterilerle nasıl konuşacağını belirleyeceğiz.
-            </p>
           </div>
 
           <nav className="mt-10 space-y-1.5" aria-label="Kurulum adımları">
@@ -622,7 +777,9 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
               const isActive = step.id === currentStep
               const isCompleted = step.id < currentStep
               const isReachable =
-                step.id <= furthestStep && (!provisionedStore || step.id === 3)
+                step.id <= furthestStep &&
+                (!provisionedStore || step.id >= 4) &&
+                (!createdAdditionalStore || step.id >= 2)
 
               return (
                 <button
@@ -689,9 +846,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
 
           <div className="mt-auto border-t border-white/10 pt-6">
             <div className="flex items-center gap-3">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-white/10 text-xs font-bold text-[#d9e7e0]">
-                {getInitials(user.name)}
-              </span>
+              <OnboardingUserAvatar user={user} dark />
               <div className="min-w-0">
                 <p className="truncate text-xs font-semibold text-white">
                   {user.name}
@@ -738,25 +893,18 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
             </div>
 
             <div className="flex min-w-0 items-center justify-end gap-2">
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="hidden sm:inline-flex"
-              >
-                <Link href={APP_ROUTES.dashboard.settings.billing}>
-                  Plan ve faturalama
-                </Link>
-              </Button>
+              {isAdditionalStore ? (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href={APP_ROUTES.dashboard.root}>Panele dön</Link>
+                </Button>
+              ) : null}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
                     className="flex items-center gap-2 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                   >
-                    <span className="flex size-8 items-center justify-center rounded-lg bg-secondary text-[10px] font-bold text-secondary-foreground">
-                      {getInitials(user.name)}
-                    </span>
+                    <OnboardingUserAvatar user={user} />
                     <span className="hidden max-w-36 truncate text-xs font-semibold sm:block">
                       {user.name}
                     </span>
@@ -769,32 +917,14 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                 <DropdownMenuContent
                   align="end"
                   sideOffset={8}
-                  className="w-56"
+                  className="w-44"
                 >
-                  <div className="px-3 py-2.5">
-                    <p className="text-sm font-semibold">{user.name}</p>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href={APP_ROUTES.dashboard.settings.billing}>
-                      Plan ve faturalama
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href={APP_ROUTES.dashboard.support}>
-                      Yardım ve destek
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleLogout}
                     className="cursor-pointer gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
                   >
                     <HugeiconsIcon icon={Logout01Icon} className="size-4" />
-                    Oturumu kapat
+                    Çıkış yap
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -826,6 +956,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                         />
                       ) : currentStep === 1 ? (
                         <StoreStep
+                          additionalStore={isAdditionalStore}
                           storeName={storeName}
                           setStoreName={setStoreName}
                           brandDescription={profileDraft.brandDescription ?? ""}
@@ -850,7 +981,7 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                           value={inventoryPolicy}
                           onChange={setInventoryPolicy}
                         />
-                      ) : (
+                      ) : currentStep === 4 ? (
                         <AiPreferencesStep
                           tone={profileDraft.tone}
                           responseLength={profileDraft.responseLength}
@@ -859,6 +990,17 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                           onToneChange={(value) => updateProfile("tone", value)}
                           onResponseLengthChange={(value) =>
                             updateProfile("responseLength", value)
+                          }
+                        />
+                      ) : (
+                        <ShippingReturnsStep
+                          shippingPolicy={profileDraft.shippingPolicy ?? ""}
+                          returnPolicy={profileDraft.returnPolicy ?? ""}
+                          onShippingPolicyChange={(value) =>
+                            updateProfile("shippingPolicy", value || null)
+                          }
+                          onReturnPolicyChange={(value) =>
+                            updateProfile("returnPolicy", value || null)
                           }
                         />
                       )}
@@ -886,12 +1028,17 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                     onClick={handleBack}
                     disabled={
                       currentStep === 1 ||
-                      Boolean(provisionedStore) ||
+                      (Boolean(provisionedStore) && currentStep <= 4) ||
+                      (Boolean(createdAdditionalStore) && currentStep <= 2) ||
                       isProvisioning ||
                       isSubmitting
                     }
                     className={
-                      currentStep === 1 || provisionedStore ? "invisible" : ""
+                      currentStep === 1 ||
+                      (provisionedStore && currentStep <= 4) ||
+                      (createdAdditionalStore && currentStep <= 2)
+                        ? "invisible"
+                        : ""
                     }
                   >
                     <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
@@ -918,7 +1065,9 @@ export function OnboardingFlow({ user, initialStatus }: OnboardingFlowProps) {
                     ) : currentStep === STEPS.length ? (
                       <>
                         <HugeiconsIcon icon={Rocket01Icon} className="size-4" />
-                        Kurulumu tamamla
+                        {isAdditionalStore
+                          ? "Mağazayı kullanmaya başla"
+                          : "Kurulumu tamamla"}
                       </>
                     ) : currentStep === 3 ? (
                       <>
@@ -990,11 +1139,13 @@ function StepHeading({
 }
 
 function StoreStep({
+  additionalStore = false,
   storeName,
   setStoreName,
   brandDescription,
   setBrandDescription,
 }: {
+  additionalStore?: boolean
   storeName: string
   setStoreName: (value: string) => void
   brandDescription: string
@@ -1004,7 +1155,11 @@ function StoreStep({
     <div>
       <StepHeading
         eyebrow="Mağaza bilgileri"
-        title="AI hangi mağaza için çalışacak?"
+        title={
+          additionalStore
+            ? "Yeni mağazanızın adı ne olsun?"
+            : "AI hangi mağaza için çalışacak?"
+        }
         description="Mağazanızı adlandırın ve AI'ın marka bağlamını anlayabilmesi için kısa bir açıklama ekleyin."
       />
 
@@ -1543,6 +1698,82 @@ function AiPreferencesStep({
             </div>
           </div>
         </section>
+      </div>
+    </div>
+  )
+}
+
+function ShippingReturnsStep({
+  shippingPolicy,
+  returnPolicy,
+  onShippingPolicyChange,
+  onReturnPolicyChange,
+}: {
+  shippingPolicy: string
+  returnPolicy: string
+  onShippingPolicyChange: (value: string) => void
+  onReturnPolicyChange: (value: string) => void
+}) {
+  return (
+    <div>
+      <StepHeading
+        eyebrow="Mağaza politikaları"
+        title="Kargo ve iade süreciniz nasıl işliyor?"
+        description="Müşterilere doğru bilgi verebilmemiz için mağazanızın geçerli kargo ve iade kurallarını yazın. Bu bilgileri daha sonra bilgi tabanından değiştirebilirsiniz."
+      />
+
+      <div className="grid max-w-3xl gap-7">
+        <div>
+          <label
+            htmlFor="onboarding-shipping-policy"
+            className="mb-2 block text-sm font-medium text-foreground"
+          >
+            Kargo bilgileri <span className="text-destructive">*</span>
+          </label>
+          <Textarea
+            id="onboarding-shipping-policy"
+            value={shippingPolicy}
+            onChange={(event) => onShippingPolicyChange(event.target.value)}
+            placeholder="Kargo firmaları, sipariş hazırlama süresi ve gönderim koşullarınızı yazın."
+            maxLength={4000}
+            required
+            aria-describedby="onboarding-shipping-help"
+            className="min-h-32 border-input bg-card px-4 py-3 text-sm leading-6 shadow-xs hover:border-foreground/25 focus-visible:bg-card dark:bg-card"
+          />
+          <p
+            id="onboarding-shipping-help"
+            className="mt-2 text-xs leading-5 text-muted-foreground"
+          >
+            Yalnızca müşterileriniz için geçerli ve doğrulayabildiğiniz
+            bilgileri girin.
+          </p>
+        </div>
+
+        <div>
+          <label
+            htmlFor="onboarding-return-policy"
+            className="mb-2 block text-sm font-medium text-foreground"
+          >
+            İade politikası <span className="text-destructive">*</span>
+          </label>
+          <Textarea
+            id="onboarding-return-policy"
+            value={returnPolicy}
+            onChange={(event) => onReturnPolicyChange(event.target.value)}
+            placeholder="İade süresi, kabul koşulları ve başvuru adımlarınızı yazın."
+            maxLength={4000}
+            required
+            aria-describedby="onboarding-return-help"
+            className="min-h-32 border-input bg-card px-4 py-3 text-sm leading-6 shadow-xs hover:border-foreground/25 focus-visible:bg-card dark:bg-card"
+          />
+          <p
+            id="onboarding-return-help"
+            className="mt-2 text-xs leading-5 text-muted-foreground"
+          >
+            Pazaryerlerine göre farklı kurallarınız varsa bunları daha sonra
+            kanal bazında düzenleyebilirsiniz.
+          </p>
+        </div>
       </div>
     </div>
   )

@@ -19,11 +19,12 @@ export default async function AdminContactMessagePage({
   params: Promise<{ messageId: string }>
 }) {
   const { messageId } = await params
+  let message
   try {
-    const message = await getServerAdminContactMessage(messageId)
-    return <AdminContactMessageDetail initialMessage={message} />
+    message = await getServerAdminContactMessage(messageId)
   } catch (error) {
     if (error instanceof AdminContactMessageNotFoundError) notFound()
     throw error
   }
+  return <AdminContactMessageDetail initialMessage={message} />
 }

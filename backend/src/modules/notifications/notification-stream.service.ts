@@ -7,8 +7,18 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import Redis from 'ioredis';
-import { filter, interval, map, merge, Observable, of, Subject } from 'rxjs';
+import {
+  filter,
+  interval,
+  map,
+  merge,
+  Observable,
+  of,
+  Subject,
+  takeUntil,
+} from 'rxjs';
 import { getRedisConnection } from '../../infrastructure/queue/redis-connection';
+import { RuntimeState } from '../../infrastructure/runtime/runtime-state';
 
 export type NotificationChangeReason =
   'CREATED' | 'READ' | 'READ_ALL' | 'DELETED';
@@ -35,6 +45,8 @@ export class NotificationStreamService
   private readonly sourceId = randomUUID();
   private readonly publisher = new Redis(getRedisConnection());
   private readonly subscriber = new Redis(getRedisConnection());
+
+  constructor(private readonly runtime: RuntimeState) {}
 
   async onModuleInit() {
     this.publisher.on('error', (error) => {
@@ -94,7 +106,9 @@ export class NotificationStreamService
       })),
     );
 
-    return merge(of(connected), changes, heartbeat);
+    return merge(of(connected), changes, heartbeat).pipe(
+      takeUntil(this.runtime.stopped),
+    );
   }
 
   emit(
@@ -124,12 +138,10 @@ export class NotificationStreamService
     }
   }
 
-  async onModuleDestroy() {
+  onModuleDestroy() {
     this.changes.complete();
-    await Promise.allSettled([
-      this.subscriber.unsubscribe(NOTIFICATION_CHANGES_CHANNEL),
-      this.subscriber.quit(),
-      this.publisher.quit(),
-    ]);
+    // HTTP/workers have drained; do not wait indefinitely for offline Redis.
+    this.subscriber.disconnect();
+    this.publisher.disconnect();
   }
 }

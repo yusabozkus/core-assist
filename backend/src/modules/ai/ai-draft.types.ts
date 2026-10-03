@@ -13,6 +13,14 @@ export type AiDraftAnswerability =
 export const OUT_OF_SCOPE_CLASSIFICATION_THRESHOLD = 0.9;
 
 export type AiDraftResult = {
+  responseKind?:
+    | 'CUSTOMER_CLARIFICATION'
+    | 'SIZE_GUIDANCE'
+    | 'SIZE_ESTIMATE'
+    | 'GENERAL_CARE_GUIDANCE'
+    | 'CATALOG_AVAILABILITY'
+    | 'VERIFIED_STORE_POLICY'
+    | 'MATERIAL_PROPERTY';
   answer: string;
   interpretation: string;
   scope: AiDraftScope;
@@ -39,12 +47,13 @@ export type GeminiDraftPayload = Pick<
   | 'confidence'
   | 'usedEvidenceIds'
   | 'missingInformation'
->;
+> & { estimatedSize?: string };
 
 export type GeminiGenerationRequest = {
   model: string;
   prompt: string;
   thinkingLevel: 'minimal' | 'low' | 'medium';
+  allowedEstimatedSizes?: string[];
 };
 
 export class AiDraftRateLimitError extends Error {

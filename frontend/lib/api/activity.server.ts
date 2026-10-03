@@ -1,4 +1,5 @@
 import "server-only"
+import { fetchServerApi } from "@/lib/api/server-fetch"
 
 import { headers } from "next/headers"
 import type {
@@ -9,12 +10,6 @@ import type {
   ActivityPageSize,
   ActivityResultFilter,
 } from "@/types/activity"
-
-const apiUrl = (
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4001"
-).replace(/\/$/, "")
 
 export async function getServerActivity(
   storeId: string,
@@ -40,13 +35,9 @@ export async function getServerActivity(
   if (options.q) params.set("q", options.q)
   if (options.cursor) params.set("cursor", options.cursor)
 
-  const response = await fetch(
-    `${apiUrl}/stores/${encodeURIComponent(storeId)}/activity?${params}`,
-    {
-      cache: "no-store",
-      headers: { Accept: "application/json", cookie },
-      signal: AbortSignal.timeout(8_000),
-    }
+  const response = await fetchServerApi(
+    `/stores/${encodeURIComponent(storeId)}/activity?${params}`,
+    { cookie, timeoutMs: 8_000 }
   )
   if (!response.ok)
     throw new Error(`İşlem geçmişi yüklenemedi (${response.status}).`)

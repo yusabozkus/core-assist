@@ -39,11 +39,13 @@ export function evaluateAutoSendEligibility({
   decision,
   requestedFacts,
   storeMinimumConfidence,
+  allowHeightWeightRecommendation = false,
 }: {
   draft: AiDraftResult;
   decision: Exclude<QuestionReplyDecision, 'DO_NOT_REPLY'>;
   requestedFacts: ProductAnswerFact[];
   storeMinimumConfidence: number;
+  allowHeightWeightRecommendation?: boolean;
 }) {
   if (draft.answerability === 'OUT_OF_SCOPE') {
     const eligible =
@@ -63,10 +65,25 @@ export function evaluateAutoSendEligibility({
     Math.max(storeMinimumConfidence, DEFAULT_AUTO_SEND_CONFIDENCE),
     0.99,
   );
-  const intentThreshold = requestedFacts.reduce(
-    (highest, fact) => Math.max(highest, INTENT_CONFIDENCE_FLOORS[fact]),
-    DEFAULT_AUTO_SEND_CONFIDENCE,
-  );
+  const validatedHeightWeightRecommendation =
+    allowHeightWeightRecommendation &&
+    requestedFacts.includes('SIZE') &&
+    requestedFacts.every((fact) => fact === 'SIZE' || fact === 'FIT') &&
+    (draft.responseKind === 'SIZE_ESTIMATE' ||
+      draft.usedEvidenceIds.some((id) =>
+        id.startsWith('height-weight-size-'),
+      )) &&
+    draft.answerability === 'FULL' &&
+    draft.usedEvidenceIds.some(
+      (id) => id === 'variant-sizes' || id.startsWith('height-weight-size-'),
+    ) &&
+    /tahmin|yaklaşık/i.test(draft.answer);
+  const intentThreshold = validatedHeightWeightRecommendation
+    ? DEFAULT_AUTO_SEND_CONFIDENCE
+    : requestedFacts.reduce(
+        (highest, fact) => Math.max(highest, INTENT_CONFIDENCE_FLOORS[fact]),
+        DEFAULT_AUTO_SEND_CONFIDENCE,
+      );
   const appliedConfidenceThreshold = Math.max(
     normalizedStoreMinimum,
     intentThreshold,

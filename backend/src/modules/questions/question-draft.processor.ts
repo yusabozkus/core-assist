@@ -1,6 +1,10 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import type { Job } from 'bullmq';
-import { UnrecoverableError } from 'bullmq';
+import { DelayedError, UnrecoverableError } from 'bullmq';
+import {
+  DraftCapacityException,
+  DRAFT_COOLDOWN_MS,
+} from './draft-execution.service';
 import {
   BillingAccessRequiredException,
   BillingQuotaExceededException,
@@ -27,7 +31,7 @@ export class QuestionDraftProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<QuestionDraftQueueJobData>) {
+  async process(job: Job<QuestionDraftQueueJobData>, token?: string) {
     if (job.name === RESUME_BILLING_BLOCKED_DRAFTS_JOB)
       return this.draftQueue.resumeBillingBlockedDrafts();
     if (job.name === APPLY_AUTOMATION_SETTINGS_JOB)
@@ -41,6 +45,11 @@ export class QuestionDraftProcessor extends WorkerHost {
     try {
       return await this.draftWorker.run(data);
     } catch (error) {
+      if (error instanceof DraftCapacityException) {
+        await this.draftWorker.deferForCapacity(data);
+        await job.moveToDelayed(Date.now() + DRAFT_COOLDOWN_MS, token);
+        throw new DelayedError();
+      }
       const maximumAttempts = job.opts.attempts ?? 1;
       const isFinalAttempt = job.attemptsMade + 1 >= maximumAttempts;
 

@@ -23,9 +23,6 @@ export function DashboardChannels({ data }: { data: DashboardOverview }) {
           <h2 id="channels-title" className="text-sm font-semibold">
             Satış kanalları
           </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Bağlantılar ve son veri güncellemeleri
-          </p>
         </div>
         <Link
           href={APP_ROUTES.dashboard.channels.root}

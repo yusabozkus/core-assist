@@ -55,13 +55,20 @@ export function ConnectedAccounts({
   const [unlinkingAccount, setUnlinkingAccount] =
     useState<AuthAccountSummary | null>(null)
   const [isUnlinking, setIsUnlinking] = useState(false)
+  const linkedAccountExists = initialAccounts.some(
+    (account) => account.providerId === initialLinkedProvider
+  )
   const [message, setMessage] = useState<string | null>(() =>
-    initialLinkedProvider
+    initialLinkedProvider && linkedAccountExists && !initialLinkError
       ? `${getProviderName(initialLinkedProvider)} hesabınız bağlandı.`
       : null
   )
   const [error, setError] = useState<string | null>(() =>
-    initialLinkError ? getProviderError(initialLinkError) : null
+    initialLinkError
+      ? getProviderError(initialLinkError)
+      : initialLinkedProvider && !linkedAccountExists
+        ? "Hesap bağlantısı tamamlanmadı. Lütfen tekrar deneyin."
+        : null
   )
 
   const accountByProvider = useMemo(
@@ -298,6 +305,8 @@ function getProviderError(code?: string) {
       return "Bu sağlayıcı hesabı başka bir Core Asistan hesabına bağlı."
     case "unable_to_link_account":
       return "Sağlayıcı hesabı doğrulanamadığı için bağlantı tamamlanamadı."
+    case "email_does_not_match":
+      return "Sağlayıcı hesabının e-postası mevcut hesabınızla eşleşmiyor."
     case "provider_not_found":
     case "oauth_provider_not_found":
       return "Bu giriş yöntemi henüz yapılandırılmamış."

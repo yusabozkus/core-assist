@@ -1,3 +1,4 @@
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { AdminHeader } from "@/components/admin/admin-header"
@@ -31,9 +32,11 @@ export default async function AdminLayout({
   // Access remains fail-closed above. The header summary is operational
   // decoration and must not make an authorized admin session unusable.
   const headerSummary = await getAdminHeaderSummaryOrUnavailable()
+  const sidebarDefaultOpen =
+    (await cookies()).get("sidebar_state")?.value !== "false"
 
   return (
-    <SidebarProvider className="min-h-svh">
+    <SidebarProvider defaultOpen={sidebarDefaultOpen} className="min-h-svh">
       <AdminSidebar
         variant="inset"
         user={{

@@ -1,13 +1,8 @@
 import "server-only"
+import { fetchServerApi } from "@/lib/api/server-fetch"
 
 import { headers } from "next/headers"
 import type { SupportTicketDetail, SupportTicketList } from "@/types/support"
-
-const apiUrl = (
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4001"
-).replace(/\/$/, "")
 
 const supportPath = "/support/tickets"
 
@@ -36,11 +31,7 @@ async function supportServerFetch<T>(
   const cookie = (await headers()).get("cookie")
   if (!cookie) throw new Error("Support requires an authenticated session.")
 
-  const response = await fetch(`${apiUrl}${path}`, {
-    cache: "no-store",
-    headers: { Accept: "application/json", cookie },
-    signal: AbortSignal.timeout(10_000),
-  })
+  const response = await fetchServerApi(path, { cookie })
   if (response.status === 404 && options.ticketNotFound) {
     throw new SupportTicketNotFoundError()
   }

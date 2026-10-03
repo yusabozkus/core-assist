@@ -17,11 +17,13 @@ export const PENDING_QUESTION_STATES = [
   "BLOCKED_SUBSCRIPTION",
   "DRAFT_FAILED",
   "SEND_FAILED",
+  "SEND_REVIEW",
 ] as const
 
 export type PendingQuestionState = (typeof PENDING_QUESTION_STATES)[number]
 
-export type QuestionAnswerStatus = "QUEUED" | "PROCESSING" | "SENT" | "FAILED"
+export type QuestionAnswerStatus =
+  "QUEUED" | "PROCESSING" | "REVIEW_REQUIRED" | "SENT" | "FAILED"
 export type QuestionAnswerOrigin = "MANUAL" | "AUTOMATION"
 export type QuestionAnswerComposition = "MANUAL" | "AI_UNCHANGED" | "AI_EDITED"
 export type AiDraftTrigger = "MANUAL" | "AUTOMATION"
@@ -132,6 +134,7 @@ export type ProductQuestion = {
   answeredAt: string | null
   externalCreatedAt: string
   createdAt: string
+  updatedAt: string
   connection: {
     providerKey: string
   }
@@ -156,6 +159,7 @@ export type ProductQuestionListItem = {
     "FULL" | "PARTIAL" | "INSUFFICIENT" | "OUT_OF_SCOPE" | null
   draftProcessingStatus: QuestionDraftProcessingStatus | null
   externalCreatedAt: string
+  updatedAt: string
   connection: {
     providerKey: string
   }

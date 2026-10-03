@@ -20,13 +20,22 @@ export default function AdminOperationsLoading() {
       </div>
 
       <Skeleton className="mt-6 h-4 w-32" />
-      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-        {Array.from({ length: 7 }).map((_, index) => (
-          <Skeleton key={index} className="h-28 rounded-xl" />
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-5">
+        {Array.from({ length: 10 }).map((_, index) => (
+          <Skeleton key={index} className="h-44 rounded-xl" />
         ))}
       </div>
 
-      <Skeleton className="mt-6 h-28 rounded-xl" />
+      <Skeleton className="mt-6 h-4 w-40" />
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <Skeleton className="h-10 w-full max-w-2xl rounded-lg" />
+        <Skeleton className="h-8 w-28 rounded-lg" />
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {Array.from({ length: 7 }).map((_, index) => (
+          <Skeleton key={index} className="h-8 w-32 rounded-lg" />
+        ))}
+      </div>
       <div className="mt-3 overflow-hidden rounded-xl border border-border">
         <Skeleton className="h-9 rounded-none" />
         {Array.from({ length: 7 }).map((_, index) => (

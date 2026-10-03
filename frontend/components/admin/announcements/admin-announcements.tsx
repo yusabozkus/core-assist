@@ -1,31 +1,31 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   ArrowDown01Icon,
+  ArrowLeft01Icon,
   ArrowRight01Icon,
-  CheckmarkCircle01Icon,
-  Mail01Icon,
   Notification01Icon,
+  PlusSignIcon,
   RefreshIcon,
-  UserGroupIcon,
+  Search01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { APP_ROUTES } from "@/constants/site"
@@ -38,148 +38,285 @@ import { cn } from "@/lib/utils"
 import {
   ANNOUNCEMENT_ROLES,
   type AdminAnnouncement,
+  type AnnouncementInput,
   type AnnouncementList,
-  type AnnouncementPreview,
   type AnnouncementRole,
 } from "@/types/admin-announcement"
 import { formatEmailDate } from "../emails/admin-email-presentation"
 
 const roles = Object.keys(ANNOUNCEMENT_ROLES) as AnnouncementRole[]
-const roleDescriptions: Record<AnnouncementRole, string> = {
-  OWNER: "Müşteri hesabının sahibi",
-  ACCOUNT_ADMIN: "Tüm hesabı yöneten ekip üyeleri",
-  STORE_ADMIN: "Atandığı mağazaları yönetenler",
-  AGENT: "Mağazada işlem yapan temsilciler",
-  VIEWER: "Görüntüleme yetkisi olanlar",
-}
 
-export function AdminAnnouncements({ data }: { data: AnnouncementList }) {
+export function AdminAnnouncements({
+  data,
+  query,
+}: {
+  data: AnnouncementList
+  query: { q?: string; page: number }
+}) {
   const router = useRouter()
+  const [search, setSearch] = useState(query.q ?? "")
+  const [navigationPending, startNavigation] = useTransition()
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [title, setTitle] = useState("")
   const [message, setMessage] = useState("")
   const [selectedRoles, setSelectedRoles] = useState<AnnouncementRole[]>([])
   const [sendEmail, setSendEmail] = useState(false)
-  const [preview, setPreview] = useState<AnnouncementPreview | null>(null)
-  const [pending, setPending] = useState<"preview" | "publish" | null>(null)
+  const [publishing, setPublishing] = useState(false)
   const [error, setError] = useState("")
+  const publishingRef = useRef(false)
+  const preparedRef = useRef<{ id: string; input: string } | null>(null)
   const allRolesSelected = selectedRoles.length === roles.length
 
-  async function preparePreview() {
-    if (pending) return
-    setPending("preview")
+  function searchAnnouncements() {
+    const normalized = search.trim()
+    if (normalized === (query.q ?? "") && query.page === 1) return
+    const params = new URLSearchParams()
+    if (normalized) params.set("q", normalized)
+    const url =
+      APP_ROUTES.admin.announcements + (params.size ? "?" + params : "")
+    startNavigation(() => router.push(url, { scroll: false }))
+  }
+
+  function goToPage(page: number) {
+    const params = new URLSearchParams()
+    if (query.q) params.set("q", query.q)
+    if (page > 1) params.set("page", String(page))
+    const url =
+      APP_ROUTES.admin.announcements + (params.size ? "?" + params : "")
+    startNavigation(() => router.push(url, { scroll: false }))
+  }
+
+  function resetForm() {
+    setTitle("")
+    setMessage("")
+    setSelectedRoles([])
+    setSendEmail(false)
     setError("")
-    try {
-      setPreview(
-        await previewAdminAnnouncement({
-          title: title.trim(),
-          message: message.trim(),
-          roles: selectedRoles,
-          sendEmail,
-        })
-      )
-    } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "Önizleme oluşturulamadı."
-      )
-    } finally {
-      setPending(null)
-    }
+    preparedRef.current = null
   }
 
   async function publish() {
-    if (!preview || pending) return
-    setPending("publish")
+    if (
+      publishingRef.current ||
+      !title.trim() ||
+      !message.trim() ||
+      !selectedRoles.length
+    )
+      return
+
+    publishingRef.current = true
+    setPublishing(true)
     setError("")
+    const input: AnnouncementInput = {
+      title: title.trim(),
+      message: message.trim(),
+      roles: selectedRoles,
+      sendEmail,
+    }
+    const inputKey = JSON.stringify(input)
     try {
-      const result = await publishAdminAnnouncement(preview.id)
+      let id =
+        preparedRef.current?.input === inputKey ? preparedRef.current.id : null
+      if (!id) {
+        const prepared = await previewAdminAnnouncement(input)
+        id = prepared.id
+        preparedRef.current = { id, input: inputKey }
+      }
+      const result = await publishAdminAnnouncement(id)
       toast.success(
-        `${result.recipientCount} kişiye bildirim oluşturuldu.${result.sendEmail ? ` ${result.emailCount} e-posta gönderim sırasına alındı.` : ""}`
+        String(result.recipientCount) +
+          " kişiye bildirim oluşturuldu." +
+          (result.sendEmail
+            ? " " +
+              String(result.emailCount) +
+              " e-posta gönderim sırasına alındı."
+            : "")
       )
-      setPreview(null)
-      setTitle("")
-      setMessage("")
-      setSelectedRoles([])
-      setSendEmail(false)
+      resetForm()
+      setDrawerOpen(false)
       router.refresh()
     } catch (cause) {
       setError(
         cause instanceof Error
           ? cause.message
-          : "Gönderim sonucu alınamadı. Aynı önizlemeden tekrar deneyebilirsiniz."
+          : "Duyuru yayımlanamadı. Lütfen yeniden deneyin."
       )
       if (cause instanceof ApiError && [400, 404, 409].includes(cause.status))
-        setPreview(null)
+        preparedRef.current = null
     } finally {
-      setPending(null)
+      publishingRef.current = false
+      setPublishing(false)
     }
   }
 
   return (
     <main className="mx-auto w-full max-w-[1440px] px-5 py-8 sm:px-8 sm:py-10">
-      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+      <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-medium tracking-[0.12em] text-primary uppercase">
-            Müşteri iletişimi
-          </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">
+          <h1 className="text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">
             Duyurular
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Müşteri ekiplerini rollerine göre bilgilendirin. Panel bildirimi
-            oluşturun, gerekirse aynı duyuruyu e-postayla iletin.
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Müşteri ekiplerine gönderilen duyuruları görüntüleyin ve yönetin.
           </p>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link href={APP_ROUTES.admin.emails}>
-            <HugeiconsIcon icon={Mail01Icon} className="size-4" />
-            E-posta geçmişi
-            <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
-          </Link>
+        <Button type="button" onClick={() => setDrawerOpen(true)}>
+          <HugeiconsIcon icon={PlusSignIcon} className="size-4" />
+          Yeni duyuru
         </Button>
       </header>
 
-      <div className="mt-7 grid items-start gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.9fr)]">
-        <form
-          className="overflow-hidden rounded-xl border border-border bg-card shadow-xs"
-          onSubmit={(event) => {
-            event.preventDefault()
-            void preparePreview()
-          }}
-        >
-          <div className="flex items-center justify-between gap-4 border-b border-border bg-muted/25 px-5 py-4 sm:px-6">
-            <div className="flex items-center gap-3">
-              <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <HugeiconsIcon icon={Notification01Icon} className="size-4.5" />
-              </span>
-              <div>
-                <h2 className="text-sm font-semibold">Yeni duyuru</h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  İçeriği, alıcıları ve gönderim kanalını belirleyin.
-                </p>
-              </div>
-            </div>
-            <Badge variant="outline" className="bg-card text-muted-foreground">
-              Taslak
-            </Badge>
+      <section className="mt-8" aria-label="Duyuru listesi">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold">Gönderim geçmişi</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {data.pagination.total.toLocaleString("tr-TR")} duyuru
+              {query.q ? " bulundu" : " yayımlandı"}
+            </p>
+          </div>
+          <Link
+            href={APP_ROUTES.admin.emails}
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            E-posta geçmişi
+          </Link>
+        </div>
+
+        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+          <div className="flex flex-wrap items-center gap-2 border-b border-border p-3 sm:p-4">
+            <form
+              className="flex min-w-[220px] flex-1 gap-2 sm:max-w-lg"
+              onSubmit={(event) => {
+                event.preventDefault()
+                searchAnnouncements()
+              }}
+            >
+              <Input
+                aria-label="Duyurularda ara"
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                maxLength={120}
+                placeholder="Başlık veya mesajda ara..."
+                icon={<HugeiconsIcon icon={Search01Icon} className="size-4" />}
+                className="h-10 bg-background shadow-none"
+              />
+              <Button
+                type="submit"
+                variant="secondary"
+                disabled={navigationPending}
+                className="h-10"
+              >
+                Ara
+              </Button>
+            </form>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => router.refresh()}
+              disabled={navigationPending}
+              aria-label="Duyuruları yenile"
+              title="Duyuruları yenile"
+              className="size-10"
+            >
+              <HugeiconsIcon icon={RefreshIcon} className="size-4" />
+            </Button>
           </div>
 
-          <fieldset
-            disabled={Boolean(pending)}
-            className="border-b border-border px-5 py-6 sm:px-6"
+          {data.items.length ? (
+            <div className="divide-y divide-border">
+              {data.items.map((item) => (
+                <HistoryRow key={item.id} item={item} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center px-6 py-16 text-center">
+              <span className="flex size-11 items-center justify-center rounded-xl bg-primary/8 text-primary">
+                <HugeiconsIcon icon={Notification01Icon} className="size-5" />
+              </span>
+              <p className="mt-4 text-sm font-medium">
+                {query.q ? "Eşleşen duyuru bulunamadı" : "Henüz duyuru yok"}
+              </p>
+              <p className="mt-1 max-w-sm text-xs leading-5 text-muted-foreground">
+                {query.q
+                  ? "Başka bir başlık veya mesaj içeriği arayın."
+                  : "İlk duyurunuzu oluşturmak için Yeni duyuru butonunu kullanın."}
+              </p>
+            </div>
+          )}
+
+          {data.pagination.totalPages > 1 || data.pagination.page > 1 ? (
+            <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3 text-xs text-muted-foreground sm:px-5">
+              <span>
+                Sayfa {data.pagination.page} / {data.pagination.totalPages}
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={navigationPending || data.pagination.page <= 1}
+                  onClick={() => goToPage(data.pagination.page - 1)}
+                >
+                  <HugeiconsIcon icon={ArrowLeft01Icon} className="size-3.5" />
+                  Önceki
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={
+                    navigationPending ||
+                    data.pagination.page >= data.pagination.totalPages
+                  }
+                  onClick={() => goToPage(data.pagination.page + 1)}
+                >
+                  Sonraki
+                  <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      <Sheet
+        open={drawerOpen}
+        onOpenChange={(open) => {
+          if (!publishing) setDrawerOpen(open)
+        }}
+      >
+        <SheetContent
+          side="right"
+          className="p-0 data-[side=right]:w-full! data-[side=right]:sm:max-w-xl!"
+        >
+          <SheetHeader className="shrink-0 border-b border-border px-6 py-5 pr-16">
+            <SheetTitle>Yeni duyuru</SheetTitle>
+            <SheetDescription>
+              Mesajı ve alıcıları seçip yayımlayın.
+            </SheetDescription>
+          </SheetHeader>
+
+          <form
+            className="flex min-h-0 flex-1 flex-col"
+            onSubmit={(event) => {
+              event.preventDefault()
+              void publish()
+            }}
           >
-            <legend className="sr-only">Duyuru içeriği</legend>
-            <SectionHeading
-              number="01"
-              title="İçerik"
-              description="Müşterilerin panelde ve e-postada göreceği metin."
-            />
-            <div className="mt-5 space-y-5">
+            <fieldset
+              disabled={publishing}
+              className="min-h-0 flex-1 space-y-7 overflow-y-auto px-6 py-6"
+            >
+              <legend className="sr-only">Duyuru bilgileri</legend>
               <div className="space-y-2">
                 <label
                   htmlFor="announcement-title"
-                  className="text-xs font-medium"
+                  className="text-sm font-medium"
                 >
-                  Başlık <span className="text-destructive">*</span>
+                  Başlık
                 </label>
                 <Input
                   id="announcement-title"
@@ -187,20 +324,21 @@ export function AdminAnnouncements({ data }: { data: AnnouncementList }) {
                   onChange={(event) => setTitle(event.target.value)}
                   maxLength={160}
                   required
-                  placeholder="Örn. Planlı bakım bilgilendirmesi"
+                  placeholder="Örn. Planlı bakım"
                   className="h-10 bg-background shadow-none"
                 />
               </div>
+
               <div className="space-y-2">
-                <div className="flex items-end justify-between gap-3">
+                <div className="flex items-center justify-between gap-3">
                   <label
                     htmlFor="announcement-message"
-                    className="text-xs font-medium"
+                    className="text-sm font-medium"
                   >
-                    Mesaj <span className="text-destructive">*</span>
+                    Mesaj
                   </label>
-                  <span className="text-[11px] text-muted-foreground tabular-nums">
-                    {message.length} / 1000
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {message.length}/1000
                   </span>
                 </div>
                 <Textarea
@@ -210,140 +348,75 @@ export function AdminAnnouncements({ data }: { data: AnnouncementList }) {
                   maxLength={1000}
                   required
                   rows={6}
-                  placeholder="Ne olduğunu ve müşterilerin bilmesi gerekenleri açıkça yazın."
-                  className="min-h-40 resize-y rounded-lg border-border bg-background shadow-none"
+                  placeholder="Müşterilere iletmek istediğiniz bilgiyi yazın..."
+                  className="min-h-36 resize-y bg-background shadow-none"
                 />
               </div>
-            </div>
-          </fieldset>
 
-          <fieldset
-            disabled={Boolean(pending)}
-            className="border-b border-border px-5 py-6 sm:px-6"
-          >
-            <legend className="sr-only">Alıcı rolleri</legend>
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <SectionHeading
-                number="02"
-                title="Alıcılar"
-                description="Duyuru yalnızca seçilen rollerdeki kişilere ulaşır."
-              />
-              <div className="flex items-center gap-2 pt-1">
-                <Checkbox
-                  id="announcement-all-roles"
-                  checked={
-                    allRolesSelected
-                      ? true
-                      : selectedRoles.length
-                        ? "indeterminate"
-                        : false
-                  }
-                  onCheckedChange={(checked) =>
-                    setSelectedRoles(checked === true ? [...roles] : [])
-                  }
-                />
-                <label
-                  htmlFor="announcement-all-roles"
-                  className="cursor-pointer text-xs font-medium"
-                >
-                  Hepsini seç
-                </label>
-              </div>
-            </div>
-            <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
-              {roles.map((role) => {
-                const selected = selectedRoles.includes(role)
-                return (
-                  <div
-                    key={role}
-                    className={cn(
-                      "flex items-start gap-3 rounded-lg border p-3.5 transition-colors",
-                      selected
-                        ? "border-primary/35 bg-primary/5"
-                        : "border-border bg-background hover:border-primary/20 hover:bg-muted/30"
-                    )}
-                  >
-                    <Checkbox
-                      id={`announcement-role-${role}`}
-                      checked={selected}
-                      onCheckedChange={(checked) =>
-                        setSelectedRoles((current) =>
-                          checked
-                            ? [...current, role]
-                            : current.filter((item) => item !== role)
-                        )
-                      }
-                      className="mt-0.5"
-                    />
-                    <label
-                      htmlFor={`announcement-role-${role}`}
-                      className="min-w-0 flex-1 cursor-pointer"
-                    >
-                      <span className="block text-sm font-medium">
-                        {ANNOUNCEMENT_ROLES[role]}
-                      </span>
-                      <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
-                        {roleDescriptions[role]}
-                      </span>
-                    </label>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">Alıcılar</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Duyuru seçilen rollere gönderilir.
+                    </p>
                   </div>
-                )
-              })}
-            </div>
-            <p className="mt-3 text-xs leading-5 text-muted-foreground">
-              Tüm müşteri hesapları kapsanır. Bir kişi birden fazla mağazada
-              olsa da tek bildirim alır. Sistem adminleri alıcı değildir.
-            </p>
-          </fieldset>
-
-          <fieldset disabled={Boolean(pending)} className="px-5 py-6 sm:px-6">
-            <legend className="sr-only">Gönderim kanalları</legend>
-            <SectionHeading
-              number="03"
-              title="Gönderim kanalları"
-              description="Panel bildirimi her duyuruda kullanılır; e-posta isteğe bağlıdır."
-            />
-            <div className="mt-5 space-y-2.5">
-              <div className="flex items-center gap-3 rounded-lg border border-primary/25 bg-primary/5 p-3.5">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <HugeiconsIcon
-                    icon={Notification01Icon}
-                    className="size-4.5"
-                  />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium">Panel bildirimi</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Seçilen kişilerin bildirim merkezinde görünür.
-                  </p>
+                  <label className="flex cursor-pointer items-center gap-2 text-xs">
+                    <Checkbox
+                      checked={
+                        allRolesSelected
+                          ? true
+                          : selectedRoles.length
+                            ? "indeterminate"
+                            : false
+                      }
+                      onCheckedChange={(checked) =>
+                        setSelectedRoles(checked === true ? [...roles] : [])
+                      }
+                    />
+                    Tümünü seç
+                  </label>
                 </div>
-                <HugeiconsIcon
-                  icon={CheckmarkCircle01Icon}
-                  className="size-4.5 shrink-0 text-primary"
-                />
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {roles.map((role) => {
+                    const selected = selectedRoles.includes(role)
+                    return (
+                      <label
+                        key={role}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm transition-colors",
+                          selected
+                            ? "border-primary/35 bg-primary/5"
+                            : "border-border hover:bg-muted/30"
+                        )}
+                      >
+                        <Checkbox
+                          checked={selected}
+                          onCheckedChange={(checked) =>
+                            setSelectedRoles((current) =>
+                              checked
+                                ? [...current, role]
+                                : current.filter((item) => item !== role)
+                            )
+                          }
+                        />
+                        {ANNOUNCEMENT_ROLES[role]}
+                      </label>
+                    )
+                  })}
+                </div>
+                {!selectedRoles.length ? (
+                  <p className="text-xs text-muted-foreground">
+                    Yayımlamak için en az bir rol seçin.
+                  </p>
+                ) : null}
               </div>
-              <div
-                className={cn(
-                  "flex items-center gap-3 rounded-lg border p-3.5",
-                  sendEmail
-                    ? "border-primary/35 bg-primary/5"
-                    : "border-border bg-background"
-                )}
-              >
-                <span
-                  className={cn(
-                    "flex size-9 shrink-0 items-center justify-center rounded-lg",
-                    sendEmail
-                      ? "bg-primary/10 text-primary"
-                      : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  <HugeiconsIcon icon={Mail01Icon} className="size-4.5" />
-                </span>
-                <div className="min-w-0 flex-1">
+
+              <div className="flex items-center justify-between gap-4 border-t border-border pt-6">
+                <div>
                   <label
                     htmlFor="announcement-email"
-                    className="cursor-pointer text-sm font-medium"
+                    className="text-sm font-medium"
                   >
                     E-posta da gönder
                   </label>
@@ -352,8 +425,8 @@ export function AdminAnnouncements({ data }: { data: AnnouncementList }) {
                     className="mt-0.5 text-xs leading-5 text-muted-foreground"
                   >
                     {data.emailAvailable
-                      ? "Doğrulanmış e-posta adreslerine ayrıca gönderilir."
-                      : "E-posta yapılandırması eksik; yalnızca panel bildirimi kullanılabilir."}
+                      ? "Panel bildirimine ek olarak doğrulanmış adreslere e-posta gönderilir."
+                      : "E-posta gönderimi şu anda kullanılamıyor."}
                   </p>
                 </div>
                 <Switch
@@ -361,322 +434,40 @@ export function AdminAnnouncements({ data }: { data: AnnouncementList }) {
                   aria-describedby="announcement-email-help"
                   checked={sendEmail}
                   onCheckedChange={setSendEmail}
-                  disabled={!data.emailAvailable || Boolean(pending)}
+                  disabled={!data.emailAvailable || publishing}
                 />
               </div>
-            </div>
-          </fieldset>
+            </fieldset>
 
-          <div className="flex flex-col gap-4 border-t border-border bg-muted/20 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <p className="text-xs text-muted-foreground">
-              Sonraki adımda alıcı sayısını görüp gönderimi onaylayacaksınız.
-            </p>
-            <Button
-              type="submit"
-              className="w-full sm:w-auto"
-              disabled={
-                Boolean(pending) ||
-                !selectedRoles.length ||
-                !title.trim() ||
-                !message.trim()
-              }
-            >
-              {pending === "preview"
-                ? "Alıcılar hesaplanıyor…"
-                : "Alıcıları önizle"}
-              {pending !== "preview" ? (
-                <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" />
-              ) : null}
-            </Button>
-          </div>
-          {error && !preview ? (
-            <p
-              role="alert"
-              className="border-t border-border px-5 py-3 text-sm text-destructive sm:px-6"
-            >
-              {error}
-            </p>
-          ) : null}
-        </form>
-
-        <aside className="space-y-4 xl:sticky xl:top-6">
-          <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <div>
-                <h2 className="text-sm font-semibold">Canlı önizleme</h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Panel bildirimindeki görünüm
-                </p>
-              </div>
-              <Badge variant="secondary" className="font-medium">
-                Taslak
-              </Badge>
-            </div>
-            <div className="bg-muted/35 p-5">
-              <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
-                <div className="flex items-start gap-3">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <HugeiconsIcon
-                      icon={Notification01Icon}
-                      className="size-4.5"
-                    />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs font-medium text-primary">
-                        Core Asistan duyurusu
-                      </p>
-                      <span className="text-[11px] text-muted-foreground">
-                        Şimdi
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm font-semibold break-words">
-                      {title.trim() || "Duyuru başlığı"}
-                    </p>
-                    <p className="mt-1 max-h-48 overflow-y-auto text-xs leading-5 break-words whitespace-pre-wrap text-muted-foreground">
-                      {message.trim() || "Mesajınız burada görünecek."}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-3 px-5 py-4 text-xs">
-              <div className="flex items-start justify-between gap-4">
-                <span className="text-muted-foreground">Alıcı rolü</span>
-                <span className="max-w-[65%] text-right font-medium">
-                  {selectedRoles.length
-                    ? allRolesSelected
-                      ? "Tüm roller"
-                      : selectedRoles
-                          .map((role) => ANNOUNCEMENT_ROLES[role])
-                          .join(", ")
-                    : "Seçilmedi"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-muted-foreground">Kanallar</span>
-                <span className="font-medium">
-                  Bildirim{sendEmail ? " + e-posta" : ""}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-3 rounded-xl border border-border bg-card p-4 text-xs leading-5 text-muted-foreground">
-            <HugeiconsIcon
-              icon={UserGroupIcon}
-              className="mt-0.5 size-4 shrink-0 text-primary"
-            />
-            Gerçek alıcı sayısı, roller seçilip önizleme açıldığında hesaplanır.
-          </div>
-        </aside>
-      </div>
-
-      <section
-        className="mt-10"
-        aria-labelledby="announcements-history-heading"
-      >
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2
-              id="announcements-history-heading"
-              className="text-base font-semibold"
-            >
-              Gönderim geçmişi
-            </h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Son 30 duyuru ve gönderim kapsamı.
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => router.refresh()}
-          >
-            <HugeiconsIcon icon={RefreshIcon} className="size-3.5" />
-            Yenile
-          </Button>
-        </div>
-        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
-          {data.items.length ? (
-            <div className="divide-y divide-border">
-              {data.items.map((item) => (
-                <HistoryRow key={item.id} item={item} />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center px-6 py-14 text-center">
-              <span className="flex size-10 items-center justify-center rounded-xl bg-primary/8 text-primary">
-                <HugeiconsIcon icon={Notification01Icon} className="size-5" />
-              </span>
-              <p className="mt-4 text-sm font-medium">
-                Henüz duyuru gönderilmedi
-              </p>
-              <p className="mt-1 max-w-sm text-xs leading-5 text-muted-foreground">
-                İlk duyurunuzu yukarıdaki formdan hazırlayıp alıcıları kontrol
-                ederek yayımlayabilirsiniz.
-              </p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      <Dialog
-        open={Boolean(preview)}
-        onOpenChange={(open) => {
-          if (!open && !pending) {
-            setPreview(null)
-            setError("")
-          }
-        }}
-      >
-        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
-          <DialogHeader>
-            <div className="mb-2 flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <HugeiconsIcon icon={Notification01Icon} className="size-5" />
-            </div>
-            <DialogTitle>Gönderimi onayla</DialogTitle>
-            <DialogDescription>
-              İçeriği ve alıcı sayısını kontrol edin. Onayla dediğinizde duyuru
-              yayımlanır.
-            </DialogDescription>
-          </DialogHeader>
-          {preview ? (
-            <div className="space-y-4 py-1">
-              <div className="rounded-lg border border-border bg-muted/20 p-4">
-                <p className="text-sm font-semibold break-words">
-                  {preview.title}
-                </p>
-                <p className="mt-2 max-h-32 overflow-y-auto text-xs leading-5 break-words whitespace-pre-wrap text-muted-foreground">
-                  {preview.message}
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">
-                <div className="bg-card p-4">
-                  <HugeiconsIcon
-                    icon={Notification01Icon}
-                    className="size-4 text-primary"
-                  />
-                  <p className="mt-3 text-2xl font-semibold tabular-nums">
-                    {preview.recipientCount.toLocaleString("tr-TR")}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Panel bildirimi
-                  </p>
-                </div>
-                <div className="bg-card p-4">
-                  <HugeiconsIcon
-                    icon={Mail01Icon}
-                    className="size-4 text-primary"
-                  />
-                  <p className="mt-3 text-2xl font-semibold tabular-nums">
-                    {preview.emailCount.toLocaleString("tr-TR")}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {preview.sendEmail
-                      ? "Sıraya alınacak e-posta"
-                      : "E-posta kapalı"}
-                  </p>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs font-medium">Seçilen roller</p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {preview.roles.map((role) => (
-                    <Badge
-                      key={role}
-                      variant="secondary"
-                      className="font-medium"
-                    >
-                      {ANNOUNCEMENT_ROLES[role]}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              {preview.skippedEmailCount > 0 ? (
-                <p className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2.5 text-xs leading-5 text-amber-800 dark:text-amber-300">
-                  {preview.skippedEmailCount} kişinin e-posta adresi
-                  doğrulanmamış. Bu kişilere panel bildirimi ulaşacak.
+            <SheetFooter className="shrink-0 border-t border-border bg-card px-6 py-4">
+              {error ? (
+                <p role="alert" className="text-sm text-destructive">
+                  {error}
                 </p>
               ) : null}
-              <div className="border-t border-border pt-4">
-                <p className="text-xs font-medium">
-                  Örnek alıcılar{" "}
-                  <span className="font-normal text-muted-foreground">
-                    ({preview.sample.length} / {preview.recipientCount})
-                  </span>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs text-muted-foreground">
+                  Panel bildirimi gönderilir.
                 </p>
-                <ul className="mt-2 divide-y divide-border">
-                  {preview.sample.map((user) => (
-                    <li
-                      key={user.email}
-                      className="flex flex-col gap-0.5 py-2 text-xs sm:flex-row sm:justify-between sm:gap-3"
-                    >
-                      <span className="min-w-0 break-all">
-                        {user.name} · {user.email}
-                      </span>
-                      <span className="shrink-0 text-muted-foreground">
-                        {user.workspaceName} · {ANNOUNCEMENT_ROLES[user.role]}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                <Button
+                  type="submit"
+                  disabled={
+                    publishing ||
+                    !title.trim() ||
+                    !message.trim() ||
+                    !selectedRoles.length
+                  }
+                >
+                  {publishing ? "Yayımlanıyor…" : "Duyuruyu yayımla"}
+                </Button>
               </div>
-              <p className="text-[11px] text-muted-foreground">
-                Önizleme {formatEmailDate(preview.expiresAt)} tarihine kadar
-                geçerlidir.
-              </p>
-            </div>
-          ) : null}
-          {error ? (
-            <p role="alert" className="text-sm text-destructive">
-              {error}
-            </p>
-          ) : null}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              disabled={Boolean(pending)}
-              onClick={() => setPreview(null)}
-            >
-              Düzenlemeye dön
-            </Button>
-            <Button disabled={Boolean(pending)} onClick={() => void publish()}>
-              {pending === "publish"
-                ? "Gönderim hazırlanıyor…"
-                : "Duyuruyu yayımla"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
     </main>
   )
 }
-
-function SectionHeading({
-  number,
-  title,
-  description,
-}: {
-  number: string
-  title: string
-  description: string
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-muted/50 text-[11px] font-semibold text-muted-foreground tabular-nums">
-        {number}
-      </span>
-      <div>
-        <h3 className="text-sm font-semibold">{title}</h3>
-        <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-          {description}
-        </p>
-      </div>
-    </div>
-  )
-}
-
 function HistoryRow({ item }: { item: AdminAnnouncement }) {
   return (
     <details className="group">

@@ -1,0 +1,11 @@
+[Unit]
+Description=Core Asistan encrypted off-site database backup
+Requires=docker.service
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/core-assist
+EnvironmentFile=/etc/core-assist-backup.env
+ExecStart=/bin/bash /opt/core-assist/deploy/backup-offsite.sh
+UMask=0077

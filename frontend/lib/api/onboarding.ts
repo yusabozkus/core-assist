@@ -19,3 +19,12 @@ export function completeOnboarding(payload: CompleteOnboardingPayload) {
     body: JSON.stringify(payload),
   })
 }
+
+export function completeAdditionalStoreOnboarding(
+  payload: CompleteOnboardingPayload
+) {
+  return apiFetch<CompleteOnboardingResponse>("/onboarding/stores/complete", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}

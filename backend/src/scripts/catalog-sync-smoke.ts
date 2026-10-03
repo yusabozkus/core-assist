@@ -12,7 +12,7 @@ import {
 import { CredentialsEncryptionService } from '../modules/channels/credentials-encryption.service';
 import { PRODUCT_SYNC_DISPATCHER } from '../modules/product-sync/product-sync.constants';
 import type { ProductSyncDispatcher } from '../modules/product-sync/product-sync.types';
-import { MOCK_PRODUCTS_PER_PROVIDER } from '../modules/channels/providers/mock-catalog.connector';
+import { MOCK_TRENDYOL_PRODUCTS } from '../modules/channels/providers/mock-catalog.connector';
 import { CatalogService } from '../modules/catalog/catalog.service';
 import { BillingSubscriptionService } from '../modules/billing/billing-subscription.service';
 
@@ -135,7 +135,7 @@ async function run() {
       ]);
 
     if (
-      products !== MOCK_PRODUCTS_PER_PROVIDER ||
+      products !== MOCK_TRENDYOL_PRODUCTS ||
       variants !== externalVariants ||
       variants !== firstVariantIds.length ||
       outOfStock < 1
@@ -148,10 +148,10 @@ async function run() {
     if (
       firstPage.items.length !== 10 ||
       !firstPage.nextCursor ||
-      firstPage.total !== MOCK_PRODUCTS_PER_PROVIDER ||
+      firstPage.total !== MOCK_TRENDYOL_PRODUCTS ||
       secondPage.items.length !== 10 ||
       !secondPage.nextCursor ||
-      thirdPage.items.length !== MOCK_PRODUCTS_PER_PROVIDER - 20 ||
+      thirdPage.items.length !== MOCK_TRENDYOL_PRODUCTS - 20 ||
       thirdPage.nextCursor !== null ||
       !productDetail.title ||
       productDetail.images.length < 1 ||

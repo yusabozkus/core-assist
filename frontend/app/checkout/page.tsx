@@ -8,6 +8,7 @@ import { billingRoutes } from "@/lib/billing-routes"
 import { SUBSCRIPTION_PLANS } from "@/constants/billing"
 import { APP_ROUTES } from "@/constants/site"
 import { getCurrentUser } from "@/lib/server-auth"
+import { requireCompletedOnboarding } from "@/lib/require-onboarding.server"
 import type { BillingCycle } from "@/types/billing"
 
 export const metadata: Metadata = {
@@ -43,6 +44,7 @@ export default async function CheckoutPage({
     const returnTo = `${APP_ROUTES.checkout}?workspaceId=${encodeURIComponent(workspaceId)}&plan=${plan.id}&cycle=${billingCycle}`
     redirect(`${APP_ROUTES.login}?returnTo=${encodeURIComponent(returnTo)}`)
   }
+  await requireCompletedOnboarding()
   const workspace = await getBillingWorkspace(workspaceId)
   if (!workspace) return <BillingAccessNotice />
 

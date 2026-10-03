@@ -44,11 +44,33 @@ export function applyHeightWeightSizeRecommendation(
     });
   }
 
+  const catalogSizes = uniqueSizesByNormalized(
+    context.product.variants.flatMap((variant) =>
+      variant.size ? [variant.size] : [],
+    ),
+  );
+  const canEstimate =
+    !/(?:^| )(?:ayakkabi|sneaker|terlik|sandalet|cizme|bot|canta|kemer|aksesuar)(?: |$)/.test(
+      normalize(`${context.product.category ?? ''} ${context.product.title}`),
+    );
+  const estimatedRecommendation = (candidateSizes: string[]) =>
+    withRecommendation(context, {
+      status: 'ESTIMATE_ALLOWED',
+      customerHeightCm: measurements.heightCm,
+      customerWeightKg: measurements.weightKg,
+      recommendedSizes: candidateSizes,
+      requiredMeasurements: findRequiredBodyMeasurements(context),
+      sourceEvidenceId: 'variant-sizes',
+    });
+
   const guidesWithHeightWeight =
     context.product.sizeGuides?.filter((guide) =>
       guideHasHeightWeightMapping(guide.structuredData),
     ) ?? [];
   if (guidesWithHeightWeight.length === 0) {
+    if (canEstimate && catalogSizes.length >= 2) {
+      return estimatedRecommendation(catalogSizes);
+    }
     return withRecommendation(context, {
       status: 'GUIDE_UNAVAILABLE',
       customerHeightCm: measurements.heightCm,
@@ -165,6 +187,15 @@ export function parseProductAnswerSizeGuideData(
 
   return {
     ...(typeof value.title === 'string' ? { title: value.title } : {}),
+    ...(typeof value.audience === 'string' ? { audience: value.audience } : {}),
+    ...(['BODY', 'GARMENT', 'MIXED', 'UNKNOWN'].includes(
+      String(value.measurementBasis),
+    )
+      ? {
+          measurementBasis: value.measurementBasis as
+            'BODY' | 'GARMENT' | 'MIXED' | 'UNKNOWN',
+        }
+      : {}),
     unit: value.unit,
     headers: value.headers,
     rows,
@@ -184,24 +215,26 @@ function extractCustomerHeightWeight(question: string) {
   const normalized = normalize(question).replaceAll(',', '.');
   const weightMatches = [
     ...normalized.matchAll(
-      /(\d{2,3}(?:\.\d+)?)\s*(?:kg|kilo(?:gram)?)(?:yum|yim|um|im)?\b/g,
+      /(\d{2,3}(?:\.\d+)?)\s*(?:kg|kilo(?:gram)?)(?:yum|yim|um|im|ya|ye|yla|yle)?\b/g,
     ),
   ];
   const namedWeight = normalized.match(
     /(?:kilom|kiloyum|kilo|agirligim|agirlik)\s*(?:[:=]?\s*)(\d{2,3}(?:\.\d+)?)/,
   );
-  const weightKg = plausibleWeight(
-    Number(weightMatches[0]?.[1] ?? namedWeight?.[1]),
-  );
+  const selectedWeight = namedWeight ?? weightMatches[0];
+  const weightKg = plausibleWeight(Number(selectedWeight?.[1]));
 
-  const explicitHeight =
-    normalized.match(
-      /(?:boyum|boyu|boy)\s*(?:[:=]?\s*)(\d(?:\.\d{1,2})|\d{3}(?:\.\d+)?)/,
-    ) ??
-    normalized.match(
-      /(\d(?:\.\d{1,2})|\d{3}(?:\.\d+)?)\s*(?:cm|santimetre|metre|boy(?:um)?)\b/,
-    );
-  let heightCm = plausibleHeight(Number(explicitHeight?.[1]));
+  const namedHeight = normalized.match(
+    /(?:boyum|boyu|boy)\s*(?:[:=]?\s*)(\d(?:\.\d{1,2})|\d{3}(?:\.\d+)?)/,
+  );
+  const measuredHeight = normalized.match(
+    /(\d(?:\.\d{1,2})|\d{3}(?:\.\d+)?)\s*(?:cm|santimetre|metre|boy(?:um)?)\b/,
+  );
+  let heightCm =
+    capturedNumberOffset(namedHeight) !== capturedNumberOffset(selectedWeight)
+      ? plausibleHeight(Number(namedHeight?.[1]))
+      : null;
+  heightCm ??= plausibleHeight(Number(measuredHeight?.[1]));
 
   if (heightCm === null && weightMatches[0]) {
     const beforeWeight = normalized.slice(0, weightMatches[0].index);
@@ -212,11 +245,15 @@ function extractCustomerHeightWeight(question: string) {
   }
 
   const requested =
-    /\b(?:boy|boyum|kilo|kiloyum|kilom|kg|agirlik|agirligim)\b/.test(
+    /\b(?:boy|boyum|kilo(?:gram)?(?:yum|yim|um|im|ya|ye|yla|yle)?|kilom|kg|agirlik|agirligim)\b/.test(
       normalized,
     );
 
   return { requested, heightCm, weightKg };
+}
+
+function capturedNumberOffset(match: RegExpMatchArray | null | undefined) {
+  return match ? (match.index ?? 0) + match[0].lastIndexOf(match[1]) : null;
 }
 
 function guideHasHeightWeightMapping(data: ProductAnswerSizeGuideData | null) {
@@ -345,7 +382,7 @@ function isNonBodyMeasurement(name: string) {
   return (
     /^(?:tr|eu|tr eu|uk|us|uk us|it|beden|size|numara|kanvas)(?: cm)?$/.test(
       name,
-    ) || /uzunluk|ic bacak|urun boyu|giysi boyu/.test(name)
+    ) || /karsiligi|uzunluk|ic bacak|ic boy|urun boyu|giysi boyu/.test(name)
   );
 }
 
@@ -428,6 +465,17 @@ function clampConfidence(value: number) {
 
 function unique(values: string[]) {
   return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+}
+
+function uniqueSizesByNormalized(values: string[]) {
+  return [
+    ...new Map(
+      values
+        .map((value) => value.trim())
+        .filter(Boolean)
+        .map((value) => [normalizeSize(value), value]),
+    ).values(),
+  ];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -25,9 +25,12 @@ import { AuditModule } from './modules/audit/audit.module';
 import { DataRetentionModule } from './modules/data-retention/data-retention.module';
 import { ContactModule } from './modules/contact/contact.module';
 import { ActivityModule } from './modules/activity/activity.module';
+import { RuntimeModule } from './infrastructure/runtime/runtime.module';
+import { LandingDemoModule } from './modules/landing-demo/landing-demo.module';
 
 @Module({
   imports: [
+    RuntimeModule,
     BullModule.forRoot({ connection: getRedisConnection() }),
     PrismaModule,
     AuditModule,
@@ -50,6 +53,7 @@ import { ActivityModule } from './modules/activity/activity.module';
     SupportModule,
     DataRetentionModule,
     ContactModule,
+    LandingDemoModule,
     AdminModule,
   ],
   controllers: [AppController],

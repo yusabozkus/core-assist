@@ -20,6 +20,11 @@ import {
   UpdateSupportTicketStatusDto,
 } from './dto/update-support-ticket-status.dto';
 import { SupportNotificationService } from './support-notification.service';
+import {
+  SupportAttachmentService,
+  assertSupportImageQuota,
+  type StoredSupportImage,
+} from './support-attachment.service';
 import { lockSupportTicket } from './support-ticket-lock';
 
 const summaryInclude = {
@@ -44,6 +49,7 @@ const detailInclude = {
     orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     include: {
       author: { select: { id: true, name: true, image: true } },
+      attachments: { select: { id: true, contentType: true, size: true } },
     },
   },
   _count: { select: { messages: true } },
@@ -62,6 +68,7 @@ export class SupportService {
     private readonly prisma: PrismaService,
     private readonly supportNotifications: SupportNotificationService,
     private readonly workspaces: WorkspacesService,
+    private readonly attachments: SupportAttachmentService,
   ) {}
 
   async findAll(userId: string) {
@@ -181,7 +188,12 @@ export class SupportService {
     return this.toDetail(result.ticket);
   }
 
-  async reply(ticketId: string, userId: string, body: CreateSupportMessageDto) {
+  async reply(
+    ticketId: string,
+    userId: string,
+    body: CreateSupportMessageDto,
+    images: StoredSupportImage[] = [],
+  ) {
     const recipients = await this.prisma.$transaction(async (transaction) => {
       const account = await this.requireAccountMembership(userId, transaction);
       const ticket = await lockSupportTicket(transaction, ticketId);
@@ -197,6 +209,14 @@ export class SupportService {
         );
       }
 
+      if (images.length) {
+        const usage = await transaction.supportAttachment.aggregate({
+          where: { message: { ticket: { workspaceId: ticket.workspaceId } } },
+          _sum: { size: true },
+        });
+        assertSupportImageQuota(usage._sum.size ?? 0, images);
+      }
+
       const now = new Date();
       const message = await transaction.supportMessage.create({
         data: {
@@ -204,6 +224,7 @@ export class SupportService {
           authorUserId: userId,
           authorType: SupportMessageAuthorType.CUSTOMER,
           body: body.message,
+          attachments: images.length ? { create: images } : undefined,
         },
       });
       await transaction.supportTicket.update({
@@ -226,6 +247,46 @@ export class SupportService {
     this.supportNotifications.emitCreated(recipients, null);
 
     return this.findOne(ticketId, userId);
+  }
+
+  async replyWithImages(
+    ticketId: string,
+    userId: string,
+    message: string | undefined,
+    files: Express.Multer.File[],
+  ) {
+    await this.findOne(ticketId, userId);
+    const images = await this.attachments.upload(files);
+    try {
+      return await this.reply(
+        ticketId,
+        userId,
+        { message: message?.trim() || 'Görsel eklendi' },
+        images,
+      );
+    } catch (error) {
+      await this.attachments.remove(images);
+      throw error;
+    }
+  }
+
+  async readAttachment(ticketId: string, attachmentId: string, userId: string) {
+    const account = await this.requireAccountMembership(userId);
+    const attachment = await this.prisma.supportAttachment.findFirst({
+      where: {
+        id: attachmentId,
+        message: {
+          ticketId,
+          isInternal: false,
+          ticket: { workspaceId: account.workspaceId },
+        },
+      },
+    });
+    if (!attachment) throw new NotFoundException('Görsel bulunamadı.');
+    return {
+      contentType: attachment.contentType,
+      bytes: await this.attachments.read(attachment.objectKey),
+    };
   }
 
   async updateStatus(
@@ -368,6 +429,7 @@ export class SupportService {
         id: message.id,
         authorType: message.authorType,
         body: message.body,
+        attachments: message.attachments,
         createdAt: message.createdAt,
         author: message.author
           ? {

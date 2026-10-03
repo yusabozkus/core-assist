@@ -6,6 +6,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  CatalogSyncKind,
+  CatalogSyncStatus,
+  ChannelConnectionStatus,
   InventoryPolicy,
   QuestionAnswerStatus,
   StoreRole,
@@ -130,6 +133,30 @@ export class StoresService {
         inventoryPolicy: true,
         status: true,
         createdAt: true,
+        knowledgeProfile: {
+          select: { shippingPolicy: true, returnPolicy: true },
+        },
+        channelConnections: {
+          where: {
+            removedAt: null,
+            status: ChannelConnectionStatus.CONNECTED,
+            credentialsEncrypted: { not: null },
+            syncRuns: {
+              some: {
+                kind: CatalogSyncKind.FULL,
+                OR: [
+                  { status: CatalogSyncStatus.COMPLETED },
+                  {
+                    status: CatalogSyncStatus.RUNNING,
+                    productsProcessed: { gt: 0 },
+                  },
+                ],
+              },
+            },
+          },
+          take: 1,
+          select: { id: true },
+        },
         members: {
           where: { userId },
           take: 1,
@@ -147,13 +174,26 @@ export class StoresService {
       },
     });
 
-    return stores.map(({ members, workspace, ...store }) => ({
-      ...store,
-      accessLevel: resolveTeamAccessLevel(
-        workspace.members[0]?.role ?? WorkspaceRole.MEMBER,
+    return stores.map(
+      ({
         members,
-      ),
-    }));
+        workspace,
+        knowledgeProfile,
+        channelConnections,
+        ...store
+      }) => ({
+        ...store,
+        setupComplete: Boolean(
+          knowledgeProfile?.shippingPolicy?.trim() &&
+          knowledgeProfile?.returnPolicy?.trim() &&
+          channelConnections.length > 0,
+        ),
+        accessLevel: resolveTeamAccessLevel(
+          workspace.members[0]?.role ?? WorkspaceRole.MEMBER,
+          members,
+        ),
+      }),
+    );
   }
 
   async findOne(id: string, userId: string) {
@@ -322,6 +362,7 @@ export class StoresService {
                 in: [
                   QuestionAnswerStatus.QUEUED,
                   QuestionAnswerStatus.PROCESSING,
+                  QuestionAnswerStatus.REVIEW_REQUIRED,
                 ],
               },
             },
@@ -485,6 +526,7 @@ export class StoresService {
                 in: [
                   QuestionAnswerStatus.QUEUED,
                   QuestionAnswerStatus.PROCESSING,
+                  QuestionAnswerStatus.REVIEW_REQUIRED,
                 ],
               },
             },

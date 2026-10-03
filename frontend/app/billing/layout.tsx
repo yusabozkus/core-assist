@@ -5,8 +5,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-// Authentication and workspace authorization are checked by each page,
-// independently of dashboard/onboarding and operational store access.
+// Each billing page checks authentication and completed onboarding before
+// workspace authorization. Billing does not require an active store.
 export default function BillingLayout({
   children,
 }: {

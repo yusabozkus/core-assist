@@ -1,6 +1,8 @@
 export type QuestionAnswerJobData = {
   storeId: string;
   answerId: string;
+  // Fences old Redis jobs after an explicitly requested new delivery attempt.
+  queuedAt?: string;
 };
 
 type QueueManualQuestionAnswerInput = {

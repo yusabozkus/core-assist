@@ -22,7 +22,10 @@ import {
   announcementUserSelect,
   selectAnnouncementAudience,
 } from './admin-announcements.policy';
-import { PreviewAdminAnnouncementDto } from './dto/admin-announcement.dto';
+import {
+  AdminAnnouncementsQueryDto,
+  PreviewAdminAnnouncementDto,
+} from './dto/admin-announcement.dto';
 
 const publicSelect = {
   id: true,
@@ -38,6 +41,8 @@ const publicSelect = {
   publishedAt: true,
 } satisfies Prisma.AdminAnnouncementSelect;
 
+const PAGE_SIZE = 20;
+
 @Injectable()
 export class AdminAnnouncementsService {
   constructor(
@@ -48,14 +53,38 @@ export class AdminAnnouncementsService {
     private readonly access: AdminAccessService,
   ) {}
 
-  async list() {
-    const items = await this.prisma.adminAnnouncement.findMany({
-      where: { publishedAt: { not: null } },
-      orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
-      take: 30,
-      select: publicSelect,
-    });
-    return { items, emailAvailable: this.emailConfiguration() !== null };
+  async list(query: AdminAnnouncementsQueryDto) {
+    const where: Prisma.AdminAnnouncementWhereInput = {
+      publishedAt: { not: null },
+      ...(query.q
+        ? {
+            OR: [
+              { title: { contains: query.q, mode: 'insensitive' } },
+              { message: { contains: query.q, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
+    const [items, total] = await Promise.all([
+      this.prisma.adminAnnouncement.findMany({
+        where,
+        orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }],
+        skip: (query.page - 1) * PAGE_SIZE,
+        take: PAGE_SIZE,
+        select: publicSelect,
+      }),
+      this.prisma.adminAnnouncement.count({ where }),
+    ]);
+    return {
+      items,
+      pagination: {
+        page: query.page,
+        pageSize: PAGE_SIZE,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+      },
+      emailAvailable: this.emailConfiguration() !== null,
+    };
   }
 
   async preview(body: PreviewAdminAnnouncementDto, adminUserId: string) {

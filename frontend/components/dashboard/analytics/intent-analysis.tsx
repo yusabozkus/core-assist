@@ -74,10 +74,6 @@ export function IntentAnalysis({
           <h2 id="intent-analysis-title" className="text-sm font-semibold">
             Soru türlerine göre AI performansı
           </h2>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            AI’ın kendine güvendiği ve kullanıcı kontrolüne daha sık ihtiyaç
-            duyduğu konuları karşılaştırın.
-          </p>
         </div>
         <Select value={sort} onValueChange={(value) => setSort(value as Sort)}>
           <SelectTrigger

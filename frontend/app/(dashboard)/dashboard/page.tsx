@@ -25,6 +25,7 @@ export default async function DashboardPage({
       key={`${activeStore.id}-${range}`}
       storeId={activeStore.id}
       storeName={activeStore.name}
+      accessLevel={activeStore.accessLevel}
       range={range}
       initialData={initialData}
     />

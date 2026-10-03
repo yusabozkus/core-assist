@@ -38,6 +38,16 @@ export function replyToSupportTicket(
   )
 }
 
+export function replyWithSupportImages(ticketId: string, message: string, images: File[]) {
+  const body = new FormData()
+  if (message) body.append("message", message)
+  for (const image of images) body.append("images", image)
+  return apiFetch<SupportTicketDetail>(
+    `${supportPath}/${encodeURIComponent(ticketId)}/image-messages`,
+    { method: "POST", body }
+  )
+}
+
 export function updateSupportTicketStatus(
   ticketId: string,
   action: "RESOLVE" | "REOPEN"

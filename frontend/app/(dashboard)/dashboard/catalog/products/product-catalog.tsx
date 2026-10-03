@@ -24,12 +24,14 @@ export type ProductCatalogProps = {
   storeId: string
   initialPage: CatalogProductPage
   connections: ChannelConnection[]
+  canManageStore: boolean
 }
 
 export function ProductCatalog({
   storeId,
   initialPage,
   connections,
+  canManageStore,
 }: ProductCatalogProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -108,12 +110,14 @@ export function ProductCatalog({
             <CatalogBadge label="Toplam stok" value={page.summary.totalStock} />
           </div>
         </div>
-        <CatalogStockSync
-          storeId={storeId}
-          connections={connections}
-          provider={provider}
-          onCompleted={refresh}
-        />
+        {canManageStore ? (
+          <CatalogStockSync
+            storeId={storeId}
+            connections={connections}
+            provider={provider}
+            onCompleted={refresh}
+          />
+        ) : null}
       </div>
 
       <CatalogToolbar
@@ -135,7 +139,7 @@ export function ProductCatalog({
         ) : loading === "replace" ? (
           <ProductCardGridSkeleton view={view} />
         ) : page.summary.products === 0 ? (
-          <EmptyCatalog />
+          <EmptyCatalog canManageStore={canManageStore} />
         ) : page.items.length === 0 && !error ? (
           <NoSearchResults
             query={loadedFilters.query}

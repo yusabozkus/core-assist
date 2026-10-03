@@ -3,12 +3,12 @@ import {
   getServerChannelConnections,
   getServerIntegrationProviders,
 } from "@/lib/api/channels.server"
-import { getOperationalStoreContext } from "@/lib/stores/active-store"
+import { getManagedOperationalStoreContext } from "@/lib/stores/active-store"
 
 export const dynamic = "force-dynamic"
 
 export default async function ChannelsPage() {
-  const { activeStore } = await getOperationalStoreContext()
+  const { activeStore } = await getManagedOperationalStoreContext()
 
   const [connections, providers] = await Promise.all([
     getServerChannelConnections(activeStore.id),

@@ -31,6 +31,7 @@ import { InventoryVerificationService } from '../inventory-verification/inventor
 import { NotificationsService } from '../notifications/notifications.service';
 import type { QuestionAnswerJobData } from './question-answer.types';
 import { requiresInventoryVerification } from './automatic-answer-inventory.guard';
+import { ANSWER_DELIVERY_REVIEW_MESSAGE } from './question-answer.constants';
 
 @Injectable()
 export class QuestionAnswerWorkerService {
@@ -45,6 +46,9 @@ export class QuestionAnswerWorkerService {
   ) {}
 
   async run(data: QuestionAnswerJobData) {
+    // Legacy jobs are replaced by reconciliation; they cannot identify a new
+    // attempt safely after an operator has resolved an earlier failed one.
+    if (!data.queuedAt) return;
     const delivery = await this.prisma.questionAnswer.findFirst({
       where: { id: data.answerId, storeId: data.storeId },
       select: {
@@ -54,6 +58,7 @@ export class QuestionAnswerWorkerService {
         origin: true,
         requestedByUserId: true,
         status: true,
+        queuedAt: true,
         questionId: true,
         draftAttemptId: true,
         question: {
@@ -101,8 +106,8 @@ export class QuestionAnswerWorkerService {
 
     if (!delivery) throw new Error('Question answer delivery is unavailable.');
     if (
-      delivery.status === QuestionAnswerStatus.SENT ||
-      delivery.status === QuestionAnswerStatus.FAILED
+      delivery.queuedAt.toISOString() !== data.queuedAt ||
+      delivery.status !== QuestionAnswerStatus.QUEUED
     )
       return;
 
@@ -123,47 +128,6 @@ export class QuestionAnswerWorkerService {
       return true;
     };
     if (await stopIfSubscriptionInactive()) return;
-
-    const claimed = await this.prisma.$transaction(async (transaction) => {
-      await transaction.$queryRaw`
-        SELECT "id"
-        FROM "store"
-        WHERE "id" = ${data.storeId}
-        FOR UPDATE
-      `;
-
-      const store = await transaction.store.findUnique({
-        where: { id: data.storeId },
-        select: { status: true },
-      });
-      if (store?.status !== StoreStatus.ACTIVE) return false;
-
-      const updated = await transaction.questionAnswer.updateMany({
-        where: {
-          id: delivery.id,
-          storeId: data.storeId,
-          status: {
-            in: [QuestionAnswerStatus.QUEUED, QuestionAnswerStatus.PROCESSING],
-          },
-        },
-        data: {
-          status: QuestionAnswerStatus.PROCESSING,
-          attempts: { increment: 1 },
-          processingStartedAt: new Date(),
-          lastError: null,
-        },
-      });
-
-      return updated.count === 1;
-    });
-
-    if (!claimed) {
-      await this.failPendingDelivery(
-        data,
-        'Mağaza aktif olmadığı için cevap gönderilmedi.',
-      );
-      return;
-    }
 
     if (delivery.connection.status !== ChannelConnectionStatus.CONNECTED) {
       throw new Error('Question channel connection is not active.');
@@ -200,6 +164,7 @@ export class QuestionAnswerWorkerService {
       if (
         draft?.answerability !== 'OUT_OF_SCOPE' &&
         requiresInventoryVerification({
+          answer: delivery.answer,
           evidenceIds: delivery.question.draftEvidenceIds,
           requestedFacts: draft?.requestedFacts,
           detectedFacts: draft?.detectedFacts,
@@ -264,7 +229,7 @@ export class QuestionAnswerWorkerService {
           },
           answerDelivery: {
             id: delivery.id,
-            status: QuestionAnswerStatus.PROCESSING,
+            status: QuestionAnswerStatus.QUEUED,
           },
         },
         select: {
@@ -293,45 +258,113 @@ export class QuestionAnswerWorkerService {
     const credentials = this.encryption.decrypt(
       delivery.connection.credentialsEncrypted,
     );
-    const result = await this.providers.sendProductQuestionAnswer(
-      delivery.connection.providerKey,
-      {
-        environment: delivery.connection.environment,
-        credentials,
-      },
-      delivery.question.externalQuestionId,
-      delivery.answer,
-    );
+    const claimed = await this.prisma.$transaction(async (transaction) => {
+      await transaction.$queryRaw`
+        SELECT "id"
+        FROM "store"
+        WHERE "id" = ${data.storeId}
+        FOR UPDATE
+      `;
 
-    await this.prisma.$transaction(async (transaction) => {
-      await transaction.questionAnswer.update({
-        where: { id: delivery.id },
+      const store = await transaction.store.findUnique({
+        where: { id: data.storeId },
+        select: { status: true },
+      });
+      if (store?.status !== StoreStatus.ACTIVE) return false;
+
+      const updated = await transaction.questionAnswer.updateMany({
+        where: {
+          id: delivery.id,
+          storeId: data.storeId,
+          queuedAt: new Date(data.queuedAt!),
+          status: QuestionAnswerStatus.QUEUED,
+        },
         data: {
-          status: QuestionAnswerStatus.SENT,
-          externalAnswerId: result.externalAnswerId ?? null,
-          sentAt: result.answeredAt,
-          processingStartedAt: null,
+          status: QuestionAnswerStatus.PROCESSING,
+          attempts: { increment: 1 },
+          processingStartedAt: new Date(),
           lastError: null,
         },
       });
-      await transaction.productQuestion.update({
-        where: { id: delivery.questionId },
-        data: {
-          status: ProductQuestionStatus.ANSWERED,
-          answer: delivery.answer,
-          answeredAt: result.answeredAt,
+
+      return updated.count === 1;
+    });
+
+    if (!claimed) {
+      await this.failPendingDelivery(
+        data,
+        'Mağaza aktif olmadığı için cevap gönderilmedi.',
+      );
+      return;
+    }
+
+    try {
+      const result = await this.providers.sendProductQuestionAnswer(
+        delivery.connection.providerKey,
+        {
+          environment: delivery.connection.environment,
+          credentials,
         },
-      });
-      if (delivery.draftAttemptId) {
-        await transaction.aiDraftAttempt.update({
-          where: { id: delivery.draftAttemptId },
+        delivery.question.externalQuestionId,
+        delivery.answer,
+      );
+
+      await this.prisma.$transaction(async (transaction) => {
+        const completed = await transaction.questionAnswer.updateMany({
+          where: {
+            id: delivery.id,
+            queuedAt: delivery.queuedAt,
+            status: {
+              in: [
+                QuestionAnswerStatus.PROCESSING,
+                QuestionAnswerStatus.REVIEW_REQUIRED,
+              ],
+            },
+          },
           data: {
-            outcome: AiDraftOutcome.SENT,
-            finalizedAt: result.answeredAt,
+            status: QuestionAnswerStatus.SENT,
+            externalAnswerId: result.externalAnswerId ?? null,
+            sentAt: result.answeredAt,
+            processingStartedAt: null,
+            lastError: null,
           },
         });
-      }
-    });
+        if (completed.count !== 1)
+          throw new Error('Answer delivery attempt changed before completion.');
+        await transaction.productQuestion.update({
+          where: { id: delivery.questionId },
+          data: {
+            status: ProductQuestionStatus.ANSWERED,
+            answer: delivery.answer,
+            answeredAt: result.answeredAt,
+          },
+        });
+        if (delivery.draftAttemptId) {
+          await transaction.aiDraftAttempt.update({
+            where: { id: delivery.draftAttemptId },
+            data: {
+              outcome: AiDraftOutcome.SENT,
+              finalizedAt: result.answeredAt,
+            },
+          });
+        }
+      });
+    } catch (error) {
+      // A timeout or local commit failure cannot prove that the POST failed.
+      // Persist the ambiguity; retries must never issue another POST.
+      await this.prisma.questionAnswer.updateMany({
+        where: {
+          id: delivery.id,
+          queuedAt: delivery.queuedAt,
+          status: QuestionAnswerStatus.PROCESSING,
+        },
+        data: {
+          status: QuestionAnswerStatus.REVIEW_REQUIRED,
+          lastError: ANSWER_DELIVERY_REVIEW_MESSAGE,
+        },
+      });
+      throw error;
+    }
     await this.audit.recordSafely({
       actorType: delivery.requestedByUserId
         ? AuditActorType.USER
@@ -363,6 +396,7 @@ export class QuestionAnswerWorkerService {
   }
 
   async markFinalFailure(data: QuestionAnswerJobData, error: unknown) {
+    if (!data.queuedAt) return;
     const message =
       error instanceof Error ? error.message : 'Cevap gönderilemedi.';
 
@@ -381,9 +415,9 @@ export class QuestionAnswerWorkerService {
       where: {
         id: data.answerId,
         storeId: data.storeId,
-        status: {
-          notIn: [QuestionAnswerStatus.SENT, QuestionAnswerStatus.FAILED],
-        },
+        queuedAt: new Date(data.queuedAt),
+        // Only pre-dispatch errors are safe to present as retryable failures.
+        status: QuestionAnswerStatus.QUEUED,
       },
       data: {
         status: QuestionAnswerStatus.FAILED,
@@ -464,12 +498,8 @@ export class QuestionAnswerWorkerService {
             storeId: data.storeId,
             origin: QuestionAnswerOrigin.AUTOMATION,
             draftAttemptId,
-            status: {
-              in: [
-                QuestionAnswerStatus.QUEUED,
-                QuestionAnswerStatus.PROCESSING,
-              ],
-            },
+            queuedAt: new Date(data.queuedAt!),
+            status: QuestionAnswerStatus.QUEUED,
           },
           data: {
             status: QuestionAnswerStatus.FAILED,
@@ -570,9 +600,8 @@ export class QuestionAnswerWorkerService {
       where: {
         id: data.answerId,
         storeId: data.storeId,
-        status: {
-          in: [QuestionAnswerStatus.QUEUED, QuestionAnswerStatus.PROCESSING],
-        },
+        queuedAt: new Date(data.queuedAt!),
+        status: QuestionAnswerStatus.QUEUED,
       },
       data: {
         status: QuestionAnswerStatus.FAILED,

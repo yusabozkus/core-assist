@@ -62,6 +62,7 @@ const DRAFT_RESPONSE_SCHEMA = {
       type: 'array',
       items: { type: 'string' },
     },
+    estimatedSize: { type: 'string' },
   },
 } as const;
 
@@ -70,6 +71,8 @@ const SIZE_GUIDE_RESPONSE_SCHEMA = {
   additionalProperties: false,
   required: [
     'title',
+    'audience',
+    'measurementBasis',
     'unit',
     'headers',
     'rows',
@@ -79,6 +82,14 @@ const SIZE_GUIDE_RESPONSE_SCHEMA = {
   ],
   properties: {
     title: { type: 'string' },
+    audience: {
+      type: 'string',
+      enum: ['MEN', 'WOMEN', 'BOYS', 'GIRLS', 'BABY', 'UNISEX', 'UNKNOWN'],
+    },
+    measurementBasis: {
+      type: 'string',
+      enum: ['BODY', 'GARMENT', 'MIXED', 'UNKNOWN'],
+    },
     unit: { type: 'string', enum: ['CM', 'INCH', 'MIXED', 'UNKNOWN'] },
     headers: { type: 'array', items: { type: 'string' } },
     rows: {
@@ -130,18 +141,32 @@ export class GeminiClientService {
       throw new Error('Gemini API anahtarı yapılandırılmamış.');
     }
 
+    const responseSchema = request.allowedEstimatedSizes?.length
+      ? {
+          ...DRAFT_RESPONSE_SCHEMA,
+          required: [...DRAFT_RESPONSE_SCHEMA.required, 'estimatedSize'],
+          properties: {
+            ...DRAFT_RESPONSE_SCHEMA.properties,
+            estimatedSize: {
+              type: 'string',
+              enum: request.allowedEstimatedSizes,
+            },
+          },
+        }
+      : DRAFT_RESPONSE_SCHEMA;
+
     const interaction = await this.client.interactions.create(
       {
         model: request.model,
         input: request.prompt,
         generation_config: {
-          max_output_tokens: 700,
+          max_output_tokens: 3_072,
           thinking_level: request.thinkingLevel,
         },
         response_format: {
           type: 'text',
           mime_type: 'application/json',
-          schema: DRAFT_RESPONSE_SCHEMA,
+          schema: responseSchema,
         },
         store: false,
       },
@@ -174,8 +199,8 @@ export class GeminiClientService {
           },
         ],
         generation_config: {
-          max_output_tokens: 2_000,
-          thinking_level: 'minimal',
+          max_output_tokens: 12_000,
+          thinking_level: 'medium',
         },
         response_format: {
           type: 'text',

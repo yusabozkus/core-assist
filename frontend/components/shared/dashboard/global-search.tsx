@@ -29,9 +29,11 @@ import {
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog"
 import { APP_ROUTES } from "@/constants/site"
 import { globalSearch } from "@/lib/api/search"
+import { canAccessDashboardPage } from "@/lib/dashboard-access"
 import { cn } from "@/lib/utils"
 import type { ProductQuestionStatus } from "@/types/question"
 import type { GlobalSearchResponse } from "@/types/search"
+import type { StoreAccessLevel } from "@/types/store"
 
 const SEARCH_DEBOUNCE_MS = 250
 
@@ -132,6 +134,7 @@ const SEARCH_PAGES: SearchPage[] = [
 
 type GlobalSearchProps = {
   storeId: string
+  accessLevel?: StoreAccessLevel
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -145,6 +148,7 @@ type RemoteSearchState = {
 
 export function GlobalSearch({
   storeId,
+  accessLevel,
   open,
   onOpenChange,
 }: GlobalSearchProps) {
@@ -162,16 +166,25 @@ export function GlobalSearch({
   const error = currentSearch?.error ?? null
   const isSearching =
     canSearch && (!currentSearch || currentSearch.status === "searching")
+  const canViewInbox = canAccessDashboardPage(
+    APP_ROUTES.dashboard.inbox,
+    accessLevel
+  )
 
   const pageResults = useMemo(() => {
-    if (!normalizedQuery) return SEARCH_PAGES.slice(0, 6)
+    const accessiblePages = SEARCH_PAGES.filter((page) =>
+      canAccessDashboardPage(page.url, accessLevel)
+    )
+    if (!normalizedQuery) return accessiblePages.slice(0, 6)
 
-    return SEARCH_PAGES.filter((page) =>
-      normalizeSearchText(
-        `${page.title} ${page.description} ${page.keywords}`
-      ).includes(normalizedQuery)
-    ).slice(0, 5)
-  }, [normalizedQuery])
+    return accessiblePages
+      .filter((page) =>
+        normalizeSearchText(
+          `${page.title} ${page.description} ${page.keywords}`
+        ).includes(normalizedQuery)
+      )
+      .slice(0, 5)
+  }, [normalizedQuery, accessLevel])
 
   useEffect(() => {
     if (!canSearch) return
@@ -236,7 +249,9 @@ export function GlobalSearch({
   }
 
   const hasDynamicResults = Boolean(
-    results && (results.products.length > 0 || results.questions.length > 0)
+    results &&
+    (results.products.length > 0 ||
+      (canViewInbox && results.questions.length > 0))
   )
   const showEmpty =
     query.trim().length >= 2 &&
@@ -314,7 +329,7 @@ export function GlobalSearch({
             </CommandGroup>
           ) : null}
 
-          {!isSearching && results?.questions.length ? (
+          {!isSearching && canViewInbox && results?.questions.length ? (
             <CommandGroup heading="Müşteri soruları">
               {results.questions.map((question) => (
                 <CommandItem

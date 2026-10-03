@@ -1,14 +1,9 @@
 import "server-only"
+import { fetchServerApi } from "@/lib/api/server-fetch"
 
 import { headers } from "next/headers"
 
 import type { AdminOverview } from "@/types/admin-overview"
-
-const apiUrl = (
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4001"
-).replace(/\/$/, "")
 
 export async function getServerAdminOverview() {
   const cookie = (await headers()).get("cookie")
@@ -16,11 +11,7 @@ export async function getServerAdminOverview() {
     throw new Error("Admin overview requires an authenticated session.")
   }
 
-  const response = await fetch(`${apiUrl}/admin/overview`, {
-    cache: "no-store",
-    headers: { Accept: "application/json", cookie },
-    signal: AbortSignal.timeout(10_000),
-  })
+  const response = await fetchServerApi(`/admin/overview`, { cookie })
 
   if (!response.ok) {
     throw new Error(`Admin overview request failed with ${response.status}.`)

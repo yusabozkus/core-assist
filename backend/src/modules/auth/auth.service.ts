@@ -14,6 +14,7 @@ import { isConfiguredAdminIdentity } from '../admin/admin-access.policy';
 import { AuditAction } from '../audit/audit-actions';
 import { AuditLogService } from '../audit/audit-log.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { authRuntimeConfig } from './auth-runtime.config';
 
 function requiredEnvironmentVariable(name: string): string {
   const value = process.env[name]?.trim();
@@ -25,29 +26,12 @@ function requiredEnvironmentVariable(name: string): string {
   return value;
 }
 
-function environmentURL(name: string, developmentFallback: string): string {
-  const value = process.env[name]?.trim();
-
-  if (value) {
-    return value;
-  }
-
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error(`${name} environment variable is required in production.`);
-  }
-
-  return developmentFallback;
-}
-
 function createAppAuth(
   prisma: PrismaService,
   notifications: NotificationsService,
   audit: AuditLogService,
 ) {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const baseURL = environmentURL('BETTER_AUTH_URL', 'http://localhost:4001');
-  const frontendURL = environmentURL('FRONTEND_URL', 'http://localhost:3001');
-  const trustedOrigins = new Set([frontendURL]);
+  const { frontendURL, options: runtimeOptions } = authRuntimeConfig();
   const microsoftClientId = process.env.MICROSOFT_CLIENT_ID?.trim();
   const microsoftClientSecret = process.env.MICROSOFT_CLIENT_SECRET?.trim();
 
@@ -57,17 +41,12 @@ function createAppAuth(
     );
   }
 
-  if (!isProduction) {
-    trustedOrigins.add('http://localhost:3001');
-  }
-
   return betterAuth({
+    ...runtimeOptions,
     database: prismaAdapter(prisma, {
       provider: 'postgresql',
     }),
     secret: requiredEnvironmentVariable('BETTER_AUTH_SECRET'),
-    baseURL,
-    basePath: '/api/auth',
     plugins: [
       lastLoginMethod({
         cookieName: 'core-assist.last-login-method',
@@ -84,6 +63,11 @@ function createAppAuth(
       accountLinking: {
         // An email match alone must not merge Google and Microsoft identities.
         disableImplicitLinking: true,
+        // Linking is initiated from an authenticated account settings page.
+        // Microsoft often omits a verified-email claim even for a valid OAuth identity.
+        trustedProviders: ['microsoft'],
+        // A user may own Google and Microsoft identities with different emails.
+        allowDifferentEmails: true,
       },
     },
     user: {
@@ -311,7 +295,6 @@ function createAppAuth(
     onAPIError: {
       errorURL: new URL('/login', frontendURL).toString(),
     },
-    trustedOrigins: [...trustedOrigins],
   });
 }
 

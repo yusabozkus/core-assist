@@ -1,8 +1,10 @@
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { BillingPaymentIssueShell } from "@/components/dashboard/billing/billing-payment-issue-banner"
 import { BillingUsageProvider } from "@/components/dashboard/billing/billing-usage-provider"
 import { DashboardHeader } from "@/components/shared/dashboard/dashboard-header"
+import { SetupGuide } from "@/components/dashboard/setup/setup-guide"
 import { AppSidebar } from "@/components/shared/sidebar/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Toaster } from "@/components/ui/sonner"
@@ -14,6 +16,7 @@ import {
 import { getServerChannelConnections } from "@/lib/api/channels.server"
 import { getDashboardSyncState } from "@/lib/channels/sync-state"
 import { getCurrentUser } from "@/lib/server-auth"
+import { requireCompletedOnboarding } from "@/lib/require-onboarding.server"
 import { getActiveStoreContext } from "@/lib/stores/active-store"
 
 export const dynamic = "force-dynamic"
@@ -23,6 +26,7 @@ export default async function SupportLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const currentUser = await getCurrentUser()
   if (!currentUser) redirect(APP_ROUTES.login)
+  await requireCompletedOnboarding()
 
   const { stores, activeStore } = await getActiveStoreContext()
   const [connections, billingWorkspaces, billingUsage] = await Promise.all([
@@ -34,6 +38,8 @@ export default async function SupportLayout({
       ? getServerStoreBillingUsage(activeStore.id).catch(() => null)
       : null,
   ])
+  const sidebarDefaultOpen =
+    (await cookies()).get("sidebar_state")?.value !== "false"
 
   return (
     <BillingUsageProvider
@@ -42,7 +48,10 @@ export default async function SupportLayout({
       initialUsage={billingUsage}
     >
       <BillingPaymentIssueShell workspaceId={billingWorkspaces[0]?.id}>
-        <SidebarProvider className="min-h-0 flex-1">
+        <SidebarProvider
+          defaultOpen={sidebarDefaultOpen}
+          className="min-h-0 flex-1"
+        >
           <AppSidebar
             variant="inset"
             user={{
@@ -63,6 +72,14 @@ export default async function SupportLayout({
             <div className="min-h-0 flex-1 overflow-y-auto bg-background">
               {children}
             </div>
+            {activeStore?.status === "ACTIVE" ? (
+              <SetupGuide
+                key={activeStore.id}
+                storeId={activeStore.id}
+                userId={currentUser.user.id}
+                canManageTeam={billingWorkspaces.length > 0}
+              />
+            ) : null}
             <Toaster
               position="top-center"
               duration={3000}

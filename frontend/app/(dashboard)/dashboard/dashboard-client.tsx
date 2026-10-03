@@ -32,22 +32,16 @@ import {
 } from "@/components/ui/tooltip"
 import { APP_ROUTES } from "@/constants/site"
 import { getDashboardOverview } from "@/lib/api/dashboard"
+import { canManageStore } from "@/lib/dashboard-access"
+import { canAccessDashboardPage } from "@/lib/dashboard-access"
 import { cn } from "@/lib/utils"
 import type { DashboardOverview, DashboardRange } from "@/types/dashboard"
+import type { StoreAccessLevel } from "@/types/store"
 
-function SectionHeading({
-  title,
-  description,
-}: {
-  title: string
-  description: string
-}) {
+function SectionHeading({ title }: { title: string }) {
   return (
     <div className="border-l-2 border-primary/50 pl-3">
       <h2 className="text-base font-semibold tracking-tight">{title}</h2>
-      <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
-        {description}
-      </p>
     </div>
   )
 }
@@ -55,11 +49,13 @@ function SectionHeading({
 export function DashboardClient({
   storeId,
   storeName,
+  accessLevel,
   range,
   initialData,
 }: {
   storeId: string
   storeName: string
+  accessLevel?: StoreAccessLevel
   range: DashboardRange
   initialData: DashboardOverview | null
 }) {
@@ -79,6 +75,11 @@ export function DashboardClient({
   )
   const requestRef = useRef<AbortController | null>(null)
   const { refresh: refreshBillingUsage } = useBillingUsage()
+  const mayManageStore = canManageStore(accessLevel)
+  const canViewInbox = canAccessDashboardPage(
+    APP_ROUTES.dashboard.inbox,
+    accessLevel
+  )
 
   const refresh = useCallback(async () => {
     if (requestRef.current) return
@@ -167,12 +168,14 @@ export function DashboardClient({
             </TooltipTrigger>
             <TooltipContent>Genel bakışı güncelle</TooltipContent>
           </Tooltip>
-          <Button asChild size="sm" className="ml-auto sm:ml-1">
-            <Link href={APP_ROUTES.dashboard.inbox}>
-              Gelen kutusu
-              <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
-            </Link>
-          </Button>
+          {canViewInbox ? (
+            <Button asChild size="sm" className="ml-auto sm:ml-1">
+              <Link href={APP_ROUTES.dashboard.inbox}>
+                Gelen kutusu
+                <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
+              </Link>
+            </Button>
+          ) : null}
         </div>
       </header>
 
@@ -253,51 +256,43 @@ export function DashboardClient({
         >
           <DashboardPlanUsage />
           <section className="space-y-4">
-            <SectionHeading
-              title="Operasyon özeti"
-              description="Gelen soru hacmini, yanıtlananları ve şu anda müdahale gerektiren işleri birlikte görün."
-            />
+            <SectionHeading title="Operasyon özeti" />
             <DashboardMetrics data={data} />
           </section>
           <section className="space-y-4 border-t border-border pt-7">
-            <SectionHeading
-              title="Soru operasyonu"
-              description="Gelen ve yanıtlanan soruların zaman içindeki akışını, mevcut iş kuyruğuyla birlikte değerlendirin."
-            />
+            <SectionHeading title="Soru operasyonu" />
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,1fr)]">
               <QuestionVolumeChart data={data} />
-              <DashboardQueue data={data} />
+              <DashboardQueue data={data} canManageStore={mayManageStore} />
             </div>
           </section>
           <section className="space-y-4 border-t border-border pt-7">
             <SectionHeading
-              title="Öncelikli işler"
-              description="İnsan kontrolü bekleyen soruları, satış kanallarının durumunu ve katalog uyarılarını tek alanda takip edin."
+              title={canViewInbox ? "Öncelikli işler" : "Katalog durumu"}
             />
-            <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,1fr)]">
-              <PriorityQuestions data={data} />
+            <div
+              className={cn(
+                "grid items-stretch gap-5",
+                canViewInbox &&
+                  "xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,1fr)]"
+              )}
+            >
+              {canViewInbox ? <PriorityQuestions data={data} /> : null}
               <div className="grid min-w-0 gap-5">
-                <DashboardChannels data={data} />
+                {mayManageStore ? <DashboardChannels data={data} /> : null}
                 <CatalogHealth data={data} />
               </div>
             </div>
           </section>
-          <section className="space-y-4 border-t border-border pt-7">
-            <SectionHeading
-              title="Katalog görünümü"
-              description={`Son ${data.period.days} günde en çok müşteri ilgisi alan ürünleri inceleyin.`}
-            />
+          <div className="border-t border-border pt-7">
             <DashboardCatalog
               data={data}
               onSelectProduct={setSelectedProductId}
             />
-          </section>
+          </div>
           <section className="space-y-4 border-t border-border pt-7">
-            <SectionHeading
-              title="Hızlı erişim"
-              description="Sık kullandığınız yönetim ve analiz ekranlarına doğrudan geçin."
-            />
-            <DashboardShortcuts />
+            <SectionHeading title="Hızlı erişim" />
+            <DashboardShortcuts accessLevel={accessLevel} />
           </section>
           <footer className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted-foreground">
             <span>

@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
 import {
   AlertCircleIcon,
@@ -34,6 +37,8 @@ type ChannelCardProps = {
   onConfigure: (connection: ChannelConnection) => void
   onAction: (connection: ChannelConnection, action: ChannelAction) => void
   onRemove: (connection: ChannelConnection) => void
+  tourTarget?: boolean
+  tourMenuOpen?: boolean
 }
 
 const channelDateFormatter = new Intl.DateTimeFormat("tr-TR", {
@@ -52,7 +57,10 @@ export function ChannelCard({
   onConfigure,
   onAction,
   onRemove,
+  tourTarget = false,
+  tourMenuOpen = false,
 }: ChannelCardProps) {
+  const [menuOpen, setMenuOpen] = useState(false)
   const connected = connection.status === "CONNECTED"
   const canReconnect =
     connection.status === "DISCONNECTED" || connection.status === "ERROR"
@@ -87,7 +95,13 @@ export function ChannelCard({
               : "Canlı ortam"}
           </p>
         </div>
-        <DropdownMenu>
+        <DropdownMenu
+          modal={false}
+          open={tourMenuOpen || menuOpen}
+          onOpenChange={(open) => {
+            if (!tourMenuOpen) setMenuOpen(open)
+          }}
+        >
           <DropdownMenuTrigger asChild>
             <Button
               type="button"
@@ -96,20 +110,31 @@ export function ChannelCard({
               className="-mr-1 text-muted-foreground"
               aria-label={`${provider.name} bağlantı işlemleri`}
               disabled={actionsDisabled}
+              data-channel-tour-menu-trigger={tourTarget ? "" : undefined}
             >
               <HugeiconsIcon icon={MoreHorizontalIcon} className="size-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-52">
+          <DropdownMenuContent
+            align="end"
+            className={
+              tourMenuOpen ? "pointer-events-none z-[101] min-w-52" : "min-w-52"
+            }
+            data-channel-tour-menu={tourTarget && tourMenuOpen ? "" : undefined}
+          >
             {connection.status !== "PENDING" ? (
-              <DropdownMenuItem onSelect={() => onConfigure(connection)}>
+              <DropdownMenuItem
+                onSelect={() => !tourMenuOpen && onConfigure(connection)}
+              >
                 <HugeiconsIcon icon={Settings02Icon} />
                 Bağlantı ayarları
               </DropdownMenuItem>
             ) : null}
             {connected ? (
               <DropdownMenuItem
-                onSelect={() => onAction(connection, "disconnect")}
+                onSelect={() =>
+                  !tourMenuOpen && onAction(connection, "disconnect")
+                }
               >
                 <HugeiconsIcon icon={Unlink01Icon} />
                 Devre dışı bırak
@@ -118,7 +143,7 @@ export function ChannelCard({
             {connection.status !== "PENDING" ? <DropdownMenuSeparator /> : null}
             <DropdownMenuItem
               variant="destructive"
-              onSelect={() => onRemove(connection)}
+              onSelect={() => !tourMenuOpen && onRemove(connection)}
             >
               <HugeiconsIcon icon={Delete02Icon} />
               Bağlantıyı kaldır
@@ -178,7 +203,10 @@ export function ChannelCard({
         </div>
       ) : null}
 
-      <div className="mt-auto flex flex-col gap-3 px-4 pt-4 pb-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-6 sm:pt-5 sm:pb-6">
+      <div
+        data-channel-tour-actions={tourTarget ? "" : undefined}
+        className="mt-auto flex flex-col gap-3 px-4 pt-4 pb-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-6 sm:pt-5 sm:pb-6"
+      >
         <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
           {connection.status === "PENDING" ? (
             <Button

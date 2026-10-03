@@ -107,9 +107,10 @@ function createMockQuestions(
       createdAt: afterConnection(createdAfter, index + 1),
       rawPayload: {
         fixture: true,
-        fixtureVersion: 1,
+        fixtureVersion: 2,
         scenario: seed.scenario ?? 'PRODUCT',
         provider: providerKey,
+        sourceUrl: seed.sourceUrl,
         sourceAskedAt: seed.sourceAskedAt,
       },
     };
@@ -124,7 +125,7 @@ function createMockQuestions(
       createdAt: new Date(createdAfter.getTime() - 60 * 60_000),
       rawPayload: {
         fixture: true,
-        fixtureVersion: 1,
+        fixtureVersion: 2,
         historical: true,
         provider: providerKey,
       },

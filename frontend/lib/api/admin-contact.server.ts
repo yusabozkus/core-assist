@@ -1,4 +1,5 @@
 import "server-only"
+import { fetchServerApi } from "@/lib/api/server-fetch"
 
 import { headers } from "next/headers"
 import type {
@@ -6,12 +7,6 @@ import type {
   AdminContactMessageList,
   AdminContactMessageQuery,
 } from "@/types/contact"
-
-const apiUrl = (
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4001"
-).replace(/\/$/, "")
 
 export class AdminContactMessageNotFoundError extends Error {
   constructor() {
@@ -42,11 +37,7 @@ async function adminContactServerFetch<T>(path: string, notFound = false) {
   const cookie = (await headers()).get("cookie")
   if (!cookie) throw new Error("Admin contact requires authentication.")
 
-  const response = await fetch(`${apiUrl}${path}`, {
-    cache: "no-store",
-    headers: { Accept: "application/json", cookie },
-    signal: AbortSignal.timeout(10_000),
-  })
+  const response = await fetchServerApi(path, { cookie })
   if (response.status === 404 && notFound) {
     throw new AdminContactMessageNotFoundError()
   }

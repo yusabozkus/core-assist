@@ -15,6 +15,8 @@ Bu politika, Core Asistan veritabanındaki operasyonel tabloların kontrolsüz b
 
 Destek talebi silindiğinde ona bağlı mesajlar ilişkisel olarak silinir. Açık, işlemde veya müşteri yanıtı bekleyen destek talepleri temizlenmez. Çalışan senkronizasyonlar temizlenmez.
 
+Destek mesajı görselleri özel B2 bucket'ında tutulur. Süresi dolan destek taleplerinin görselleri, talep veritabanından silinmeden önce B2'den silinir; B2 silme işlemi başarısızsa talep silme işi hata verir ve sonraki temizlikte yeniden denenir. Bucket sürümleme/lifecycle ayarlarını ayrıca gözden geçirin: silinen nesnelerin eski sürümleri B2 politikasına göre depoda kalabilir.
+
 ## Faturalandırma operasyon kayıtları
 
 Faturalandırma kuyruğundaki ayrı günlük temizlik işi aşağıdaki sabit politikayı uygular:

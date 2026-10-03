@@ -23,7 +23,13 @@ const chartConfig = {
   reviewed: { label: "Kullanıcı onaylı", color: "var(--chart-4)" },
 } satisfies ChartConfig
 
-export function AutomationImpact({ data }: { data: AiPerformance }) {
+export function AutomationImpact({
+  data,
+  canManageStore,
+}: {
+  data: AiPerformance
+  canManageStore: boolean
+}) {
   const total = data.answers.aiAssisted
   const autoRate = total ? (data.answers.autoSent / total) * 100 : 0
   return (
@@ -35,14 +41,16 @@ export function AutomationImpact({ data }: { data: AiPerformance }) {
         <h2 id="automation-impact-title" className="text-sm font-semibold">
           Yanıtları kim gönderdi?
         </h2>
-        <Link
-          href={APP_ROUTES.dashboard.automations.root}
-          className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-[10px] font-medium hover:text-primary"
-        >
-          <span className="size-1 rounded-full bg-primary" />
-          {automationLabels[data.automation.mode]}
-          <HugeiconsIcon icon={ArrowRight01Icon} className="size-3" />
-        </Link>
+        {canManageStore ? (
+          <Link
+            href={APP_ROUTES.dashboard.automations.root}
+            className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-[10px] font-medium hover:text-primary"
+          >
+            <span className="size-1 rounded-full bg-primary" />
+            {automationLabels[data.automation.mode]}
+            <HugeiconsIcon icon={ArrowRight01Icon} className="size-3" />
+          </Link>
+        ) : null}
       </div>
       <div className="mt-5 flex items-baseline gap-2">
         <strong className="text-3xl font-semibold tracking-tight tabular-nums">

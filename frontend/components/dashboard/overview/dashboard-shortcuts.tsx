@@ -7,6 +7,8 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { APP_ROUTES } from "@/constants/site"
+import { canAccessDashboardPage } from "@/lib/dashboard-access"
+import type { StoreAccessLevel } from "@/types/store"
 
 const shortcuts = [
   {
@@ -29,13 +31,18 @@ const shortcuts = [
   },
 ]
 
-export function DashboardShortcuts() {
+export function DashboardShortcuts({
+  accessLevel,
+}: {
+  accessLevel?: StoreAccessLevel
+}) {
+  const visibleShortcuts = shortcuts.filter((link) =>
+    canAccessDashboardPage(link.href, accessLevel)
+  )
+
   return (
-    <nav
-      aria-label="Hızlı erişim"
-      className="grid gap-3 md:grid-cols-3"
-    >
-      {shortcuts.map((link) => (
+    <nav aria-label="Hızlı erişim" className="grid gap-3 md:grid-cols-3">
+      {visibleShortcuts.map((link) => (
         <Link
           key={link.href}
           href={link.href}

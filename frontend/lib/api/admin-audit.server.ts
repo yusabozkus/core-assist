@@ -1,4 +1,5 @@
 import "server-only"
+import { fetchServerApi } from "@/lib/api/server-fetch"
 
 import { headers } from "next/headers"
 
@@ -6,12 +7,6 @@ import type {
   AdminAuditLogsPage,
   AdminAuditLogsQuery,
 } from "@/types/admin-audit"
-
-const apiUrl = (
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4001"
-).replace(/\/$/, "")
 
 export function getServerAdminAuditLogs(query: AdminAuditLogsQuery) {
   const search = new URLSearchParams()
@@ -28,11 +23,7 @@ async function adminAuditServerFetch<T>(path: string) {
     throw new Error("Audit logs require an authenticated admin session.")
   }
 
-  const response = await fetch(`${apiUrl}${path}`, {
-    cache: "no-store",
-    headers: { Accept: "application/json", cookie },
-    signal: AbortSignal.timeout(10_000),
-  })
+  const response = await fetchServerApi(path, { cookie })
   if (!response.ok) {
     throw new Error(`Audit logs request failed with ${response.status}.`)
   }

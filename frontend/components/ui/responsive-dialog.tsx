@@ -47,8 +47,11 @@ type ResponsiveDialogProps = {
   showCloseButton?: boolean
   preventClose?: boolean
   contentClassName?: string
+  scrollClassName?: string
   bodyClassName?: string
   headerClassName?: string
+  titleClassName?: string
+  descriptionClassName?: string
   footerClassName?: string
 }
 
@@ -65,8 +68,11 @@ function ResponsiveDialog({
   showCloseButton = true,
   preventClose = false,
   contentClassName,
+  scrollClassName,
   bodyClassName,
   headerClassName,
+  titleClassName,
+  descriptionClassName,
   footerClassName,
 }: ResponsiveDialogProps) {
   const isMobile = useIsMobile()
@@ -117,6 +123,7 @@ function ResponsiveDialog({
       >
         {trigger ? <DrawerTrigger asChild>{trigger}</DrawerTrigger> : null}
         <DrawerContent
+          data-lenis-prevent
           className={cn(
             "max-h-[96svh] overflow-hidden p-2 data-[vaul-drawer-direction=bottom]:max-h-[96svh]",
             contentClassName
@@ -147,18 +154,27 @@ function ResponsiveDialog({
             </div>
           ) : null}
 
-          <div className="themed-scrollbar min-h-0 flex-1 overflow-y-auto">
+          <div
+            className={cn(
+              "themed-scrollbar min-h-0 flex-1 overflow-y-auto",
+              scrollClassName
+            )}
+          >
             <DrawerHeader
               className={cn(
                 "border-b px-3 pt-4 pr-11 pb-3 text-left group-data-[vaul-drawer-direction=bottom]/drawer-content:text-left",
                 headerClassName
               )}
             >
-              <DrawerTitle className="text-lg tracking-[-0.02em]">
+              <DrawerTitle
+                className={cn("text-lg tracking-[-0.02em]", titleClassName)}
+              >
                 {displayedContent.title}
               </DrawerTitle>
               {displayedContent.description ? (
-                <DrawerDescription className="mt-1 leading-5">
+                <DrawerDescription
+                  className={cn("mt-1 leading-5", descriptionClassName)}
+                >
                   {displayedContent.description}
                 </DrawerDescription>
               ) : null}
@@ -188,6 +204,7 @@ function ResponsiveDialog({
     <Dialog open={resolvedOpen} onOpenChange={handleOpenChange}>
       {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
       <DialogContent
+        data-lenis-prevent
         showCloseButton={showCloseButton && !preventClose}
         className={cn(
           "max-h-[min(92svh,56rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-lg",
@@ -208,11 +225,11 @@ function ResponsiveDialog({
         <DialogHeader
           className={cn("shrink-0 border-b px-5 py-4 pr-14", headerClassName)}
         >
-          <DialogTitle className="tracking-[-0.02em]">
+          <DialogTitle className={cn("tracking-[-0.02em]", titleClassName)}>
             {displayedContent.title}
           </DialogTitle>
           {displayedContent.description ? (
-            <DialogDescription className="">
+            <DialogDescription className={descriptionClassName}>
               {displayedContent.description}
             </DialogDescription>
           ) : null}

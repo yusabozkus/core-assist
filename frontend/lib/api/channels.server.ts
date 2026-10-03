@@ -1,4 +1,5 @@
 import "server-only"
+import { fetchServerApi } from "@/lib/api/server-fetch"
 
 import { headers } from "next/headers"
 import { cache } from "react"
@@ -13,12 +14,6 @@ import type {
 
 const CHANNELS_REQUEST_TIMEOUT_MS = 8_000
 
-const apiUrl = (
-  process.env.API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:4001"
-).replace(/\/$/, "")
-
 export const getServerChannelConnections = cache(
   async (storeId: string): Promise<ChannelConnection[]> => {
     const cookie = (await headers()).get("cookie")
@@ -27,13 +22,9 @@ export const getServerChannelConnections = cache(
       return []
     }
 
-    const response = await fetch(`${apiUrl}/stores/${storeId}/channels`, {
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-        cookie,
-      },
-      signal: AbortSignal.timeout(CHANNELS_REQUEST_TIMEOUT_MS),
+    const response = await fetchServerApi(`/stores/${storeId}/channels`, {
+      cookie,
+      timeoutMs: CHANNELS_REQUEST_TIMEOUT_MS,
     })
 
     if (!response.ok) {
@@ -54,16 +45,9 @@ export const getServerIntegrationProviders = cache(
       return []
     }
 
-    const response = await fetch(
-      `${apiUrl}/stores/${storeId}/channels/providers/available`,
-      {
-        cache: "no-store",
-        headers: {
-          Accept: "application/json",
-          cookie,
-        },
-        signal: AbortSignal.timeout(CHANNELS_REQUEST_TIMEOUT_MS),
-      }
+    const response = await fetchServerApi(
+      `/stores/${storeId}/channels/providers/available`,
+      { cookie, timeoutMs: CHANNELS_REQUEST_TIMEOUT_MS }
     )
 
     if (!response.ok) {
@@ -102,16 +86,9 @@ export const getServerChannelSyncHistory = cache(
     }
     if (options.from) searchParams.set("from", options.from)
 
-    const response = await fetch(
-      `${apiUrl}/stores/${storeId}/channels/sync-runs?${searchParams.toString()}`,
-      {
-        cache: "no-store",
-        headers: {
-          Accept: "application/json",
-          cookie,
-        },
-        signal: AbortSignal.timeout(CHANNELS_REQUEST_TIMEOUT_MS),
-      }
+    const response = await fetchServerApi(
+      `/stores/${storeId}/channels/sync-runs?${searchParams.toString()}`,
+      { cookie, timeoutMs: CHANNELS_REQUEST_TIMEOUT_MS }
     )
 
     if (!response.ok) {

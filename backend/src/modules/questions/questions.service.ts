@@ -43,6 +43,7 @@ const QUESTION_LIST_SELECT = {
   draftAnswerability: true,
   draftProcessingStatus: true,
   externalCreatedAt: true,
+  updatedAt: true,
   connection: {
     select: { providerKey: true },
   },
@@ -83,6 +84,7 @@ const QUESTION_DETAIL_SELECT = {
   status: true,
   externalCreatedAt: true,
   createdAt: true,
+  updatedAt: true,
   answer: true,
   draftDecision: true,
   draftConfidence: true,
@@ -566,6 +568,7 @@ function questionStatusWhere(
 ): Prisma.ProductQuestionWhereInput {
   switch (status) {
     case QuestionListStatusFilter.PENDING:
+      if (pendingStates.length === 0) return { id: { in: [] } };
       return {
         status: {
           in: [ProductQuestionStatus.PENDING, ProductQuestionStatus.DRAFTED],
@@ -660,6 +663,12 @@ function pendingQuestionStateWhere(
       return {
         draftProcessingStatus: QuestionDraftProcessingStatus.FAILED,
         ...noAnswerDelivery,
+      };
+    case PendingQuestionStateFilter.SEND_REVIEW:
+      return {
+        answerDelivery: {
+          is: { status: QuestionAnswerStatus.REVIEW_REQUIRED },
+        },
       };
     case PendingQuestionStateFilter.SEND_FAILED:
       return {

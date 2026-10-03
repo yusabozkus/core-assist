@@ -1,11 +1,26 @@
 "use client"
 
-import { useId, type ReactNode } from "react"
+import { useId, useState, type ReactNode } from "react"
+import { Cancel01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
+import {
+  getPreferredEmojis,
+  MAX_PREFERRED_EMOJIS,
+  parseEmojiEntry,
+} from "@/lib/emoji-preferences"
 import type {
   AiEmojiPolicy,
   AiResponseLength,
@@ -20,11 +35,11 @@ type ResponseBehaviorControlsProps = {
   onChange: <Key extends keyof Profile>(key: Key, value: Profile[Key]) => void
 }
 
-const toneOptions: Array<{ value: AiTone; label: string }> = [
-  { value: "PROFESSIONAL", label: "Profesyonel" },
-  { value: "FRIENDLY", label: "Samimi" },
-  { value: "WARM", label: "Sıcak" },
-  { value: "MINIMAL", label: "Doğrudan" },
+const toneOptions: Array<{ value: AiTone; label: string; detail: string }> = [
+  { value: "PROFESSIONAL", label: "Profesyonel", detail: "Ölçülü ve resmî" },
+  { value: "FRIENDLY", label: "Samimi", detail: "Yakın ve gündelik" },
+  { value: "WARM", label: "Sıcak", detail: "Nazik ve içten" },
+  { value: "MINIMAL", label: "Doğrudan", detail: "Dolambaçsız ve net" },
 ]
 
 const emojiOptions: Array<{ value: AiEmojiPolicy; label: string }> = [
@@ -47,97 +62,125 @@ export function ResponseBehaviorControls({
   profile,
   onChange,
 }: ResponseBehaviorControlsProps) {
+  const [emojiEntry, setEmojiEntry] = useState("")
+  const [emojiFeedback, setEmojiFeedback] = useState<{
+    message: string
+    type: "error" | "limit"
+  } | null>(null)
+  const preferredEmojis = getPreferredEmojis(profile.preferredEmoji)
   const responseLengthIndex = Math.max(
     0,
     responseLengths.findIndex(
       (option) => option.value === profile.responseLength
     )
   )
-  const responseLength = responseLengths[responseLengthIndex]
+
+  function addEmojis() {
+    const entry = parseEmojiEntry(emojiEntry)
+    if (!entry.valid) {
+      setEmojiFeedback({
+        type: "error",
+        message:
+          "Yalnızca emoji girin. Birden fazlasını birlikte ekleyebilirsiniz.",
+      })
+      return
+    }
+
+    const next = [...new Set([...preferredEmojis, ...entry.emojis])]
+    if (next.length > MAX_PREFERRED_EMOJIS) {
+      setEmojiFeedback({
+        type: "limit",
+        message:
+          "Maksimum emoji sayısına ulaştınız. Yeni emoji eklemek için mevcutlardan birini kaldırın.",
+      })
+      return
+    }
+
+    onChange("preferredEmoji", next.join(" "))
+    setEmojiEntry("")
+    setEmojiFeedback(
+      next.length === MAX_PREFERRED_EMOJIS
+        ? {
+            type: "limit",
+            message:
+              "Maksimum emoji sayısına ulaştınız. Yeni emoji eklemek için mevcutlardan birini kaldırın.",
+          }
+        : null
+    )
+  }
+
+  function removeEmoji(emoji: string) {
+    const next = preferredEmojis.filter((item) => item !== emoji)
+    onChange("preferredEmoji", next.length ? next.join(" ") : null)
+    setEmojiFeedback(null)
+  }
 
   return (
     <div className="divide-y divide-border">
-      <SettingRow
-        title="Yanıt tonu"
-        description="Cevapların müşteride bıraktığı genel iletişim hissini belirler."
-        first
-      >
-        <SegmentedControl
+      <SettingRow title="Yanıt tonu" first>
+        <ChoiceCards
           ariaLabel="Yanıt tonu"
           value={profile.tone}
           onValueChange={(value) => onChange("tone", value)}
           options={toneOptions}
-          className="grid-cols-2 sm:grid-cols-4"
+          className="grid-cols-2"
         />
       </SettingRow>
 
-      <SettingRow
-        title="Yanıt uzunluğu"
-        description="AI, gerekli bilgiyi bu hedef uzunluğa göre özetler."
-      >
-        <div className="px-1 py-1">
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <p className="text-xs text-muted-foreground">
-              Hedef cevap uzunluğu
-            </p>
-            <div className="text-right">
-              <p className="text-sm font-semibold text-foreground">
-                {responseLength.label}
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                {responseLength.detail}
-              </p>
-            </div>
-          </div>
-          <Slider
-            value={[responseLengthIndex]}
-            min={0}
-            max={responseLengths.length - 1}
-            step={1}
-            onValueChange={([index]) => {
-              const option = responseLengths[index]
-              if (option) onChange("responseLength", option.value)
-            }}
-            aria-label="Yanıt uzunluğu"
-          />
-          <div className="mt-3 grid grid-cols-3 text-[11px] text-muted-foreground">
-            {responseLengths.map((option, index) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => onChange("responseLength", option.value)}
-                className={cn(
-                  "rounded-sm py-1 transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                  index === 0 && "text-left",
-                  index === 1 && "text-center",
-                  index === 2 && "text-right",
-                  profile.responseLength === option.value &&
-                    "font-semibold text-primary"
-                )}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+      <SettingRow title="Yanıt uzunluğu">
+        <Slider
+          className="mt-4"
+          value={[responseLengthIndex]}
+          min={0}
+          max={responseLengths.length - 1}
+          step={1}
+          onValueChange={([index]) => {
+            const option = responseLengths[index]
+            if (option) onChange("responseLength", option.value)
+          }}
+          aria-label="Yanıt uzunluğu"
+        />
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {responseLengths.map((option, index) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onChange("responseLength", option.value)}
+              className={cn(
+                "rounded-md py-1 text-xs transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                index === 0 && "text-left",
+                index === 1 && "text-center",
+                index === 2 && "text-right",
+                profile.responseLength === option.value
+                  ? "font-semibold text-primary"
+                  : "text-muted-foreground"
+              )}
+            >
+              <span className="block">{option.label}</span>
+              <span className="block text-[10px] font-normal text-muted-foreground">
+                {option.detail}
+              </span>
+            </button>
+          ))}
         </div>
       </SettingRow>
 
-      <div className="">
+      <div className="mt-2 space-y-1">
         <SettingsSwitchRow
-          title="Selamlama kullan"
-          description="Yanıtı kısa bir selamlama ile başlatır."
+          title="Selamlama"
+          description="Açıksa yanıt, seçtiğiniz tona uygun kısa bir selamlama ile başlar."
           checked={profile.greetingEnabled}
           onCheckedChange={(checked) => onChange("greetingEnabled", checked)}
         />
         <SettingsSwitchRow
-          title="Kapanış kullan"
-          description="Yanıtı nazik bir kapanış cümlesiyle tamamlar."
+          title="Kapanış"
+          description="Açıksa yanıtın sonuna kısa bir nezaket cümlesi eklenir."
           checked={profile.closingEnabled}
           onCheckedChange={(checked) => onChange("closingEnabled", checked)}
         />
         <SettingsSwitchRow
-          title="Boy ve kiloya göre beden önerisi"
-          description="Yalnızca beden tablosunda açık bir boy-kilo eşleşmesi bulunduğunda öneri verir."
+          title="Boy ve kiloya göre beden tahmini"
+          description="Boy ve kilo birlikte verilirse tahmini beden önerir. Otomatik gönderim yalnızca güvenli modun koşulları sağlanırsa yapılır."
           checked={profile.heightWeightSizeRecommendationEnabled}
           onCheckedChange={(checked) =>
             onChange("heightWeightSizeRecommendationEnabled", checked)
@@ -145,85 +188,149 @@ export function ResponseBehaviorControls({
         />
       </div>
 
-      <SettingRow
-        title="Emoji kullanımı"
-        description="Emojinin yanıtlarda ne sıklıkta yer alacağını belirleyin."
-        last
-      >
-        <div className="space-y-4">
-          <SegmentedControl
-            ariaLabel="Emoji kullanımı"
+      <section className="py-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <label
+            htmlFor="response-emoji-policy"
+            className="text-sm font-semibold"
+          >
+            Emoji kullanımı
+          </label>
+          <Select
             value={profile.emojiPolicy}
-            onValueChange={(value) => onChange("emojiPolicy", value)}
-            options={emojiOptions}
-            className="grid-cols-3"
-          />
-
-          {profile.emojiPolicy !== "NEVER" ? (
-            <div className="grid animate-in gap-3 border-l-2 border-primary/35 bg-primary/4 px-3.5 py-3 duration-200 fade-in slide-in-from-top-1 sm:grid-cols-[1fr_7rem] sm:items-center">
-              <div>
-                <label
-                  htmlFor="preferred-response-emoji"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Tercih edilen emoji
-                </label>
-                <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-                  {profile.emojiPolicy === "ALWAYS"
-                    ? "Her yanıtın sonunda yalnızca bir kez kullanılır."
-                    : "Uygun bir yanıtta öncelikli olarak kullanılır."}
-                </p>
-              </div>
-              <Input
-                id="preferred-response-emoji"
-                value={profile.preferredEmoji ?? ""}
-                onChange={(event) =>
-                  onChange(
-                    "preferredEmoji",
-                    normalizePreferredEmoji(event.target.value)
-                  )
-                }
-                placeholder="🙂"
-                inputMode="text"
-                maxLength={16}
-                className="h-10 bg-card text-center text-lg"
-                aria-label="Tercih edilen emoji"
-              />
-            </div>
-          ) : null}
+            onValueChange={(value) => {
+              onChange("emojiPolicy", value as AiEmojiPolicy)
+              setEmojiFeedback(null)
+            }}
+          >
+            <SelectTrigger
+              id="response-emoji-policy"
+              size="sm"
+              className="w-44 rounded-lg border-border bg-background"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              {emojiOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      </SettingRow>
+
+        {profile.emojiPolicy !== "NEVER" ? (
+          <div className="mt-4 space-y-3 rounded-xl border border-border bg-muted/20 p-4">
+            <div>
+              <label
+                htmlFor="preferred-response-emojis"
+                className="text-sm font-medium text-foreground"
+              >
+                Kullanılabilecek emojiler
+              </label>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Yanıtta bunlardan yalnızca biri kullanılır. Boş bırakırsanız AI
+                seçer.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <div className="min-w-0 flex-1">
+                <Input
+                  id="preferred-response-emojis"
+                  value={emojiEntry}
+                  onChange={(event) => {
+                    setEmojiEntry(event.target.value)
+                    setEmojiFeedback(null)
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter" || event.nativeEvent.isComposing)
+                      return
+                    event.preventDefault()
+                    addEmojis()
+                  }}
+                  placeholder="Emoji yazın veya yapıştırın"
+                  maxLength={320}
+                  aria-invalid={emojiFeedback?.type === "error"}
+                  aria-describedby={
+                    emojiFeedback ? "preferred-emojis-feedback" : undefined
+                  }
+                  className="h-9 rounded-lg bg-background"
+                />
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={addEmojis}
+                disabled={!emojiEntry.trim()}
+                className="shrink-0"
+              >
+                Ekle
+              </Button>
+            </div>
+            {emojiFeedback ? (
+              <p
+                id="preferred-emojis-feedback"
+                role={emojiFeedback.type === "error" ? "alert" : "status"}
+                className={cn(
+                  "text-xs",
+                  emojiFeedback.type === "error"
+                    ? "text-destructive"
+                    : "text-muted-foreground"
+                )}
+              >
+                {emojiFeedback.message}
+              </p>
+            ) : null}
+            {preferredEmojis.length > 0 ? (
+              <div
+                className="flex flex-wrap gap-2"
+                aria-label="Seçilen emojiler"
+              >
+                {preferredEmojis.map((emoji) => (
+                  <span
+                    key={emoji}
+                    className="inline-flex items-center gap-1 rounded-full border border-border bg-background py-1 pr-1 pl-2.5"
+                  >
+                    <span className="text-base leading-none">{emoji}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeEmoji(emoji)}
+                      aria-label={`${emoji} emojisini kaldır`}
+                      className="inline-flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    >
+                      <HugeiconsIcon icon={Cancel01Icon} className="size-3.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
     </div>
   )
 }
 
 function SettingRow({
   title,
-  description,
   children,
   first = false,
-  last = false,
 }: {
   title: string
-  description: string
   children: ReactNode
   first?: boolean
-  last?: boolean
 }) {
   return (
-    <section className={cn("space-y-4 py-6", first && "pt-0", last && "pb-0")}>
-      <div>
-        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-        <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
-          {description}
-        </p>
-      </div>
+    <section className={cn("space-y-3 py-6", first && "pt-0")}>
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       <div className="min-w-0">{children}</div>
     </section>
   )
 }
 
-function SegmentedControl<Value extends string>({
+function ChoiceCards<Value extends string>({
   ariaLabel,
   value,
   onValueChange,
@@ -233,37 +340,61 @@ function SegmentedControl<Value extends string>({
   ariaLabel: string
   value: Value
   onValueChange: (value: Value) => void
-  options: Array<{ value: Value; label: string }>
+  options: Array<{ value: Value; label: string; detail: string }>
   className?: string
 }) {
+  const groupName = useId()
+
   return (
     <div
       role="radiogroup"
       aria-label={ariaLabel}
-      className={cn(
-        "grid rounded-lg border border-border bg-muted p-1",
-        className
-      )}
+      className={cn("grid gap-2.5", className)}
     >
       {options.map((option) => {
-        const selected = option.value === value
+        const selected = value === option.value
 
         return (
-          <button
+          <label
             key={option.value}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            onClick={() => onValueChange(option.value)}
             className={cn(
-              "min-w-0 rounded-md px-2.5 py-2 text-xs font-medium transition-[background-color,color,box-shadow] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:text-sm",
+              "relative flex min-h-21 cursor-pointer flex-col rounded-xl border px-3.5 py-3 transition-colors",
               selected
-                ? "bg-card text-foreground shadow-xs ring-1 ring-border/70"
-                : "text-muted-foreground hover:text-foreground"
+                ? "border-primary/60 bg-primary/6"
+                : "border-border bg-background hover:border-primary/30 hover:bg-muted/25"
             )}
           >
-            {option.label}
-          </button>
+            <input
+              type="radio"
+              name={groupName}
+              value={option.value}
+              checked={selected}
+              onChange={() => onValueChange(option.value)}
+              className="peer sr-only"
+            />
+            <span className="flex items-center justify-between gap-2">
+              <span className="text-sm font-semibold text-foreground">
+                {option.label}
+              </span>
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "flex size-4 shrink-0 items-center justify-center rounded-full border",
+                  selected
+                    ? "border-primary bg-primary"
+                    : "border-muted-foreground/40"
+                )}
+              >
+                {selected ? (
+                  <span className="size-1.5 rounded-full bg-primary-foreground" />
+                ) : null}
+              </span>
+            </span>
+            <span className="mt-1 text-xs leading-4 text-muted-foreground">
+              {option.detail}
+            </span>
+            <span className="pointer-events-none absolute inset-0 rounded-xl peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2" />
+          </label>
         )
       })}
     </div>
@@ -277,48 +408,32 @@ function SettingsSwitchRow({
   onCheckedChange,
 }: {
   title: string
-  description: string
+  description?: string
   checked: boolean
   onCheckedChange: (checked: boolean) => void
 }) {
   const id = useId()
 
   return (
-    <div className="flex items-center justify-between gap-5 py-3.5">
+    <div className="flex items-center justify-between gap-5 py-2.5">
       <div className="min-w-0">
-        <label htmlFor={id} className="text-sm font-medium text-foreground">
-          {title}
-        </label>
-        <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-          {description}
-        </p>
+        <div className="flex items-center gap-1.5">
+          <label htmlFor={id} className="text-sm font-medium text-foreground">
+            {title}
+          </label>
+        </div>
+        {description ? (
+          <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
+            {description}
+          </p>
+        ) : null}
       </div>
-      <div className="flex shrink-0 items-center gap-2.5">
-        <span
-          className={cn(
-            "hidden text-[11px] font-medium sm:block",
-            checked ? "text-primary" : "text-muted-foreground"
-          )}
-        >
-          {checked ? "Açık" : "Kapalı"}
-        </span>
-        <Switch
-          id={id}
-          checked={checked}
-          onCheckedChange={onCheckedChange}
-          aria-label={title}
-        />
-      </div>
+      <Switch
+        id={id}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        aria-label={title}
+      />
     </div>
-  )
-}
-
-function normalizePreferredEmoji(value: string) {
-  return (
-    value
-      .trim()
-      .match(
-        /(?:\p{Regional_Indicator}{2}|(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:\uFE0E|\uFE0F)?(?:\p{Emoji_Modifier})?(?:\u200D(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:\uFE0E|\uFE0F)?(?:\p{Emoji_Modifier})?)*)/u
-      )?.[0] ?? null
   )
 }
