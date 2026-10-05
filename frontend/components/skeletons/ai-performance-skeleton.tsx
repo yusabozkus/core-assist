@@ -34,6 +34,14 @@ export function AiPerformanceSkeleton() {
         </div>
         <Skeleton className="h-3 w-40" />
       </div>
+      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="space-y-2">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-3 w-36" />
+        </div>
+        <Skeleton className="h-8 w-full rounded-lg sm:w-40" />
+      </div>
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.8fr)]">
         <div className="rounded-xl border border-border bg-card p-5 sm:p-6">
           <div className="flex gap-4">
@@ -66,8 +74,13 @@ export function AiPerformanceSkeleton() {
               key={index}
               className="space-y-3 rounded-xl border border-border bg-card p-3.5 sm:p-5"
             >
-              <Skeleton className="size-8 rounded-lg" />
-              <Skeleton className="h-4 w-full max-w-28" />
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <Skeleton className="size-7 shrink-0 rounded-lg sm:size-8" />
+                  <Skeleton className="h-4 w-full max-w-28" />
+                </div>
+                <Skeleton className="size-6 shrink-0 rounded-sm" />
+              </div>
               <Skeleton className="h-7 w-16" />
               <Skeleton className="h-3 w-full" />
             </div>

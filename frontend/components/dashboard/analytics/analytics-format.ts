@@ -1,11 +1,15 @@
 import type { ProductAnswerFact } from "@/types/question"
 import type { AiPerformance } from "@/types/ai-performance"
+import { questionStatusTones } from "@/components/dashboard/inbox/question-status-tones"
 
 export const formatCount = (value: number) => value.toLocaleString("tr-TR")
 export const formatPercent = (value: number) =>
   `%${value.toLocaleString("tr-TR", { maximumFractionDigits: 1 })}`
 export const boundedPercent = (value: number) =>
   Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0
+
+export const confidenceExplanation =
+  "AI yanıtı için hesaplanan güven puanıdır; bağımsız olarak ölçülmüş bir doğruluk oranı değildir. Yüksek puan, yanıtın kesin doğru olduğunu garanti etmez."
 
 export const intentLabels: Record<ProductAnswerFact, string> = {
   STOCK: "Stok",
@@ -48,7 +52,7 @@ export function activityStatus(item: AiPerformance["recentActivity"][number]) {
   if (item.deliveryStatus === "REVIEW_REQUIRED")
     return {
       label: "Teslimat kontrolü gerekli",
-      tone: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+      tone: questionStatusTones.deliveryReview,
     }
   if (item.deliveryStatus === "SENT")
     return {
@@ -58,12 +62,12 @@ export function activityStatus(item: AiPerformance["recentActivity"][number]) {
           : item.composition === "AI_EDITED"
             ? "Düzenlenerek gönderildi"
             : "Onaylanıp gönderildi",
-      tone: "border-primary/20 bg-primary/10 text-primary",
+      tone: questionStatusTones.answered,
     }
   if (item.deliveryStatus === "FAILED" || item.outcome === "FAILED")
     return {
       label: "İşlem başarısız",
-      tone: "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-400",
+      tone: questionStatusTones.failed,
     }
   if (item.deliveryStatus === "QUEUED" || item.deliveryStatus === "PROCESSING")
     return {
@@ -71,30 +75,34 @@ export function activityStatus(item: AiPerformance["recentActivity"][number]) {
         item.deliveryStatus === "QUEUED"
           ? "Gönderim kuyruğunda"
           : "Gönderiliyor",
-      tone: "border-sky-500/20 bg-sky-500/10 text-sky-700 dark:text-sky-400",
+      tone: questionStatusTones.deliveryPending,
     }
   if (item.outcome === "SUPERSEDED")
     return {
       label: "Yeni taslakla değiştirildi",
-      tone: "border-border bg-muted text-muted-foreground",
+      tone: questionStatusTones.neutral,
     }
   if (item.answerability === "OUT_OF_SCOPE")
     return {
       label: "Kapsam dışı",
-      tone: "border-slate-500/20 bg-slate-500/10 text-slate-700 dark:text-slate-300",
+      tone: questionStatusTones.outOfScope,
     }
   if (item.decision === "DO_NOT_REPLY")
     return {
       label: "Yanıtlanmayacak",
-      tone: "border-border bg-muted text-muted-foreground",
+      tone: questionStatusTones.failed,
     }
   if (item.decision === "NEEDS_REVIEW")
     return {
       label: "İnceleme gerekli",
-      tone: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+      tone: questionStatusTones.review,
     }
   return {
-    label: "Taslak hazır",
-    tone: "border-violet-500/20 bg-violet-500/10 text-violet-700 dark:text-violet-400",
+    label:
+      item.decision === "READY_FOR_SEND" ? "Gönderime hazır" : "Taslak hazır",
+    tone:
+      item.decision === "READY_FOR_SEND"
+        ? questionStatusTones.ready
+        : questionStatusTones.draft,
   }
 }

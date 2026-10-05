@@ -21,6 +21,8 @@ export function AiQuotaDialog({
 }) {
   return (
     <ResponsiveDialog
+      dismissOnOutsideInteraction={false}
+      dismissOnEscape={false}
       open={open}
       onOpenChange={onOpenChange}
       title="AI soru hakkınız doldu"

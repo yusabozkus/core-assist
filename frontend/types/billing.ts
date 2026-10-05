@@ -214,4 +214,40 @@ export type BillingPortalSession = {
   updatePaymentMethodUrl: string | null
   cancelSubscriptionUrl: string | null
 }
+
+export type BillingPaymentMethodCheckout = {
+  transactionId: string
+  requiresPayment: boolean
+  currency: string
+  amountDue: number
+  subtotal: number
+  tax: number
+  total: number
+  items: { name: string; quantity: number }[]
+}
+
+export type BillingPaymentMethodCheckoutStatus = {
+  completed: boolean
+  paymentMethod: BillingPaymentMethod | null
+}
 export type BillingWorkspace = { id: string; name: string }
+
+export type BillingSubscriptionAction = "cancel" | "reverse_cancellation"
+
+export type BillingSubscriptionManagement = {
+  subscriptionId: string
+  updatedAt: string
+  status: "active" | "trialing" | "past_due" | "paused" | "canceled"
+  cancellationScheduled: boolean
+  scheduledChangeAction: "cancel" | "pause" | "resume" | null
+  accessEndsAt: string | null
+  nextBilledAt: string | null
+  action: BillingSubscriptionAction | null
+  blockedReason: string | null
+}
+
+export type BillingSubscriptionManagementResult = {
+  completed: boolean
+  synchronized: boolean
+  subscription: BillingSubscriptionManagement
+}

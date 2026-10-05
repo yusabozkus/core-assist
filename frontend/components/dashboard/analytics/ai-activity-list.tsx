@@ -2,9 +2,15 @@ import Link from "next/link"
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
+import { Badge } from "@/components/ui/badge"
 import { APP_ROUTES } from "@/constants/site"
 import type { AiPerformance } from "@/types/ai-performance"
-import { activityStatus, formatPercent } from "./analytics-format"
+import {
+  activityStatus,
+  confidenceExplanation,
+  formatPercent,
+} from "./analytics-format"
+import { MetricHelp } from "./metric-help"
 
 export function AiActivityList({
   activity,
@@ -26,10 +32,14 @@ export function AiActivityList({
       className="min-w-0 overflow-hidden rounded-xl border border-border bg-card"
     >
       <header className="flex items-center justify-between gap-4 p-5 sm:p-6">
-        <div>
+        <div className="flex items-center gap-2">
           <h2 id="ai-activity-title" className="text-sm font-semibold">
             Son AI işlemleri
           </h2>
+          <MetricHelp
+            label="AI güven puanı"
+            description={confidenceExplanation}
+          />
         </div>
         <Link
           href={APP_ROUTES.dashboard.inbox}
@@ -64,11 +74,12 @@ export function AiActivityList({
                         {item.productTitle ?? "Ürün eşleşmedi"}
                       </p>
                     </div>
-                    <span
-                      className={`w-fit shrink-0 rounded-full border px-2 py-0.5 text-[10px] ${status.tone}`}
+                    <Badge
+                      variant="outline"
+                      className={`h-5 w-fit shrink-0 gap-1 px-1.5 py-0 text-[10px] font-medium ${status.tone}`}
                     >
                       {status.label}
-                    </span>
+                    </Badge>
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
                     <span>{item.customerName ?? "Pazaryeri müşterisi"}</span>
@@ -77,7 +88,7 @@ export function AiActivityList({
                     </time>
                     {item.answerability !== "OUT_OF_SCOPE" ? (
                       <span className="tabular-nums">
-                        {formatPercent(item.confidence * 100)} güven
+                        {formatPercent(item.confidence * 100)} AI güveni
                       </span>
                     ) : null}
                   </div>

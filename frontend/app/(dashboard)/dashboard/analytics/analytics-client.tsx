@@ -1,6 +1,6 @@
 "use client"
 
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
@@ -22,6 +22,8 @@ import { IntentAnalysis } from "@/components/dashboard/analytics/intent-analysis
 import { ProviderComparison } from "@/components/dashboard/analytics/provider-comparison"
 import { AiActivityList } from "@/components/dashboard/analytics/ai-activity-list"
 import { PerformanceOverview } from "@/components/dashboard/analytics/performance-overview"
+import { CurrentReviewWorkload } from "@/components/dashboard/analytics/current-review-workload"
+import { PerformanceQuestionSheet } from "@/components/dashboard/analytics/performance-question-sheet"
 import { AiQuotaIndicator } from "@/components/dashboard/analytics/ai-quota-indicator"
 import { useBillingUsage } from "@/components/dashboard/billing/billing-usage-provider"
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
@@ -42,7 +44,12 @@ import {
 import { APP_ROUTES } from "@/constants/site"
 import { canManageStore } from "@/lib/dashboard-access"
 import { cn } from "@/lib/utils"
-import type { AiPerformance, AiPerformanceRange } from "@/types/ai-performance"
+import type {
+  AiPerformance,
+  AiPerformanceRange,
+  AiPerformanceSelection,
+  AiPerformanceDetailScope,
+} from "@/types/ai-performance"
 import type { StoreSummary } from "@/types/store"
 
 const ranges: Array<{ value: AiPerformanceRange; label: string }> = [
@@ -75,6 +82,9 @@ export function AnalyticsClient({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [pending, startTransition] = useTransition()
+  const [detailScope, setDetailScope] = useState<
+    (AiPerformanceDetailScope & { storeId: string }) | null
+  >(null)
   const { refresh: refreshBillingUsage } = useBillingUsage()
   const mayManageStore = canManageStore(activeStore.accessLevel)
   const providers = [
@@ -90,6 +100,10 @@ export function AnalyticsClient({
       performance.delivery.failed > 0 ||
       performance.delivery.queued > 0 ||
       performance.delivery.processing > 0)
+  const hasPreviousActivity =
+    performance?.comparison &&
+    (performance.comparison.totalDrafts > 0 ||
+      performance.comparison.aiAssisted > 0)
   const dateFormatter = new Intl.DateTimeFormat("tr-TR", {
     day: "numeric",
     month: "short",
@@ -101,6 +115,7 @@ export function AnalyticsClient({
     range?: AiPerformanceRange
     provider?: string
   }) {
+    setDetailScope(null)
     const params = new URLSearchParams(searchParams.toString())
     params.set("range", next.range ?? range)
     const nextProvider = next.provider ?? provider
@@ -112,8 +127,22 @@ export function AnalyticsClient({
   }
 
   function refreshPerformance() {
+    setDetailScope(null)
     void refreshBillingUsage()
     startTransition(() => router.refresh())
+  }
+
+  function inspectQuestions(selection: AiPerformanceSelection) {
+    if (!performance || pending) return
+    setDetailScope({
+      ...selection,
+      storeId: activeStore.id,
+      range: performance.range,
+      provider: performance.provider,
+      asOf: performance.generatedAt,
+      from: performance.from,
+      timezone: performance.timezone,
+    })
   }
 
   return (
@@ -293,6 +322,12 @@ export function AnalyticsClient({
         ) : null}
       </div>
 
+      {performance ? (
+        <CurrentReviewWorkload
+          count={performance.currentWorkload.needsReview}
+        />
+      ) : null}
+
       {!performance ? (
         <section
           role="alert"
@@ -320,7 +355,7 @@ export function AnalyticsClient({
             Tekrar dene
           </Button>
         </section>
-      ) : hasActivity ? (
+      ) : hasActivity || hasPreviousActivity ? (
         <div
           aria-busy={pending}
           className={cn(
@@ -329,11 +364,24 @@ export function AnalyticsClient({
           )}
         >
           <div className="grid items-stretch gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.8fr)]">
-            <PerformanceOverview data={performance} />
+            <PerformanceOverview
+              data={performance}
+              onInspectFailed={() =>
+                inspectQuestions({ kind: "FAILED_DELIVERY" })
+              }
+            />
             <AiQuotaIndicator className="h-full" />
           </div>
           <section className="space-y-3 sm:space-y-4">
             <SectionHeading title="Öne çıkan metrikler" />
+            {performance.comparison && (
+              <p className="text-[11px] leading-5 text-muted-foreground">
+                Önceki dönem:{" "}
+                {dateFormatter.format(new Date(performance.comparison.from))} –{" "}
+                {dateFormatter.format(new Date(performance.comparison.to))}. Her
+                iki dönem aynı yerel saate kadar karşılaştırılır.
+              </p>
+            )}
             <AnalyticsSummary data={performance} />
           </section>
           <section className="space-y-4 border-t border-border pt-7">
@@ -352,10 +400,15 @@ export function AnalyticsClient({
               <AutomationImpact
                 data={performance}
                 canManageStore={mayManageStore}
+                onInspectFailed={() =>
+                  inspectQuestions({ kind: "FAILED_DELIVERY" })
+                }
               />
               <ReviewReasons
                 data={performance}
-                canManageStore={mayManageStore}
+                onInspect={(reason) =>
+                  inspectQuestions({ kind: "REVIEW_REASON", reason })
+                }
               />
             </div>
           </section>
@@ -414,6 +467,16 @@ export function AnalyticsClient({
           </div>
         </section>
       )}
+      {detailScope &&
+        detailScope.storeId === activeStore.id &&
+        detailScope.asOf === performance?.generatedAt && (
+          <PerformanceQuestionSheet
+            key={`${activeStore.id}:${detailScope.asOf}:${detailScope.kind}:${detailScope.kind === "REVIEW_REASON" ? detailScope.reason : ""}`}
+            storeId={activeStore.id}
+            scope={detailScope}
+            onClose={() => setDetailScope(null)}
+          />
+        )}
     </div>
   )
 }

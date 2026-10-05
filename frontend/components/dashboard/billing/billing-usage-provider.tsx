@@ -62,9 +62,12 @@ export function BillingUsageProvider({
     }
 
     document.addEventListener("visibilitychange", handleVisibilityChange)
+    const handleBillingUpdate = () => void refresh()
+    window.addEventListener("billing-updated", handleBillingUpdate)
     return () => {
       window.clearInterval(intervalId)
       document.removeEventListener("visibilitychange", handleVisibilityChange)
+      window.removeEventListener("billing-updated", handleBillingUpdate)
       requestRef.current?.abort()
     }
   }, [refresh, storeId])

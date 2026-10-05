@@ -18,20 +18,22 @@ import {
 import type { AiPerformance } from "@/types/ai-performance"
 import {
   boundedPercent,
+  confidenceExplanation,
   formatCount,
   formatPercent,
   intentLabels,
 } from "./analytics-format"
+import { MetricHelp } from "./metric-help"
 
 type Sort = "VOLUME" | "CONFIDENCE" | "REVIEW"
 
 const chartConfig = {
   confidence: {
-    label: "AI güveni · yüksek olması iyi",
+    label: "Ortalama AI güven puanı",
     color: "var(--primary)",
   },
   review: {
-    label: "Kontrol ihtiyacı · düşük olması iyi",
+    label: "İncelemeye ayrılan taslak oranı",
     color: "var(--chart-3)",
   },
 } satisfies ChartConfig
@@ -99,10 +101,13 @@ export function IntentAnalysis({
                   <span className="size-2 rounded-sm bg-primary" />
                   <span>
                     <strong className="font-medium text-foreground">
-                      AI güveni
+                      AI güven puanı
                     </strong>{" "}
-                    · yüksek olması iyi
                   </span>
+                  <MetricHelp
+                    label="Soru türüne göre AI güven puanı"
+                    description={`${confidenceExplanation} Kapsam dışı taslaklar hariç tutulur; her soru türünün kendi taslakları üzerinden ortalama alınır.`}
+                  />
                 </span>
                 <span className="flex items-center gap-2 text-muted-foreground">
                   <span className="size-2 rounded-sm bg-chart-3" />
@@ -112,6 +117,10 @@ export function IntentAnalysis({
                     </strong>{" "}
                     · düşük olması iyi
                   </span>
+                  <MetricHelp
+                    label="Soru türüne göre kontrol ihtiyacı"
+                    description="İnceleme gerektiren taslakların, ilgili soru türünün tüm taslaklarına oranıdır. Kapsam dışı taslaklar hariç tutulur. Güven puanıyla aynı ölçü değildir."
+                  />
                 </span>
               </div>
               <div className="themed-scrollbar overflow-x-auto pt-5">
@@ -157,7 +166,7 @@ export function IntentAnalysis({
                             <div className="flex w-full items-center justify-between gap-5">
                               <span className="text-muted-foreground">
                                 {name === "confidence"
-                                  ? "AI güveni"
+                                  ? "AI güven puanı"
                                   : "Kontrol ihtiyacı"}
                               </span>
                               <span className="font-medium tabular-nums">
@@ -197,7 +206,7 @@ export function IntentAnalysis({
               </div>
               <p className="my-4 text-[10px] text-muted-foreground">
                 Seçili sıralamadaki ilk {chartData.length} soru türü gösterilir.
-                Sütunların üzerindeki değerler doğrudan karşılaştırılabilir.
+                Güven puanı ile kontrol ihtiyacı farklı ölçülerdir.
               </p>
             </>
           )}
@@ -205,12 +214,17 @@ export function IntentAnalysis({
             <summary className="cursor-pointer py-4 text-xs font-medium outline-none focus-visible:rounded-md focus-visible:ring-2 focus-visible:ring-ring">
               Ayrıntılı sonuçları göster ({ordered.length} soru türü)
             </summary>
+            <p className="mb-4 text-[11px] leading-5 text-muted-foreground">
+              Kontrol ve otomatik gönderime uygunluk oranları ilgili türün
+              taslaklarını; düzenleme oranı kullanıcı onaylı AI yanıtlarını esas
+              alır. Otomatik gönderimler düzenleme oranına dahil değildir.
+            </p>
             <div
               aria-hidden="true"
               className="hidden grid-cols-[minmax(7rem,1fr)_minmax(10rem,1.5fr)_repeat(3,minmax(4.5rem,0.5fr))] gap-4 border-b border-border pb-3 text-[10px] text-muted-foreground lg:grid"
             >
               <span>Soru türü</span>
-              <span>Ortalama güven</span>
+              <span>AI güven puanı</span>
               <span>Kontrol ihtiyacı</span>
               <span>Otomatik gönderime uygun</span>
               <span>Kullanıcı düzenledi</span>
@@ -231,7 +245,7 @@ export function IntentAnalysis({
                   </div>
                   <div>
                     <p className="mb-2 text-[10px] text-muted-foreground lg:hidden">
-                      Ortalama güven
+                      AI güven puanı
                     </p>
                     <div className="flex items-center gap-3">
                       <span className="text-xs font-semibold tabular-nums">

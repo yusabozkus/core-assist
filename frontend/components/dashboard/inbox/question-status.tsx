@@ -8,6 +8,7 @@ import type {
   QuestionReplyDecision,
 } from "@/types/question"
 import { cn } from "@/lib/utils"
+import { questionStatusTones } from "./question-status-tones"
 
 export function QuestionStatus({
   status,
@@ -35,7 +36,14 @@ export function QuestionStatus({
 
   if (deliveryStatus === "REVIEW_REQUIRED") {
     return (
-      <Badge variant="warning" className={cn("shrink-0", compactClassName)}>
+      <Badge
+        variant="outline"
+        className={cn(
+          "shrink-0",
+          questionStatusTones.deliveryReview,
+          compactClassName
+        )}
+      >
         Teslimat kontrolü
       </Badge>
     )
@@ -45,10 +53,7 @@ export function QuestionStatus({
     return (
       <Badge
         variant="outline"
-        className={cn(
-          "shrink-0 border-red-500/25 bg-red-500/10 text-red-600 dark:text-red-400",
-          compactClassName
-        )}
+        className={cn("shrink-0", questionStatusTones.failed, compactClassName)}
       >
         Gönderilemedi
       </Badge>
@@ -60,7 +65,8 @@ export function QuestionStatus({
       <Badge
         variant="outline"
         className={cn(
-          "shrink-0 border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-400",
+          "shrink-0",
+          questionStatusTones.deliveryPending,
           compactClassName
         )}
       >
@@ -80,10 +86,7 @@ export function QuestionStatus({
     return (
       <Badge
         variant="outline"
-        className={cn(
-          "shrink-0 border-violet-500/25 bg-violet-500/10 text-violet-700 dark:text-violet-400",
-          compactClassName
-        )}
+        className={cn("shrink-0", questionStatusTones.draft, compactClassName)}
       >
         <HugeiconsIcon
           icon={RefreshIcon}
@@ -104,7 +107,8 @@ export function QuestionStatus({
       <Badge
         variant="outline"
         className={cn(
-          "shrink-0 border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+          "shrink-0",
+          questionStatusTones.blocked,
           compactClassName
         )}
       >
@@ -119,10 +123,7 @@ export function QuestionStatus({
     return (
       <Badge
         variant="outline"
-        className={cn(
-          "shrink-0 border-red-500/25 bg-red-500/10 text-red-600 dark:text-red-400",
-          compactClassName
-        )}
+        className={cn("shrink-0", questionStatusTones.failed, compactClassName)}
       >
         Taslak hatası
       </Badge>
@@ -134,7 +135,8 @@ export function QuestionStatus({
       <Badge
         variant="outline"
         className={cn(
-          "shrink-0 border-slate-500/25 bg-slate-500/10 text-slate-700 dark:text-slate-300",
+          "shrink-0",
+          questionStatusTones.outOfScope,
           compactClassName
         )}
       >
@@ -148,7 +150,8 @@ export function QuestionStatus({
       <Badge
         variant="outline"
         className={cn(
-          "shrink-0 border-violet-500/25 bg-violet-500/10 text-violet-700 dark:text-violet-300",
+          "shrink-0",
+          questionStatusTones.shadowEligible,
           compactClassName
         )}
       >
@@ -165,10 +168,7 @@ export function QuestionStatus({
     return (
       <Badge
         variant="outline"
-        className={cn(
-          "shrink-0 border-orange-500/25 bg-orange-500/10 text-orange-700 dark:text-orange-400",
-          compactClassName
-        )}
+        className={cn("shrink-0", questionStatusTones.review, compactClassName)}
       >
         İnceleme bekliyor
       </Badge>
@@ -179,10 +179,7 @@ export function QuestionStatus({
     return (
       <Badge
         variant="outline"
-        className={cn(
-          "shrink-0 border-teal-500/25 bg-teal-500/10 text-teal-700 dark:text-teal-400",
-          compactClassName
-        )}
+        className={cn("shrink-0", questionStatusTones.ready, compactClassName)}
       >
         Gönderime hazır
       </Badge>
@@ -192,23 +189,19 @@ export function QuestionStatus({
   const details = {
     PENDING: {
       label: "Bekliyor",
-      className:
-        "border-blue-500/25 bg-blue-500/10 text-blue-700 dark:text-blue-400",
+      className: questionStatusTones.pending,
     },
     DRAFTED: {
       label: "Taslak hazır",
-      className:
-        "border-violet-500/25 bg-violet-500/10 text-violet-700 dark:text-violet-400",
+      className: questionStatusTones.draft,
     },
     ANSWERED: {
       label: "Yanıtlandı",
-      className:
-        "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+      className: questionStatusTones.answered,
     },
     IGNORED: {
       label: "Yanıtlanmadı",
-      className:
-        "border-red-500/25 bg-red-500/10 text-red-600 dark:text-red-400",
+      className: questionStatusTones.failed,
     },
   }[status]
 

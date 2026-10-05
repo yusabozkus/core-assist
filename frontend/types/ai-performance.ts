@@ -3,12 +3,45 @@ import type {
   AiDraftTrigger,
   AiAutomationMode,
   ProductAnswerFact,
+  ProductQuestionStatus,
+  QuestionDraftProcessingStatus,
   QuestionAnswerComposition,
   QuestionAnswerStatus,
   QuestionReplyDecision,
 } from "@/types/question"
 
 export type AiPerformanceRange = "7D" | "30D" | "90D" | "ALL"
+
+export type AiPerformanceSelection =
+  { kind: "REVIEW_REASON"; reason: string } | { kind: "FAILED_DELIVERY" }
+
+export type AiPerformanceDetailScope = AiPerformanceSelection & {
+  range: AiPerformanceRange
+  provider: string | null
+  asOf: string
+  from: string | null
+  timezone: string
+}
+
+export type AiPerformanceCursor = { questionId: string; before: string }
+
+export type AiPerformanceQuestionPage = {
+  totals: { questions: number; events: number }
+  items: Array<{
+    questionId: string
+    question: string
+    customerName: string | null
+    productTitle: string | null
+    providerKey: string
+    status: ProductQuestionStatus
+    draftDecision: QuestionReplyDecision | null
+    draftProcessingStatus: QuestionDraftProcessingStatus | null
+    deliveryStatus: QuestionAnswerStatus | null
+    eventCount: number
+    lastMatchedAt: string
+  }>
+  nextCursor: AiPerformanceCursor | null
+}
 
 export type AiPerformance = {
   range: AiPerformanceRange
@@ -17,11 +50,24 @@ export type AiPerformance = {
   availableProviders: string[]
   from: string | null
   generatedAt: string
+  comparison: {
+    from: string
+    to: string
+    totalDrafts: number
+    aiAssisted: number
+    autoSent: number
+    acceptanceRate: number | null
+    needsReviewRate: number | null
+  } | null
+  currentWorkload: {
+    needsReview: number
+  }
   summary: {
     totalDrafts: number
     uniqueQuestions: number
     reviewedAnswers: number
     averageConfidence: number
+    confidenceSamples: number
     readyRate: number
     needsReviewRate: number
     acceptanceRate: number
@@ -67,6 +113,7 @@ export type AiPerformance = {
     providerKey: string
     totalDrafts: number
     averageConfidence: number
+    confidenceSamples: number
     readyRate: number
     needsReviewRate: number
     sentAnswers: number

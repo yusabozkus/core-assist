@@ -10,8 +10,10 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
 import { APP_ROUTES } from "@/constants/site"
 import type { AiPerformance } from "@/types/ai-performance"
+import { MetricHelp } from "./metric-help"
 import {
   automationLabels,
+  confidenceExplanation,
   formatCount,
   formatPercent,
 } from "./analytics-format"
@@ -55,8 +57,8 @@ function getOverviewState(data: AiPerformance): OverviewState {
     return {
       title: "İnsan kontrolü bu dönemde öne çıkıyor",
       description: `${formatCount(data.draftDecisions.needsReview)} taslak, eksik bilgi veya düşük güven gibi nedenlerle incelemeye bırakıldı.`,
-      actionLabel: "Bekleyenleri incele",
-      actionHref: APP_ROUTES.dashboard.inbox,
+      actionLabel: "İnceleme nedenlerini gör",
+      actionHref: "#review-reasons-title",
       icon: AlertCircleIcon,
       tone: "border-amber-500/20 bg-amber-500/[0.045] dark:bg-amber-500/[0.07]",
       iconTone: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
@@ -74,12 +76,23 @@ function getOverviewState(data: AiPerformance): OverviewState {
   }
 }
 
-export function PerformanceOverview({ data }: { data: AiPerformance }) {
+export function PerformanceOverview({
+  data,
+  onInspectFailed,
+}: {
+  data: AiPerformance
+  onInspectFailed: () => void
+}) {
   const state = getOverviewState(data)
   const metrics = [
     {
-      label: "Ortalama AI güveni",
-      value: formatPercent(data.summary.averageConfidence * 100),
+      label: "Ortalama AI güven puanı",
+      value:
+        data.summary.confidenceSamples > 0
+          ? formatPercent(data.summary.averageConfidence * 100)
+          : "—",
+      note: "Doğruluk oranı değildir.",
+      explanation: `${confidenceExplanation} Bu ortalama, kapsam dışı olmayan ${formatCount(data.summary.confidenceSamples)} taslak üzerinden hesaplanır.`,
     },
     {
       label: "Gönderim başarısı",
@@ -87,10 +100,15 @@ export function PerformanceOverview({ data }: { data: AiPerformance }) {
         data.delivery.successRate === null
           ? "—"
           : formatPercent(data.delivery.successRate),
+      note: `${formatCount(data.answers.aiAssisted)} / ${formatCount(data.answers.aiAssisted + data.delivery.failed)} sonuçlanan AI gönderimi`,
+      explanation:
+        "Başarılı AI gönderimleri / başarılı ve başarısız AI gönderimlerinin toplamı. Kuyrukta veya işlemde olanlar hariçtir. Başarılı yanıtlar gönderilme, başarısız yanıtlar kuyruğa alınma tarihine göre seçili döneme dahil edilir. Yanıtın içeriğinin doğruluğunu ölçmez.",
     },
     {
       label: "Aktif yanıt modu",
       value: automationLabels[data.automation.mode],
+      note: null,
+      explanation: null,
     },
   ]
 
@@ -117,17 +135,30 @@ export function PerformanceOverview({ data }: { data: AiPerformance }) {
               {state.description}
             </p>
           </div>
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="w-full shrink-0 bg-card sm:w-auto"
-          >
-            <Link href={state.actionHref}>
+          {data.delivery.failed > 0 ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full shrink-0 bg-card sm:w-auto"
+              onClick={onInspectFailed}
+            >
               {state.actionLabel}
               <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
-            </Link>
-          </Button>
+            </Button>
+          ) : (
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="w-full shrink-0 bg-card sm:w-auto"
+            >
+              <Link href={state.actionHref}>
+                {state.actionLabel}
+                <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
+              </Link>
+            </Button>
+          )}
         </div>
 
         <dl className="grid grid-cols-2 border-t border-border/70 sm:grid-cols-3">
@@ -136,14 +167,25 @@ export function PerformanceOverview({ data }: { data: AiPerformance }) {
               key={metric.label}
               className={`min-w-0 px-4 py-3.5 sm:px-5 ${index === 1 ? "border-l border-border/70" : ""} ${index === 2 ? "col-span-2 flex items-center justify-between gap-3 border-t border-border/70 sm:col-span-1 sm:block sm:border-t-0 sm:border-l" : ""}`}
             >
-              <dt className="text-[10px] font-medium text-muted-foreground">
+              <dt className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
                 {metric.label}
+                {metric.explanation && (
+                  <MetricHelp
+                    label={metric.label}
+                    description={metric.explanation}
+                  />
+                )}
               </dt>
               <dd
                 className={`truncate text-sm font-semibold tracking-tight tabular-nums sm:text-base ${index === 2 ? "sm:mt-1.5" : "mt-1.5"}`}
               >
                 {metric.value}
               </dd>
+              {metric.note && (
+                <dd className="mt-1 text-[10px] leading-4 text-muted-foreground">
+                  {metric.note}
+                </dd>
+              )}
             </div>
           ))}
         </dl>

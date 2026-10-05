@@ -7,6 +7,11 @@ import type {
   BillingHistory,
   BillingPlanId,
   BillingPortalSession,
+  BillingPaymentMethodCheckout,
+  BillingPaymentMethodCheckoutStatus,
+  BillingSubscriptionManagement,
+  BillingSubscriptionManagementResult,
+  BillingSubscriptionAction,
   BillingSummary,
   BillingPlanChangePreview,
   BillingPlanChangeResult,
@@ -85,6 +90,27 @@ export function createBillingPortalSession(workspaceId: string) {
   )
 }
 
+export function createPaymentMethodCheckout(
+  workspaceId: string,
+  signal?: AbortSignal
+) {
+  return apiFetch<BillingPaymentMethodCheckout>(
+    `/workspaces/${encodeURIComponent(workspaceId)}/billing/payment-method/checkout`,
+    { method: "POST", signal }
+  )
+}
+
+export function getPaymentMethodCheckoutStatus(
+  workspaceId: string,
+  transactionId: string,
+  signal?: AbortSignal
+) {
+  return apiFetch<BillingPaymentMethodCheckoutStatus>(
+    `/workspaces/${encodeURIComponent(workspaceId)}/billing/payment-method/checkout/${encodeURIComponent(transactionId)}`,
+    { signal }
+  )
+}
+
 export function refreshBillingSubscription(
   workspaceId: string,
   signal?: AbortSignal
@@ -149,4 +175,29 @@ export function prepareBillingWorkspace(signal?: AbortSignal) {
     method: "POST",
     signal,
   })
+}
+
+export function getSubscriptionManagement(
+  workspaceId: string,
+  signal?: AbortSignal
+) {
+  return apiFetch<BillingSubscriptionManagement>(
+    `/workspaces/${encodeURIComponent(workspaceId)}/billing/subscription-management`,
+    { signal }
+  )
+}
+
+export function manageBillingSubscription(
+  workspaceId: string,
+  input: {
+    action: BillingSubscriptionAction
+    subscriptionId: string
+    updatedAt: string
+  },
+  signal?: AbortSignal
+) {
+  return apiFetch<BillingSubscriptionManagementResult>(
+    `/workspaces/${encodeURIComponent(workspaceId)}/billing/subscription-management`,
+    { method: "POST", signal, body: JSON.stringify(input) }
+  )
 }

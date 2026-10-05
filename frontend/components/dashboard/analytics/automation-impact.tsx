@@ -12,6 +12,8 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import type { AiPerformance } from "@/types/ai-performance"
+import { PeriodChange } from "./period-change"
+import { MetricHelp } from "./metric-help"
 import {
   automationLabels,
   formatCount,
@@ -26,9 +28,11 @@ const chartConfig = {
 export function AutomationImpact({
   data,
   canManageStore,
+  onInspectFailed,
 }: {
   data: AiPerformance
   canManageStore: boolean
+  onInspectFailed: () => void
 }) {
   const total = data.answers.aiAssisted
   const autoRate = total ? (data.answers.autoSent / total) * 100 : 0
@@ -60,6 +64,13 @@ export function AutomationImpact({
           yanıt otomatik gönderildi
         </span>
       </div>
+      {data.comparison && (
+        <PeriodChange
+          kind="count"
+          current={data.answers.autoSent}
+          previous={data.comparison.autoSent}
+        />
+      )}
       <ChartContainer
         config={chartConfig}
         className="mt-4 aspect-auto h-7 w-full"
@@ -113,10 +124,17 @@ export function AutomationImpact({
           Kullanıcı onaylı {formatCount(data.summary.reviewedAnswers)}
         </span>
       </div>
+      <p className="mt-2 text-[10px] text-muted-foreground">
+        Toplam {formatCount(total)} AI destekli gönderim üzerinden
+      </p>
       <dl className="my-5 grid grid-cols-2 gap-5 border-y border-border py-4">
         <div>
-          <dt className="text-[11px] text-muted-foreground">
+          <dt className="flex items-center gap-1 text-[11px] text-muted-foreground">
             Otomatik gönderime uygun
+            <MetricHelp
+              label="Otomatik gönderime uygun"
+              description="Otomatik taslak veya otomatik gönderim modunda değerlendirilen taslaklardan gönderim koşullarını geçenlerin sayısıdır. Uygun bulunması, yanıtın gönderildiği anlamına gelmez."
+            />
           </dt>
           <dd className="mt-1.5 text-lg font-semibold tabular-nums">
             {formatCount(data.automation.eligible)}
@@ -142,8 +160,12 @@ export function AutomationImpact({
             : "Otomatik taslak veya gönderim çalıştığında sonuçlar burada görünür."}
       </p>
       <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-5 text-[11px] text-muted-foreground">
-        <span>
+        <span className="inline-flex items-center gap-1">
           Gönderim başarısı{" "}
+          <MetricHelp
+            label="Gönderim başarısı"
+            description={`${formatCount(data.answers.aiAssisted)} başarılı / ${formatCount(data.answers.aiAssisted + data.delivery.failed)} sonuçlanan AI gönderimi. Kuyrukta ve işlemde olanlar hariçtir; yanıtın doğruluğunu ölçmez.`}
+          />
           <strong className="ml-1 font-medium text-foreground">
             {data.delivery.successRate === null
               ? "—"
@@ -156,18 +178,25 @@ export function AutomationImpact({
             {formatCount(data.delivery.queued + data.delivery.processing)}
           </strong>
         </span>
-        <span>
-          Başarısız{" "}
-          <strong
-            className={
-              data.delivery.failed
-                ? "ml-1 font-medium text-destructive"
-                : "ml-1 font-medium text-foreground"
-            }
+        {data.delivery.failed > 0 ? (
+          <button
+            type="button"
+            onClick={onInspectFailed}
+            className="inline-flex items-center gap-1 rounded-sm text-destructive outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={`${formatCount(data.delivery.failed)} başarısız gönderimi görüntüle`}
           >
-            {formatCount(data.delivery.failed)}
-          </strong>
-        </span>
+            Başarısız{" "}
+            <strong className="ml-1 font-medium">
+              {formatCount(data.delivery.failed)}
+            </strong>
+            <HugeiconsIcon icon={ArrowRight01Icon} className="size-3" />
+          </button>
+        ) : (
+          <span>
+            Başarısız{" "}
+            <strong className="ml-1 font-medium text-foreground">0</strong>
+          </span>
+        )}
       </div>
     </section>
   )

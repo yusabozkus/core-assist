@@ -8,7 +8,7 @@ function discover(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name);
     if (entry.isDirectory()) return entry.name === 'generated' ? [] : discover(path);
-    return entry.name.endsWith('.spec.ts') && entry.name.endsWith('.integration.spec.ts') === (mode === 'integration') ? [relative(root, path)] : [];
+    return /\.(?:spec|test)\.ts$/.test(entry.name) && /\.integration\.(?:spec|test)\.ts$/.test(entry.name) === (mode === 'integration') ? [relative(root, path)] : [];
   });
 }
 const files = discover(join(root, 'src')).sort();

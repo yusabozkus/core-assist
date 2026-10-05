@@ -30,6 +30,7 @@ import {
 } from './dto/question-list-query.dto';
 import type { ResolveProductKnowledgeDto } from './dto/resolve-product-knowledge.dto';
 import { ProductKnowledgeService } from './product-knowledge.service';
+import { reviewRequiredQuestionWhere } from './review-required-question-filter';
 
 const QUESTION_LIST_SELECT = {
   id: true,
@@ -609,19 +610,7 @@ function pendingQuestionStateWhere(
         ...noAnswerDelivery,
       };
     case PendingQuestionStateFilter.REVIEW_REQUIRED:
-      return {
-        status: ProductQuestionStatus.DRAFTED,
-        draftDecision: QuestionReplyDecision.NEEDS_REVIEW,
-        draftProcessingStatus: null,
-        OR: [
-          noAnswerDelivery,
-          {
-            answerDelivery: {
-              is: { status: QuestionAnswerStatus.FAILED },
-            },
-          },
-        ],
-      };
+      return reviewRequiredQuestionWhere();
     case PendingQuestionStateFilter.READY_TO_SEND:
       return {
         status: ProductQuestionStatus.DRAFTED,

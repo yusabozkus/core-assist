@@ -1,7 +1,12 @@
 import { ProviderLogo } from "@/components/dashboard/channels/provider-logo"
 import { getProviderName } from "@/components/dashboard/catalog/products/product-catalog-utils"
 import type { AiPerformance } from "@/types/ai-performance"
-import { formatCount, formatPercent } from "./analytics-format"
+import {
+  confidenceExplanation,
+  formatCount,
+  formatPercent,
+} from "./analytics-format"
+import { MetricHelp } from "./metric-help"
 
 export function ProviderComparison({
   providers,
@@ -24,26 +29,31 @@ export function ProviderComparison({
           const reviewed = provider.acceptedUnchanged + provider.editedAnswers
           const stats = [
             {
-              label: "Ortalama AI güveni",
-              value: provider.totalDrafts
-                ? formatPercent(provider.averageConfidence * 100)
-                : "—",
+              label: "Ortalama AI güven puanı",
+              value:
+                provider.confidenceSamples > 0
+                  ? formatPercent(provider.averageConfidence * 100)
+                  : "—",
+              help: `${confidenceExplanation} Bu pazaryerindeki kapsam dışı olmayan ${formatCount(provider.confidenceSamples)} taslağın ortalamasıdır.`,
             },
             {
               label: "Kontrol gereken",
               value: provider.totalDrafts
                 ? formatPercent(provider.needsReviewRate)
                 : "—",
+              help: `İnceleme gerektiren taslaklar / bu pazaryerinde oluşturulan ${formatCount(provider.totalDrafts)} taslak. Şu anda bekleyen soruların sayısı değildir.`,
             },
             {
               label: "Değişmeden onay",
               value: reviewed
                 ? formatPercent((provider.acceptedUnchanged / reviewed) * 100)
                 : "—",
+              help: `${formatCount(provider.acceptedUnchanged)} değiştirilmeden gönderilen / ${formatCount(reviewed)} kullanıcı onaylı AI yanıtı. Otomatik gönderimler ve AI kullanılmadan yazılan yanıtlar bu orana dahil değildir.`,
             },
             {
-              label: "Otomatik gönderim",
+              label: "Otomatik gönderilen",
               value: formatCount(provider.autoSentAnswers),
+              help: null,
             },
           ]
           return (
@@ -67,8 +77,14 @@ export function ProviderComparison({
               <dl className="mt-5 grid grid-cols-2 gap-x-5 gap-y-4 border-t border-border/60 pt-4">
                 {stats.map((stat) => (
                   <div key={stat.label}>
-                    <dt className="text-[10px] leading-4 text-muted-foreground">
+                    <dt className="flex items-center gap-1 text-[10px] leading-4 text-muted-foreground">
                       {stat.label}
+                      {stat.help && (
+                        <MetricHelp
+                          label={stat.label}
+                          description={stat.help}
+                        />
+                      )}
                     </dt>
                     <dd className="mt-1.5 text-sm font-semibold tabular-nums">
                       {stat.value}
