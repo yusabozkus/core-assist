@@ -12,6 +12,11 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { ResendEmailService } from './resend-email.service';
 import {
+  DEFAULT_NOTIFICATION_DELIVERY_SETTINGS,
+  isCriticalQuotaEmail,
+  notificationEmailDeliveryKey,
+} from './notification-email.policy';
+import {
   FINANCE_TRANSACTIONAL_EMAIL_TYPES,
   SECURITY_TRANSACTIONAL_EMAIL_TYPES,
 } from './critical-email.policy';
@@ -43,6 +48,7 @@ import {
 
 type ExternalNotificationInput = {
   storeId: string;
+  workspaceId?: string;
   type: NotificationType;
   severity: NotificationSeverity;
   title: string;
@@ -65,6 +71,7 @@ type EssentialNotificationInput = {
   actionUrl?: string;
   securityEmail?: SecurityEmailEvent;
   billingEmail?: BillingEmailEvent;
+  aiEmail?: AiEmailEvent;
 };
 
 type DeliverySettings = {
@@ -121,6 +128,12 @@ export class NotificationDeliveryService {
     },
     input: ExternalNotificationInput,
   ) {
+    if (isCriticalQuotaEmail(input)) {
+      return this.stageEssentialEmail(transaction, notification.id, {
+        ...input,
+        recipientUserId: notification.recipientUserId,
+      });
+    }
     if (!this.emailConfigured || !isImmediateEmailType(input.type)) return;
     const recipient = await transaction.user.findUnique({
       where: { id: notification.recipientUserId },
@@ -128,7 +141,7 @@ export class NotificationDeliveryService {
         name: true,
         email: true,
         notificationDeliverySettings: {
-          where: { storeId: input.storeId, emailEnabled: true },
+          where: { storeId: input.storeId },
           take: 1,
           select: {
             browserEnabled: true,
@@ -141,10 +154,13 @@ export class NotificationDeliveryService {
         },
       },
     });
-    const settings = recipient?.notificationDeliverySettings[0];
-    if (!recipient || !settings || this.isQuietTime(settings)) return;
+    const settings =
+      recipient?.notificationDeliverySettings[0] ??
+      DEFAULT_NOTIFICATION_DELIVERY_SETTINGS;
+    if (!recipient || !settings.emailEnabled || this.isQuietTime(settings))
+      return;
     const actionUrl = this.toAbsoluteUrl(input.actionUrl);
-    const deliveryKey = `notification:${notification.id}:${notification.occurrenceCount}`;
+    const deliveryKey = notificationEmailDeliveryKey(notification, input.type);
     const rendered = input.aiEmail
       ? renderAiEmail({
           recipientName: recipient.name,
@@ -189,7 +205,8 @@ export class NotificationDeliveryService {
     if (
       !this.emailConfigured ||
       (!FINANCE_TRANSACTIONAL_EMAIL_TYPES.has(input.type) &&
-        !SECURITY_TRANSACTIONAL_EMAIL_TYPES.has(input.type))
+        !SECURITY_TRANSACTIONAL_EMAIL_TYPES.has(input.type) &&
+        !isCriticalQuotaEmail(input))
     )
       return;
 
@@ -200,34 +217,43 @@ export class NotificationDeliveryService {
     if (!recipient?.emailVerified) return;
     const deliveryKey = `critical:${notificationId}`;
     const rendered =
-      SECURITY_TRANSACTIONAL_EMAIL_TYPES.has(input.type) && input.securityEmail
-        ? renderSecurityEmail({
+      isCriticalQuotaEmail(input) && input.aiEmail
+        ? renderAiEmail({
             recipientName: recipient.name,
-            event: input.securityEmail,
-            actionUrl: this.toAbsoluteUrl(
-              input.actionUrl === '/admin/account'
-                ? '/admin/account'
-                : '/dashboard/settings/profile',
-            ),
+            title: input.title,
+            message: input.message,
+            actionUrl: this.toAbsoluteUrl(input.actionUrl),
+            event: input.aiEmail,
           })
-        : FINANCE_TRANSACTIONAL_EMAIL_TYPES.has(input.type) &&
-            input.billingEmail
-          ? renderBillingEmail({
+        : SECURITY_TRANSACTIONAL_EMAIL_TYPES.has(input.type) &&
+            input.securityEmail
+          ? renderSecurityEmail({
               recipientName: recipient.name,
-              title: input.title,
-              message: input.message,
-              event: input.billingEmail,
-              actionUrl: this.toAbsoluteUrl(input.actionUrl),
-            })
-          : {
-              subject: input.title,
-              html: buildEmailHtml(
-                recipient.name,
-                input.title,
-                input.message,
-                this.toAbsoluteUrl(input.actionUrl),
+              event: input.securityEmail,
+              actionUrl: this.toAbsoluteUrl(
+                input.actionUrl === '/admin/account'
+                  ? '/admin/account'
+                  : '/dashboard/settings/profile',
               ),
-            };
+            })
+          : FINANCE_TRANSACTIONAL_EMAIL_TYPES.has(input.type) &&
+              input.billingEmail
+            ? renderBillingEmail({
+                recipientName: recipient.name,
+                title: input.title,
+                message: input.message,
+                event: input.billingEmail,
+                actionUrl: this.toAbsoluteUrl(input.actionUrl),
+              })
+            : {
+                subject: input.title,
+                html: buildEmailHtml(
+                  recipient.name,
+                  input.title,
+                  input.message,
+                  this.toAbsoluteUrl(input.actionUrl),
+                ),
+              };
     await transaction.emailDeliveryRecord.upsert({
       where: { deliveryKey },
       create: {
@@ -278,8 +304,10 @@ export class NotificationDeliveryService {
 
     await Promise.all(
       recipients.map(async (recipient) => {
-        const settings = recipient.notificationDeliverySettings[0];
-        if (!settings || this.isQuietTime(settings)) return;
+        const settings =
+          recipient.notificationDeliverySettings[0] ??
+          DEFAULT_NOTIFICATION_DELIVERY_SETTINGS;
+        if (this.isQuietTime(settings)) return;
 
         const deliveries: Promise<void>[] = [];
         if (settings.browserEnabled && this.browserConfigured) {
@@ -293,7 +321,8 @@ export class NotificationDeliveryService {
         if (
           settings.emailEnabled &&
           this.emailConfigured &&
-          isImmediateEmailType(input.type)
+          isImmediateEmailType(input.type) &&
+          !isCriticalQuotaEmail(input)
         ) {
           const key = input.emailDeliveryKeys?.[recipient.id];
           if (!key) throw new Error('Email delivery key is missing.');
@@ -328,7 +357,7 @@ export class NotificationDeliveryService {
         name: true,
         email: true,
         notificationDeliverySettings: {
-          where: { storeId, emailEnabled: true },
+          where: { storeId },
           take: 1,
           select: {
             browserEnabled: true,
@@ -341,8 +370,11 @@ export class NotificationDeliveryService {
         },
       },
     });
-    const settings = recipient?.notificationDeliverySettings[0];
-    if (!recipient || !settings || this.isQuietTime(settings)) return false;
+    const settings =
+      recipient?.notificationDeliverySettings[0] ??
+      DEFAULT_NOTIFICATION_DELIVERY_SETTINGS;
+    if (!recipient || !settings.emailEnabled || this.isQuietTime(settings))
+      return false;
 
     const result = await this.sendEmail(
       recipientUserId,
@@ -382,7 +414,7 @@ export class NotificationDeliveryService {
         name: true,
         email: true,
         notificationDeliverySettings: {
-          where: { storeId, emailEnabled: true },
+          where: { storeId },
           take: 1,
           select: {
             browserEnabled: true,
@@ -395,8 +427,11 @@ export class NotificationDeliveryService {
         },
       },
     });
-    const settings = recipient?.notificationDeliverySettings[0];
-    if (!recipient || !settings || this.isQuietTime(settings)) return false;
+    const settings =
+      recipient?.notificationDeliverySettings[0] ??
+      DEFAULT_NOTIFICATION_DELIVERY_SETTINGS;
+    if (!recipient || !settings.emailEnabled || this.isQuietTime(settings))
+      return false;
 
     const depleted = type === NotificationType.OUT_OF_STOCK;
     const result = await this.sendEmail(
@@ -467,8 +502,10 @@ export class NotificationDeliveryService {
       }),
     ]);
     if (!recipient) return 'SKIPPED';
-    const settings = recipient.notificationDeliverySettings[0];
-    if (!settings || !settings.emailEnabled || preference?.enabled === false)
+    const settings =
+      recipient.notificationDeliverySettings[0] ??
+      DEFAULT_NOTIFICATION_DELIVERY_SETTINGS;
+    if (!settings.emailEnabled || preference?.enabled === false)
       return 'SKIPPED';
     if (this.isQuietTime(settings)) return 'DEFERRED';
 

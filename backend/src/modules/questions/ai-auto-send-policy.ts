@@ -78,10 +78,21 @@ export function evaluateAutoSendEligibility({
       (id) => id === 'variant-sizes' || id.startsWith('height-weight-size-'),
     ) &&
     /tahmin|yaklaşık/i.test(draft.answer);
+  const sizeGuidanceConfidenceFloor = getVerifiedSizeGuidanceConfidenceFloor(
+    draft,
+    decision,
+    requestedFacts,
+  );
   const intentThreshold = validatedHeightWeightRecommendation
     ? DEFAULT_AUTO_SEND_CONFIDENCE
     : requestedFacts.reduce(
-        (highest, fact) => Math.max(highest, INTENT_CONFIDENCE_FLOORS[fact]),
+        (highest, fact) =>
+          Math.max(
+            highest,
+            fact === 'SIZE' && sizeGuidanceConfidenceFloor !== null
+              ? sizeGuidanceConfidenceFloor
+              : INTENT_CONFIDENCE_FLOORS[fact],
+          ),
         DEFAULT_AUTO_SEND_CONFIDENCE,
       );
   const appliedConfidenceThreshold = Math.max(
@@ -110,4 +121,59 @@ export function evaluateAutoSendEligibility({
 
 export function getIntentConfidenceFloor(fact: ProductAnswerFact) {
   return INTENT_CONFIDENCE_FLOORS[fact];
+}
+
+function getVerifiedSizeGuidanceConfidenceFloor(
+  draft: AiDraftResult,
+  decision: Exclude<QuestionReplyDecision, 'DO_NOT_REPLY'>,
+  requestedFacts: ProductAnswerFact[],
+): number | null {
+  // These kinds are assigned by server-resolved advice, never accepted from
+  // the model payload. A clarification does not assert personal size fit;
+  // table/measurement guidance still requires a server-verified size source.
+  if (
+    decision !== 'READY_FOR_SEND' ||
+    draft.answerability !== 'FULL' ||
+    draft.risks.length > 0 ||
+    draft.missingInformation.length > 0 ||
+    !requestedFacts.includes('SIZE') ||
+    ![...requestedFacts, ...draft.detectedFacts, ...draft.usedFacts].every(
+      (fact) => fact === 'SIZE' || fact === 'FIT',
+    ) ||
+    !draft.usedEvidenceIds.every(isSizeGuidanceEvidence)
+  ) {
+    return null;
+  }
+
+  const hasSizeGuide = draft.usedEvidenceIds.some((id) =>
+    /^size-guide-.+/.test(id),
+  );
+  if (
+    draft.responseKind === 'CUSTOMER_CLARIFICATION' &&
+    (draft.usedEvidenceIds.includes('customer-size-input') || hasSizeGuide)
+  ) {
+    return DEFAULT_AUTO_SEND_CONFIDENCE;
+  }
+  if (
+    draft.responseKind === 'SIZE_GUIDANCE' &&
+    (hasSizeGuide || draft.usedEvidenceIds.includes('catalog-garment-lengths'))
+  ) {
+    return 0.95;
+  }
+
+  return null;
+}
+
+function isSizeGuidanceEvidence(id: string) {
+  return (
+    id === 'customer-size-input' ||
+    id === 'variant-sizes' ||
+    id === 'catalog-garment-lengths' ||
+    id === 'catalog-fit' ||
+    id === 'catalog-description-fit' ||
+    id === 'catalog-description-fıt' ||
+    /^size-guide-.+/.test(id) ||
+    /^relevant-attribute-\d+-f[iı]t$/.test(id) ||
+    /^merchant-verified-.+/.test(id)
+  );
 }

@@ -1631,7 +1631,7 @@ model NotificationDeliverySetting {
   userId            String
   storeId           String
   browserEnabled    Boolean  @default(false)
-  emailEnabled      Boolean  @default(false)
+  emailEnabled      Boolean  @default(true)
   quietHoursEnabled Boolean  @default(false)
   quietHoursStart   String   @default("22:00")
   quietHoursEnd     String   @default("08:00")

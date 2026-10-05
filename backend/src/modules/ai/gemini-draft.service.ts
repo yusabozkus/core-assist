@@ -15,8 +15,15 @@ import { getUnlistedAvailabilitySize } from '../questions/unlisted-size-availabi
 import { isAmbientWearQuestion } from '../questions/ambient-wear-question';
 import { isCustomerMeasurementGap } from '../questions/customer-measurement-gap';
 import {
+  hasUnsupportedGarmentLengthClaim,
+  missingGarmentLengthInformation,
+  resolveGarmentLengthGuidance,
+} from '../questions/garment-length-guidance';
+import {
   classifyShrinkageQuestion,
   isExplicitGarmentWidthQuestion,
+  isPersonalSizeSelectionQuestion,
+  isProductDimensionQuestion,
   parseCustomerBodyMeasurements,
   resolveProductAnswerAdvice,
   rowMatchesSize,
@@ -217,7 +224,8 @@ function createPrompt(context: ProductAnswerContext) {
     heightWeightSizeRecommendation: context.heightWeightSizeRecommendation,
     resolvedGuidance: independentSizeEstimate
       ? null
-      : resolveProductAnswerAdvice(context),
+      : (resolveGarmentLengthGuidance(context) ??
+        resolveProductAnswerAdvice(context)),
     product: {
       title: context.product.title,
       brand: context.product.brand,
@@ -275,6 +283,8 @@ function createPrompt(context: ProductAnswerContext) {
     'Müşteri beden tablosunun nerede olduğunu soruyorsa bu bir ürün ölçüsü sorusu değildir. PLATFORM_GUIDANCE kanıtındaki konumu doğrudan tarif et; ölçü bilgisi eksikmiş gibi cevap verme.',
     'CATALOG_STATE kanıtı yalnızca o ürünün mevcut katalog durumunu doğrular. Beden tablosu görünmüyorsa bunu söyleyebilirsin; bu kanıttan beden veya santimetre değeri çıkarma.',
     'Ürün eni, düz zeminde ölçülen giysi genişliğidir; beden tablosundaki göğüs çevresi ise vücut çevresidir. Göğüs çevresini ikiye bölerek ürün eni üretme ve bu iki ölçüyü birbirinin yerine kullanma.',
+    'Oversize, boxy, regular veya rahat kalıp adı tek başına ürünün boyunun normal kesimden uzun ya da kısa olduğunu kanıtlamaz. Boy karşılaştırmasında doğrulanmış ürün boylarını paylaş; karşılaştırılan başka ürünün boyu bilinmiyorsa daha uzun/kısa olduğunu söyleme. Beden tablosundaki vücut ölçüsünü giysi boyu yerine kullanma ve kaynakta ürün boyu yokken ölçüler listeleniyor deme.',
+    'Müşterinin başka bir kumaş/kanvas pantolonda giydiği beden, yeni ürünün materyalini sorduğu anlamına gelmez. Doğrulanmış tablodaki beden kodlarını ancak ilgili sütunun adını belirterek eşleştir; Kanvas beden kodunu genel EU bedeni gibi sunma. Boy-kilo önerisinin kapalı olması tablodaki açık beden kodu veya vücut çevresi eşleşmesini engellemez.',
     'Müşteri yalnızca göğüs genişliği diyorsa tablodaki göğüs çevresini adını açıkça belirterek paylaşabilirsin. Özellikle düz zeminde en istiyorsa çevre ölçüsünü en diye cevaplama.',
     'Ribana veya "rikla/riklalı" sorusu kumaşın ribanalı dokuda olup olmadığını sorar; bunu likra ile karıştırma. Düz dokuma kanıtı varsa ürünün ribanalı olmadığını söyleyebilirsin.',
     'Likra veya esneklik sorusunda yalnızca bileşimde likra/elastan bulunmasına ya da açık esneklik bilgisine dayan. %100 pamuk bileşimi varsa likra/elastan içermediğini söyleyebilirsin.',
@@ -489,7 +499,12 @@ function parseAndValidate(
     };
   }
 
-  const advice = resolveProductAnswerAdvice(context);
+  const lengthAdvice = detectedFacts.every(
+    (fact) => fact === 'SIZE' || fact === 'FIT',
+  )
+    ? resolveGarmentLengthGuidance(context)
+    : null;
+  const advice = lengthAdvice ?? resolveProductAnswerAdvice(context);
   if (scope === 'IN_SCOPE' && advice) {
     return {
       ...advice,
@@ -933,10 +948,9 @@ function heightWeightSizeFallback(
 }
 
 function isPersonalSizeRecommendationQuestion(question: string) {
-  const normalized = normalizeText(question);
   return (
-    /\b(beden|numara|size)\b/.test(normalized) &&
-    /\b(kac|hangi|oner|almali|uygun|olur|sec)\b/.test(normalized)
+    isPersonalSizeSelectionQuestion(question) &&
+    !isProductDimensionQuestion(question)
   );
 }
 
@@ -1095,7 +1109,7 @@ export function applySellerTone(
 
   if (!greetingEnabled) {
     result = result.replace(
-      /^(?:merhaba|merhabalar|iyi günler|selamlar)[,!:.]?\s*/i,
+      /^(?:merhabalar|merhaba|iyi günler|selamlar)\b[,!:.]?\s*/i,
       '',
     );
   }
@@ -1265,6 +1279,8 @@ function inferMissingInformation(
 
   const exactPropertyGap = missingExactProductMeasurement(context);
   if (exactPropertyGap) missing.push(exactPropertyGap);
+  const garmentLengthGap = missingGarmentLengthInformation(context);
+  if (garmentLengthGap) missing.push(garmentLengthGap);
 
   if (
     /\b(?:kalinlik|kalin|ince|gramaj)\b/.test(question) &&
@@ -1314,6 +1330,11 @@ function inferMissingInformation(
     catalogPattern: RegExp;
     label: string;
   }> = [
+    {
+      questionPattern: /polar/,
+      catalogPattern: /polar/,
+      label: 'Ürünün polar kumaş veya polar iç yüzey bilgisi',
+    },
     {
       questionPattern: /kararma|kararir/,
       catalogPattern: /kararma|kararmaz|kararmaya/,
@@ -1626,6 +1647,7 @@ function hasPriceContradiction(
 }
 
 function hasUnsupportedClaim(answer: string, context: ProductAnswerContext) {
+  if (hasUnsupportedGarmentLengthClaim(answer, context)) return true;
   const normalizedAnswer = normalizeText(answer);
   if (
     (context.product.sizeGuides?.length ?? 0) > 0 &&
@@ -1641,6 +1663,11 @@ function hasUnsupportedClaim(answer: string, context: ProductAnswerContext) {
       .join(' '),
   );
   const checks: Array<{ claim: RegExp; evidence: RegExp }> = [
+    {
+      claim:
+        /polar(?:dir|lidir|li)?(?: degil\w*| yok\w*| var\w*)|(?:ici|ic yuzeyi|astari) polar/,
+      evidence: /polar/,
+    },
     { claim: /hakiki deri/, evidence: /hakiki deri/ },
     {
       claim: /(?:\b100|yuzde yuz) pamuk/,

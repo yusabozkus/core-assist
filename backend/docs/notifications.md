@@ -1,8 +1,10 @@
 # Bildirim sistemi kurulumu
 
 Core Asistan bildirimleri varsayılan olarak uygulama içinde ve canlı SSE akışıyla
-çalışır. Tarayıcı ve e-posta teslimatı isteğe bağlıdır; gerekli ortam değişkenleri
-tanımlanmadığında ayar ekranındaki ilgili seçenekler pasif görünür.
+çalışır. Operasyon e-postaları tercih kaydı olmayan kullanıcılar için varsayılan
+açıktır ve kapatılabilir; mevcut kapatma tercihleri korunur. Tarayıcı teslimatı
+isteğe bağlıdır. Gerekli ortam değişkenleri tanımlanmadığında ayar ekranındaki
+ilgili seçenekler pasif görünür.
 
 ## Alıcı ve tercih politikası
 
@@ -60,20 +62,34 @@ Bu tablo, önemli veya işlem gerektiren olaylar için hedef alıcı ve gönderi
 | Davet kabul edildi | Hesap sahibi ve daveti oluşturan yönetici | Anında |
 | Rol/mağaza erişimi değişti veya üyelik kaldırıldı | Yetkisi değişen kullanıcı | Anında, zorunlu |
 | Ödeme başarısızlığı, abonelik/plan değişimi, fatura/iade | Hesap sahibi ve hesap yöneticileri | Anında |
-| AI kotası %80/%95/%100 | Hesap sahibi ve hesap yöneticileri | Her eşikte bir kez |
+| AI kotası %80 | Hesap sahibi ve hesap yöneticileri | E-posta tercihine bağlı; dönem başına bir kez |
+| AI kotası %90/%100 | Hesap sahibi ve hesap yöneticileri | Zorunlu; ortak kota dönemi başına her eşikte bir kez |
 | Kanal kopması, tekrarlı senkronizasyon hatası | İlgili mağaza ve hesap yöneticileri | Olay veya eşik anında |
 | Otomatik yanıt hatası veya otomasyon durması | İlgili mağaza yöneticileri ve temsilciler | Anında |
 | İnceleme bekleyen sorular, düşük/tükenen stok | İlgili mağaza yöneticileri ve temsilciler | Günlük veya tercihe bağlı özet |
 | Yeni cihaz/giriş sağlayıcısı değişikliği | İlgili kullanıcı | Anında, zorunlu |
 | Hesap silme talebi | İlgili kullanıcı ve hesap sahibi | Anında, zorunlu |
 
-Merkezi `olay → alıcı rolleri` politikası, mağaza erişimine göre alıcı seçimi, görüntüleyiciye varsayılan operasyonel e-posta göndermeme, finans/güvenlik e-postalarının kapatılamaması ve olay başına mükerrer gönderim koruması **açık uygulama işleridir**. Operasyonel e-postalar tercih ve hız sınırına, yoğun bildirimler günlük özete bağlanmalıdır; bütün mağaza üyelerine kör yayın yapılmamalıdır.
+%90 ve %100 kota e-postaları genel e-posta tercihini ve sessiz saatleri dikkate
+almadan doğrulanmış e-posta adresine gönderilir. Alıcılar yalnızca hesap sahibi
+ve hesap yöneticileridir. Pazaryerleri ve mağazalar aynı kota dönemini
+paylaştığında bildirim ve e-posta kimlikleri ortaktır; tekrarlar yeni e-posta
+oluşturmaz. Kota nedeniyle duraklama için ayrıca operasyon e-postası gönderilmez.
+%80 uyarısı genel e-posta tercihine ve sessiz saatlere tabidir.
+
+İlk mağaza bildirimi oluşturulurken alıcıların eksik teslimat tercihleri
+varsayılan açık olarak kaydedilir; var olan tercihler değiştirilmez. Böylece
+kullanıcı tercihler sayfasını açmadan da özetleri alabilir. AI incelemeleri soru
+başına e-posta göndermez; varsayılan sekiz saatlik aralıkta yeni incelemeler toplu
+olarak bildirilir. Stok uyarıları da toplulaştırılır; kritik stok özetleri en az
+24 saat arayla gönderilir.
 
 ## Sessiz saatler
 
 Kullanıcı sessiz saatleri açtığında bu aralıkta tarayıcı ve e-posta teslimatı
-yapılmaz. Bildirim uygulama içinde kaydedilmeye ve okunmamış sayacında görünmeye
-devam eder. Saat hesabı mağazanın saat dilimiyle yapılır.
+yapılmaz. Kritik kota (%90/%100), ödeme, abonelik ve güvenlik e-postaları bu
+tercihten bağımsızdır. Bildirim uygulama içinde kaydedilmeye ve okunmamış sayacında
+görünmeye devam eder. Saat hesabı mağazanın saat dilimiyle yapılır.
 
 ## Saklama ve canlı akış
 

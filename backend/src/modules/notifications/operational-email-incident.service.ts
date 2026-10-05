@@ -132,6 +132,7 @@ export class OperationalEmailIncidentService {
 
     if (
       incident &&
+      input.kind !== OperationalEmailIncidentKind.AI_QUOTA_PAUSED &&
       (incident.isNew ||
         (!isWarningKind(input.kind) &&
           operationalSummaryDue(
@@ -212,6 +213,7 @@ export class OperationalEmailIncidentService {
       const incidents = await this.prisma.operationalEmailIncident.findMany({
         where: {
           ...(cursor ? { id: { gt: cursor } } : {}),
+          kind: { not: OperationalEmailIncidentKind.AI_QUOTA_PAUSED },
           OR: [
             { status: OperationalEmailIncidentStatus.OPEN },
             {
@@ -257,6 +259,9 @@ export class OperationalEmailIncidentService {
     const claim = await this.prisma.operationalEmailIncident.updateMany({
       where: {
         id,
+        // Quota is emailed centrally at workspace-period thresholds. A second
+        // store incident email would duplicate the mandatory 100% notice.
+        kind: { not: OperationalEmailIncidentKind.AI_QUOTA_PAUSED },
         OR: [{ claimUntil: null }, { claimUntil: { lte: now } }],
       },
       data: {

@@ -42,7 +42,7 @@ export class BillingUsageNotificationService {
         ? 'AI soru hakkınız doldu'
         : `AI soru hakkınızın %${threshold}'i kullanıldı`,
       message: exhausted
-        ? `${usage.limit.toLocaleString('tr-TR')} soru hakkınızın tamamını kullandınız. Manuel yanıtlamaya devam edebilir veya planınızı yükseltebilirsiniz.`
+        ? `${usage.limit.toLocaleString('tr-TR')} soru hakkınızın tamamını kullandınız. Yeni AI taslakları kota yenilenene kadar bekleyecek. Mevcut soruları manuel yanıtlayabilir veya planınızı yükseltebilirsiniz.`
         : `${usage.used.toLocaleString('tr-TR')} / ${usage.limit.toLocaleString('tr-TR')} soru hakkı kullanıldı. Dönem sonuna kadar ${usage.remaining.toLocaleString('tr-TR')} hakkınız kaldı.`,
       actionUrl: '/billing',
       entityType: 'BILLING_USAGE_PERIOD',

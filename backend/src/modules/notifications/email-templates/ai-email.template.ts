@@ -27,7 +27,7 @@ export function renderAiEmail(input: {
   title: string;
   message: string;
   actionUrl: string;
-  preferencesUrl: string;
+  preferencesUrl?: string;
   event: AiEmailEvent;
 }) {
   const event = input.event;
@@ -104,8 +104,9 @@ export function renderAiEmail(input: {
       detailsHtml,
       actionUrl: input.actionUrl,
       actionLabel,
-      footer:
-        'Bu e-posta Core Asistan tarafından otomatik olarak gönderilmiştir.',
+      footer: input.preferencesUrl
+        ? 'Bu e-posta Core Asistan tarafından otomatik olarak gönderilmiştir.'
+        : 'Bu kritik kota bildirimi, e-posta tercihinizden bağımsız olarak hesap yöneticilerine gönderilir.',
       preferencesUrl: input.preferencesUrl,
     }),
   };
