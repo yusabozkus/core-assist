@@ -14,6 +14,7 @@ import {
   ProductQuestionStatus,
   QuestionAnswerStatus,
   QuestionReplyDecision,
+  StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { InventoryVerificationService } from '../inventory-verification/inventory-verification.service';
@@ -122,6 +123,7 @@ export class QuestionDraftService {
           where: {
             id: questionId,
             storeId,
+            store: { status: StoreStatus.ACTIVE },
             status: {
               in: [
                 ProductQuestionStatus.PENDING,
@@ -177,6 +179,7 @@ export class QuestionDraftService {
     let inventorySnapshotHash: string | null = null;
     let inventoryCheckAttempted = false;
     const verifyInventory = async () => {
+      await execution.assertActive();
       inventoryCheckAttempted = true;
       try {
         const verification =

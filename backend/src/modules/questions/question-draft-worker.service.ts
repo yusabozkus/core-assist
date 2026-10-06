@@ -8,6 +8,7 @@ import {
   QuestionAnswerStatus,
   QuestionDraftProcessingStatus,
   QuestionReplyDecision,
+  StoreStatus,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../database/prisma.service';
 import {
@@ -19,6 +20,18 @@ import type { QuestionAnswerDispatcher } from '../question-answer/question-answe
 import { NotificationsService } from '../notifications/notifications.service';
 import { QuestionDraftService } from './question-draft.service';
 import type { QuestionDraftJobData } from './question-draft.types';
+import type { DraftQuestionAnswer } from './product-answer-context.types';
+import { DraftStoreInactiveException } from './draft-execution.service';
+
+export type DraftWorkerAttempt = {
+  startedAt: Date | null;
+  queuedAt: Date | null;
+};
+type ProcessingSnapshot = {
+  draftProcessingStatus: QuestionDraftProcessingStatus | null;
+  draftProcessingStartedAt: Date | null;
+  draftQueuedAt: Date | null;
+};
 
 @Injectable()
 export class QuestionDraftWorkerService {
@@ -30,11 +43,14 @@ export class QuestionDraftWorkerService {
     private readonly notifications: NotificationsService,
   ) {}
 
-  async run(data: QuestionDraftJobData) {
+  async run(data: QuestionDraftJobData, attempt: DraftWorkerAttempt) {
     const question = await this.prisma.productQuestion.findFirst({
       where: { id: data.questionId, storeId: data.storeId },
       select: {
         status: true,
+        draftProcessingStatus: true,
+        draftProcessingStartedAt: true,
+        draftQueuedAt: true,
         answer: true,
         draftDecision: true,
         draftAttempts: {
@@ -45,6 +61,7 @@ export class QuestionDraftWorkerService {
         answerDelivery: { select: { status: true } },
         store: {
           select: {
+            status: true,
             knowledgeProfile: { select: { automationMode: true } },
           },
         },
@@ -52,6 +69,10 @@ export class QuestionDraftWorkerService {
     });
 
     if (!question) {
+      return { status: 'SKIPPED' as const };
+    }
+    if (question.store.status !== StoreStatus.ACTIVE) {
+      await this.clearProcessingState(data, question, true);
       return { status: 'SKIPPED' as const };
     }
 
@@ -62,7 +83,7 @@ export class QuestionDraftWorkerService {
       automationMode !== AiAutomationMode.SHADOW &&
       automationMode !== AiAutomationMode.SAFE_AUTO
     ) {
-      await this.clearProcessingState(data);
+      await this.clearProcessingState(data, question);
       return { status: 'SKIPPED' as const };
     }
 
@@ -85,24 +106,28 @@ export class QuestionDraftWorkerService {
           question.answer,
           question.draftAttempts[0].id,
         );
-        await this.clearProcessingState(data);
+        await this.clearProcessingState(data, question);
         return { status: 'QUEUED' as const };
       }
 
-      await this.clearProcessingState(data);
+      await this.clearProcessingState(data, question);
       return { status: 'SKIPPED' as const };
     }
 
     if (question.status !== ProductQuestionStatus.PENDING) {
-      await this.clearProcessingState(data);
+      await this.clearProcessingState(data, question);
       return { status: 'SKIPPED' as const };
     }
 
-    await this.prisma.productQuestion.updateMany({
+    const startedAt = new Date();
+    const claimed = await this.prisma.productQuestion.updateMany({
       where: {
         id: data.questionId,
         storeId: data.storeId,
         status: ProductQuestionStatus.PENDING,
+        store: { status: StoreStatus.ACTIVE },
+        draftQueuedAt: question.draftQueuedAt,
+        draftProcessingStartedAt: question.draftProcessingStartedAt,
         draftProcessingStatus: {
           in: [
             QuestionDraftProcessingStatus.QUEUED,
@@ -113,14 +138,27 @@ export class QuestionDraftWorkerService {
       data: {
         draftProcessingStatus: QuestionDraftProcessingStatus.PROCESSING,
         draftProcessingError: null,
-        draftProcessingStartedAt: new Date(),
+        draftProcessingStartedAt: startedAt,
       },
     });
+    if (!claimed.count) {
+      await this.clearProcessingState(data, question, true);
+      return { status: 'SKIPPED' as const };
+    }
+    attempt.startedAt = startedAt;
+    attempt.queuedAt = question.draftQueuedAt;
 
-    const result = await this.drafts.generate(data.storeId, data.questionId, {
-      trigger: knowledgeResolved ? 'MANUAL' : 'AUTOMATION',
-      requestedByUserId: data.requestedByUserId,
-    });
+    let result: DraftQuestionAnswer;
+    try {
+      result = await this.drafts.generate(data.storeId, data.questionId, {
+        trigger: knowledgeResolved ? 'MANUAL' : 'AUTOMATION',
+        requestedByUserId: data.requestedByUserId,
+      });
+    } catch (error) {
+      if (!(error instanceof DraftStoreInactiveException)) throw error;
+      await this.clearInactiveAttempt(data, attempt);
+      return { status: 'SKIPPED' as const };
+    }
 
     if (result.status === 'DRAFTED') {
       await this.notifications.recordOperationalSuccess({
@@ -174,7 +212,12 @@ export class QuestionDraftWorkerService {
     return { status: 'QUEUED' as const };
   }
 
-  async markFinalFailure(data: QuestionDraftJobData, error: unknown) {
+  async markFinalFailure(
+    data: QuestionDraftJobData,
+    error: unknown,
+    attempt: DraftWorkerAttempt,
+  ) {
+    if (!attempt.startedAt) return;
     const message =
       error instanceof Error ? error.message : 'AI taslağı oluşturulamadı.';
     const billingBlocked =
@@ -186,12 +229,10 @@ export class QuestionDraftWorkerService {
         id: data.questionId,
         storeId: data.storeId,
         status: ProductQuestionStatus.PENDING,
-        draftProcessingStatus: {
-          in: [
-            QuestionDraftProcessingStatus.QUEUED,
-            QuestionDraftProcessingStatus.PROCESSING,
-          ],
-        },
+        store: { status: StoreStatus.ACTIVE },
+        draftProcessingStatus: QuestionDraftProcessingStatus.PROCESSING,
+        draftProcessingStartedAt: attempt.startedAt,
+        draftQueuedAt: attempt.queuedAt,
       },
       data: {
         draftProcessingStatus:
@@ -205,6 +246,9 @@ export class QuestionDraftWorkerService {
       },
     });
 
+    if (!updated.count) {
+      await this.clearInactiveAttempt(data, attempt);
+    }
     if (updated.count > 0 && billingBlocked) {
       const quotaBlocked = error instanceof BillingQuotaExceededException;
       await this.notifications.createForStoreMembers({
@@ -261,27 +305,61 @@ export class QuestionDraftWorkerService {
     });
   }
 
-  async deferForCapacity(data: QuestionDraftJobData) {
-    await this.prisma.productQuestion.updateMany({
+  async deferForCapacity(
+    data: QuestionDraftJobData,
+    attempt: DraftWorkerAttempt,
+  ) {
+    if (!attempt.startedAt) return;
+    const updated = await this.prisma.productQuestion.updateMany({
       where: {
         id: data.questionId,
         storeId: data.storeId,
         status: ProductQuestionStatus.PENDING,
+        store: { status: StoreStatus.ACTIVE },
         draftProcessingStatus: QuestionDraftProcessingStatus.PROCESSING,
+        draftProcessingStartedAt: attempt.startedAt,
+        draftQueuedAt: attempt.queuedAt,
       },
       data: {
         draftProcessingStatus: QuestionDraftProcessingStatus.QUEUED,
         draftProcessingStartedAt: null,
       },
     });
+    if (!updated.count) {
+      await this.clearInactiveAttempt(data, attempt);
+    }
   }
 
-  private async clearProcessingState(data: QuestionDraftJobData) {
+  private async clearInactiveAttempt(
+    data: QuestionDraftJobData,
+    attempt: DraftWorkerAttempt,
+  ) {
+    return this.clearProcessingState(
+      data,
+      {
+        draftProcessingStatus: QuestionDraftProcessingStatus.PROCESSING,
+        draftProcessingStartedAt: attempt.startedAt,
+        draftQueuedAt: attempt.queuedAt,
+      },
+      true,
+    );
+  }
+
+  private async clearProcessingState(
+    data: QuestionDraftJobData,
+    snapshot: ProcessingSnapshot,
+    inactiveStoreOnly = false,
+  ) {
     await this.prisma.productQuestion.updateMany({
       where: {
         id: data.questionId,
         storeId: data.storeId,
-        draftProcessingStatus: { not: null },
+        ...(inactiveStoreOnly
+          ? { store: { status: { not: StoreStatus.ACTIVE } } }
+          : {}),
+        draftProcessingStatus: snapshot.draftProcessingStatus,
+        draftProcessingStartedAt: snapshot.draftProcessingStartedAt,
+        draftQueuedAt: snapshot.draftQueuedAt,
       },
       data: {
         draftProcessingStatus: null,

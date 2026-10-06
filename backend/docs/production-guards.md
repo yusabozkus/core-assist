@@ -29,6 +29,36 @@ Lease 5 dakika geçerlidir; 30 saniyede bir yenilenir. 10 dakikayı geçen üret
 
 Başarısız veya sahipliğini kaybetmiş üretim taslak kaydetmez ve müşteri kotasını tüketmez. Üretim sırasında cevap gönderim kuyruğuna alınmışsa geç kalan taslak commit edilmez. Mevcut ücretsiz yeniden üretim kuralları korunur. **Daha önce sağlayıcıya gönderilmiş isteğin maliyeti geri alınmaz**; süreç kaybında eski dış çağrı iptal edilmiş sayılmaz. Stok doğrulaması gerektiren mevcut akış tek mantıksal üretimde iki model çağrısı yapabilir. Dolayısıyla bu koruma mutlak parasal bütçe limiti değildir.
 
+### Arşivlenmiş mağazalarda üretimi durdurma
+
+Mağaza arşivlendiğinde `INACTIVE` olur. Aboneliğin hâlâ geçerli olması bu mağazada AI üretimine izin vermez. Worker, bekleyen üretim ve hazır yanıt işlerini model veya cevap gönderimi yapmadan atlar. Yeni taslak kuyruğu kaydı da yalnızca aktif mağaza için oluşturulur. Arşivleme transaction'ı mağazanın taslak işaretlerini temizler; mevcut cevapları ve taslak geçmişini silmez.
+
+Arşivleme aynı transaction'da yalnızca o mağazanın devam eden üretim token'ını değiştirir. Mağaza hemen geri açılsa bile eski model sonucu kaydedilemez. Aynı workspace'teki başka mağazanın üretimi ve hesap cooldown'ı korunur. Arşivleme veya audit yazımı başarısız olursa mağaza durumu, işaretler ve token değişikliği birlikte geri alınır.
+
+Manuel ve otomatik üretim ortak lease akışında mağaza aktifliğini kontrol eder. Stok/model çağrısı öncesinde kontrol tekrarlanır; taslak ve kota transaction'ı, arşivlemeyle aynı mağaza satırını kilitler. Arşivleme önce tamamlandıysa taslak/deneme ve kota kaydı oluşmaz. Taslak transaction'ı önce tamamlandıysa arşivlemeden önceki başarılı üretim korunur. Arşivleme sebebiyle iptal edilen iş için AI hatası veya kota uyarısı üretilmez. Başlamış dış model çağrısının sağlayıcı maliyeti geri alınamaz; geç gelen sonuç müşteri kotasına yazılmaz.
+
+Bu değişiklik yeni migration veya env ayarı gerektirmez; mevcut mağaza ve `ai_draft_lease` tablolarını kullanır. Eski worker sürümleri bu kontrolü uygulamadığından arşivleme davranışı, yalnızca güncel backend/worker sürümüyle kullanılmalıdır.
+
+### Kesintiye uğrayan taslak işlerini kurtarma
+
+Mevcut taslak toparlama scheduler'ı **5 dakikada bir**, `PENDING` soruların **6 dakikadan eski `PROCESSING`** kayıtlarını da tarar. Bu süre tek başına yeniden üretim izni değildir: BullMQ işi bekliyor/çalışıyor/ertelenmişse veya aynı sorunun PostgreSQL lease'i hâlâ geçerliyse kayıt korunur. Redis durumunun okunamaması da yeniden üretim başlatmaz. Başlangıç tarihi olmayan eski kayıtlarda kuyruk tarihi, o da yoksa son güncelleme tarihi kullanılır.
+
+İş Redis'te yoksa veya tamamlanmış/başarısız/sahipsiz durumdaysa, lease edinme ve kurtarma aynı workspace satır kilidiyle sıralanır. Transaction sorunun hâlâ aynı üretim denemesine ait olduğunu, mağaza/bağlantı/otomasyon ve cevap teslimatı durumunun değişmediğini kontrol eder. Uygun iş önce DB'de `QUEUED` yapılır, sonra aynı BullMQ kimliğiyle kuyruğa alınır. Redis gönderimi başarısız olursa DB kaydı kalıcı gönderim niyeti olarak kalır ve sonraki tarama tekrar dener. Saklanan `KNOWLEDGE_RESOLVED` işi, talepte bulunan kullanıcı bilgisiyle korunur; Redis'te bu niyet kaybolmuş ve otomasyon kapalıysa manuel üretim varsayılmaz.
+
+Kota veya abonelik engeli varsa ilgili bekleme durumu kaydedilir. Arşivlenmiş mağaza, kopmuş bağlantı, eşleşmeyen ürün, kapalı otomasyon veya başlamış/belirsiz cevap teslimatı nedeniyle uygun olmayan sahipsiz iş `FAILED` yapılır ve açıklaması kaydedilir. Kurtarma doğrudan model veya pazaryeri çağrısı yapmaz; normal worker üretim öncesindeki kontrollerini yeniden uygular.
+
+Worker'ın son hata ve kapasite erteleme işlemleri yalnızca kendi başlangıç/kuyruk tarihleriyle eşleşen denemeyi değiştirebilir. Eski worker'ın gecikmiş sonucu kurtarılan veya yeni başlamış işi bozamaz. Kurtarma, aynı sorunun süresi dolmuş lease token'ını da değiştirir; lease dolmadan başlamış ama satır kilidinde bekleyen eski transaction bile sonradan taslak commit edemez. Başka sorunun geçerli lease'i korunur. **Cevap gönderiminin `PROCESSING` kaydı bu kuralla tekrar gönderilmez**; belirsiz pazaryeri teslimatları için [ayrı teslimat rehberi](question-delivery-recovery.md) geçerlidir.
+
+Bu kurtarma değişikliği yeni migration veya env ayarı gerektirmez; mevcut `ai_draft_lease` tablosunu kullanır. Redis bütünüyle silinmişse scheduler da kaybolur: Redis geri geldikten sonra backend yeniden başlatılmalı; başlangıç scheduler'ı yeniden kurar.
+
+## İletişim ve destek görseli limitleri
+
+İletişim formunda kayan bir saat içinde normalize edilmiş e-posta başına **3**, IP fingerprint'i başına **5** mesaj kabul edilir. İki limitin kilidi aynı PostgreSQL transaction'ında, sabit sırayla alınır; sayım ve kayıt kilitler bırakılmadan tamamlanır. Paralel backend süreçleri de aynı kilitleri paylaşır. Başarısız kayıt veya limit reddi hak tüketmez; honeypot alanı doluysa mevcut sessiz kabul davranışı korunur. Kilit kimlikleri hash'lenir, e-posta/IP açık olarak kullanılmaz.
+
+Mesajlara bağlı destek görsellerinin toplamı hesap/workspace başına **512 MiB** ile sınırlıdır. Müşteri yanıtları, admin yanıtları ve dahili not görselleri aynı toplamı paylaşır. Görselli mesaj transaction'ı önce ilgili kullanıcıları sabit sırayla `FOR KEY SHARE`, sonra workspace'i `FOR NO KEY UPDATE` ve talebi kilitler; güncel toplam kontrolü ve görselleri mesaja bağlama aynı işlemde yapılır. Kullanıcı kilitleri, eşzamanlı hesap silmede mesaj/bildirim foreign key'lerinin ters kilit sırasına girmesini önler. Sıra hesap silmenin kullanıcı → workspace → talep sırasıyla uyumludur. Görselsiz mesajlar depolama kotasını veya workspace kilidini gerektirmez.
+
+B2 yükleme kilidin dışında yapılır. Kota veya mesaj kaydı reddedilirse mesaja bağlanmamış dosyalar mevcut kalıcı temizleme akışına bırakılır; bağlı görseller silinmez. Başarısız mesaj/bildirim/audit işlemi, görsel kaydını ve kota kullanımını birlikte geri alır. İki kontrol `READ COMMITTED` kullanır; kilit bekledikten sonraki sayım, önceki başarılı işlemin kaydını görür. Bu düzeltme yeni migration veya env ayarı gerektirmez.
+
 ## Davet logları
 
 Backend HTTP loglarında query/fragment kullanılmaz; `/workspace-invitations/<token>` ve `/invite/<token>` yollarındaki token bölümü `[REDACTED]` olur. Encoded request path, tamamlanmış/yarıda kesilmiş istek, hata stack'i, iç içe metadata ve logger context'i de kapsanır. Normal rota, durum kodu ve süre gibi tanı alanları korunur.

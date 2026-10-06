@@ -8,6 +8,8 @@ import {
 } from '../billing/billing.errors';
 import type { BillingSubscriptionService } from '../billing/billing-subscription.service';
 import type { BillingUsageService } from '../billing/billing-usage.service';
+import type { Prisma } from '../../generated/prisma/client';
+import type { DraftExecutionService } from './draft-execution.service';
 import { QuestionDraftQueueService } from './question-draft-queue.service';
 import type {
   QuestionDraftJobData,
@@ -22,14 +24,35 @@ type Question = {
   draftQueuedAt: Date | null;
   draftProcessingStartedAt: Date | null;
   draftProcessingError: string | null;
+  productId: string | null;
+  updatedAt: Date;
+  connection: { status: string };
+  answerDelivery: { status: string } | null;
+  store: {
+    workspaceId: string;
+    status: string;
+    knowledgeProfile: { automationMode: string };
+  };
 };
 type Where = {
   id?: string;
   storeId?: string;
   status?: string;
+  productId?: string | null | { not: null };
   draftProcessingStatus?: string | null | { in: string[] };
   draftQueuedAt?: Date | null | { lte: Date };
-  store?: unknown;
+  draftProcessingStartedAt?: Date | null | { lte: Date };
+  updatedAt?: Date | { lte: Date };
+  store?: {
+    workspaceId?: string;
+    status?: string;
+    knowledgeProfile?: {
+      automationMode?: string | { in: string[] };
+      is?: null;
+    };
+  };
+  connection?: { status: string };
+  answerDelivery?: { status?: string; is?: null };
   OR?: Where[];
 };
 
@@ -43,6 +66,11 @@ function fixture(
     automatic?: boolean;
     connected?: boolean;
     retryFailure?: boolean;
+    processingAgeMs?: number;
+    activeLease?: boolean;
+    archived?: boolean;
+    answerStatus?: string;
+    hasProduct?: boolean;
   } = {},
 ) {
   const questions: Question[] = Array.from(
@@ -53,13 +81,34 @@ function fixture(
       status: 'PENDING',
       draftProcessingStatus: options.processingStatus ?? 'BLOCKED_QUOTA',
       draftQueuedAt: new Date(Date.now() - 120_000),
-      draftProcessingStartedAt: null,
+      draftProcessingStartedAt:
+        options.processingStatus === 'PROCESSING'
+          ? new Date(Date.now() - (options.processingAgeMs ?? 0))
+          : null,
       draftProcessingError: 'Previous quota failure',
+      productId: options.hasProduct === false ? null : 'product',
+      updatedAt: new Date(Date.now() - (options.processingAgeMs ?? 0)),
+      connection: {
+        status: options.connected === false ? 'DISCONNECTED' : 'CONNECTED',
+      },
+      answerDelivery: options.answerStatus
+        ? { status: options.answerStatus }
+        : null,
+      store: {
+        workspaceId: 'workspace',
+        status: options.archived ? 'INACTIVE' : 'ACTIVE',
+        knowledgeProfile: {
+          automationMode: options.automatic === false ? 'OFF' : 'SHADOW',
+        },
+      },
     }),
   );
   let retryFailure = options.retryFailure ?? false;
   const retried: string[] = [];
   const added: string[] = [];
+  const removed: string[] = [];
+  let beforeRecovery: (() => void) | undefined;
+  let beforeUpdate: (() => void) | undefined;
   const jobs = new Map<
     string,
     {
@@ -69,6 +118,7 @@ function fixture(
       attemptsStarted: number;
       getState(): Promise<string>;
       updateData(data: QuestionDraftJobData): Promise<void>;
+      remove(): Promise<void>;
       retry(
         state: string,
         reset: { resetAttemptsMade: boolean; resetAttemptsStarted: boolean },
@@ -88,6 +138,13 @@ function fixture(
       getState: () => Promise.resolve(job.state),
       updateData: (data: QuestionDraftJobData) => {
         job.data = data;
+        return Promise.resolve();
+      },
+      remove: () => {
+        if (job.state === 'active')
+          return Promise.reject(new Error('Job is locked'));
+        jobs.delete(`question-draft-${question.id}`);
+        removed.push(question.id);
         return Promise.resolve();
       },
       retry: (
@@ -113,6 +170,11 @@ function fixture(
     if (where.id && where.id !== question.id) return false;
     if (where.storeId && where.storeId !== question.storeId) return false;
     if (where.status && where.status !== question.status) return false;
+    if ('productId' in where) {
+      if (where.productId && typeof where.productId === 'object') {
+        if (question.productId === null) return false;
+      } else if (where.productId !== question.productId) return false;
+    }
     const state = where.draftProcessingStatus;
     if (state && typeof state === 'object') {
       if (!state.in.includes(question.draftProcessingStatus ?? ''))
@@ -122,11 +184,47 @@ function fixture(
       state !== question.draftProcessingStatus
     )
       return false;
+    if (where.store?.status && question.store.status !== where.store.status)
+      return false;
     if (
-      where.store &&
-      (options.automatic === false || options.connected === false)
+      where.store?.workspaceId &&
+      question.store.workspaceId !== where.store.workspaceId
     )
       return false;
+    const mode = where.store?.knowledgeProfile?.automationMode;
+    if (mode) {
+      if (typeof mode === 'object') {
+        if (!mode.in.includes(question.store.knowledgeProfile.automationMode))
+          return false;
+      } else if (question.store.knowledgeProfile.automationMode !== mode)
+        return false;
+    }
+    if (where.answerDelivery?.is === null && question.answerDelivery)
+      return false;
+    if (
+      where.answerDelivery?.status &&
+      question.answerDelivery?.status !== where.answerDelivery.status
+    )
+      return false;
+    if (
+      where.connection &&
+      question.connection.status !== where.connection.status
+    )
+      return false;
+    for (const field of ['draftProcessingStartedAt', 'updatedAt'] as const) {
+      if (!(field in where)) continue;
+      const condition = where[field];
+      const value = question[field];
+      if (condition === null && value !== null) return false;
+      if (condition instanceof Date && value?.getTime() !== condition.getTime())
+        return false;
+      if (
+        condition &&
+        !(condition instanceof Date) &&
+        (!value || value > condition.lte)
+      )
+        return false;
+    }
     if ('draftQueuedAt' in where) {
       if (where.draftQueuedAt === null && question.draftQueuedAt !== null)
         return false;
@@ -174,8 +272,11 @@ function fixture(
                 matches(question, input.where) &&
                 (!input.cursor || question.id > input.cursor.id),
             )
-            .slice(0, input.take),
+            .slice(0, input.take)
+            .map((question) => ({ ...question })),
         ),
+      findFirst: ({ where }: { where: Where }) =>
+        Promise.resolve(questions.find((question) => matches(question, where))),
       updateMany: ({
         where,
         data,
@@ -183,6 +284,7 @@ function fixture(
         where: Where;
         data: Partial<Question>;
       }) => {
+        beforeUpdate?.();
         const matched = questions.filter((question) =>
           matches(question, where),
         );
@@ -223,17 +325,36 @@ function fixture(
         ? Promise.reject(new BillingQuotaExceededException(100))
         : Promise.resolve(),
   } as unknown as BillingUsageService;
+  const executions = {
+    recoverAbandonedProcessing: async (
+      _workspaceId: string,
+      _questionId: string,
+      restore: (tx: Prisma.TransactionClient) => Promise<boolean>,
+    ) => {
+      if (options.activeLease) return false;
+      beforeRecovery?.();
+      return restore(prisma);
+    },
+  } as unknown as DraftExecutionService;
   return {
     service: new QuestionDraftQueueService(
       queue,
       prisma,
       billing,
       billingUsage,
+      executions,
     ),
     questions,
     jobs,
     retried,
     added,
+    removed,
+    beforeRecovery: (hook: () => void) => {
+      beforeRecovery = hook;
+    },
+    beforeUpdate: (hook: () => void) => {
+      beforeUpdate = hook;
+    },
     restoreRedis: () => {
       retryFailure = false;
     },
@@ -291,7 +412,7 @@ void test('reconciliation leaves waiting, active, delayed and prioritized jobs u
   }
 });
 
-void test('a newly queued dispatch gets a grace period and answered or processing questions are never replayed', async () => {
+void test('new queued and processing attempts get a grace period and answered questions are never replayed', async () => {
   const fresh = fixture({ processingStatus: 'QUEUED', jobState: 'missing' });
   fresh.questions[0].draftQueuedAt = new Date();
   await fresh.service.resumeBillingBlockedDrafts();
@@ -305,6 +426,194 @@ void test('a newly queued dispatch gets a grace period and answered or processin
   assert.equal(processing.retried.length, 0);
 });
 
+void test('abandoned processing questions recover missing, terminal and orphaned Redis jobs', async () => {
+  for (const jobState of ['missing', 'failed', 'completed', 'unknown']) {
+    const f = fixture({
+      processingStatus: 'PROCESSING',
+      processingAgeMs: 60 * 60_000,
+      jobState,
+    });
+    await f.service.resumeBillingBlockedDrafts();
+    assert.equal(f.questions[0].draftProcessingStatus, 'QUEUED');
+    assert.equal(f.questions[0].draftProcessingStartedAt, null);
+    assert.equal(f.jobs.get('question-draft-q-000')!.state, 'waiting');
+    assert.equal(f.retried.length + f.added.length, 1);
+    if (jobState === 'unknown') assert.equal(f.removed.length, 1);
+    await f.service.resumeBillingBlockedDrafts();
+    assert.equal(f.retried.length + f.added.length, 1);
+  }
+});
+
+void test('an old processing marker cannot restart a live Redis job or DB lease', async () => {
+  for (const jobState of [
+    'active',
+    'waiting',
+    'delayed',
+    'prioritized',
+    'waiting-children',
+  ]) {
+    const f = fixture({
+      processingStatus: 'PROCESSING',
+      processingAgeMs: 60 * 60_000,
+      jobState,
+    });
+    await f.service.resumeBillingBlockedDrafts();
+    assert.equal(f.questions[0].draftProcessingStatus, 'PROCESSING');
+    assert.equal(f.retried.length + f.added.length, 0);
+  }
+  const f = fixture({
+    processingStatus: 'PROCESSING',
+    processingAgeMs: 60 * 60_000,
+    jobState: 'missing',
+    activeLease: true,
+  });
+  await f.service.resumeBillingBlockedDrafts();
+  assert.equal(f.questions[0].draftProcessingStatus, 'PROCESSING');
+  assert.equal(f.added.length, 0);
+});
+
+void test('processing recovery rechecks the observed attempt after a newer worker or manual answer wins', async () => {
+  for (const change of ['new-attempt', 'answered']) {
+    const f = fixture({
+      processingStatus: 'PROCESSING',
+      processingAgeMs: 60 * 60_000,
+      jobState: 'missing',
+    });
+    f.beforeRecovery(() => {
+      if (change === 'new-attempt')
+        f.questions[0].draftProcessingStartedAt = new Date();
+      else f.questions[0].status = 'ANSWERED';
+    });
+    await f.service.resumeBillingBlockedDrafts();
+    assert.equal(f.retried.length + f.added.length, 0);
+    assert.equal(f.questions[0].draftProcessingStatus, 'PROCESSING');
+  }
+});
+
+void test('a store, connection, automation or delivery change during restoration prevents requeueing', async () => {
+  const changes: Array<(question: Question) => void> = [
+    (question) => {
+      question.store.status = 'INACTIVE';
+    },
+    (question) => {
+      question.connection.status = 'DISCONNECTED';
+    },
+    (question) => {
+      question.store.knowledgeProfile.automationMode = 'OFF';
+    },
+    (question) => {
+      question.answerDelivery = { status: 'PROCESSING' };
+    },
+  ];
+  for (const change of changes) {
+    const state = fixture({
+      processingStatus: 'PROCESSING',
+      processingAgeMs: 10 * 60_000,
+      jobState: 'missing',
+    });
+    state.beforeUpdate(() => change(state.questions[0]));
+    await state.service.resumeBillingBlockedDrafts();
+    assert.equal(state.questions[0].draftProcessingStatus, 'PROCESSING');
+    assert.equal(state.added.length + state.retried.length, 0);
+    state.beforeUpdate(() => {});
+    await state.service.resumeBillingBlockedDrafts();
+    assert.equal(state.questions[0].draftProcessingStatus, 'FAILED');
+    assert.equal(state.added.length + state.retried.length, 0);
+  }
+});
+
+void test('expired processing jobs become quota/subscription blocked instead of bypassing billing', async () => {
+  for (const option of [{ remaining: 0 }, { access: false }]) {
+    const f = fixture({
+      processingStatus: 'PROCESSING',
+      processingAgeMs: 60 * 60_000,
+      jobState: 'missing',
+      ...option,
+    });
+    await f.service.resumeBillingBlockedDrafts();
+    assert.equal(
+      f.questions[0].draftProcessingStatus,
+      'remaining' in option ? 'BLOCKED_QUOTA' : 'BLOCKED_SUBSCRIPTION',
+    );
+    assert.equal(f.questions[0].draftProcessingStartedAt, null);
+    assert.equal(f.retried.length + f.added.length, 0);
+  }
+});
+
+void test('ineligible abandoned processing jobs stop displaying as running without scheduling AI', async () => {
+  for (const option of [
+    { automatic: false },
+    { connected: false },
+    { archived: true },
+    { hasProduct: false },
+    { answerStatus: 'PROCESSING' },
+    { answerStatus: 'REVIEW_REQUIRED' },
+  ]) {
+    const f = fixture({
+      processingStatus: 'PROCESSING',
+      processingAgeMs: 60 * 60_000,
+      jobState: 'missing',
+      ...option,
+    });
+    await f.service.resumeBillingBlockedDrafts();
+    assert.equal(f.questions[0].draftProcessingStatus, 'FAILED');
+    assert.equal(f.questions[0].draftProcessingStartedAt, null);
+    assert.equal(f.retried.length + f.added.length, 0);
+  }
+});
+
+void test('an explicit knowledge retry preserves intent and requester with automation off', async () => {
+  const f = fixture({
+    processingStatus: 'PROCESSING',
+    processingAgeMs: 60 * 60_000,
+    automatic: false,
+  });
+  const job = f.jobs.get('question-draft-q-000')!;
+  job.data.reason = 'KNOWLEDGE_RESOLVED';
+  job.data.requestedByUserId = 'requester';
+  await f.service.resumeBillingBlockedDrafts();
+  assert.equal(f.retried.length, 1);
+  assert.equal(job.data.reason, 'KNOWLEDGE_RESOLVED');
+  assert.equal(job.data.requestedByUserId, 'requester');
+});
+
+void test('a dispatch failure after processing recovery remains queued and is repaired next time', async () => {
+  const f = fixture({
+    processingStatus: 'PROCESSING',
+    processingAgeMs: 60 * 60_000,
+    retryFailure: true,
+    automatic: false,
+  });
+  f.jobs.get('question-draft-q-000')!.data.reason = 'KNOWLEDGE_RESOLVED';
+  await f.service.resumeBillingBlockedDrafts();
+  assert.equal(f.questions[0].draftProcessingStatus, 'QUEUED');
+  assert.equal(f.retried.length, 0);
+  f.questions[0].draftQueuedAt = new Date(Date.now() - 120_000);
+  f.restoreRedis();
+  await f.service.resumeBillingBlockedDrafts();
+  assert.equal(f.retried.length, 1);
+});
+
+void test('processing recovery handles legacy null timestamps and scans beyond one batch', async () => {
+  const f = fixture({
+    count: 120,
+    processingStatus: 'PROCESSING',
+    processingAgeMs: 60 * 60_000,
+    jobState: 'missing',
+  });
+  f.questions[0].draftProcessingStartedAt = null;
+  f.questions[0].draftQueuedAt = new Date(Date.now() - 60 * 60_000);
+  f.questions[1].draftProcessingStartedAt = null;
+  f.questions[1].draftQueuedAt = null;
+  await f.service.resumeBillingBlockedDrafts();
+  assert.equal(f.added.length, 120);
+  assert.ok(
+    f.questions.every(
+      (question) => question.draftProcessingStatus === 'QUEUED',
+    ),
+  );
+});
+
 void test('recovery cannot bypass a still-exhausted quota or inactive subscription', async () => {
   for (const options of [{ remaining: 0 }, { access: false }]) {
     const state = fixture({ processingStatus: 'QUEUED', ...options });
@@ -315,6 +624,18 @@ void test('recovery cannot bypass a still-exhausted quota or inactive subscripti
       'remaining' in options ? 'BLOCKED_QUOTA' : 'BLOCKED_SUBSCRIPTION',
     );
   }
+  const disabled = fixture({
+    processingStatus: 'PROCESSING',
+    processingAgeMs: 10 * 60_000,
+    jobState: 'missing',
+    remaining: 0,
+  });
+  disabled.beforeRecovery(() => {
+    disabled.questions[0].store.knowledgeProfile.automationMode = 'OFF';
+  });
+  await disabled.service.resumeBillingBlockedDrafts();
+  assert.equal(disabled.questions[0].draftProcessingStatus, 'FAILED');
+  assert.equal(disabled.added.length + disabled.retried.length, 0);
 });
 
 void test('manual automation and disconnected questions are not resurrected', async () => {
@@ -358,4 +679,22 @@ void test('an explicit knowledge retry retains the new reason and requester inst
     requestedByUserId: 'requester',
   });
   assert.equal(state.retried.length, 1);
+});
+
+void test('archived stores cannot enqueue a new draft or become billing-blocked', async () => {
+  for (const options of [
+    { remaining: 100 },
+    { remaining: 0 },
+    { access: false },
+  ]) {
+    const state = fixture({
+      archived: true,
+      processingStatus: 'FAILED',
+      jobState: 'missing',
+      ...options,
+    });
+    await state.service.enqueue('store', 'q-000');
+    assert.equal(state.questions[0].draftProcessingStatus, 'FAILED');
+    assert.equal(state.added.length + state.retried.length, 0);
+  }
 });

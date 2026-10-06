@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { getCatalogProducts } from "@/lib/api/catalog"
+import { useListRequests } from "@/hooks/use-list-requests"
 import type { CatalogProductPage } from "@/types/product"
 
 const PAGE_SIZE = 12
@@ -24,31 +25,33 @@ export function useProductCatalog(
   const [error, setError] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
   const firstKey = `${storeId}|ALL||0`
-  const lastLoadedKey = useRef(firstKey)
-  const controllerRef = useRef<AbortController | null>(null)
   const pageRef = useRef(page)
-  const requestKey = `${storeId}|${provider}|${query.trim()}|${revision}`
+  const normalizedQuery = query.trim()
+  const requestKey = `${storeId}|${provider}|${normalizedQuery}|${revision}`
+  const requests = useListRequests(requestKey, firstKey)
   const isFiltering =
-    query.trim() !== loadedFilters.query || provider !== loadedFilters.provider
+    normalizedQuery !== loadedFilters.query ||
+    provider !== loadedFilters.provider
 
   useEffect(() => {
     pageRef.current = page
   }, [page])
 
   useEffect(() => {
-    controllerRef.current?.abort()
-    if (requestKey === lastLoadedKey.current) {
-      setLoading(null)
-      setError(null)
-      return
-    }
-
-    const controller = new AbortController()
-    controllerRef.current = controller
-    const normalizedQuery = query.trim()
+    let disposed = false
+    const request = requests.isReady(requestKey)
+      ? null
+      : requests.begin(requestKey, "first")
     const replacing = isFiltering
-    setLoading(replacing ? "replace" : "refresh")
-    setError(null)
+    queueMicrotask(() => {
+      if (disposed) return
+      setLoading(request ? (replacing ? "replace" : "refresh") : null)
+      setError(null)
+    })
+    if (!request)
+      return () => {
+        disposed = true
+      }
 
     const timeout = window.setTimeout(
       async () => {
@@ -61,55 +64,53 @@ export function useProductCatalog(
             query: normalizedQuery,
             provider,
             limit: Math.min(50, targetCount),
-            signal: controller.signal,
+            signal: request.signal,
           })
           while (result.nextCursor && result.items.length < targetCount) {
+            if (!requests.isCurrent(request)) return
             const next = await getCatalogProducts(storeId, {
               query: normalizedQuery,
               provider,
               limit: Math.min(50, targetCount - result.items.length),
               cursor: result.nextCursor,
-              signal: controller.signal,
+              signal: request.signal,
             })
             result = { ...next, items: [...result.items, ...next.items] }
           }
-          if (controller.signal.aborted) return
-          lastLoadedKey.current = requestKey
+          if (!requests.commit(request)) return
           setPage(result)
           setLoadedFilters({ query: normalizedQuery, provider })
         } catch (caught) {
-          if (!controller.signal.aborted)
+          if (requests.isCurrent(request))
             setError(
               caught instanceof Error ? caught.message : "Ürünler yüklenemedi."
             )
         } finally {
-          if (!controller.signal.aborted) setLoading(null)
+          if (requests.finish(request)) setLoading(null)
         }
       },
       replacing ? 300 : 0
     )
 
     return () => {
+      disposed = true
       window.clearTimeout(timeout)
-      controller.abort()
+      requests.cancel(request)
     }
-  }, [requestKey, storeId, query, provider, revision, isFiltering])
-
-  useEffect(() => () => controllerRef.current?.abort(), [])
+  }, [
+    requestKey,
+    requests,
+    storeId,
+    normalizedQuery,
+    provider,
+    revision,
+    isFiltering,
+  ])
 
   const loadMore = useCallback(async () => {
-    if (
-      !page.nextCursor ||
-      loading ||
-      error ||
-      isFiltering ||
-      requestKey !== lastLoadedKey.current
-    )
-      return
-    if (controllerRef.current && !controllerRef.current.signal.aborted)
-      controllerRef.current.abort()
-    const controller = new AbortController()
-    controllerRef.current = controller
+    if (!page.nextCursor || loading || error || isFiltering) return
+    const request = requests.begin(requestKey, "more")
+    if (!request) return
     setLoading("more")
     setError(null)
     try {
@@ -118,9 +119,9 @@ export function useProductCatalog(
         query: loadedFilters.query,
         provider: loadedFilters.provider,
         limit: PAGE_SIZE,
-        signal: controller.signal,
+        signal: request.signal,
       })
-      if (controller.signal.aborted) return
+      if (!requests.isCurrent(request)) return
       setPage((current) => ({
         ...result,
         items: [
@@ -133,14 +134,14 @@ export function useProductCatalog(
         ],
       }))
     } catch (caught) {
-      if (!controller.signal.aborted)
+      if (requests.isCurrent(request))
         setError(
           caught instanceof Error
             ? caught.message
             : "Diğer ürünler yüklenemedi."
         )
     } finally {
-      if (!controller.signal.aborted) setLoading(null)
+      if (requests.finish(request)) setLoading(null)
     }
   }, [
     page.nextCursor,
@@ -148,6 +149,7 @@ export function useProductCatalog(
     error,
     isFiltering,
     requestKey,
+    requests,
     loadedFilters,
     storeId,
   ])

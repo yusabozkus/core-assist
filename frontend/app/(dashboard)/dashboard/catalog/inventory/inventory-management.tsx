@@ -43,6 +43,7 @@ import { APP_ROUTES } from "@/constants/site"
 import { getCatalogInventory } from "@/lib/api/catalog"
 import { getChannelSyncRun, syncChannelInventory } from "@/lib/api/channels"
 import { cn } from "@/lib/utils"
+import { useListRequests } from "@/hooks/use-list-requests"
 import type { ChannelConnection } from "@/types/channel"
 import type {
   InventoryItem,
@@ -123,8 +124,8 @@ export function InventoryManagement({
   const [activeSyncRuns, setActiveSyncRuns] = useState<SyncHistoryItem[]>([])
   const [isSyncPending, startSyncTransition] = useTransition()
   const loadMoreMarkerRef = useRef<HTMLDivElement | null>(null)
-  const requestSequence = useRef(0)
   const syncPollInFlight = useRef(false)
+  const normalizedQuery = query.trim()
   const inventoryFilterKey = createInventoryFilterKey(
     storeId,
     query,
@@ -132,7 +133,8 @@ export function InventoryManagement({
     provider,
     lowStockThreshold
   )
-  const loadedFilterKey = useRef(
+  const requests = useListRequests(
+    inventoryFilterKey,
     createInventoryFilterKey(
       storeId,
       initialFilters.query,
@@ -155,67 +157,84 @@ export function InventoryManagement({
   const isSyncing = isSyncPending || activeSyncRunIds.length > 0
 
   const loadFirstPage = useCallback(
-    async (signal?: AbortSignal, quiet = false) => {
-      const requestId = ++requestSequence.current
+    async (quiet = false) => {
+      const request = requests.begin(
+        inventoryFilterKey,
+        quiet ? "refresh" : "first"
+      )
+      if (!request) return
       if (!quiet) setIsLoadingPage(true)
       setError(null)
 
       try {
         const result = await getCatalogInventory(storeId, {
-          query,
+          query: normalizedQuery,
           status,
           provider,
           lowStockThreshold,
           limit: PAGE_SIZE,
-          signal,
+          signal: request.signal,
         })
 
-        if (requestId !== requestSequence.current) return
-        loadedFilterKey.current = inventoryFilterKey
+        if (!requests.commit(request)) return
         setPage(result)
       } catch (caughtError) {
-        if (signal?.aborted) return
+        if (!requests.isCurrent(request)) return
         setError(
           caughtError instanceof Error
             ? caughtError.message
             : "Stok bilgileri alınamadı."
         )
       } finally {
-        if (requestId === requestSequence.current && !quiet) {
+        if (requests.finish(request) && !quiet) {
           setIsLoadingPage(false)
         }
       }
     },
-    [inventoryFilterKey, lowStockThreshold, provider, query, status, storeId]
+    [
+      inventoryFilterKey,
+      requests,
+      lowStockThreshold,
+      provider,
+      normalizedQuery,
+      status,
+      storeId,
+    ]
   )
 
   useEffect(() => {
-    const controller = new AbortController()
     const timeoutId = window.setTimeout(() => {
       updateUrl({ query, status, provider, lowStockThreshold, sort }, pathname)
       setExpandAll(false)
-      if (inventoryFilterKey !== loadedFilterKey.current) {
-        void loadFirstPage(controller.signal)
+    }, SEARCH_DEBOUNCE_MS)
+    return () => window.clearTimeout(timeoutId)
+  }, [lowStockThreshold, pathname, provider, query, sort, status])
+
+  useEffect(() => {
+    let disposed = false
+    const needsLoad = !requests.isReady(inventoryFilterKey)
+    queueMicrotask(() => {
+      if (disposed) return
+      setIsLoadingMore(false)
+      setError(null)
+      setIsLoadingPage(needsLoad)
+    })
+    const timeoutId = window.setTimeout(() => {
+      if (needsLoad) {
+        void loadFirstPage()
       }
     }, SEARCH_DEBOUNCE_MS)
 
     return () => {
+      disposed = true
       window.clearTimeout(timeoutId)
-      controller.abort()
     }
-  }, [
-    inventoryFilterKey,
-    loadFirstPage,
-    lowStockThreshold,
-    pathname,
-    provider,
-    query,
-    sort,
-    status,
-  ])
+  }, [inventoryFilterKey, requests, loadFirstPage])
 
   const loadMore = useCallback(async () => {
     if (!page.nextCursor || isLoadingPage || isLoadingMore) return
+    const request = requests.begin(inventoryFilterKey, "more")
+    if (!request) return
 
     setIsLoadingMore(true)
     setError(null)
@@ -223,32 +242,37 @@ export function InventoryManagement({
     try {
       const result = await getCatalogInventory(storeId, {
         cursor: page.nextCursor,
-        query,
+        query: normalizedQuery,
         status,
         provider,
         lowStockThreshold,
         limit: PAGE_SIZE,
+        signal: request.signal,
       })
+      if (!requests.isCurrent(request)) return
       setPage((current) => ({
         ...result,
         items: mergeInventoryItems(current.items, result.items),
       }))
     } catch (caughtError) {
+      if (!requests.isCurrent(request)) return
       setError(
         caughtError instanceof Error
           ? caughtError.message
           : "Diğer stok kayıtları yüklenemedi."
       )
     } finally {
-      setIsLoadingMore(false)
+      if (requests.finish(request)) setIsLoadingMore(false)
     }
   }, [
     isLoadingMore,
     isLoadingPage,
     lowStockThreshold,
     page.nextCursor,
+    inventoryFilterKey,
+    requests,
     provider,
-    query,
+    normalizedQuery,
     status,
     storeId,
   ])
@@ -337,7 +361,7 @@ export function InventoryManagement({
             `${checkedVariants.toLocaleString("tr-TR")} varyantın stok bilgisi güncellendi.`
           )
         }
-        await loadFirstPage(undefined, true)
+        await loadFirstPage(true)
       } catch (caughtError) {
         if (!cancelled) {
           setSyncError(

@@ -6,6 +6,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import type { Queue } from 'bullmq';
+import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { failedJobRetention } from '../../infrastructure/queue/queue-retention';
 import { BillingSubscriptionService } from '../billing/billing-subscription.service';
@@ -35,9 +36,34 @@ import type {
   QuestionDraftJobData,
   QuestionDraftQueueJobData,
 } from './question-draft.types';
+import {
+  DraftExecutionService,
+  DRAFT_LEASE_MS,
+} from './draft-execution.service';
 
 const AUTOMATION_SETTINGS_BATCH_SIZE = 100;
 const QUEUED_DRAFT_RECONCILE_GRACE_MS = 60_000;
+const PROCESSING_DRAFT_RECONCILE_GRACE_MS = DRAFT_LEASE_MS + 60_000;
+const processingRecoverySelect = {
+  id: true,
+  storeId: true,
+  productId: true,
+  draftQueuedAt: true,
+  draftProcessingStartedAt: true,
+  updatedAt: true,
+  connection: { select: { status: true } },
+  answerDelivery: { select: { status: true } },
+  store: {
+    select: {
+      workspaceId: true,
+      status: true,
+      knowledgeProfile: { select: { automationMode: true } },
+    },
+  },
+} satisfies Prisma.ProductQuestionSelect;
+type ProcessingRecoveryQuestion = Prisma.ProductQuestionGetPayload<{
+  select: typeof processingRecoverySelect;
+}>;
 
 @Injectable()
 export class QuestionDraftQueueService
@@ -51,6 +77,7 @@ export class QuestionDraftQueueService
     private readonly prisma: PrismaService,
     private readonly billing: BillingSubscriptionService,
     private readonly billingUsage: BillingUsageService,
+    private readonly executions: DraftExecutionService,
   ) {}
 
   async onModuleInit() {
@@ -65,6 +92,7 @@ export class QuestionDraftQueueService
   }
 
   async resumeBillingBlockedDrafts() {
+    await this.reconcileProcessingDrafts();
     await this.reconcileQueuedDrafts();
     // No marketplace fetch and no model call. Retry eligibility only; normal
     // worker checks still protect against quota/access races before generation.
@@ -108,6 +136,158 @@ export class QuestionDraftQueueService
     }
   }
 
+  private async reconcileProcessingDrafts() {
+    let cursor: string | undefined;
+    const staleBefore = new Date(
+      Date.now() - PROCESSING_DRAFT_RECONCILE_GRACE_MS,
+    );
+    do {
+      const questions = await this.prisma.productQuestion.findMany({
+        where: {
+          status: ProductQuestionStatus.PENDING,
+          draftProcessingStatus: QuestionDraftProcessingStatus.PROCESSING,
+          OR: [
+            { draftProcessingStartedAt: { lte: staleBefore } },
+            {
+              draftProcessingStartedAt: null,
+              draftQueuedAt: { lte: staleBefore },
+            },
+            {
+              draftProcessingStartedAt: null,
+              draftQueuedAt: null,
+              updatedAt: { lte: staleBefore },
+            },
+          ],
+        },
+        select: processingRecoverySelect,
+        orderBy: { id: 'asc' },
+        take: AUTOMATION_SETTINGS_BATCH_SIZE,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      });
+      for (const question of questions) {
+        try {
+          const job = await this.queue.getJob(`question-draft-${question.id}`);
+          const state = await job?.getState();
+          if (
+            job &&
+            state !== 'failed' &&
+            state !== 'completed' &&
+            state !== 'unknown'
+          )
+            continue;
+          let blockedError:
+            | BillingAccessRequiredException
+            | BillingQuotaExceededException
+            | undefined;
+          if (canRetryProcessingQuestion(question, job?.data)) {
+            try {
+              await this.billing.assertStoreAccess(question.storeId);
+              await this.billingUsage.assertDraftGenerationAvailableForStore(
+                question.storeId,
+                question.id,
+              );
+            } catch (error) {
+              if (
+                !(error instanceof BillingAccessRequiredException) &&
+                !(error instanceof BillingQuotaExceededException)
+              )
+                throw error;
+              blockedError = error;
+            }
+          }
+          let retry = false;
+          const recovered = await this.executions.recoverAbandonedProcessing(
+            question.store.workspaceId,
+            question.id,
+            async (tx) => {
+              const current = await tx.productQuestion.findFirst({
+                where: {
+                  id: question.id,
+                  storeId: question.storeId,
+                  status: ProductQuestionStatus.PENDING,
+                  draftProcessingStatus:
+                    QuestionDraftProcessingStatus.PROCESSING,
+                  draftProcessingStartedAt: question.draftProcessingStartedAt,
+                  draftQueuedAt: question.draftQueuedAt,
+                  updatedAt: question.updatedAt,
+                },
+                select: processingRecoverySelect,
+              });
+              if (
+                !current ||
+                current.store.workspaceId !== question.store.workspaceId
+              )
+                return false;
+              const eligible = canRetryProcessingQuestion(current, job?.data);
+              const recoveryBlock = eligible ? blockedError : undefined;
+              retry = eligible && !recoveryBlock;
+              const updated = await tx.productQuestion.updateMany({
+                where: {
+                  id: current.id,
+                  storeId: current.storeId,
+                  status: ProductQuestionStatus.PENDING,
+                  draftProcessingStatus:
+                    QuestionDraftProcessingStatus.PROCESSING,
+                  draftProcessingStartedAt: current.draftProcessingStartedAt,
+                  draftQueuedAt: current.draftQueuedAt,
+                  updatedAt: current.updatedAt,
+                  productId: current.productId,
+                  connection: { status: current.connection.status },
+                  answerDelivery: current.answerDelivery
+                    ? { status: current.answerDelivery.status }
+                    : { is: null },
+                  store: {
+                    workspaceId: current.store.workspaceId,
+                    status: current.store.status,
+                    knowledgeProfile: current.store.knowledgeProfile
+                      ? {
+                          automationMode:
+                            current.store.knowledgeProfile.automationMode,
+                        }
+                      : { is: null },
+                  },
+                },
+                data: {
+                  draftProcessingStatus:
+                    recoveryBlock instanceof BillingQuotaExceededException
+                      ? QuestionDraftProcessingStatus.BLOCKED_QUOTA
+                      : recoveryBlock instanceof BillingAccessRequiredException
+                        ? QuestionDraftProcessingStatus.BLOCKED_SUBSCRIPTION
+                        : retry
+                          ? QuestionDraftProcessingStatus.QUEUED
+                          : QuestionDraftProcessingStatus.FAILED,
+                  draftProcessingStartedAt: null,
+                  draftQueuedAt: retry ? new Date() : null,
+                  draftProcessingError:
+                    recoveryBlock?.message ??
+                    (retry
+                      ? null
+                      : 'Kesintiye uğrayan taslak işi artık otomatik üretime uygun değil. Soruyu, bağlantıyı ve yanıt ayarlarını kontrol edin.'),
+                },
+              });
+              return updated.count === 1;
+            },
+          );
+          if (recovered && retry) {
+            await this.dispatchDraftJob({
+              ...job?.data,
+              storeId: question.storeId,
+              questionId: question.id,
+            });
+          }
+        } catch {
+          // If Redis dispatch fails after the DB commit, QUEUED remains the
+          // durable outbox. One failure must not stop recovery of later rows.
+          this.logger.warn(`AI processing recovery failed (${question.id}).`);
+        }
+      }
+      cursor =
+        questions.length === AUTOMATION_SETTINGS_BATCH_SIZE
+          ? questions[questions.length - 1].id
+          : undefined;
+    } while (cursor);
+  }
+
   private async reconcileQueuedDrafts() {
     // QUEUED is the durable dispatch record. A retained failed BullMQ job or a
     // crash between the DB update and Redis dispatch must not strand it forever.
@@ -126,14 +306,16 @@ export class QuestionDraftQueueService
           connection: { status: ChannelConnectionStatus.CONNECTED },
           store: {
             status: StoreStatus.ACTIVE,
-            knowledgeProfile: {
-              automationMode: {
-                in: [AiAutomationMode.SHADOW, AiAutomationMode.SAFE_AUTO],
-              },
-            },
           },
         },
-        select: { id: true, storeId: true, draftQueuedAt: true },
+        select: {
+          id: true,
+          storeId: true,
+          draftQueuedAt: true,
+          store: {
+            select: { knowledgeProfile: { select: { automationMode: true } } },
+          },
+        },
         orderBy: { id: 'asc' },
         take: AUTOMATION_SETTINGS_BATCH_SIZE,
         ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -147,6 +329,11 @@ export class QuestionDraftQueueService
             state !== 'failed' &&
             state !== 'completed' &&
             state !== 'unknown'
+          )
+            continue;
+          if (
+            !isAutomaticMode(question.store.knowledgeProfile?.automationMode) &&
+            !isKnowledgeRetry(job?.data)
           )
             continue;
           await this.billing.assertStoreAccess(question.storeId);
@@ -220,6 +407,11 @@ export class QuestionDraftQueueService
           throw error;
       }
       return;
+    }
+    if (existing && state === 'unknown') {
+      // add() alone does not repair an orphaned job hash with the same ID.
+      // remove() respects BullMQ's active-job lock; never force-remove it.
+      await existing.remove();
     }
     if (existing && state !== 'unknown') return;
     await this.queue.add(GENERATE_QUESTION_DRAFT_JOB, data, {
@@ -397,6 +589,7 @@ export class QuestionDraftQueueService
           id: questionId,
           storeId,
           status: ProductQuestionStatus.PENDING,
+          store: { status: StoreStatus.ACTIVE },
           OR: [
             { draftProcessingStatus: null },
             { draftProcessingStatus: QuestionDraftProcessingStatus.FAILED },
@@ -423,6 +616,7 @@ export class QuestionDraftQueueService
         id: questionId,
         storeId,
         status: ProductQuestionStatus.PENDING,
+        store: { status: StoreStatus.ACTIVE },
         OR: [
           { draftProcessingStatus: null },
           { draftProcessingStatus: QuestionDraftProcessingStatus.FAILED },
@@ -467,6 +661,31 @@ export class QuestionDraftQueueService
       );
     }
   }
+}
+
+function isAutomaticMode(mode: AiAutomationMode | null | undefined) {
+  return (
+    mode === AiAutomationMode.SHADOW || mode === AiAutomationMode.SAFE_AUTO
+  );
+}
+
+function canRetryProcessingQuestion(
+  question: ProcessingRecoveryQuestion,
+  job?: QuestionDraftQueueJobData,
+) {
+  return Boolean(
+    question.productId &&
+    question.store.status === StoreStatus.ACTIVE &&
+    question.connection.status === ChannelConnectionStatus.CONNECTED &&
+    (!question.answerDelivery ||
+      question.answerDelivery.status === QuestionAnswerStatus.FAILED) &&
+    (isAutomaticMode(question.store.knowledgeProfile?.automationMode) ||
+      isKnowledgeRetry(job)),
+  );
+}
+
+function isKnowledgeRetry(data?: QuestionDraftQueueJobData) {
+  return data && 'reason' in data && data.reason === 'KNOWLEDGE_RESOLVED';
 }
 
 function errorMessage(error: unknown) {

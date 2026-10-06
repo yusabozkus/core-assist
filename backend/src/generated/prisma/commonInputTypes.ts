@@ -1388,6 +1388,23 @@ export type EnumSupportMessageAuthorTypeWithAggregatesFilter<$PrismaModel = neve
   _max?: Prisma.NestedEnumSupportMessageAuthorTypeFilter<$PrismaModel>
 }
 
+export type EnumSupportImageObjectStateFilter<$PrismaModel = never> = {
+  equals?: $Enums.SupportImageObjectState | Prisma.EnumSupportImageObjectStateFieldRefInput<$PrismaModel>
+  in?: $Enums.SupportImageObjectState[] | Prisma.ListEnumSupportImageObjectStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SupportImageObjectState[] | Prisma.ListEnumSupportImageObjectStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSupportImageObjectStateFilter<$PrismaModel> | $Enums.SupportImageObjectState
+}
+
+export type EnumSupportImageObjectStateWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SupportImageObjectState | Prisma.EnumSupportImageObjectStateFieldRefInput<$PrismaModel>
+  in?: $Enums.SupportImageObjectState[] | Prisma.ListEnumSupportImageObjectStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SupportImageObjectState[] | Prisma.ListEnumSupportImageObjectStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSupportImageObjectStateWithAggregatesFilter<$PrismaModel> | $Enums.SupportImageObjectState
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSupportImageObjectStateFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSupportImageObjectStateFilter<$PrismaModel>
+}
+
 export type EnumNotificationTypeFilter<$PrismaModel = never> = {
   equals?: $Enums.NotificationType | Prisma.EnumNotificationTypeFieldRefInput<$PrismaModel>
   in?: $Enums.NotificationType[] | Prisma.ListEnumNotificationTypeFieldRefInput<$PrismaModel>
@@ -2765,6 +2782,23 @@ export type NestedEnumSupportMessageAuthorTypeWithAggregatesFilter<$PrismaModel 
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumSupportMessageAuthorTypeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumSupportMessageAuthorTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumSupportImageObjectStateFilter<$PrismaModel = never> = {
+  equals?: $Enums.SupportImageObjectState | Prisma.EnumSupportImageObjectStateFieldRefInput<$PrismaModel>
+  in?: $Enums.SupportImageObjectState[] | Prisma.ListEnumSupportImageObjectStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SupportImageObjectState[] | Prisma.ListEnumSupportImageObjectStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSupportImageObjectStateFilter<$PrismaModel> | $Enums.SupportImageObjectState
+}
+
+export type NestedEnumSupportImageObjectStateWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SupportImageObjectState | Prisma.EnumSupportImageObjectStateFieldRefInput<$PrismaModel>
+  in?: $Enums.SupportImageObjectState[] | Prisma.ListEnumSupportImageObjectStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SupportImageObjectState[] | Prisma.ListEnumSupportImageObjectStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSupportImageObjectStateWithAggregatesFilter<$PrismaModel> | $Enums.SupportImageObjectState
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSupportImageObjectStateFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSupportImageObjectStateFilter<$PrismaModel>
 }
 
 export type NestedEnumNotificationTypeFilter<$PrismaModel = never> = {

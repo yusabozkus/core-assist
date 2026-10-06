@@ -22,7 +22,10 @@ import {
   assertSupportImageQuota,
   type StoredSupportImage,
 } from '../support/support-attachment.service';
-import { lockSupportTicket } from '../support/support-ticket-lock';
+import {
+  lockSupportTicket,
+  lockSupportTicketForImages,
+} from '../support/support-ticket-lock';
 import { AdminAccessService } from './admin-access.service';
 import { AdminSupportAssigneeDto } from './dto/admin-support-assignee.dto';
 import {
@@ -177,94 +180,99 @@ export class AdminSupportService {
     const isInternal =
       body.visibility === AdminSupportMessageVisibility.INTERNAL;
 
-    const result = await this.prisma.$transaction(async (transaction) => {
-      const ticket = await lockSupportTicket(transaction, ticketId);
-      if (
-        !isInternal &&
-        (ticket.status === SupportTicketStatus.RESOLVED ||
-          ticket.status === SupportTicketStatus.CLOSED)
-      ) {
-        throw new BadRequestException(
-          'Kullanıcıya yanıt vermeden önce talebi yeniden açmalısınız.',
-        );
-      }
+    const result = await this.prisma.$transaction(
+      async (transaction) => {
+        const ticket = images.length
+          ? await lockSupportTicketForImages(transaction, ticketId, adminUserId)
+          : await lockSupportTicket(transaction, ticketId);
+        if (
+          !isInternal &&
+          (ticket.status === SupportTicketStatus.RESOLVED ||
+            ticket.status === SupportTicketStatus.CLOSED)
+        ) {
+          throw new BadRequestException(
+            'Kullanıcıya yanıt vermeden önce talebi yeniden açmalısınız.',
+          );
+        }
 
-      if (images.length) {
-        const usage = await transaction.supportAttachment.aggregate({
-          where: { message: { ticket: { workspaceId: ticket.workspaceId } } },
-          _sum: { size: true },
+        if (images.length) {
+          const usage = await transaction.supportAttachment.aggregate({
+            where: { message: { ticket: { workspaceId: ticket.workspaceId } } },
+            _sum: { size: true },
+          });
+          assertSupportImageQuota(usage._sum.size ?? 0, images);
+        }
+
+        const now = new Date();
+        const message = await transaction.supportMessage.create({
+          data: {
+            ticketId,
+            authorUserId: adminUserId,
+            authorType: SupportMessageAuthorType.SUPPORT,
+            isInternal,
+            body: body.message,
+            attachments: images.length ? { create: images } : undefined,
+          },
         });
-        assertSupportImageQuota(usage._sum.size ?? 0, images);
-      }
-
-      const now = new Date();
-      const message = await transaction.supportMessage.create({
-        data: {
-          ticketId,
-          authorUserId: adminUserId,
-          authorType: SupportMessageAuthorType.SUPPORT,
-          isInternal,
-          body: body.message,
-          attachments: images.length ? { create: images } : undefined,
-        },
-      });
-      await transaction.supportTicket.update({
-        where: { id: ticketId },
-        data: isInternal
-          ? { updatedAt: now }
-          : {
-              status: SupportTicketStatus.WAITING_CUSTOMER,
-              firstRespondedAt: ticket.firstRespondedAt ?? now,
-              lastMessageAt: now,
-              resolvedAt: null,
-              closedAt: null,
+        await transaction.supportTicket.update({
+          where: { id: ticketId },
+          data: isInternal
+            ? { updatedAt: now }
+            : {
+                status: SupportTicketStatus.WAITING_CUSTOMER,
+                firstRespondedAt: ticket.firstRespondedAt ?? now,
+                lastMessageAt: now,
+                resolvedAt: null,
+                closedAt: null,
+              },
+        });
+        await this.audit.record(
+          {
+            actorType: AuditActorType.ADMIN,
+            actorUserId: adminUserId,
+            origin: AuditOrigin.API,
+            action: isInternal
+              ? AuditAction.ADMIN_SUPPORT_INTERNAL_NOTE_ADDED
+              : AuditAction.ADMIN_SUPPORT_REPLY_ADDED,
+            result: AuditResult.SUCCESS,
+            workspaceId: ticket.workspaceId,
+            storeId: ticket.storeId,
+            targetType: 'SUPPORT_TICKET',
+            targetId: ticketId,
+            before: { status: ticket.status },
+            after: {
+              status: isInternal
+                ? ticket.status
+                : SupportTicketStatus.WAITING_CUSTOMER,
             },
-      });
-      await this.audit.record(
-        {
-          actorType: AuditActorType.ADMIN,
-          actorUserId: adminUserId,
-          origin: AuditOrigin.API,
-          action: isInternal
-            ? AuditAction.ADMIN_SUPPORT_INTERNAL_NOTE_ADDED
-            : AuditAction.ADMIN_SUPPORT_REPLY_ADDED,
-          result: AuditResult.SUCCESS,
-          workspaceId: ticket.workspaceId,
-          storeId: ticket.storeId,
-          targetType: 'SUPPORT_TICKET',
-          targetId: ticketId,
-          before: { status: ticket.status },
-          after: {
-            status: isInternal
-              ? ticket.status
-              : SupportTicketStatus.WAITING_CUSTOMER,
+            metadata: {
+              visibility: body.visibility,
+              messageLength: body.message.length,
+            },
           },
-          metadata: {
-            visibility: body.visibility,
-            messageLength: body.message.length,
-          },
-        },
-        transaction,
-      );
-      if (isInternal) {
-        return {
-          ticket,
-          created: [] as string[],
-          resolved: [] as string[],
-        };
-      }
+          transaction,
+        );
+        if (isInternal) {
+          return {
+            ticket,
+            created: [] as string[],
+            resolved: [] as string[],
+          };
+        }
 
-      const created = await this.supportNotifications.notifyAdminReply(
-        transaction,
-        ticket,
-        message.id,
-      );
-      const resolved = await this.supportNotifications.resolveSlaNotification(
-        transaction,
-        ticket.id,
-      );
-      return { ticket, created, resolved };
-    });
+        const created = await this.supportNotifications.notifyAdminReply(
+          transaction,
+          ticket,
+          message.id,
+        );
+        const resolved = await this.supportNotifications.resolveSlaNotification(
+          transaction,
+          ticket.id,
+        );
+        return { ticket, created, resolved };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted },
+    );
 
     this.supportNotifications.emitCreated(
       result.created,
@@ -291,7 +299,7 @@ export class AdminSupportService {
         images,
       );
     } catch (error) {
-      await this.attachments.remove(images);
+      await this.attachments.discardUnattached(images);
       throw error;
     }
   }

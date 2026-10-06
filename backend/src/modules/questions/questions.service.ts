@@ -285,11 +285,10 @@ export class QuestionsService {
       ...searchWhere,
     };
     const where: Prisma.ProductQuestionWhereInput = {
-      ...baseWhere,
-      ...questionStatusWhere(query.status, query.pendingStates),
+      AND: [baseWhere, questionStatusWhere(query.status, query.pendingStates)],
     };
 
-    const [questions, summaryRows] = await Promise.all([
+    const [questions, summaryRows, filteredPending] = await Promise.all([
       this.prisma.productQuestion.findMany({
         where,
         orderBy: [{ externalCreatedAt: 'desc' }, { id: 'desc' }],
@@ -302,6 +301,21 @@ export class QuestionsService {
             by: ['status'],
             where: baseWhere,
             _count: { id: true },
+          })
+        : Promise.resolve(null),
+      query.includeSummary &&
+      query.pendingStates.length > 0 &&
+      query.pendingStates.length < ALL_PENDING_QUESTION_STATES.length
+        ? this.prisma.productQuestion.count({
+            where: {
+              AND: [
+                baseWhere,
+                questionStatusWhere(
+                  QuestionListStatusFilter.PENDING,
+                  query.pendingStates,
+                ),
+              ],
+            },
           })
         : Promise.resolve(null),
     ]);
@@ -334,12 +348,14 @@ export class QuestionsService {
     const counts = new Map(
       summaryRows.map((row) => [row.status, row._count.id]),
     );
-    const pending =
+    const allPending =
       (counts.get(ProductQuestionStatus.PENDING) ?? 0) +
       (counts.get(ProductQuestionStatus.DRAFTED) ?? 0);
     const answered = counts.get(ProductQuestionStatus.ANSWERED) ?? 0;
     const ignored = counts.get(ProductQuestionStatus.IGNORED) ?? 0;
-    const total = pending + answered + ignored;
+    const total = allPending + answered + ignored;
+    const pending =
+      query.pendingStates.length === 0 ? 0 : (filteredPending ?? allPending);
 
     return {
       ...page,

@@ -1,95 +1,10 @@
-import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
-
-import { BillingPaymentIssueShell } from "@/components/dashboard/billing/billing-payment-issue-banner"
-import { BillingUsageProvider } from "@/components/dashboard/billing/billing-usage-provider"
-import { DashboardHeader } from "@/components/shared/dashboard/dashboard-header"
-import { SetupGuide } from "@/components/dashboard/setup/setup-guide"
-import { AppSidebar } from "@/components/shared/sidebar/app-sidebar"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { Toaster } from "@/components/ui/sonner"
-import { APP_ROUTES } from "@/constants/site"
-import {
-  getServerBillingWorkspaces,
-  getServerStoreBillingUsage,
-} from "@/lib/api/billing.server"
-import { getServerChannelConnections } from "@/lib/api/channels.server"
-import { getDashboardSyncState } from "@/lib/channels/sync-state"
-import { getCurrentUser } from "@/lib/server-auth"
-import { requireCompletedOnboarding } from "@/lib/require-onboarding.server"
-import { getActiveStoreContext } from "@/lib/stores/active-store"
+import { DashboardShell } from "@/components/shared/dashboard/dashboard-shell"
 
 export const dynamic = "force-dynamic"
 
-export default async function SupportLayout({
+export default function SupportLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const currentUser = await getCurrentUser()
-  if (!currentUser) redirect(APP_ROUTES.login)
-  await requireCompletedOnboarding()
-
-  const { stores, activeStore } = await getActiveStoreContext()
-  const [connections, billingWorkspaces, billingUsage] = await Promise.all([
-    activeStore?.status === "ACTIVE"
-      ? getServerChannelConnections(activeStore.id).catch(() => null)
-      : [],
-    getServerBillingWorkspaces().catch(() => []),
-    activeStore
-      ? getServerStoreBillingUsage(activeStore.id).catch(() => null)
-      : null,
-  ])
-  const sidebarDefaultOpen =
-    (await cookies()).get("sidebar_state")?.value !== "false"
-
-  return (
-    <BillingUsageProvider
-      key={activeStore?.id ?? "account-support"}
-      storeId={activeStore?.id ?? null}
-      initialUsage={billingUsage}
-    >
-      <BillingPaymentIssueShell workspaceId={billingWorkspaces[0]?.id}>
-        <SidebarProvider
-          defaultOpen={sidebarDefaultOpen}
-          className="min-h-0 flex-1"
-        >
-          <AppSidebar
-            variant="inset"
-            user={{
-              name: currentUser.user.name,
-              email: currentUser.user.email,
-              avatarUrl: currentUser.user.image,
-            }}
-            shops={stores}
-            activeShopId={activeStore?.id ?? null}
-            canManageBilling={billingWorkspaces.length > 0}
-          />
-          <SidebarInset className="min-h-0">
-            <DashboardHeader
-              storeId={activeStore?.id}
-              syncState={getDashboardSyncState(connections)}
-              isStoreArchived={activeStore?.status === "INACTIVE"}
-            />
-            <div className="min-h-0 flex-1 overflow-y-auto bg-background">
-              {children}
-            </div>
-            {activeStore?.status === "ACTIVE" ? (
-              <SetupGuide
-                key={activeStore.id}
-                storeId={activeStore.id}
-                userId={currentUser.user.id}
-                canManageTeam={billingWorkspaces.length > 0}
-              />
-            ) : null}
-            <Toaster
-              position="top-center"
-              duration={3000}
-              visibleToasts={3}
-              gap={10}
-              offset={16}
-            />
-          </SidebarInset>
-        </SidebarProvider>
-      </BillingPaymentIssueShell>
-    </BillingUsageProvider>
-  )
+  // Account-level support remains available without a selected store.
+  return <DashboardShell requireActiveStore={false}>{children}</DashboardShell>
 }

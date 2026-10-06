@@ -1522,9 +1522,37 @@ model SupportAttachment {
   createdAt   DateTime       @default(now())
 
   message SupportMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  imageObject SupportImageObject @relation(fields: [objectKey], references: [objectKey], onDelete: Restrict, onUpdate: Restrict)
 
   @@index([messageId])
   @@map("support_attachment")
+}
+
+// Independent of account/ticket cascades: deletion work must survive its owner.
+model SupportImageObject {
+  objectKey       String                  @id
+  state           SupportImageObjectState @default(STAGED)
+  storageEndpoint String?
+  storageRegion   String?
+  storageBucket   String?
+  deleteAfter     DateTime?
+  attemptCount    Int                     @default(0)
+  lastError       String?
+  claimToken      String?
+  claimUntil      DateTime?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  attachment SupportAttachment?
+
+  @@index([state, deleteAfter, claimUntil])
+  @@map("support_image_object")
+}
+
+enum SupportImageObjectState {
+  STAGED
+  ATTACHED
+  PENDING_DELETE
 }
 
 enum NotificationType {

@@ -15,7 +15,17 @@ Bu politika, Core Asistan veritabanındaki operasyonel tabloların kontrolsüz b
 
 Destek talebi silindiğinde ona bağlı mesajlar ilişkisel olarak silinir. Açık, işlemde veya müşteri yanıtı bekleyen destek talepleri temizlenmez. Çalışan senkronizasyonlar temizlenmez.
 
-Destek mesajı görselleri özel B2 bucket'ında tutulur. Süresi dolan destek taleplerinin görselleri, talep veritabanından silinmeden önce B2'den silinir; B2 silme işlemi başarısızsa talep silme işi hata verir ve sonraki temizlikte yeniden denenir. Bucket sürümleme/lifecycle ayarlarını ayrıca gözden geçirin: silinen nesnelerin eski sürümleri B2 politikasına göre depoda kalabilir.
+Destek mesajı görselleri özel B2 bucket'ında tutulur. Görsel yaşam döngüsü, hesap ve talep kayıtlarından bağımsız `support_image_object` tablosunda izlenir:
+
+- B2'ye yüklemeden önce dosya anahtarları `STAGED` olarak kaydedilir. Bir saat içinde mesaja bağlanmayan yüklemeler temizlenir. Başarısız yükleme/mesaj işlemlerinde beş dakikalık bekleme sonrasında temizlik başlar; bu süre devam eden yüklemenin sonuçlanması içindir.
+- Mesaja bağlama, PostgreSQL tetikleyicisiyle aynı işlemde `ATTACHED` durumuna geçer. Temizlik tarafından alınmış veya süresi dolmuş dosya mesaja bağlanamaz.
+- Talep, mesaj veya hesabın silinmesi bağlı görselleri aynı veritabanı işleminde `PENDING_DELETE` olarak işaretler. İşlem geri alınırsa silme işi de geri alınır. Saklama süresi temizliğinde silme anında durum ve tarih yeniden kontrol edilir; arada yeniden açılan talepler korunur.
+- `data-retention` kuyruğundaki ayrı iş her dakika en fazla 20 dosyayı işler. Her dosya için iki dakikalık sahiplik süresi kullanılır; çöken worker'ın işi tekrar alınabilir. B2 hataları bir dakikadan başlayıp en fazla altı saate çıkan bekleme ile tekrar denenir. Başarısız kayıtlar süre doldu diye atılmaz.
+- B2 konumu yeni dosyalarla birlikte kaydedilir. Bucket/endpoint değişmişse başka konumdan silmek yerine iş bekletilir. Eski görsellerin konumu önceki uygulamadaki gibi mevcut `SUPPORT_B2_*` ayarları kabul edilir; depolama taşınacaksa dosyalar ve kayıtlı konum birlikte taşınmalıdır.
+
+Temizlik yalnızca tam eşleşen dosya anahtarının bütün sürümlerini ve silme işaretlerini kaldırır. `VersionId` olmadan silme B2'de yalnızca silme işareti eklediğinden kalıcı silmede sürüm kimliği kullanılır. [Backblaze silme davranışı](https://www.backblaze.com/apidocs/s3-delete-object). Anahtarın yalnızca destek bucket'ında `listFiles`, `readFiles`, `writeFiles` ve `deleteFiles` yetkileri olmalıdır. Object Lock veya yetersiz izin silmeyi engellerse kayıt yeniden deneme için saklanır; koruma aşılmaz.
+
+`20261006120000_track_support_image_lifecycle` migration'ı mevcut görselleri kaydeder ve tetikleyicileri kurar; B2'ye istek göndermez. Görsel yükleme trafiğini durdurup migration'ı uyguladıktan sonra yeni backend sürümünü başlatın. `db push` tetikleyicileri kurmaz; migration kullanılmalıdır. Önceden veritabanı kaydı silinmiş sahipsiz dosyalar bu migration ile tespit edilemez; bunlar ayrıca bucket envanteriyle değerlendirilmelidir. Bucket lifecycle kuralları ek güvence olarak kullanılabilir, ancak bağlı görselleri yaşa göre otomatik silen kurallar kullanılmamalıdır.
 
 ## Faturalandırma operasyon kayıtları
 

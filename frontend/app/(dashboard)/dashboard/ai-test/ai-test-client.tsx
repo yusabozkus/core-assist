@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { getCatalogProduct, getCatalogProducts } from "@/lib/api/catalog"
 import { previewAiAnswer, type AiTestResult } from "@/lib/api/ai-test"
+import { useListRequests } from "@/hooks/use-list-requests"
 import type {
   CatalogProduct,
   CatalogProductListItem,
@@ -58,50 +59,58 @@ export function AiTestClient({
   const [isAnswering, setIsAnswering] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const requestRef = useRef<AbortController | null>(null)
-  const moreRequestRef = useRef<AbortController | null>(null)
+  const normalizedSearch = search.trim()
+  const listKey = JSON.stringify([storeId, normalizedSearch])
+  const requests = useListRequests(listKey, JSON.stringify([storeId, ""]))
   const chatScrollRef = useRef<HTMLDivElement>(null)
   const nextIdRef = useRef(1)
 
   useEffect(() => {
-    moreRequestRef.current?.abort()
-    moreRequestRef.current = null
-    setIsLoadingMore(false)
-    const query = search.trim()
-    if (!query) {
-      setPage(initialPage)
+    let disposed = false
+    const query = normalizedSearch
+    const request = requests.isReady(listKey)
+      ? null
+      : requests.begin(listKey, "first")
+    queueMicrotask(() => {
+      if (disposed) return
+      setIsLoadingMore(false)
       setSearchError("")
-      setIsSearching(false)
-      return
-    }
-
-    const controller = new AbortController()
+      setIsSearching(Boolean(query && request))
+      if (!query && request) {
+        if (requests.commit(request)) setPage(initialPage)
+        requests.finish(request)
+      }
+    })
+    if (!request || !query)
+      return () => {
+        disposed = true
+        if (request) requests.cancel(request)
+      }
     const timer = window.setTimeout(async () => {
-      setIsSearching(true)
-      setSearchError("")
       try {
-        setPage(
-          await getCatalogProducts(storeId, {
-            query,
-            limit: 12,
-            signal: controller.signal,
-          })
-        )
+        const result = await getCatalogProducts(storeId, {
+          query,
+          limit: 12,
+          signal: request.signal,
+        })
+        if (requests.commit(request)) setPage(result)
       } catch (error) {
-        if (!controller.signal.aborted) {
+        if (requests.isCurrent(request)) {
           setSearchError(
             error instanceof Error ? error.message : "Ürünler yüklenemedi."
           )
         }
       } finally {
-        if (!controller.signal.aborted) setIsSearching(false)
+        if (requests.finish(request)) setIsSearching(false)
       }
     }, 250)
 
     return () => {
+      disposed = true
       window.clearTimeout(timer)
-      controller.abort()
+      requests.cancel(request)
     }
-  }, [initialPage, search, storeId])
+  }, [initialPage, listKey, requests, normalizedSearch, storeId])
 
   useEffect(() => {
     const chat = chatScrollRef.current
@@ -126,7 +135,6 @@ export function AiTestClient({
   useEffect(
     () => () => {
       requestRef.current?.abort()
-      moreRequestRef.current?.abort()
     },
     []
   )
@@ -151,9 +159,9 @@ export function AiTestClient({
   }
 
   async function loadMore() {
-    if (!page.nextCursor || isLoadingMore) return
-    const controller = new AbortController()
-    moreRequestRef.current = controller
+    if (!page.nextCursor || isLoadingMore || isSearching) return
+    const request = requests.begin(listKey, "more")
+    if (!request) return
     setIsLoadingMore(true)
     setSearchError("")
     try {
@@ -161,23 +169,22 @@ export function AiTestClient({
         query: search.trim(),
         cursor: page.nextCursor,
         limit: 12,
-        signal: controller.signal,
+        signal: request.signal,
       })
-      if (!controller.signal.aborted) {
+      if (requests.isCurrent(request)) {
         setPage((current) => ({
           ...next,
           items: [...current.items, ...next.items],
         }))
       }
     } catch (error) {
-      if (!controller.signal.aborted) {
+      if (requests.isCurrent(request)) {
         setSearchError(
           error instanceof Error ? error.message : "Ürünler yüklenemedi."
         )
       }
     } finally {
-      if (moreRequestRef.current === controller) {
-        moreRequestRef.current = null
+      if (requests.finish(request)) {
         setIsLoadingMore(false)
       }
     }
