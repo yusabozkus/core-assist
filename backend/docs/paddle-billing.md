@@ -675,6 +675,12 @@ bunlar genel AI üretim hatası veya her soru için ayrı hata bildirimi değild
 Engel sürerken AI işi tekrar kuyruğa eklenmez. Beş dakikalık ayrı yerel
 kontrol, erişimi ve kotası açılan aktif mağazaların hâlâ bekleyen, bağlı ürünü
 ve kanalı olan sorularını mevcut otomasyon moduna göre yeniden kuyruğa alır.
+Redis'te aynı kimlikle saklanan başarısız taslak işleri yeni `add` çağrısıyla
+çalışmaya başlamaz; bu işler deneme sayaçları sıfırlanarak gerçekten yeniden
+bekleyen kuyruğa taşınır. Aynı kontrol, en az bir dakikadır `QUEUED` görünen fakat
+Redis işi eksik veya tamamlanmış/başarısız olan soruları da toparlar. Bekleyen,
+gecikmeli veya çalışan işler değiştirilmez; yeniden başlatmadan önce abonelik ve
+soru bazlı kota uygunluğu kontrol edilir.
 Manuel yanıtlanmış sorular ve daha önce güvenlik nedeniyle durdurulmuş
 otomatik gönderimler kendiliğinden tekrar gönderilmez.
 

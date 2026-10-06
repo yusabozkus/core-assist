@@ -1,6 +1,7 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import {
   Injectable,
+  Logger,
   OnModuleInit,
   ServiceUnavailableException,
 } from '@nestjs/common';
@@ -36,11 +37,14 @@ import type {
 } from './question-draft.types';
 
 const AUTOMATION_SETTINGS_BATCH_SIZE = 100;
+const QUEUED_DRAFT_RECONCILE_GRACE_MS = 60_000;
 
 @Injectable()
 export class QuestionDraftQueueService
   implements QuestionDraftDispatcher, OnModuleInit
 {
+  private readonly logger = new Logger(QuestionDraftQueueService.name);
+
   constructor(
     @InjectQueue(QUESTION_DRAFT_QUEUE)
     private readonly queue: Queue<QuestionDraftQueueJobData>,
@@ -61,6 +65,7 @@ export class QuestionDraftQueueService
   }
 
   async resumeBillingBlockedDrafts() {
+    await this.reconcileQueuedDrafts();
     // No marketplace fetch and no model call. Retry eligibility only; normal
     // worker checks still protect against quota/access races before generation.
     const stores = await this.prisma.store.findMany({
@@ -101,6 +106,129 @@ export class QuestionDraftQueueService
       for (const question of questions)
         await this.enqueue(store.id, question.id);
     }
+  }
+
+  private async reconcileQueuedDrafts() {
+    // QUEUED is the durable dispatch record. A retained failed BullMQ job or a
+    // crash between the DB update and Redis dispatch must not strand it forever.
+    let cursor: string | undefined;
+    const staleBefore = new Date(Date.now() - QUEUED_DRAFT_RECONCILE_GRACE_MS);
+    do {
+      const questions = await this.prisma.productQuestion.findMany({
+        where: {
+          status: ProductQuestionStatus.PENDING,
+          draftProcessingStatus: QuestionDraftProcessingStatus.QUEUED,
+          OR: [
+            { draftQueuedAt: null },
+            { draftQueuedAt: { lte: staleBefore } },
+          ],
+          productId: { not: null },
+          connection: { status: ChannelConnectionStatus.CONNECTED },
+          store: {
+            status: StoreStatus.ACTIVE,
+            knowledgeProfile: {
+              automationMode: {
+                in: [AiAutomationMode.SHADOW, AiAutomationMode.SAFE_AUTO],
+              },
+            },
+          },
+        },
+        select: { id: true, storeId: true, draftQueuedAt: true },
+        orderBy: { id: 'asc' },
+        take: AUTOMATION_SETTINGS_BATCH_SIZE,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      });
+      for (const question of questions) {
+        try {
+          const job = await this.queue.getJob(`question-draft-${question.id}`);
+          const state = await job?.getState();
+          if (
+            job &&
+            state !== 'failed' &&
+            state !== 'completed' &&
+            state !== 'unknown'
+          )
+            continue;
+          await this.billing.assertStoreAccess(question.storeId);
+          await this.billingUsage.assertDraftGenerationAvailableForStore(
+            question.storeId,
+            question.id,
+          );
+          await this.dispatchDraftJob({
+            ...job?.data,
+            storeId: question.storeId,
+            questionId: question.id,
+          });
+        } catch (error) {
+          if (
+            error instanceof BillingAccessRequiredException ||
+            error instanceof BillingQuotaExceededException
+          ) {
+            await this.prisma.productQuestion.updateMany({
+              where: {
+                id: question.id,
+                storeId: question.storeId,
+                status: ProductQuestionStatus.PENDING,
+                draftProcessingStatus: QuestionDraftProcessingStatus.QUEUED,
+                draftQueuedAt: question.draftQueuedAt,
+              },
+              data: {
+                draftProcessingStatus:
+                  error instanceof BillingQuotaExceededException
+                    ? QuestionDraftProcessingStatus.BLOCKED_QUOTA
+                    : QuestionDraftProcessingStatus.BLOCKED_SUBSCRIPTION,
+                draftProcessingError: error.message,
+                draftQueuedAt: null,
+                draftProcessingStartedAt: null,
+              },
+            });
+          } else {
+            // Leave the outbox row queued for the next sweep and keep scanning;
+            // one Redis failure must not starve later questions.
+            this.logger.warn(
+              `AI draft queue reconciliation failed (${question.id}).`,
+            );
+          }
+        }
+      }
+      cursor =
+        questions.length === AUTOMATION_SETTINGS_BATCH_SIZE
+          ? questions[questions.length - 1].id
+          : undefined;
+    } while (cursor);
+  }
+
+  private async dispatchDraftJob(data: QuestionDraftJobData) {
+    const jobId = `question-draft-${data.questionId}`;
+    const existing = await this.queue.getJob(jobId);
+    const state = await existing?.getState();
+    if (existing && (state === 'failed' || state === 'completed')) {
+      await existing.updateData({ ...existing.data, ...data });
+      try {
+        await existing.retry(state, {
+          resetAttemptsMade: true,
+          resetAttemptsStarted: true,
+        });
+      } catch (error) {
+        // Another worker/reconciler may already have retried the same job.
+        const currentState = await existing.getState();
+        if (
+          currentState === 'failed' ||
+          currentState === 'completed' ||
+          currentState === 'unknown'
+        )
+          throw error;
+      }
+      return;
+    }
+    if (existing && state !== 'unknown') return;
+    await this.queue.add(GENERATE_QUESTION_DRAFT_JOB, data, {
+      jobId,
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 10_000 },
+      removeOnComplete: true,
+      removeOnFail: failedJobRetention(250),
+    });
   }
 
   async scheduleAutomationSettingsApply(storeId: string) {
@@ -211,17 +339,11 @@ export class QuestionDraftQueueService
     );
 
     for (const question of eligibleReadyQuestions) {
-      await this.queue.add(
-        GENERATE_QUESTION_DRAFT_JOB,
-        { storeId, questionId: question.id, reason: 'AUTOMATION' },
-        {
-          jobId: `question-draft-${question.id}`,
-          attempts: 3,
-          backoff: { type: 'exponential', delay: 10_000 },
-          removeOnComplete: true,
-          removeOnFail: failedJobRetention(250),
-        },
-      );
+      await this.dispatchDraftJob({
+        storeId,
+        questionId: question.id,
+        reason: 'AUTOMATION',
+      });
     }
 
     if (
@@ -325,17 +447,7 @@ export class QuestionDraftQueueService
     if (marked.count !== 1) return;
 
     try {
-      await this.queue.add(
-        GENERATE_QUESTION_DRAFT_JOB,
-        { storeId, questionId, ...options },
-        {
-          jobId: `question-draft-${questionId}`,
-          attempts: 3,
-          backoff: { type: 'exponential', delay: 10_000 },
-          removeOnComplete: true,
-          removeOnFail: failedJobRetention(250),
-        },
-      );
+      await this.dispatchDraftJob({ storeId, questionId, ...options });
     } catch (error) {
       await this.prisma.productQuestion.updateMany({
         where: {
