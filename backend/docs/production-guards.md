@@ -1,6 +1,6 @@
 # Push, AI taslak ve log korumaları
 
-Push, AI taslak ve davet logu korumalarının kodu ile yerel testleri tamamlandı; gerçek tarayıcı/HTTPS staging kabulü [güncel kabul kaydında](../../deploy/STAGING_ACCEPTANCE.md) ayrıca izlenir.
+Push, AI taslak ve davet logu korumaları aşağıda açıklanır. Güncel otomatik test kapsamı [kalite kontrol rehberinde](quality-checks.md), gerçek tarayıcı/HTTPS staging kabulü [kabul kaydında](../../deploy/STAGING_ACCEPTANCE.md) izlenir.
 
 ## Push abonelikleri
 
@@ -79,9 +79,7 @@ Yeni migration: `20260927060000_add_ai_draft_lease`. Gerçek uygulama veritaban�
 Yerel komutlar (`backend` dizininde):
 
 ```sh
-npm run test:production-guards
-npm run test:production-guards:integration
-npm run build
+npm run check
 ```
 
-Entegrasyon testi yalnızca localhost PostgreSQL/Redis kabul eder. `TEST_DATABASE_URL`/`TEST_REDIS_URL` verilmezse mevcut bağlantı ayarlarını kullanır; PostgreSQL'de rastgele isimli ayrı DB oluşturup tüm migration'ları uygular ve yalnızca kendi DB'sini kaldırır. DB oluşturma yetkisi gerekir. BullMQ rastgele test prefix'inde çalışır; uygulama kuyruğunu temizlemez. AI ve dış push çağrıları taklit edilir; gerçek müşteri bildirimi, ücretli model isteği veya pazaryeri cevabı gönderilmez.
+Mevcut AI lease/kurtarma testleri bellek içi PostgreSQL ve taklit kuyruklarla çalışır. Eski push/log ve harici servis entegrasyon test dosyaları kaynakta bulunmuyor; `check` bunların geçtiği anlamına gelmez. Yukarıdaki HTTPS, push ve log senaryoları staging'de ayrıca doğrulanmalıdır.

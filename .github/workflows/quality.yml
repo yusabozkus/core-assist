@@ -21,21 +21,7 @@ jobs:
         working-directory: backend
     env:
       NODE_ENV: test
-      DATABASE_URL: postgresql://postgres:local_test_only@127.0.0.1:5432/postgres
-      TEST_DATABASE_URL: postgresql://postgres:local_test_only@127.0.0.1:5432/postgres
-      TEST_REDIS_URL: redis://127.0.0.1:6379/0
       BILLING_TEST_LIMITS_ENABLED: "false"
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_PASSWORD: local_test_only
-        ports: ["5432:5432"]
-        options: --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 3s --health-retries 12
-      redis:
-        image: redis:7-alpine
-        ports: ["6379:6379"]
-        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 12
     steps:
       - uses: actions/checkout@v7
         with:
@@ -52,9 +38,6 @@ jobs:
       - run: npm audit --omit=dev
       - run: npm run db:generate
       - run: npm run check
-      - name: Run available integration tests
-        if: ${{ hashFiles('backend/src/**/*.integration.spec.ts') != '' }}
-        run: npm run test:integration
 
   frontend:
     runs-on: ubuntu-latest

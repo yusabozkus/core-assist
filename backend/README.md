@@ -25,10 +25,19 @@ API varsayılan olarak 4001 portunda çalışır. `/health` process canlılığ�
 
 ```sh
 npm run check
-npm run test:integration
 ```
 
-`check` lint, bütün unit testleri ve production build çalıştırır. Integration testleri localhost PostgreSQL/Redis ister ve rastgele test veritabanları oluşturur. Ortam, hedefli komutlar ve kapsam: [kalite kontrol rehberi](docs/quality-checks.md). Windows PowerShell'de gerekirse `npm.cmd` kullanın.
+`check` lint, mevcut yerel testleri ve production build çalıştırır. Testler servisleri taklit eder veya bellek içi PGlite kullanır; PostgreSQL/Redis kurulumu istemez. Kaynakta ayrı harici servis entegrasyon testleri bulunmuyor. Güncel kapsam: [kalite kontrol rehberi](docs/quality-checks.md). Windows PowerShell'de gerekirse `npm.cmd` kullanın.
+
+## Soru akışı simülasyonu
+
+Adet ve aralık seçerek gelen kutusuna geliştirme soruları ekleyen komut korunur:
+
+```sh
+npm run simulate:questions -- --provider=trendyol --count=5 --interval=5000
+```
+
+`--interval` milisaniyedir; örnekte 5 soru, 5 saniye aralıkla eklenir. `--store-id` veya `--connection-id` ile hedef seçilebilir. Bu araç uygulama verisi oluşturur ve yanıt otomasyonu açıksa soruları taslak kuyruğuna alır; genel `check` komutu tarafından çalıştırılmaz.
 
 ## Dağıtım ve işletim
 

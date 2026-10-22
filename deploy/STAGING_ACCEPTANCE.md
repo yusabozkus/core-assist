@@ -15,7 +15,9 @@ Bu dosya, güncel yayın durumunu, kabul ölçütlerini ve yerel kontrollerden g
 
 27 Eylül temiz Linux kontrolünde CI'a özgü bir test ayarı eksikliği bulundu: Better Auth `NODE_ENV=test` altında Origin denetimini varsayılan atladığı için auth regresyonu 403 yerine 200 aldı. Test örneğinde Origin/CSRF korumaları açıkça etkinleştirildi; production uygulama ayarı değiştirilmedi. Düzeltmeden sonra hedefli auth paketi 20/20 geçti.
 
-Son temiz Linux koşusu **başarılı / exit 0**: backend audit/lint, 140 unit + 55 integration, Nest build; frontend audit/lint, 8 test ve Next build. Koşu `core-quality-test-7b0e6b487e`; loglar yerelde `.ops-test/core-quality-test-7b0e6b487e/` altında. Projenin geçici konteyner, volume ve image'ları kaldırıldı. Bu sonuç aşağıdaki gerçek GitHub/staging satırlarını tamamlamaz.
+Önceki temiz Linux koşusu **başarılı / exit 0**: backend audit/lint, 140 unit + 55 integration, Nest build; frontend audit/lint, 8 test ve Next build. Koşu `core-quality-test-7b0e6b487e`; loglar yerelde `.ops-test/core-quality-test-7b0e6b487e/` altında. Projenin geçici konteyner, volume ve image'ları kaldırıldı. Bu sonuç aşağıdaki gerçek GitHub/staging satırlarını tamamlamaz.
+
+6 Ekim test temizliği: bu eski koşunun entegrasyon test dosyaları güncel kaynakta bulunmuyor. Eski sonuç tarihsel kayıt olarak korunur; güncel Quality akışı yalnızca mevcut yerel testleri, lint ve build'i çalıştırır. PostgreSQL/Redis test servisleri ve karşılığı olmayan komutlar kaldırıldı. Bu değişiklik yeni bir GitHub/Linux/staging koşusu olarak kaydedilmez.
 
 IDE'de açık `.ops-test/core-ops-test-*/backend.env`, yerel Docker testinin **sahte anahtar** dosyasıdır. Staging yapılandırması olarak kullanılmaz. Bu klasör Git tarafından ignore edilir. Gerçek deploy dosyaları [dağıtım rehberine](README.md) göre hazırlanır; anahtarlar kabul kaydına veya commit'e eklenmez.
 
@@ -52,7 +54,7 @@ Bu senaryolar önce ayrı test hesapları ve sandbox sağlayıcılarıyla uygula
 
 | Test grubu | Senaryo | Geçme koşulu |
 | --- | --- | --- |
-| Temiz kurulum | Lockfile ile kurulum, codegen, lint, unit/integration testleri ve iki production build | Bütün komutlar exit 0; tekrar edilen entegrasyon testlerinde kapanış hatası yok |
+| Temiz kurulum | Lockfile ile kurulum, codegen, lint, mevcut yerel testler ve iki production build | Bütün komutlar exit 0; harici servis kabulü ayrıca tamamlanır |
 | Image ve migration | Hedef Linux image, boş ve eski sürüm verisiyle migration, tekrar çalıştırma ve restart | Servisler hazır; migration tekrarında güvenli; kullanıcı verisi korunuyor |
 | Giriş | Google/Microsoft, logout, session revoke, web/API subdomainleri arasında SSR yenilemesi | Giriş döngüsü yok; iptal edilen oturum veri alamıyor |
 | Yetki | OWNER, ACCOUNT_ADMIN, temsilci, VIEWER, platform admin ve yabancı hesap; farklı URL kimlikleri | Her rol yalnızca izinli okuma/yazma yapabiliyor; başka hesaba erişim yok |
@@ -93,6 +95,6 @@ Hedef yük varsayımı **10 müşteri, 20 mağaza, 20.000 ürün ve ayda 30.000 
 node deploy/test-quality.mjs
 ```
 
-Bu komut yalnızca açıkça listelenen kaynak/config dosyalarını `.ops-test/core-quality-test-<rastgele>` içine kopyalar. Gerçek `.env`, secrets, yerel node_modules ve build çıktıları taşınmaz. Node 22 üzerinde temiz `npm ci`, üretim audit'i, codegen, lint, unit/integration ve frontend build çalışır. PostgreSQL/Redis host portu yayınlamaz; backend bu geçici servislerin ağ alanında localhost'a bağlanır, testlerin localhost koruması korunur. Yalnızca oluşturulan projenin konteyner/volume/image'ları sonunda kaldırılır; loglar kalır.
+Bu komut yalnızca açıkça listelenen kaynak/config dosyalarını `.ops-test/core-quality-test-<rastgele>` içine kopyalar. Gerçek `.env`, secrets, yerel node_modules ve build çıktıları taşınmaz. Node 22 üzerinde temiz `npm ci`, üretim audit'i, codegen, lint, mevcut yerel testler ve iki production build çalışır. PostgreSQL/Redis servisi başlatılmaz; testler servisleri taklit eder veya bellek içi PGlite kullanır. Yalnızca oluşturulan projenin konteyner/volume/image'ları sonunda kaldırılır; loglar kalır.
 
 Bu kontrol GitHub Actions yürütücüsünü, dal korumasını veya gerçek staging'i doğrulamaz. Başarısızlıkta log yolu ve hata döner; başarılı sonuç GitHub workflow URL'si yerine kullanılamaz.

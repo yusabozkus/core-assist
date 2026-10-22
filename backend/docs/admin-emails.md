@@ -79,16 +79,14 @@ Mevcut gönderimler geçmişteki webhook olayları olmadan otomatik olarak
 ## Kontroller
 
 ```bash
-npm run test:admin-emails
-npm run test:admin-emails:integration
-npm run build
+npm run check
 ```
 
-Entegrasyon testi yalnızca localhost PostgreSQL'e bağlanır. `TEST_DATABASE_URL`
-veya `DATABASE_URL` bağlantısıyla `core_assist_email_test_` önekli geçici bir
-veritabanı oluşturur, migration'ları uygular ve test sonunda kaldırır. Bağlantı
-kullanıcısının veritabanı oluşturma yetkisi olmalıdır. Uygulama veritabanını
-değiştirmez, dış API çağırmaz ve e-posta göndermez.
+Mevcut `notification-email.policy.test.ts`, e-posta tercihleri, kota eşikleri ve
+digest davranışını servisleri taklit ederek kontrol eder. Admin e-posta/webhook
+için eski hedefli test dosyaları kaynakta bulunmuyor; `check` bu yolların tamamını
+doğrulamaz. Resend imzası, teslimat ve admin görünürlüğü ayrı staging kabulünde
+sınanmalıdır. Güncel test kapsamı: [kalite kontrol rehberi](quality-checks.md).
 
 Kaynaklar:
 - [Resend webhook olayları](https://resend.com/docs/webhooks/event-types)

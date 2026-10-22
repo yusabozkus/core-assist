@@ -39,7 +39,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 RUN npm run db:generate
-CMD ["sh", "-c", "npm audit --omit=dev && npm run check && npm run test:integration"]
+CMD ["sh", "-c", "npm audit --omit=dev && npm run check"]
 `);
 writeFileSync(resolve(frontend, 'Dockerfile'), `FROM node:22-bookworm-slim
 WORKDIR /app
@@ -48,24 +48,12 @@ RUN npm ci
 COPY . .
 CMD ["sh", "-c", "npm audit --omit=dev && npm run check"]
 `);
-const dbUrl = 'postgresql://postgres:local_test_only@127.0.0.1:5432/postgres';
 writeFileSync(resolve(directory, 'compose.json'), JSON.stringify({
   services: {
-    postgres: {
-      image: 'postgres:16-alpine',
-      environment: { POSTGRES_PASSWORD: 'local_test_only' },
-      healthcheck: { test: ['CMD-SHELL', 'pg_isready -U postgres'], interval: '2s', timeout: '3s', retries: 30 },
-    },
-    redis: {
-      image: 'redis:7-alpine',
-      network_mode: 'service:postgres',
-      healthcheck: { test: ['CMD', 'redis-cli', 'ping'], interval: '2s', timeout: '3s', retries: 30 },
-    },
     backend: {
-      build: './backend', network_mode: 'service:postgres',
+      build: './backend',
       environment: {
-        NODE_ENV: 'test', DATABASE_URL: dbUrl, TEST_DATABASE_URL: dbUrl,
-        TEST_REDIS_URL: 'redis://127.0.0.1:6379/0', BILLING_TEST_LIMITS_ENABLED: 'false',
+        NODE_ENV: 'test', BILLING_TEST_LIMITS_ENABLED: 'false',
       },
     },
     frontend: {
@@ -95,7 +83,6 @@ console.log(`Logs: ${directory}`);
 try {
   compose(['config', '--quiet'], 'config.log');
   compose(['build', 'backend', 'frontend'], 'build.log');
-  compose(['up', '-d', '--wait', 'postgres', 'redis'], 'services.log');
   compose(['run', '--rm', '--no-deps', 'backend'], 'backend.log');
   compose(['run', '--rm', '--no-deps', 'frontend'], 'frontend.log');
   console.log('Linux CI commands passed. This is not a GitHub-hosted workflow run.');

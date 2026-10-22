@@ -60,11 +60,11 @@ Komut yalnızca `REVIEW_REQUIRED` durumunu değiştirir; kayıt kilitlenir, soru
 Backend dizininde:
 
 ```powershell
-npm run test:question-delivery:integration
+npm run check
 ```
 
-Yalnızca localhost PostgreSQL ve Redis kabul edilir. Test rastgele isimli `core_assist_delivery_test_*` veritabanı açar, migrationları uygular; Redis'te rastgele test prefix'i kullanır. Sonda yalnızca kendi kaynaklarını kaldırır. DB kullanıcısının `CREATE DATABASE` yetkisi gerekir. Alternatif yerel bağlantılar `TEST_DATABASE_URL`/`TEST_REDIS_URL` ile verilebilir. Sağlayıcı POST'u, AI ve bildirim gönderimi taklit edilir; gerçek pazaryeri cevabı veya e-posta gönderilmez.
+Eski cevap teslimatı entegrasyon test dosyası kaynakta bulunmuyor. `check`, mevcut yerel testleri ve build'i çalıştırır; teslimat/reconciliation akışının uçtan uca geçtiği anlamına gelmez. Güncel otomatik kapsam: [kalite kontrol rehberi](quality-checks.md).
 
-Kapsam: event sonrası hata, soru/event transaction hatası, eşzamanlı tekrar, eski event onarımı, Redis enqueue kaybı/belirsizliği, gerçek BullMQ işi ve eski job geçişi, çift worker, sağlayıcı yanıt kaybı, gönderim sonrası DB hatası, sahipsiz PROCESSING, güvenli ön kontrol hatası, operatör kararı/audit, SAFE_AUTO koşulları ve eski veriyi ayıran migration.
+Staging kabulünde event sonrası hata, transaction rollback, eşzamanlı tekrar, Redis enqueue kaybı/belirsizliği, çift worker, sağlayıcı yanıt kaybı, gönderim sonrası DB hatası, sahipsiz `PROCESSING`, operatör kararı/audit ve `SAFE_AUTO` koşulları ayrıca sınanmalıdır.
 
-Bu testler fiziksel process-kill, VDS yeniden başlatma veya gerçek pazaryeri sandbox kabul testinin yerine geçmez. Son yayın kabulünde bunlar ayrıca denenmelidir.
+Fiziksel process-kill, VDS yeniden başlatma ve gerçek pazaryeri sandbox kabulü de [staging kabul kaydında](../../deploy/STAGING_ACCEPTANCE.md) takip edilir.
