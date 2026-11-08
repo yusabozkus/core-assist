@@ -283,60 +283,72 @@ void test('security audit HTTP: team form POST accepts an untrusted origin while
         }),
       });
 
-    await t.test('unauthenticated form requests cannot create invitations', async () => {
-      const response = await invite(undefined, siblingOrigin);
-      assert.equal(response.status, 401);
-      await response.arrayBuffer();
-      assert.equal(fixture.writes.length, 0);
-    });
-    await t.test('known gap: authenticated simple POST grants account admin despite disallowed Origin', async () => {
-      const response = await invite(testCookie, siblingOrigin);
-      assert.equal(response.status, 201);
-      assert.equal(response.headers.get('access-control-allow-origin'), null);
-      const body = (await response.json()) as {
-        invitation: { accessLevel: string };
-      };
-      assert.equal(body.invitation.accessLevel, 'ACCOUNT_ADMIN');
-      assert.equal(fixture.writes.length, 1);
-    });
-    await t.test('account deletion and billing closure reject untrusted origins', async () => {
-      for (const [route, confirmation] of [
-        ['delete', 'HESABIMI SİL'],
-        ['close-billing', 'TAHSİLATI DURDUR'],
-      ]) {
-        const response = await fetch(`${base}/users/me/${route}`, {
-          method: 'POST',
-          headers: {
-            origin: siblingOrigin,
-            cookie: testCookie,
-            'content-type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({ confirmation }),
-        });
-        assert.equal(response.status, 403);
+    await t.test(
+      'unauthenticated form requests cannot create invitations',
+      async () => {
+        const response = await invite(undefined, siblingOrigin);
+        assert.equal(response.status, 401);
         await response.arrayBuffer();
-      }
-      assert.equal(accountActions, 0);
-    });
-    await t.test('account deletion rejects missing Origin and wrong confirmation', async () => {
-      for (const [origin, confirmation] of [
-        [undefined, 'HESABIMI SİL'],
-        [frontendOrigin, 'DELETE'],
-      ]) {
-        const response = await fetch(`${base}/users/me/delete`, {
-          method: 'POST',
-          headers: {
-            ...(origin ? { origin } : {}),
-            cookie: testCookie,
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({ confirmation }),
-        });
-        assert.equal(response.status, 403);
-        await response.arrayBuffer();
-      }
-      assert.equal(accountActions, 0);
-    });
+        assert.equal(fixture.writes.length, 0);
+      },
+    );
+    await t.test(
+      'known gap: authenticated simple POST grants account admin despite disallowed Origin',
+      async () => {
+        const response = await invite(testCookie, siblingOrigin);
+        assert.equal(response.status, 201);
+        assert.equal(response.headers.get('access-control-allow-origin'), null);
+        const body = (await response.json()) as {
+          invitation: { accessLevel: string };
+        };
+        assert.equal(body.invitation.accessLevel, 'ACCOUNT_ADMIN');
+        assert.equal(fixture.writes.length, 1);
+      },
+    );
+    await t.test(
+      'account deletion and billing closure reject untrusted origins',
+      async () => {
+        for (const [route, confirmation] of [
+          ['delete', 'HESABIMI SİL'],
+          ['close-billing', 'TAHSİLATI DURDUR'],
+        ]) {
+          const response = await fetch(`${base}/users/me/${route}`, {
+            method: 'POST',
+            headers: {
+              origin: siblingOrigin,
+              cookie: testCookie,
+              'content-type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({ confirmation }),
+          });
+          assert.equal(response.status, 403);
+          await response.arrayBuffer();
+        }
+        assert.equal(accountActions, 0);
+      },
+    );
+    await t.test(
+      'account deletion rejects missing Origin and wrong confirmation',
+      async () => {
+        for (const [origin, confirmation, expectedStatus] of [
+          [undefined, 'HESABIMI SİL', 403],
+          [frontendOrigin, 'DELETE', 400],
+        ] as const) {
+          const response = await fetch(`${base}/users/me/delete`, {
+            method: 'POST',
+            headers: {
+              ...(origin ? { origin } : {}),
+              cookie: testCookie,
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify({ confirmation }),
+          });
+          assert.equal(response.status, expectedStatus);
+          await response.arrayBuffer();
+        }
+        assert.equal(accountActions, 0);
+      },
+    );
   } finally {
     await app.close();
     if (originalFrontend === undefined) delete process.env.FRONTEND_URL;

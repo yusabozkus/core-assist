@@ -1,85 +1,108 @@
-# Push, AI taslak ve log korumaları
+# Push, AI Draft, and Log Protection
 
-Push, AI taslak ve davet logu korumaları aşağıda açıklanır. Güncel otomatik test kapsamı [kalite kontrol rehberinde](quality-checks.md), gerçek tarayıcı/HTTPS staging kabulü [kabul kaydında](../../deploy/STAGING_ACCEPTANCE.md) izlenir.
+This guide explains push validation, AI draft limits, and invitation log protection. See [Quality checks](quality-checks.md) for current automated coverage and checks that need real browsers and HTTPS.
 
-## Push abonelikleri
+## Push subscriptions
 
-Kayıtta ve her gönderimde endpoint ve anahtarlar doğrulanır. HTTPS/443 dışında protokol/port, kullanıcı bilgisi, fragment, IP adresi ve izinli servisleri taklit eden domainler reddedilir. `p256dh` geçerli bir P-256 açık anahtarı, `auth` 16 baytlık base64url veri olmalıdır.
+The app checks endpoints and keys at registration and before every send. It rejects protocols other than HTTPS, ports other than 443, user credentials in URLs, fragments, IP addresses, and domains that copy an allowed service name. `p256dh` must be a valid P-256 public key. `auth` must be 16 bytes of base64url data.
 
-İzinli hostlar:
+Allowed hosts:
 
-- `fcm.googleapis.com` — [Chrome push servisi](https://developer.chrome.com/blog/push-notifications-on-the-open-web).
+- `fcm.googleapis.com` — [Chrome push service](https://developer.chrome.com/blog/push-notifications-on-the-open-web).
 - `updates.push.services.mozilla.com` — [Mozilla Autopush](https://mozilla-services.github.io/autopush-rs/http.html).
-- Tek alt domainli `*.push.apple.com` — [WebKit Web Push](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/).
-- Tek alt domainli `*.notify.windows.com` — [Microsoft push servis adresleri](https://learn.microsoft.com/en-us/windows/apps/develop/notifications/push-notifications/firewall-allowlist-config).
+- `*.push.apple.com`, with one subdomain — [WebKit Web Push](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/).
+- `*.notify.windows.com`, with one subdomain — [Microsoft push service addresses](https://learn.microsoft.com/en-us/windows/apps/develop/notifications/push-notifications/firewall-allowlist-config).
 
-Endpoint yolları sağlayıcıya ait opak değerlerdir; WNS'nin kök yol + query biçimi de kabul edilir. Yeni bir servis adresi gerekirse gerçek tarayıcının ürettiği adres doğrulanıp liste ve testler güncellenmeli; genel wildcard açılmamalı.
+Endpoint paths are provider values that the app does not interpret. The WNS root path with a query is also accepted. Before adding another host, check an endpoint created by a real browser, then update the list and tests. Do not allow a general wildcard.
 
-DNS kontrolü doğrudan HTTPS socket resolver'ında yapılır. Yanıtın herhangi bir adresi özel, loopback, link-local veya engellenen ayrılmış aralıkta ise gönderim reddedilir. Doğrulanan adresler doğrudan socket'e verilir; ayrı bir ikinci DNS çözümlemesi yapılmaz. TLS sertifika doğrulaması korunur. Redirect/proxy takibi yoktur; DNS/bağlantı/yanıt dahil toplam süre 10 saniye, yanıt gövdesi 64 KiB ile sınırlıdır. `web-push` şifrelemesi ve VAPID kullanımı korunur. 404/410 abonelik temizliği mevcut akışta devam eder.
+DNS checks run inside the HTTPS socket resolver. If any returned address is private, loopback, link-local, or in a blocked reserved range, the send is rejected. The socket uses the checked addresses directly, without another DNS lookup. TLS certificate checks remain enabled. Redirects and proxies are not followed.
 
-Kullanıcı başına en fazla **10 abonelik** kaydedilebilir; eşzamanlı kayıtlar kullanıcı satırı kilidiyle sınırlandırılır. Mevcut abonelik güncellenebilir. Başka kullanıcının aboneliği devralınamaz; ortak tarayıcıda hesap değiştirirken önce eski abonelik kaldırılmalıdır. Eski geçersiz kayıtlar gönderimde de reddedilir; bu değişiklik veri silme migration'ı çalıştırmaz. Gönderim sorgusu da kullanıcı başına 10 kayıtla sınırlıdır.
+The total timeout is 10 seconds, including DNS, connection, and response. The response body limit is 64 KiB. `web-push` encryption and VAPID still apply. The existing process removes subscriptions after `404` or `410` responses.
 
-## AI taslak üretimi
+Each user can have at most **10 subscriptions**. A user-row lock protects concurrent registration. Existing subscriptions can be updated, but another user's subscription cannot be taken over. On a shared browser, remove the old subscription before changing accounts. Invalid old records are rejected during sending; no deletion migration is run. Send queries also return at most 10 subscriptions per user.
 
-Manuel ve otomatik üretim aynı PostgreSQL `ai_draft_lease` kaydını kullanır. **Hesap/workspace başına aynı anda 1 üretim**, üretim başlangıçları arasında **en az 5 saniye** vardır. Hesabın farklı mağazaları da aynı sınırı paylaşır; farklı hesaplar bu kilitle birbirini engellemez. Bu seçim aynı soru tekrarlarını ve farklı soruların son kota hakkı için yarışını önler.
+## AI draft generation
 
-Manuel istekte kapasite doluysa `429`, `AI_RATE_LIMITED` ve `retryAfterSeconds: 5` döner; mevcut panel bekleme davranışı kullanılır. Otomatik job 5 saniye ertelenir, kapasite beklemesi başarısız deneme hakkını tüketmez. Bu sınır provider'ın kendi rate limitinden ayrıdır.
+Manual and automatic generation share a PostgreSQL `ai_draft_lease` record. There can be **one generation at a time per account/workspace**, with **at least five seconds between starts**. Stores in the same account share this limit. Separate accounts do not block each other. This prevents duplicate generation and races for the last quota allowance.
 
-Lease 5 dakika geçerlidir; 30 saniyede bir yenilenir. 10 dakikayı geçen üretim için yeni yenileme kabul edilmez. Son yenilemenin süresi dolana kadar kilit kalabileceği için bu, 10 dakikalık kesin işlem iptali değildir. Normal tamamlanma/hata kilidi bırakır; process kaybında süresi dolan kilidi yeni iş devralabilir. Eski sahibin token'ı yeni işi serbest bırakamaz. Dış AI çağrısından önce sahiplik doğrulanır; taslak/kota transaction'ı içinde yeniden doğrulanıp satır kilitlenir.
+When capacity is busy, manual requests return `429`, `AI_RATE_LIMITED`, and `retryAfterSeconds: 5`. The panel uses its normal waiting behavior. Automatic jobs wait five seconds without using a failed-attempt allowance. This limit is separate from the AI provider's rate limit.
 
-Başarısız veya sahipliğini kaybetmiş üretim taslak kaydetmez ve müşteri kotasını tüketmez. Üretim sırasında cevap gönderim kuyruğuna alınmışsa geç kalan taslak commit edilmez. Mevcut ücretsiz yeniden üretim kuralları korunur. **Daha önce sağlayıcıya gönderilmiş isteğin maliyeti geri alınmaz**; süreç kaybında eski dış çağrı iptal edilmiş sayılmaz. Stok doğrulaması gerektiren mevcut akış tek mantıksal üretimde iki model çağrısı yapabilir. Dolayısıyla bu koruma mutlak parasal bütçe limiti değildir.
+The lease lasts five minutes and renews every 30 seconds. Renewal stops after 10 minutes of generation. This is not an exact 10-minute cancellation: the lease may remain until its last renewal expires. Normal completion or failure releases it. After a crash, another job can take over an expired lease. An old token cannot release a newer job.
 
-### Arşivlenmiş mağazalarda üretimi durdurma
+Ownership is checked before the external AI call and again inside the draft/quota transaction, with a row lock. Failed generation or lost ownership does not save a draft or use customer quota. A late draft is also blocked if answer delivery was queued during generation. Existing free regeneration rules stay the same.
 
-Mağaza arşivlendiğinde `INACTIVE` olur. Aboneliğin hâlâ geçerli olması bu mağazada AI üretimine izin vermez. Worker, bekleyen üretim ve hazır yanıt işlerini model veya cevap gönderimi yapmadan atlar. Yeni taslak kuyruğu kaydı da yalnızca aktif mağaza için oluşturulur. Arşivleme transaction'ı mağazanın taslak işaretlerini temizler; mevcut cevapları ve taslak geçmişini silmez.
+**The cost of a request already sent to the provider cannot be reversed.** A crashed process does not prove that its external call stopped. Stock validation can also require two model calls within one logical generation. These rules are not a fixed money budget.
 
-Arşivleme aynı transaction'da yalnızca o mağazanın devam eden üretim token'ını değiştirir. Mağaza hemen geri açılsa bile eski model sonucu kaydedilemez. Aynı workspace'teki başka mağazanın üretimi ve hesap cooldown'ı korunur. Arşivleme veya audit yazımı başarısız olursa mağaza durumu, işaretler ve token değişikliği birlikte geri alınır.
+### Archived stores
 
-Manuel ve otomatik üretim ortak lease akışında mağaza aktifliğini kontrol eder. Stok/model çağrısı öncesinde kontrol tekrarlanır; taslak ve kota transaction'ı, arşivlemeyle aynı mağaza satırını kilitler. Arşivleme önce tamamlandıysa taslak/deneme ve kota kaydı oluşmaz. Taslak transaction'ı önce tamamlandıysa arşivlemeden önceki başarılı üretim korunur. Arşivleme sebebiyle iptal edilen iş için AI hatası veya kota uyarısı üretilmez. Başlamış dış model çağrısının sağlayıcı maliyeti geri alınamaz; geç gelen sonuç müşteri kotasına yazılmaz.
+Archiving changes a store to `INACTIVE`. An active subscription does not allow AI work for that store. Workers skip pending draft and prepared-answer jobs before model or answer calls. New draft queue records require an active store. The archive transaction clears draft job markers, but keeps answers and draft history.
 
-Bu değişiklik yeni migration veya env ayarı gerektirmez; mevcut mağaza ve `ai_draft_lease` tablolarını kullanır. Eski worker sürümleri bu kontrolü uygulamadığından arşivleme davranışı, yalnızca güncel backend/worker sürümüyle kullanılmalıdır.
+In the same transaction, archive changes the token only for that store's running generation. Reopening immediately cannot save the old model result. Another store's generation in the same workspace and the account cooldown are kept. If archive or audit writing fails, the store status, markers, and token change all roll back.
 
-### Kesintiye uğrayan taslak işlerini kurtarma
+Manual and automatic generation check store status in the shared lease process. They check again before stock/model calls. Draft and quota saving locks the same store row used by archive:
 
-Mevcut taslak toparlama scheduler'ı **5 dakikada bir**, `PENDING` soruların **6 dakikadan eski `PROCESSING`** kayıtlarını da tarar. Bu süre tek başına yeniden üretim izni değildir: BullMQ işi bekliyor/çalışıyor/ertelenmişse veya aynı sorunun PostgreSQL lease'i hâlâ geçerliyse kayıt korunur. Redis durumunun okunamaması da yeniden üretim başlatmaz. Başlangıç tarihi olmayan eski kayıtlarda kuyruk tarihi, o da yoksa son güncelleme tarihi kullanılır.
+- If archive finishes first, no draft, attempt, or quota record is saved.
+- If draft saving finishes first, the valid result from before archive is kept.
+- Cancellation due to archive creates no AI error or quota warning.
+- A late external result may still cost the provider, but does not use customer quota.
 
-İş Redis'te yoksa veya tamamlanmış/başarısız/sahipsiz durumdaysa, lease edinme ve kurtarma aynı workspace satır kilidiyle sıralanır. Transaction sorunun hâlâ aynı üretim denemesine ait olduğunu, mağaza/bağlantı/otomasyon ve cevap teslimatı durumunun değişmediğini kontrol eder. Uygun iş önce DB'de `QUEUED` yapılır, sonra aynı BullMQ kimliğiyle kuyruğa alınır. Redis gönderimi başarısız olursa DB kaydı kalıcı gönderim niyeti olarak kalır ve sonraki tarama tekrar dener. Saklanan `KNOWLEDGE_RESOLVED` işi, talepte bulunan kullanıcı bilgisiyle korunur; Redis'te bu niyet kaybolmuş ve otomasyon kapalıysa manuel üretim varsayılmaz.
+This uses existing store and `ai_draft_lease` tables. No new migration or environment setting is needed for archive protection. Use current backend and worker versions; old workers do not apply these checks.
 
-Kota veya abonelik engeli varsa ilgili bekleme durumu kaydedilir. Arşivlenmiş mağaza, kopmuş bağlantı, eşleşmeyen ürün, kapalı otomasyon veya başlamış/belirsiz cevap teslimatı nedeniyle uygun olmayan sahipsiz iş `FAILED` yapılır ve açıklaması kaydedilir. Kurtarma doğrudan model veya pazaryeri çağrısı yapmaz; normal worker üretim öncesindeki kontrollerini yeniden uygular.
+### Interrupted draft jobs
 
-Worker'ın son hata ve kapasite erteleme işlemleri yalnızca kendi başlangıç/kuyruk tarihleriyle eşleşen denemeyi değiştirebilir. Eski worker'ın gecikmiş sonucu kurtarılan veya yeni başlamış işi bozamaz. Kurtarma, aynı sorunun süresi dolmuş lease token'ını da değiştirir; lease dolmadan başlamış ama satır kilidinde bekleyen eski transaction bile sonradan taslak commit edemez. Başka sorunun geçerli lease'i korunur. **Cevap gönderiminin `PROCESSING` kaydı bu kuralla tekrar gönderilmez**; belirsiz pazaryeri teslimatları için [ayrı teslimat rehberi](question-delivery-recovery.md) geçerlidir.
+Every **five minutes**, the draft recovery scheduler also scans `PENDING` questions with `PROCESSING` draft records older than **six minutes**. Age alone does not allow another generation. The record is kept if the BullMQ job is waiting, active, or delayed, or the same question has a valid PostgreSQL lease. An unreadable Redis state also does not start a new generation. Old records without a start time use their queue time, then their last update time.
 
-Bu kurtarma değişikliği yeni migration veya env ayarı gerektirmez; mevcut `ai_draft_lease` tablosunu kullanır. Redis bütünüyle silinmişse scheduler da kaybolur: Redis geri geldikten sonra backend yeniden başlatılmalı; başlangıç scheduler'ı yeniden kurar.
+For missing, completed, failed, or orphaned Redis jobs, lease changes and recovery use the same workspace-row lock. The transaction checks the attempt, store, connection, automation, and answer-delivery state again. An eligible job becomes `QUEUED` in the database before it is added with the same BullMQ ID. If enqueue fails, the saved request stays for the next scan.
 
-## İletişim ve destek görseli limitleri
+Saved `KNOWLEDGE_RESOLVED` intent keeps the requesting user's details. If this intent is lost in Redis and automation is off, recovery does not assume a manual request.
 
-İletişim formunda kayan bir saat içinde normalize edilmiş e-posta başına **3**, IP fingerprint'i başına **5** mesaj kabul edilir. İki limitin kilidi aynı PostgreSQL transaction'ında, sabit sırayla alınır; sayım ve kayıt kilitler bırakılmadan tamamlanır. Paralel backend süreçleri de aynı kilitleri paylaşır. Başarısız kayıt veya limit reddi hak tüketmez; honeypot alanı doluysa mevcut sessiz kabul davranışı korunur. Kilit kimlikleri hash'lenir, e-posta/IP açık olarak kullanılmaz.
+Quota or subscription blocks save the matching waiting status. An orphaned job becomes `FAILED` with a reason if the store is archived, the connection is lost, the product is unmatched, automation is off, or answer delivery has started or is uncertain. Recovery does not call the model or marketplace directly. The normal worker repeats its checks before generation.
 
-Mesajlara bağlı destek görsellerinin toplamı hesap/workspace başına **512 MiB** ile sınırlıdır. Müşteri yanıtları, admin yanıtları ve dahili not görselleri aynı toplamı paylaşır. Görselli mesaj transaction'ı önce ilgili kullanıcıları sabit sırayla `FOR KEY SHARE`, sonra workspace'i `FOR NO KEY UPDATE` ve talebi kilitler; güncel toplam kontrolü ve görselleri mesaja bağlama aynı işlemde yapılır. Kullanıcı kilitleri, eşzamanlı hesap silmede mesaj/bildirim foreign key'lerinin ters kilit sırasına girmesini önler. Sıra hesap silmenin kullanıcı → workspace → talep sırasıyla uyumludur. Görselsiz mesajlar depolama kotasını veya workspace kilidini gerektirmez.
+Worker error and capacity-delay callbacks can update only their own attempt, matched by start and queue times. Old callbacks cannot change a recovered or newer job. Recovery also changes the same question's expired lease token. Even an old transaction waiting on a row lock cannot commit afterward. A valid lease for another question is kept.
 
-B2 yükleme kilidin dışında yapılır. Kota veya mesaj kaydı reddedilirse mesaja bağlanmamış dosyalar mevcut kalıcı temizleme akışına bırakılır; bağlı görseller silinmez. Başarısız mesaj/bildirim/audit işlemi, görsel kaydını ve kota kullanımını birlikte geri alır. İki kontrol `READ COMMITTED` kullanır; kilit bekledikten sonraki sayım, önceki başarılı işlemin kaydını görür. Bu düzeltme yeni migration veya env ayarı gerektirmez.
+**This process never resends an answer in `PROCESSING`.** Use the separate [Delivery recovery guide](question-delivery-recovery.md) for uncertain marketplace delivery.
 
-## Davet logları
+Draft recovery uses the existing `ai_draft_lease` table and needs no new migration or environment setting. A full Redis wipe also removes the scheduler. Restart the backend after Redis is back so startup creates it again.
 
-Backend HTTP loglarında query/fragment kullanılmaz; `/workspace-invitations/<token>` ve `/invite/<token>` yollarındaki token bölümü `[REDACTED]` olur. Encoded request path, tamamlanmış/yarıda kesilmiş istek, hata stack'i, iç içe metadata ve logger context'i de kapsanır. Normal rota, durum kodu ve süre gibi tanı alanları korunur.
+## Contact and support image limits
 
-Bu işlem eski log dosyalarını veya reverse proxy/CDN loglarını değiştirmez. Docker/proxy adımında davet URL'lerinin proxy erişim loglarına açık yazılmaması ayrıca sağlanmalı; HTTPS staging'de tüm log katmanları kontrol edilmelidir.
+The contact form accepts **three messages per normalized email** and **five per IP fingerprint** in a rolling hour. Both limits use locks in the same PostgreSQL transaction, in a fixed order. Counting and saving finish before locks are released. Parallel backend processes share the locks.
 
-## Geçiş ve doğrulama
+A failed save or rejected request does not use the allowance. A filled honeypot keeps the existing silent acceptance behavior. Lock IDs are hashed; they do not use plain email or IP values.
 
-Yeni migration: `20260927060000_add_ai_draft_lease`. Gerçek uygulama veritabanına bu çalışma sırasında uygulanmadı. Yeni kod bu tabloyu gerektirir; eski sürümde AI kilidi olmadığı için eski/yeni backend karışık çalıştırılmamalı.
+Images attached to support messages have a shared **512 MiB account/workspace limit**. Customer replies, admin replies, and internal notes use the same total. An image-message transaction locks:
 
-1. Önce [cevap teslimatı geçiş rehberindeki](question-delivery-recovery.md) eski worker durdurma sırasını uygula. Uygun yedeği al.
-2. Backend bağımlılıklarını kur; `npm run db:generate` ve `npm run build` ile yeni client/build üret. Hedef DB'ye `npm run db:migrate:deploy` uygula.
-3. Yalnızca yeni backend/worker sürümünü başlat. Yeni env değişkeni gerekmiyor. VAPID ayarları mevcut bildirim yapılandırmasından gelir.
-4. Staging'de Chrome/Firefox/Edge ve desteklenen Apple cihazında abonelik kaydı ve gerçek bildirim alımını doğrula. Geçersiz/sona ermiş aboneliğin kalan alıcıları engellemediğini kontrol et.
-5. İki sekmeden aynı/farklı soruya taslak isteği, otomasyonla yarış, 429 sonrası tekrar deneme ve mevcut ücretsiz yeniden üretim davranışını panelden kontrol et.
-6. Sahte davet token'ıyla başarılı/hatalı istek gönder; backend ve proxy loglarında token bulunmadığını doğrula.
+1. Relevant users in a fixed order with `FOR KEY SHARE`.
+2. The workspace with `FOR NO KEY UPDATE`.
+3. The ticket.
 
-Yerel komutlar (`backend` dizininde):
+The quota check and image attachment happen in the same transaction. User locks prevent foreign-key lock-order conflicts during account deletion. The order matches deletion's user → workspace → ticket order. Messages without images do not need a storage quota check or workspace lock.
+
+B2 uploads happen outside the lock. If quota or message saving fails, unattached files stay in the persistent cleanup process. Attached images are not deleted. Message, notification, or audit failure rolls back both image links and quota use.
+
+Both limit checks use `READ COMMITTED`. After waiting for a lock, counts can see the previous successful transaction. These limit protections need no new migration or environment setting.
+
+## Invitation logs
+
+Backend HTTP logs leave out queries and fragments. Tokens in `/workspace-invitations/<token>` and `/invite/<token>` become `[REDACTED]`. This also covers encoded paths, completed or interrupted requests, error stacks, nested metadata, and logger context. Normal diagnostic fields, such as route, status, and duration, remain.
+
+This does not change old log files, reverse proxy logs, or CDN logs. Configure those layers to hide invitation tokens too. Check every log layer in an HTTPS test environment.
+
+## Migration and validation
+
+AI leases require migration `20260927060000_add_ai_draft_lease`. During the original development work it was not applied to the application database. Check your current migration state. Do not run old and new workers together; old code has no AI lease protection.
+
+1. Follow the old-worker shutdown order in [Delivery recovery](question-delivery-recovery.md), and take a suitable backup.
+2. Install backend dependencies. Run `npm run db:generate` and `npm run build`. Apply `npm run db:migrate:deploy` to the target database.
+3. Start only the new backend and workers. No new environment variables are needed. VAPID uses the existing notification settings.
+4. Test subscription registration and real push in Chrome, Firefox, Edge, and supported Apple devices. An invalid or expired subscription must not block other recipients.
+5. In two tabs, request drafts for the same and different questions. Check races with automation, retry after `429`, and free regeneration.
+6. Send successful and failed requests with a fake invitation token. Check that backend and proxy logs do not contain it.
+
+Local command, from the backend directory:
 
 ```sh
 npm run check
 ```
 
-Mevcut AI lease/kurtarma testleri bellek içi PostgreSQL ve taklit kuyruklarla çalışır. Eski push/log ve harici servis entegrasyon test dosyaları kaynakta bulunmuyor; `check` bunların geçtiği anlamına gelmez. Yukarıdaki HTTPS, push ve log senaryoları staging'de ayrıca doğrulanmalıdır.
+Current AI lease and recovery tests use in-memory PostgreSQL and mocked queues. Old focused push/log and external-service integration test files are no longer in the source. `check` does not prove those paths. Validate the HTTPS, push, and logging cases above separately.

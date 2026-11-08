@@ -1,62 +1,68 @@
-# Veri Saklama Politikası
+# Data Retention Policy
 
-Bu politika, Core Asistan veritabanındaki operasyonel tabloların kontrolsüz büyümesini önler. Temizlik işi BullMQ üzerindeki `data-retention` kuyruğunda günlük çalışır ve her kayıt türü için bir çalışmada en fazla 10.000 kaydı, 500 kayıtlık partiler halinde siler.
+This policy limits the growth of operational database tables. A daily job in the BullMQ `data-retention` queue deletes up to 10,000 records of each type per run, in batches of 500.
 
-## Varsayılan süreler
+## Default periods
 
-| Kayıt | Saklama süresi | Temizlik koşulu |
+| Record | Keep for | Delete when |
 | --- | ---: | --- |
-| Audit kayıtları | 365 gün | `createdAt` süresi dolmuşsa |
-| Başarılı senkronizasyon çalışmaları | 90 gün | Durum `COMPLETED` ve `updatedAt` süresi dolmuşsa |
-| Başarısız senkronizasyon çalışmaları | 180 gün | Durum `FAILED` ve `updatedAt` süresi dolmuşsa |
-| Çözülen destek talepleri | 365 gün | Durum `RESOLVED` ve `resolvedAt` süresi dolmuşsa |
-| Kapatılan destek talepleri | 365 gün | Durum `CLOSED` ve `closedAt` süresi dolmuşsa |
-| Arşivlenen iletişim mesajları | 730 gün | Durum `ARCHIVED` ve `archivedAt` süresi dolmuşsa |
+| Audit logs | 365 days | `createdAt` is older than the limit |
+| Successful sync runs | 90 days | Status is `COMPLETED` and `updatedAt` is older than the limit |
+| Failed sync runs | 180 days | Status is `FAILED` and `updatedAt` is older than the limit |
+| Resolved support tickets | 365 days | Status is `RESOLVED` and `resolvedAt` is older than the limit |
+| Closed support tickets | 365 days | Status is `CLOSED` and `closedAt` is older than the limit |
+| Archived contact messages | 730 days | Status is `ARCHIVED` and `archivedAt` is older than the limit |
 
-Destek talebi silindiğinde ona bağlı mesajlar ilişkisel olarak silinir. Açık, işlemde veya müşteri yanıtı bekleyen destek talepleri temizlenmez. Çalışan senkronizasyonlar temizlenmez.
+Deleting a support ticket also deletes its messages. Open tickets, tickets in progress, and tickets waiting for a customer reply are kept. Running sync jobs are also kept.
 
-Destek mesajı görselleri özel B2 bucket'ında tutulur. Görsel yaşam döngüsü, hesap ve talep kayıtlarından bağımsız `support_image_object` tablosunda izlenir:
+## Support images
 
-- B2'ye yüklemeden önce dosya anahtarları `STAGED` olarak kaydedilir. Bir saat içinde mesaja bağlanmayan yüklemeler temizlenir. Başarısız yükleme/mesaj işlemlerinde beş dakikalık bekleme sonrasında temizlik başlar; bu süre devam eden yüklemenin sonuçlanması içindir.
-- Mesaja bağlama, PostgreSQL tetikleyicisiyle aynı işlemde `ATTACHED` durumuna geçer. Temizlik tarafından alınmış veya süresi dolmuş dosya mesaja bağlanamaz.
-- Talep, mesaj veya hesabın silinmesi bağlı görselleri aynı veritabanı işleminde `PENDING_DELETE` olarak işaretler. İşlem geri alınırsa silme işi de geri alınır. Saklama süresi temizliğinde silme anında durum ve tarih yeniden kontrol edilir; arada yeniden açılan talepler korunur.
-- `data-retention` kuyruğundaki ayrı iş her dakika en fazla 20 dosyayı işler. Her dosya için iki dakikalık sahiplik süresi kullanılır; çöken worker'ın işi tekrar alınabilir. B2 hataları bir dakikadan başlayıp en fazla altı saate çıkan bekleme ile tekrar denenir. Başarısız kayıtlar süre doldu diye atılmaz.
-- B2 konumu yeni dosyalarla birlikte kaydedilir. Bucket/endpoint değişmişse başka konumdan silmek yerine iş bekletilir. Eski görsellerin konumu önceki uygulamadaki gibi mevcut `SUPPORT_B2_*` ayarları kabul edilir; depolama taşınacaksa dosyalar ve kayıtlı konum birlikte taşınmalıdır.
+Images use a private B2 bucket. The `support_image_object` table tracks each image separately from its account and ticket.
 
-Temizlik yalnızca tam eşleşen dosya anahtarının bütün sürümlerini ve silme işaretlerini kaldırır. `VersionId` olmadan silme B2'de yalnızca silme işareti eklediğinden kalıcı silmede sürüm kimliği kullanılır. [Backblaze silme davranışı](https://www.backblaze.com/apidocs/s3-delete-object). Anahtarın yalnızca destek bucket'ında `listFiles`, `readFiles`, `writeFiles` ve `deleteFiles` yetkileri olmalıdır. Object Lock veya yetersiz izin silmeyi engellerse kayıt yeniden deneme için saklanır; koruma aşılmaz.
+- Before upload, file keys are saved as `STAGED`. Uploads not attached to a message within one hour are cleaned up. Failed uploads or message operations have a five-minute wait, so an upload in progress can finish.
+- A PostgreSQL trigger changes the image to `ATTACHED` in the same transaction as the message link. Expired files or files already claimed for cleanup cannot be attached.
+- Deleting a ticket, message, or account marks its images `PENDING_DELETE` in the same transaction. A rollback also cancels this change. Retention cleanup checks the ticket status and date again before deletion, so reopened tickets are protected.
+- A separate job in `data-retention` handles up to 20 files each minute. Each file has a two-minute lease. Another worker can take over after a crash. B2 errors retry after one minute, with waits increasing up to six hours. Failed records are kept until cleanup succeeds.
+- New files include their B2 location. If the bucket or endpoint changes, cleanup waits instead of deleting from another location. Old images use the current `SUPPORT_B2_*` settings, as before. When moving storage, move both the files and their saved location.
 
-`20261006120000_track_support_image_lifecycle` migration'ı mevcut görselleri kaydeder ve tetikleyicileri kurar; B2'ye istek göndermez. Görsel yükleme trafiğini durdurup migration'ı uyguladıktan sonra yeni backend sürümünü başlatın. `db push` tetikleyicileri kurmaz; migration kullanılmalıdır. Önceden veritabanı kaydı silinmiş sahipsiz dosyalar bu migration ile tespit edilemez; bunlar ayrıca bucket envanteriyle değerlendirilmelidir. Bucket lifecycle kuralları ek güvence olarak kullanılabilir, ancak bağlı görselleri yaşa göre otomatik silen kurallar kullanılmamalıdır.
+Cleanup removes all versions and delete markers for the exact file key. It uses `VersionId` because a B2 delete without it only adds a delete marker. See [Backblaze delete behavior](https://www.backblaze.com/apidocs/s3-delete-object).
 
-## Faturalandırma operasyon kayıtları
+The key should have only `listFiles`, `readFiles`, `writeFiles`, and `deleteFiles` access for the support bucket. If Object Lock or missing permissions block deletion, keep the record for retry. Do not bypass the protection.
 
-Faturalandırma kuyruğundaki ayrı günlük temizlik işi aşağıdaki sabit politikayı uygular:
+Migration `20261006120000_track_support_image_lifecycle` adds tracking for existing images and creates the triggers. It does not call B2. Pause image uploads, apply the migration, then start the new backend. Use migrations: `db push` does not create these triggers.
 
-| Kayıt | Saklama süresi | Temizlik koşulu |
+The migration cannot find old orphan files whose database records were already deleted. Review those with a separate bucket inventory. Bucket lifecycle rules can add protection, but must not delete attached images only because of their age.
+
+## Billing operation records
+
+A separate daily job in the billing queue uses these fixed periods:
+
+| Record | Keep for | Delete when |
 | --- | ---: | --- |
-| Paddle webhook olay kimlikleri | 180 gün | `processedAt` süresi dolmuşsa |
-| İptal edilmiş/başarısız checkout kayıtları | 90 gün | Aboneliğe bağlanmamış ve `updatedAt` süresi dolmuşsa |
-| Süresi geçmiş plan önizlemeleri | 1 gün ek süre | Durum `PREVIEWED` ve `expiresAt` süresi dolmuşsa |
-| Başarısız plan değişiklikleri | 90 gün | Durum `FAILED` ve `updatedAt` süresi dolmuşsa |
-| Tamamlanmış plan değişiklikleri | 365 gün | Durum `COMPLETED` ve `updatedAt` süresi dolmuşsa |
-| Paddle transaction referansları | 730 gün | Son eşleşmenin `updatedAt` süresi dolmuşsa |
+| Paddle webhook event IDs | 180 days | `processedAt` is older than the limit |
+| Canceled or failed checkouts | 90 days | No subscription is linked and `updatedAt` is older than the limit |
+| Expired plan previews | 1 extra day | Status is `PREVIEWED` and `expiresAt` has passed by one day |
+| Failed plan changes | 90 days | Status is `FAILED` and `updatedAt` is older than the limit |
+| Completed plan changes | 365 days | Status is `COMPLETED` and `updatedAt` is older than the limit |
+| Paddle transaction references | 730 days | The last match's `updatedAt` is older than the limit |
 
-Transaction referanslarında kart, tutar, adres veya ham webhook içeriği tutulmaz; yalnızca admin araması için müşteri hesabı, ortam ve Paddle kimlikleri saklanır.
+Transaction references keep only the customer account, environment, and Paddle IDs for admin search. They do not keep card details, amounts, addresses, or raw webhooks.
 
-## E-posta olay kayıtları
+## Email event records
 
-Senkronizasyon/kanal ve AI taslak/cevap gönderim e-posta olayları, kapanış e-postası işlemi tamamlandıktan 90 gün sonra ilişkili teslimat kayıtlarıyla birlikte temizlenir. Açık olaylar ve kapanış işlemi bekleyenler saklanır. Temizlik, bildirim e-postası kuyruğunun periyodik kontrolünde yapılır.
+Sync, channel, AI draft, and answer-delivery email incidents are deleted with their delivery records 90 days after the closing email is handled. Open incidents and pending closing emails are kept. The notification email queue runs this cleanup during its regular checks.
 
-Resend teslimat kayıtları, sağlayıcının kabul kimliği ve son gönderim sonucu ile birlikte terminal duruma geçtikten 90 gün sonra temizlenir. Bekleyen kaydın e-posta içeriği yalnızca güvenli tekrar deneme için tutulur; başarılı, kalıcı başarısız veya manuel inceleme gerektiren sonuca ulaşıldığında içerik silinir. Sonucu belirsiz kayıtlar Resend idempotency süresi dolduktan sonra otomatik yeniden gönderilmez.
+Resend delivery records keep the provider's acceptance ID and final send result. They are deleted 90 days after reaching a final state. Pending email content is kept only for safe retries. Content is removed after success, permanent failure, or a result that needs manual review. Uncertain sends are not retried automatically after Resend's idempotency window ends.
 
-## Kapsam dışında kalanlar
+## Outside this policy
 
-- Fatura, ödeme, abonelik ve kullanım muhasebesi kayıtları bu temizlik işi tarafından silinmez. Billing operasyon kayıtlarının ayrı saklama politikası vardır.
-- Ürünler, sorular, cevaplar ve AI taslak geçmişi bu politikaya dahil değildir.
-- Veritabanı yedeklerinin saklama süresi altyapı sağlayıcısında ayrıca belirlenmelidir.
+- This job does not delete invoices, payments, subscriptions, or usage accounting records. Billing operation records have separate rules.
+- Products, questions, answers, and AI draft history are outside this policy.
+- Set database backup retention separately with the infrastructure provider.
 
-## Ortam değişkenleri
+## Environment variables
 
-Süreler production ihtiyacına göre aşağıdaki değişkenlerle gün cinsinden değiştirilebilir:
+Set retention periods in days with these variables:
 
 - `DATA_RETENTION_AUDIT_LOG_DAYS`
 - `DATA_RETENTION_COMPLETED_SYNC_RUN_DAYS`
@@ -64,6 +70,7 @@ Süreler production ihtiyacına göre aşağıdaki değişkenlerle gün cinsinde
 - `DATA_RETENTION_RESOLVED_SUPPORT_TICKET_DAYS`
 - `DATA_RETENTION_CLOSED_SUPPORT_TICKET_DAYS`
 - `DATA_RETENTION_ARCHIVED_CONTACT_MESSAGE_DAYS`
-- `DATA_RETENTION_CLEANUP_INTERVAL_MS`
 
-Yasal veya sözleşmesel bir saklama zorunluluğu varsa production öncesinde bu değerler ve yedekleme politikası birlikte gözden geçirilmelidir.
+`DATA_RETENTION_CLEANUP_INTERVAL_MS` sets the cleanup interval in milliseconds.
+
+Before production, review these values and backup rules together with any legal or contract requirements.

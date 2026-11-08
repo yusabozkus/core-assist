@@ -1,10 +1,10 @@
-# Kalite kontrolleri ve test kapsamı
+# Quality Checks and Test Coverage
 
-Bu komutlar CI ile aynı lint, test ve build kontrollerini yerelde çalıştırır. Windows PowerShell script çalıştırma politikası `npm` komutunu engelliyorsa `npm.cmd` kullanın.
+Run these commands locally to check lint, tests, and builds. If PowerShell blocks `npm`, use `npm.cmd` instead.
 
-## Komutlar
+## Commands
 
-Backend dizininde:
+In the backend directory:
 
 ```sh
 npm ci
@@ -12,58 +12,89 @@ npm run db:generate
 npm run check
 ```
 
-Frontend dizininde:
+In the frontend directory:
 
 ```sh
 npm ci
 npm run check
 ```
 
-| Komut | Kapsam |
+| Command | Coverage |
 | --- | --- |
-| Backend `npm test` | `src` altındaki bütün integration dışı `.test.ts` ve mevcut `.spec.ts` dosyaları otomatik keşfedilir. Yeni testler `.test.ts` olarak eklenir. |
-| Backend `npm run check` | Kaynak değiştirmeyen lint, bütün unit testleri, Nest production build. |
-| Frontend `npm test` | `scripts/*.test.mjs`: görsel güvenlik konfigürasyonu ve server API davranış regresyonları. |
-| Frontend `npm run check` | Kaynak değiştirmeyen lint, bütün frontend testleri, Next production build/TypeScript kontrolü. |
-| Backend `npm run lint:fix` | İsteğe bağlı yerel lint düzeltmesi; CI kullanmaz. |
+| Backend `npm test` | Finds non-integration `.test.ts` and existing `.spec.ts` files under `src`. Add new tests as `.test.ts`. |
+| Backend `npm run check` | Lint without changing source files, all unit tests, and a Nest production build. |
+| Frontend `npm test` | Runs `scripts/*.test.mjs`, including image security settings and server API checks. |
+| Frontend `npm run check` | Lint without changing source files, all frontend tests, and a Next production build with TypeScript checks. |
+| Backend `npm run lint:fix` | Optional local command that fixes lint issues. |
 
-Lint sıfır hata ve sıfır uyarı ister. Node test runner'ın hata kodu üst komuta taşınır; başarısız test veya kapanış hatası başarılı sayılmaz. `src/generated` test keşfinden hariçtir. CI her iki projede ayrıca `npm audit --omit=dev` çalıştırır; `check` komutu bu ağ bağımlı taramayı içermez. Güncellemeler ve geçici override gerekçeleri: [bağımlılık güvenliği](dependency-security.md).
+Lint requires zero errors and zero warnings. A failed test or shutdown error must return a failure code to the parent command. Test discovery excludes `src/generated`. Finding no tests also fails.
 
-## İzole yerel testler
+Run `npm audit --omit=dev` separately in each project. `check` does not include this network-based scan. See [Dependency security](dependency-security.md) for past updates and reasons for temporary overrides.
 
-Mevcut kaynakta ayrı PostgreSQL/Redis entegrasyon test dosyaları bulunmuyor. Olmayan dosyalara işaret eden hedefli test komutları, entegrasyon komutları ve kullanılmayan test DB yardımcısı kaldırıldı. Genel test runner'ı mevcut dosyaları keşfeder; hiç test bulunmaması veya bir testin başarısız olması hata koduyla sonuçlanır. CI yalnızca kaynakta bulunan testleri çalıştırır; harici servis entegrasyonunun geçtiği anlamına gelmez.
+## Local tests
 
-Destek görseli yaşam döngüsünün kontrolleri `npm test` içindedir. `support-image-lifecycle.test.ts`, gerçek görsel migration'ını bellek içi PGlite/PostgreSQL üzerinde çalıştırır; mevcut kayıtların korunmasını, hesap/talep silme zincirini, rollback'i ve temizliğe alınmış yüklemenin mesaja bağlanamamasını kontrol eder. `support-attachment.test.ts` B2 istemcisini taklit ederek yarım yükleme, hata/yeniden deneme, worker sahipliği ve tam anahtarın bütün sürümlerinin silinmesini kontrol eder. Bu kontroller `DATABASE_URL`, Redis, Docker veya gerçek B2 bağlantısı kullanmaz; tam uygulama ortamındaki E2E testinin yerine geçmez.
+Separate PostgreSQL/Redis integration test files are no longer in this checkout. The runner uses only files that still exist. A successful `check` does not mean that real external service integration passed.
 
-AI taslak kurtarma kontrolleri de `npm test` içindedir. `draft-execution.test.ts` mevcut lease migration'ını bellek içi PGlite üzerinde çalıştırır; geçerli sahipliğin korunmasını, eski token'ın commit/serbest bırakma engelini ve kurtarma rollback'ini doğrular. `question-draft-queue.test.ts` Redis iş durumlarını taklit ederek sahipsiz `PROCESSING`, kalıcı `QUEUED`, kota/abonelik, ayar değişimi ve sayfalama senaryolarını kontrol eder. `question-draft-worker.test.ts` eski worker callback'lerinin yeni denemeyi değiştiremediğini doğrular. Bu testler gerçek DB, Redis, AI, e-posta veya pazaryeri bağlantısı kullanmaz; fiziksel process-kill ve gerçek servis kabulünün yerine geçmez.
+### Support images
 
-`store-ai-lifecycle.test.ts`, gerçek mağaza arşivleme/geri açma ve taslak üretim servislerini bellek içi PostgreSQL üzerinde çalıştırır; model ve bildirim servisleri taklit edilir. Arşivleme sırasında gelen model sonucunun taslak veya kota kaydı oluşturamadığını, geri açmanın eski sonucu canlandıramadığını, başarısız arşivlemenin rollback'ini ve aynı hesaptaki diğer mağazanın üretiminin korunduğunu doğrular. Worker testleri arşivlenmiş işlerde üretim, gönderim ve hata bildirimi yapılmadığını ayrıca kontrol eder.
+- `support-image-lifecycle.test.ts` runs the real image migration in in-memory PGlite/PostgreSQL. It checks existing records, account and ticket deletion, rollback, and blocked attachment after cleanup has claimed an upload.
+- `support-attachment.test.ts` uses a mocked B2 client. It checks partial uploads, errors and retries, worker ownership, and deletion of every version for the exact key.
 
-## Kritik regresyonlar
+These tests do not use `DATABASE_URL`, Redis, Docker, or real B2. They do not replace a full application test.
 
-`contact-rate-limit.test.ts` ve `support-image-quota.test.ts`, gerçek servisleri transaction kilitlerini taklit eden yerel kayıtlarla paralel çalıştırır. Bütün transaction'lar genel bir kuyrukta sıraya alınmaz; yalnızca kodun istediği e-posta/IP/workspace/talep kilitleri paylaşılır. Saatlik sınırlar, farklı talepler ve müşteri/admin/dahili not yarışı, rollback, yetki sınırı ve reddedilen yüklemenin temizliğe bırakılması doğrulanır. `atomic-limit-sql.test.ts` gerçek kilit SQL'ini ve bigint parametrelerini bellek içi PGlite'ta çalıştırır; commit/rollback sonrasında advisory kilitlerin kalmadığını doğrular. PGlite tek bağlantılıdır; bu SQL kontrolü gerçek çok süreçli PostgreSQL yük testinin yerine geçmez. Testler gerçek DB, B2, Redis veya e-posta bağlantısı açmaz.
+### AI drafts and store lifecycle
 
-- AI yanıtları: otomatik gönderim kararı, eksik bilgi, beden/ölçü ve ürün bağlamı; model yanıtları taklit edilir.
-- Abonelik ve ödeme yöntemi: hesap yetkisi, Origin, abonelik/müşteri bağı, dönem sonu iptal, tekrar eden veya sonucu belirsiz işlemler; Paddle istemcisi taklit edilir.
-- E-posta tercihleri: varsayılanlar, mevcut opt-out, kota eşikleri, rol/sessiz saat kontrolü, tekrarların engellenmesi ve digest; gerçek e-posta gönderilmez.
-- AI analitiği ve kurulum rehberi: inceleme sayacı, dönem/pazaryeri ayrımı, detay sayfalama, üyelik kontrolü ve kullanıcı bazlı rehber ilerlemesi.
+- `draft-execution.test.ts` runs the lease migration in PGlite. It checks valid ownership, blocked commit or release with an old token, and recovery rollback.
+- `question-draft-queue.test.ts` uses mocked Redis job states. It checks orphaned `PROCESSING` jobs, saved `QUEUED` jobs, quota and subscription limits, settings changes, and pagination.
+- `question-draft-worker.test.ts` checks that old worker callbacks cannot change a new attempt.
+- `store-ai-lifecycle.test.ts` runs real store archive, reopen, and draft services in in-memory PostgreSQL. Model and notification services are mocked. It checks that a late model result after archive cannot save a draft or use quota. Reopening does not restore the old result. Failed archive changes roll back, and another store's generation stays valid.
+- Worker tests also check that archived jobs do not generate, send, or create error notifications.
 
-Mevcut testler bütün auth/tenant HTTP yollarını, Paddle/Resend webhook imzalarını, gerçek BullMQ yeniden başlatmayı veya pazaryeri cevap teslimatını uçtan uca doğrulamaz. Önceki koşuların kayıtları tarihsel kanıttır; kaldırılmış testlerin kapsamı güncel `check` sonucuna dahil değildir. Güncel kaynak kapsamı ve gerçek sağlayıcı kabulü ayrı değerlendirilmelidir.
+These tests do not use live PostgreSQL, Redis, AI, email, or marketplace services. Test real process crashes and service recovery separately.
 
-Frontend server API testleri gerçek TypeScript istemcilerini çalıştırır; Next request headers ve fetch yerine yerel test doubles kullanır. Cookie ayrımı, public davete cookie gönderilmemesi, `no-store`, timeout, özel 404 sınıfları, onboarding hata sözleşmesi ve oturumsuz boş durumlar korunur. React cache bu testlerde passthrough'dur; Next'in gerçek SSR/cache ve tarayıcı davranışı staging kabulünde doğrulanmalıdır.
+## Other important checks
 
-Frontend `dashboard-shell.test.mjs`, ana panel ve destek layout'larını ortak server bileşeniyle çalıştırır; API bağlantıları ve client bileşenleri taklit edilir. Temsilci/izleyici için kanal isteği ve kurulum rehberi olmaması, header'a aktif mağazanın rolünün aktarılması, mağaza yönetimi ile hesap/fatura yetkisinin ayrımı, arşivlenmiş mağaza, onboarding/oturum yönlendirmeleri ve mağazasız hesap desteği doğrulanır. Gerçek tarayıcı veya DB kullanılmaz.
+### Concurrent limits
 
-`questions-list.test.ts`, gelen kutusunun arama ve durum filtrelerini birlikte uygulamasını, bekleyen sayacının sayfalamadan bağımsız filtreli toplamını ve yetki sınırını sahte kayıtlarla doğrular. Frontend `list-requests.test.mjs`, gerçek istek sahipliği kodunu geciktirilmiş sonuç/hata yanıtlarıyla çalıştırır: eski arama, sayfalama ve arka plan yenilemesi yeni listenin verisini, cursor'ını, sayacını veya yükleniyor durumunu değiştiremez. Aynı sayfayı eşzamanlı yükleme ve bileşen kapandıktan sonra gelen sonuçlar da sınanır. Gerçek DB veya tarayıcı kullanılmaz.
+`contact-rate-limit.test.ts` and `support-image-quota.test.ts` run real services in parallel with local transaction lock models. Only requested email, IP, workspace, and ticket locks are shared; transactions are not all placed in one global queue.
 
-## CI ve yayın kabulü
+They check hourly limits, separate tickets, customer/admin/internal-note races, rollback, access limits, and cleanup of rejected uploads. `atomic-limit-sql.test.ts` runs the real lock SQL and bigint parameters in PGlite. It checks that commit and rollback release advisory locks. PGlite has one connection, so this does not replace a load test with several PostgreSQL processes. No real B2, Redis, or email connection is opened.
 
-[Quality workflow](../../.github/workflows/quality.yml) pull request, `main`/`master`/`ci/production-readiness` push ve elle tetiklemede Node 22 üzerinde çalışır. Backend job'ı `npm ci`, Prisma generate ve `check`; frontend job'ı `npm ci` ve `check` çalıştırır. İki job da production bağımlılık audit'i yapar. Mevcut testler için PostgreSQL/Redis servisleri başlatılmaz. Production secret kullanmaz ve deploy yapmaz. Önceki başarılı koşu ve commit [staging kabul kaydında](../../deploy/STAGING_ACCEPTANCE.md) yer alır; yeni aday aynı iki job için yeniden doğrulanmalı ve korunan dalda required check seçilmelidir.
+### Backend policies
 
-Docker kabulü ve gerekli image build komutları: [deploy rehberi](../../deploy/README.md). `node deploy/test-production.mjs` ayrı rastgele Compose projesinde readiness, kalıcılık, proxy logları, şifreli backup/restore ve gerçek SIGTERM kapanışını sınar.
+- AI answers: automatic send decisions, missing information, sizes, measurements, and product context, with mocked model replies.
+- Subscription and payment methods: account permission, `Origin`, subscription/customer links, end-of-period cancellation, duplicates, and uncertain operations, with a mocked Paddle client.
+- Email preferences: defaults, existing opt-outs, quota thresholds, roles, quiet hours, duplicate prevention, and grouped emails. No real emails are sent.
+- AI analytics and setup guide: review counts, period and marketplace scope, detail pagination, membership checks, and progress for each user.
+- `questions-list.test.ts`: combined search and status filters, filtered totals independent of pagination, and access limits, using fake records.
 
-Repo kökünde `node --test deploy/compose-config.test.mjs`, Docker Compose CLI ile production/staging örneklerinin ayrı volume/ağ/secret/backup/image adlarını ve staging sandbox/origin ayarlarını doğrular; konteyner veya secret dosyası gerektirmez. Backend CI job'ı bu üç kontrolü de çalıştırır. `test-quality.mjs` Linux uygulama testlerinden önce aynı kontrolü host üzerinde çalıştırır.
+### Frontend
 
-`node deploy/test-quality.mjs` CI'daki komutları temiz Node 22/Linux konteynerlerinde, gerçek env dosyaları olmadan çalıştırır. Yalnızca backend/frontend kalite konteynerlerini kullanır; PostgreSQL/Redis servisi başlatmaz ve yerel logları saklar; GitHub workflow koşusu yerine geçmez. Gerçek ortam sırası ve sonuç alanları: [staging kabul kaydı](../../deploy/STAGING_ACCEPTANCE.md).
+Server API tests run the real TypeScript clients with local replacements for Next request headers and fetch. They check cookie separation, no cookies on public invitation requests, `no-store`, timeouts, special 404 types, onboarding errors, and empty states without a session. React cache passes calls through in these tests. Validate real Next SSR, caching, and browser behavior separately.
 
-Yayın öncesinde [staging kabul kaydı](../../deploy/STAGING_ACCEPTANCE.md) ayrıca tamamlanmalı: HTTPS OAuth/oturum/Server Action, gerçek Paddle sandbox checkout-yenileme-plan değişikliği-iptal, Resend webhook ve teslimat, tarayıcı push, pazaryeri senaryoları, VDS yük ölçümü ve off-site restore. Otomatik testlerin geçmesi bağımlılık güvenlik bulgularını da kendiliğinden kapatmaz.
+`dashboard-shell.test.mjs` runs the main and support layouts through the shared server component. APIs and client components are mocked. It checks:
+
+- No channel request or setup guide for agents and viewers.
+- The active store role in the header.
+- Separate store management and account/billing permissions.
+- Archived stores, onboarding and session redirects, and accounts without stores.
+
+`list-requests.test.mjs` runs the real request ownership code with delayed results and errors. Old search, pagination, or background requests cannot replace newer list data, cursors, counts, or loading states. It also checks duplicate page loads and results received after the component closes. These tests use no real browser or database.
+
+## Release and live-service checks
+
+This checkout has no quality CI workflow or deployment test scripts. Run the commands above manually, or add them to a new CI setup. Old results in other documents are historical evidence, not current test coverage.
+
+Current local tests do not fully cover every auth or tenant HTTP route, Paddle/Resend signatures, real BullMQ restarts, or marketplace answer delivery.
+
+Before production, validate these in a test environment:
+
+- HTTPS OAuth, sessions, Server Actions, real SSR, and browser behavior.
+- Paddle Sandbox checkout, renewal, plan changes, and cancellation.
+- Resend webhook signatures, delivery, and admin visibility.
+- Browser push on supported devices.
+- Marketplace sync and answer delivery, including uncertain results.
+- Real queue recovery after process or Redis failure, and graceful SIGTERM shutdown.
+- Server load, persistent storage, log redaction, encrypted backups, and off-site restore.
+
+Passing tests does not clear dependency security findings. Review audit results separately.

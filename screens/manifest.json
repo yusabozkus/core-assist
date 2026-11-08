@@ -1,0 +1,793 @@
+{
+  "capturedAt": "2026-11-08T03:00:12.060Z",
+  "scope": "customer-and-admin",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "scale": 1,
+  "screenshots": [
+    {
+      "id": "10-dashboard",
+      "title": "Dashboard",
+      "theme": "light",
+      "file": "light/10-dashboard.png",
+      "route": "/dashboard",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 151735
+    },
+    {
+      "id": "11-inbox",
+      "title": "Customer inbox",
+      "theme": "light",
+      "file": "light/11-inbox.png",
+      "route": "/dashboard/inbox?status=ANSWERED&question=87bde238-df93-4121-8a57-6558762f130d",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 231739
+    },
+    {
+      "id": "12-products",
+      "title": "Products",
+      "theme": "light",
+      "file": "light/12-products.png",
+      "route": "/dashboard/catalog/products",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 409083
+    },
+    {
+      "id": "13-inventory",
+      "title": "Inventory",
+      "theme": "light",
+      "file": "light/13-inventory.png",
+      "route": "/dashboard/catalog/inventory",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 191552
+    },
+    {
+      "id": "14-channels",
+      "title": "Connected marketplaces",
+      "theme": "light",
+      "file": "light/14-channels.png",
+      "route": "/dashboard/channels",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 124648
+    },
+    {
+      "id": "15-sync",
+      "title": "Sync history",
+      "theme": "light",
+      "file": "light/15-sync.png",
+      "route": "/dashboard/channels/sync",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 210502
+    },
+    {
+      "id": "16-automations",
+      "title": "AI reply settings",
+      "theme": "light",
+      "file": "light/16-automations.png",
+      "route": "/dashboard/automations",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 181106
+    },
+    {
+      "id": "17-knowledge",
+      "title": "Store knowledge",
+      "theme": "light",
+      "file": "light/17-knowledge.png",
+      "route": "/dashboard/automations/knowledge",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 151285
+    },
+    {
+      "id": "18-analytics",
+      "title": "AI analytics",
+      "theme": "light",
+      "file": "light/18-analytics.png",
+      "route": "/dashboard/analytics",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 166018
+    },
+    {
+      "id": "19-activity",
+      "title": "Activity history",
+      "theme": "light",
+      "file": "light/19-activity.png",
+      "route": "/dashboard/activity",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 199880
+    },
+    {
+      "id": "20-team",
+      "title": "Team and permissions",
+      "theme": "light",
+      "file": "light/20-team.png",
+      "route": "/dashboard/team",
+      "fullPage": false,
+      "titleInBrowser": "Ekip ve Yetkiler | Core Asistan",
+      "bytes": 104987
+    },
+    {
+      "id": "21-store-settings",
+      "title": "Store settings",
+      "theme": "light",
+      "file": "light/21-store-settings.png",
+      "route": "/dashboard/settings",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 134027
+    },
+    {
+      "id": "22-profile",
+      "title": "Account and security",
+      "theme": "light",
+      "file": "light/22-profile.png",
+      "route": "/dashboard/settings/profile",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 152677
+    },
+    {
+      "id": "23-notifications",
+      "title": "Notification preferences",
+      "theme": "light",
+      "file": "light/23-notifications.png",
+      "route": "/dashboard/settings/notifications",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 158884
+    },
+    {
+      "id": "24-support",
+      "title": "Support center",
+      "theme": "light",
+      "file": "light/24-support.png",
+      "route": "/dashboard/support",
+      "fullPage": false,
+      "titleInBrowser": "Yardım Merkezi | Core Asistan",
+      "bytes": 153987
+    },
+    {
+      "id": "26-billing",
+      "title": "Subscription and billing",
+      "theme": "light",
+      "file": "light/26-billing.png",
+      "route": "/billing/424d6ee5-8d1f-4a79-9e6a-e837cd567833",
+      "fullPage": false,
+      "titleInBrowser": "Plan ve faturalama | Core Asistan",
+      "bytes": 178694
+    },
+    {
+      "id": "27-plans",
+      "title": "Subscription plans",
+      "theme": "light",
+      "file": "light/27-plans.png",
+      "route": "/billing/424d6ee5-8d1f-4a79-9e6a-e837cd567833/plans",
+      "fullPage": false,
+      "titleInBrowser": "Plan ve faturalama | Core Asistan",
+      "bytes": 147011
+    },
+    {
+      "id": "28-invoices",
+      "title": "Invoices",
+      "theme": "light",
+      "file": "light/28-invoices.png",
+      "route": "/billing/424d6ee5-8d1f-4a79-9e6a-e837cd567833/invoices",
+      "fullPage": false,
+      "titleInBrowser": "Plan ve faturalama | Core Asistan",
+      "bytes": 110045
+    },
+    {
+      "id": "31-product-detail",
+      "title": "Product details",
+      "theme": "light",
+      "file": "light/31-product-detail.png",
+      "route": "/dashboard/catalog/products?product=585c4a0d-bbb0-47e7-834f-dc9b48a1f2ca",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 433265
+    },
+    {
+      "id": "32-support-chat",
+      "title": "Support conversation",
+      "theme": "light",
+      "file": "light/32-support-chat.png",
+      "route": "/dashboard/support/tickets/e7734c34-9517-48e2-8225-2b1d6ab85699",
+      "fullPage": false,
+      "titleInBrowser": "Destek talebi | Core Asistan",
+      "bytes": 76448
+    },
+    {
+      "id": "10-dashboard",
+      "title": "Dashboard",
+      "theme": "dark",
+      "file": "dark/10-dashboard.png",
+      "route": "/dashboard",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 151500
+    },
+    {
+      "id": "11-inbox",
+      "title": "Customer inbox",
+      "theme": "dark",
+      "file": "dark/11-inbox.png",
+      "route": "/dashboard/inbox?status=ANSWERED&question=87bde238-df93-4121-8a57-6558762f130d",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 231444
+    },
+    {
+      "id": "12-products",
+      "title": "Products",
+      "theme": "dark",
+      "file": "dark/12-products.png",
+      "route": "/dashboard/catalog/products",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 408501
+    },
+    {
+      "id": "13-inventory",
+      "title": "Inventory",
+      "theme": "dark",
+      "file": "dark/13-inventory.png",
+      "route": "/dashboard/catalog/inventory",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 192313
+    },
+    {
+      "id": "14-channels",
+      "title": "Connected marketplaces",
+      "theme": "dark",
+      "file": "dark/14-channels.png",
+      "route": "/dashboard/channels",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 123686
+    },
+    {
+      "id": "15-sync",
+      "title": "Sync history",
+      "theme": "dark",
+      "file": "dark/15-sync.png",
+      "route": "/dashboard/channels/sync",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 210362
+    },
+    {
+      "id": "16-automations",
+      "title": "AI reply settings",
+      "theme": "dark",
+      "file": "dark/16-automations.png",
+      "route": "/dashboard/automations",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 180690
+    },
+    {
+      "id": "17-knowledge",
+      "title": "Store knowledge",
+      "theme": "dark",
+      "file": "dark/17-knowledge.png",
+      "route": "/dashboard/automations/knowledge",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 150772
+    },
+    {
+      "id": "18-analytics",
+      "title": "AI analytics",
+      "theme": "dark",
+      "file": "dark/18-analytics.png",
+      "route": "/dashboard/analytics",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 166450
+    },
+    {
+      "id": "19-activity",
+      "title": "Activity history",
+      "theme": "dark",
+      "file": "dark/19-activity.png",
+      "route": "/dashboard/activity",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 200236
+    },
+    {
+      "id": "20-team",
+      "title": "Team and permissions",
+      "theme": "dark",
+      "file": "dark/20-team.png",
+      "route": "/dashboard/team",
+      "fullPage": false,
+      "titleInBrowser": "Ekip ve Yetkiler | Core Asistan",
+      "bytes": 105521
+    },
+    {
+      "id": "21-store-settings",
+      "title": "Store settings",
+      "theme": "dark",
+      "file": "dark/21-store-settings.png",
+      "route": "/dashboard/settings",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 134281
+    },
+    {
+      "id": "22-profile",
+      "title": "Account and security",
+      "theme": "dark",
+      "file": "dark/22-profile.png",
+      "route": "/dashboard/settings/profile",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 153620
+    },
+    {
+      "id": "23-notifications",
+      "title": "Notification preferences",
+      "theme": "dark",
+      "file": "dark/23-notifications.png",
+      "route": "/dashboard/settings/notifications",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 159053
+    },
+    {
+      "id": "24-support",
+      "title": "Support center",
+      "theme": "dark",
+      "file": "dark/24-support.png",
+      "route": "/dashboard/support",
+      "fullPage": false,
+      "titleInBrowser": "Yardım Merkezi | Core Asistan",
+      "bytes": 153826
+    },
+    {
+      "id": "26-billing",
+      "title": "Subscription and billing",
+      "theme": "dark",
+      "file": "dark/26-billing.png",
+      "route": "/billing/424d6ee5-8d1f-4a79-9e6a-e837cd567833",
+      "fullPage": false,
+      "titleInBrowser": "Plan ve faturalama | Core Asistan",
+      "bytes": 176333
+    },
+    {
+      "id": "27-plans",
+      "title": "Subscription plans",
+      "theme": "dark",
+      "file": "dark/27-plans.png",
+      "route": "/billing/424d6ee5-8d1f-4a79-9e6a-e837cd567833/plans",
+      "fullPage": false,
+      "titleInBrowser": "Plan ve faturalama | Core Asistan",
+      "bytes": 146210
+    },
+    {
+      "id": "28-invoices",
+      "title": "Invoices",
+      "theme": "dark",
+      "file": "dark/28-invoices.png",
+      "route": "/billing/424d6ee5-8d1f-4a79-9e6a-e837cd567833/invoices",
+      "fullPage": false,
+      "titleInBrowser": "Plan ve faturalama | Core Asistan",
+      "bytes": 110339
+    },
+    {
+      "id": "31-product-detail",
+      "title": "Product details",
+      "theme": "dark",
+      "file": "dark/31-product-detail.png",
+      "route": "/dashboard/catalog/products?product=585c4a0d-bbb0-47e7-834f-dc9b48a1f2ca",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 456971
+    },
+    {
+      "id": "32-support-chat",
+      "title": "Support conversation",
+      "theme": "dark",
+      "file": "dark/32-support-chat.png",
+      "route": "/dashboard/support/tickets/e7734c34-9517-48e2-8225-2b1d6ab85699",
+      "fullPage": false,
+      "titleInBrowser": "Destek talebi | Core Asistan",
+      "bytes": 77612
+    },
+    {
+      "id": "33-payment-form",
+      "title": "Payment form",
+      "theme": "light",
+      "file": "light/33-payment-form.png",
+      "route": "/billing/424d6ee5-8d1f-4a79-9e6a-e837cd567833",
+      "fullPage": false,
+      "titleInBrowser": "Plan ve faturalama | Core Asistan",
+      "bytes": 181214
+    },
+    {
+      "id": "33-payment-form",
+      "title": "Payment form",
+      "theme": "dark",
+      "file": "dark/33-payment-form.png",
+      "route": "/billing/424d6ee5-8d1f-4a79-9e6a-e837cd567833",
+      "fullPage": false,
+      "titleInBrowser": "Plan ve faturalama | Core Asistan",
+      "bytes": 185207
+    },
+    {
+      "id": "40-admin",
+      "title": "Admin · Overview",
+      "theme": "light",
+      "file": "light/40-admin.png",
+      "route": "/admin",
+      "fullPage": false,
+      "titleInBrowser": "Genel Bakış | Core Asistan Admin",
+      "bytes": 177868
+    },
+    {
+      "id": "41-admin-customers",
+      "title": "Admin · Customers",
+      "theme": "light",
+      "file": "light/41-admin-customers.png",
+      "route": "/admin/customers",
+      "fullPage": false,
+      "titleInBrowser": "Müşteriler | Core Asistan Admin",
+      "bytes": 144702
+    },
+    {
+      "id": "42-admin-billing",
+      "title": "Admin · Subscriptions",
+      "theme": "light",
+      "file": "light/42-admin-billing.png",
+      "route": "/admin/billing",
+      "fullPage": false,
+      "titleInBrowser": "Abonelikler | Core Asistan Admin",
+      "bytes": 144139
+    },
+    {
+      "id": "43-admin-operations",
+      "title": "Admin · Operations",
+      "theme": "light",
+      "file": "light/43-admin-operations.png",
+      "route": "/admin/operations",
+      "fullPage": false,
+      "titleInBrowser": "Operasyonlar | Core Asistan Admin",
+      "bytes": 193417
+    },
+    {
+      "id": "44-admin-ai",
+      "title": "Admin · AI usage",
+      "theme": "light",
+      "file": "light/44-admin-ai.png",
+      "route": "/admin/ai-usage",
+      "fullPage": false,
+      "titleInBrowser": "AI ve Kullanım | Core Asistan Admin",
+      "bytes": 142190
+    },
+    {
+      "id": "45-admin-emails",
+      "title": "Admin · Email deliveries",
+      "theme": "light",
+      "file": "light/45-admin-emails.png",
+      "route": "/admin/emails",
+      "fullPage": false,
+      "titleInBrowser": "E-posta | Core Asistan Admin",
+      "bytes": 195299
+    },
+    {
+      "id": "46-admin-support",
+      "title": "Admin · Support tickets",
+      "theme": "light",
+      "file": "light/46-admin-support.png",
+      "route": "/admin/support",
+      "fullPage": false,
+      "titleInBrowser": "Destek Talepleri | Core Asistan Admin",
+      "bytes": 126159
+    },
+    {
+      "id": "47-admin-audit",
+      "title": "Admin · Audit logs",
+      "theme": "light",
+      "file": "light/47-admin-audit.png",
+      "route": "/admin/audit-logs",
+      "fullPage": false,
+      "titleInBrowser": "Denetim kayıtları | Core Asistan Admin",
+      "bytes": 226516
+    },
+    {
+      "id": "48-admin-contact",
+      "title": "Admin · Contact messages",
+      "theme": "light",
+      "file": "light/48-admin-contact.png",
+      "route": "/admin/contact-messages",
+      "fullPage": false,
+      "titleInBrowser": "İletişim Mesajları | Core Asistan Admin",
+      "bytes": 97344
+    },
+    {
+      "id": "49-admin-announcements",
+      "title": "Admin · Announcements",
+      "theme": "light",
+      "file": "light/49-admin-announcements.png",
+      "route": "/admin/announcements",
+      "fullPage": false,
+      "titleInBrowser": "Duyurular | Core Asistan Admin",
+      "bytes": 94892
+    },
+    {
+      "id": "50-admin-notifications",
+      "title": "Admin · Notifications",
+      "theme": "light",
+      "file": "light/50-admin-notifications.png",
+      "route": "/admin/notifications",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 158781
+    },
+    {
+      "id": "51-admin-system",
+      "title": "Admin · System health",
+      "theme": "light",
+      "file": "light/51-admin-system.png",
+      "route": "/admin/system",
+      "fullPage": false,
+      "titleInBrowser": "Sistem Sağlığı | Core Asistan Admin",
+      "bytes": 154766
+    },
+    {
+      "id": "52-admin-account",
+      "title": "Admin · Account and security",
+      "theme": "light",
+      "file": "light/52-admin-account.png",
+      "route": "/admin/account",
+      "fullPage": false,
+      "titleInBrowser": "Hesap ve güvenlik | Core Asistan Admin",
+      "bytes": 172192
+    },
+    {
+      "id": "53-admin-customer-detail",
+      "title": "Admin · Customer details",
+      "theme": "light",
+      "file": "light/53-admin-customer-detail.png",
+      "route": "/admin/customers/424d6ee5-8d1f-4a79-9e6a-e837cd567833",
+      "fullPage": false,
+      "titleInBrowser": "Müşteri Detayı | Core Asistan Admin",
+      "bytes": 211731
+    },
+    {
+      "id": "54-admin-subscription-detail",
+      "title": "Admin · Subscription details",
+      "theme": "light",
+      "file": "light/54-admin-subscription-detail.png",
+      "route": "/admin/billing/424d6ee5-8d1f-4a79-9e6a-e837cd567833",
+      "fullPage": false,
+      "titleInBrowser": "Abonelik Detayı | Core Asistan Admin",
+      "bytes": 166444
+    },
+    {
+      "id": "55-admin-email-detail",
+      "title": "Admin · Email delivery details",
+      "theme": "light",
+      "file": "light/55-admin-email-detail.png",
+      "route": "/admin/emails/a73227a4-2b31-4aaf-9805-725f7b9cc97e",
+      "fullPage": false,
+      "titleInBrowser": "E-posta Detayı | Core Asistan Admin",
+      "bytes": 148997
+    },
+    {
+      "id": "58-admin-ticket-detail",
+      "title": "Admin · Support conversation",
+      "theme": "light",
+      "file": "light/58-admin-ticket-detail.png",
+      "route": "/admin/support/e7734c34-9517-48e2-8225-2b1d6ab85699",
+      "fullPage": false,
+      "titleInBrowser": "Destek Talebi | Core Asistan Admin",
+      "bytes": 127359
+    },
+    {
+      "id": "70-admin-announcement-form",
+      "title": "Admin · New announcement",
+      "theme": "light",
+      "file": "light/70-admin-announcement-form.png",
+      "route": "/admin/announcements",
+      "fullPage": false,
+      "titleInBrowser": "Duyurular | Core Asistan Admin",
+      "bytes": 157227
+    },
+    {
+      "id": "40-admin",
+      "title": "Admin · Overview",
+      "theme": "dark",
+      "file": "dark/40-admin.png",
+      "route": "/admin",
+      "fullPage": false,
+      "titleInBrowser": "Genel Bakış | Core Asistan Admin",
+      "bytes": 179313
+    },
+    {
+      "id": "41-admin-customers",
+      "title": "Admin · Customers",
+      "theme": "dark",
+      "file": "dark/41-admin-customers.png",
+      "route": "/admin/customers",
+      "fullPage": false,
+      "titleInBrowser": "Müşteriler | Core Asistan Admin",
+      "bytes": 145729
+    },
+    {
+      "id": "42-admin-billing",
+      "title": "Admin · Subscriptions",
+      "theme": "dark",
+      "file": "dark/42-admin-billing.png",
+      "route": "/admin/billing",
+      "fullPage": false,
+      "titleInBrowser": "Abonelikler | Core Asistan Admin",
+      "bytes": 145238
+    },
+    {
+      "id": "43-admin-operations",
+      "title": "Admin · Operations",
+      "theme": "dark",
+      "file": "dark/43-admin-operations.png",
+      "route": "/admin/operations",
+      "fullPage": false,
+      "titleInBrowser": "Operasyonlar | Core Asistan Admin",
+      "bytes": 194110
+    },
+    {
+      "id": "44-admin-ai",
+      "title": "Admin · AI usage",
+      "theme": "dark",
+      "file": "dark/44-admin-ai.png",
+      "route": "/admin/ai-usage",
+      "fullPage": false,
+      "titleInBrowser": "AI ve Kullanım | Core Asistan Admin",
+      "bytes": 142433
+    },
+    {
+      "id": "45-admin-emails",
+      "title": "Admin · Email deliveries",
+      "theme": "dark",
+      "file": "dark/45-admin-emails.png",
+      "route": "/admin/emails",
+      "fullPage": false,
+      "titleInBrowser": "E-posta | Core Asistan Admin",
+      "bytes": 197379
+    },
+    {
+      "id": "46-admin-support",
+      "title": "Admin · Support tickets",
+      "theme": "dark",
+      "file": "dark/46-admin-support.png",
+      "route": "/admin/support",
+      "fullPage": false,
+      "titleInBrowser": "Destek Talepleri | Core Asistan Admin",
+      "bytes": 126475
+    },
+    {
+      "id": "47-admin-audit",
+      "title": "Admin · Audit logs",
+      "theme": "dark",
+      "file": "dark/47-admin-audit.png",
+      "route": "/admin/audit-logs",
+      "fullPage": false,
+      "titleInBrowser": "Denetim kayıtları | Core Asistan Admin",
+      "bytes": 227655
+    },
+    {
+      "id": "48-admin-contact",
+      "title": "Admin · Contact messages",
+      "theme": "dark",
+      "file": "dark/48-admin-contact.png",
+      "route": "/admin/contact-messages",
+      "fullPage": false,
+      "titleInBrowser": "İletişim Mesajları | Core Asistan Admin",
+      "bytes": 97774
+    },
+    {
+      "id": "49-admin-announcements",
+      "title": "Admin · Announcements",
+      "theme": "dark",
+      "file": "dark/49-admin-announcements.png",
+      "route": "/admin/announcements",
+      "fullPage": false,
+      "titleInBrowser": "Duyurular | Core Asistan Admin",
+      "bytes": 95308
+    },
+    {
+      "id": "50-admin-notifications",
+      "title": "Admin · Notifications",
+      "theme": "dark",
+      "file": "dark/50-admin-notifications.png",
+      "route": "/admin/notifications",
+      "fullPage": false,
+      "titleInBrowser": "Core Asistan - E-Ticaret AI Müşteri Asistanı & Operasyon Paneli",
+      "bytes": 159355
+    },
+    {
+      "id": "51-admin-system",
+      "title": "Admin · System health",
+      "theme": "dark",
+      "file": "dark/51-admin-system.png",
+      "route": "/admin/system",
+      "fullPage": false,
+      "titleInBrowser": "Sistem Sağlığı | Core Asistan Admin",
+      "bytes": 154320
+    },
+    {
+      "id": "52-admin-account",
+      "title": "Admin · Account and security",
+      "theme": "dark",
+      "file": "dark/52-admin-account.png",
+      "route": "/admin/account",
+      "fullPage": false,
+      "titleInBrowser": "Hesap ve güvenlik | Core Asistan Admin",
+      "bytes": 173179
+    },
+    {
+      "id": "53-admin-customer-detail",
+      "title": "Admin · Customer details",
+      "theme": "dark",
+      "file": "dark/53-admin-customer-detail.png",
+      "route": "/admin/customers/424d6ee5-8d1f-4a79-9e6a-e837cd567833",
+      "fullPage": false,
+      "titleInBrowser": "Müşteri Detayı | Core Asistan Admin",
+      "bytes": 214037
+    },
+    {
+      "id": "54-admin-subscription-detail",
+      "title": "Admin · Subscription details",
+      "theme": "dark",
+      "file": "dark/54-admin-subscription-detail.png",
+      "route": "/admin/billing/424d6ee5-8d1f-4a79-9e6a-e837cd567833",
+      "fullPage": false,
+      "titleInBrowser": "Abonelik Detayı | Core Asistan Admin",
+      "bytes": 167496
+    },
+    {
+      "id": "55-admin-email-detail",
+      "title": "Admin · Email delivery details",
+      "theme": "dark",
+      "file": "dark/55-admin-email-detail.png",
+      "route": "/admin/emails/a73227a4-2b31-4aaf-9805-725f7b9cc97e",
+      "fullPage": false,
+      "titleInBrowser": "E-posta Detayı | Core Asistan Admin",
+      "bytes": 150005
+    },
+    {
+      "id": "58-admin-ticket-detail",
+      "title": "Admin · Support conversation",
+      "theme": "dark",
+      "file": "dark/58-admin-ticket-detail.png",
+      "route": "/admin/support/e7734c34-9517-48e2-8225-2b1d6ab85699",
+      "fullPage": false,
+      "titleInBrowser": "Destek Talebi | Core Asistan Admin",
+      "bytes": 130512
+    },
+    {
+      "id": "70-admin-announcement-form",
+      "title": "Admin · New announcement",
+      "theme": "dark",
+      "file": "dark/70-admin-announcement-form.png",
+      "route": "/admin/announcements",
+      "fullPage": false,
+      "titleInBrowser": "Duyurular | Core Asistan Admin",
+      "bytes": 159064
+    }
+  ],
+  "skipped": [],
+  "adminCapturedAt": "2026-11-08T03:05:30.007Z"
+}
