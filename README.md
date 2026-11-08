@@ -1,5 +1,7 @@
 # Core Asistan
 
+Just landing page! - coreasistan.com
+
 **AI tools for customer questions and marketplace operations.**
 
 Core Asistan is a full-stack application that helps online sellers manage customer questions, products, stock, and store operations in one place. It combines a shared inbox with AI answer drafts, store knowledge, team access, and subscription management.
