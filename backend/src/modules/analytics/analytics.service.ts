@@ -1,7 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import type { ProductAnswerFact } from '../questions/product-answer-context.types';
+import { reviewRequiredQuestionWhere } from '../questions/review-required-question-filter';
+import {
+  performanceBoundsSql,
+  performanceSourceSql,
+  reviewReasonRowsSql,
+} from './analytics-query';
+import {
+  AiPerformanceDetailKind,
+  AiPerformanceDetailQueryDto,
+} from './dto/ai-performance-detail-query.dto';
 import {
   AiPerformanceQueryDto,
   AiPerformanceRange,
@@ -11,6 +25,7 @@ type DraftMetrics = {
   total: number;
   questions: number;
   confidence: number;
+  confidenceSamples: number;
   ready: number;
   review: number;
   blocked: number;
@@ -32,10 +47,20 @@ type DeliveryMetrics = {
   processing: number;
 };
 
+type ComparisonMetrics = {
+  drafts: number;
+  review: number;
+  assisted: number;
+  unchanged: number;
+  edited: number;
+  automatic: number;
+};
+
 type ProviderMetrics = {
   providerKey: string;
   totalDrafts: number;
   averageConfidence: number;
+  confidenceSamples: number;
   readyDrafts: number;
   needsReviewDrafts: number;
   sentAnswers: number;
@@ -105,55 +130,15 @@ export class AnalyticsService {
         const timezone = validTimezone(membership.store.timezone);
         const range = query.range ?? AiPerformanceRange.THIRTY_DAYS;
         const provider = query.provider?.trim() || null;
-        const days =
-          range === AiPerformanceRange.SEVEN_DAYS
-            ? 7
-            : range === AiPerformanceRange.NINETY_DAYS
-              ? 90
-              : 30;
         const monthly = range === AiPerformanceRange.ALL;
-        const [bounds] = await db.$queryRaw<Array<{ from: Date }>>(Prisma.sql`
-        SELECT ((((${now}::timestamptz AT TIME ZONE ${timezone})::date
-          - (${days}::int - 1))::timestamp AT TIME ZONE ${timezone})
-          AT TIME ZONE 'UTC') AS "from"
-      `);
+        const [bounds] = await db.$queryRaw<
+          Array<{ from: Date; previousFrom: Date; previousTo: Date }>
+        >(performanceBoundsSql(now, timezone, range));
         const from = monthly ? null : bounds.from;
-        const providerFilter = provider
-          ? Prisma.sql`AND c.provider = ${provider}`
-          : Prisma.empty;
-        const attemptTime = from
-          ? Prisma.sql`AND a."createdAt" >= ${from}`
-          : Prisma.empty;
-        const sentTime = from
-          ? Prisma.sql`AND d."sentAt" >= ${from}`
-          : Prisma.empty;
-        const queuedTime = from
-          ? Prisma.sql`AND d."queuedAt" >= ${from}`
-          : Prisma.empty;
 
         // Only aggregate rows cross the database boundary. ALL never hydrates
         // the complete history into application memory.
-        const source = Prisma.sql`
-        WITH attempts AS (
-          SELECT a.id, a."questionId", a.decision, a.confidence, a.answerability,
-            a."requestedFacts", a."automationMode", a."autoSendEligible",
-            a."eligibilityReasons", a.risks, a."missingInformation", a."createdAt",
-            c.provider AS "providerKey"
-          FROM ai_draft_attempt a
-          JOIN product_question q ON q.id = a."questionId" AND q."storeId" = ${storeId}
-          JOIN channel_connection c ON c.id = q."connectionId" AND c."storeId" = ${storeId}
-          WHERE a."storeId" = ${storeId} AND a."createdAt" <= ${now} ${attemptTime} ${providerFilter}
-        ), deliveries AS (
-          SELECT d.id, d."draftAttemptId", d.origin, d.composition, d.status,
-            d."sentAt", c.provider AS "providerKey"
-          FROM question_answer d
-          JOIN channel_connection c ON c.id = d."connectionId" AND c."storeId" = ${storeId}
-          WHERE d."storeId" = ${storeId} ${providerFilter} AND (
-            (d.status = 'SENT' AND d."sentAt" <= ${now} ${sentTime})
-            OR (d.status IN ('FAILED', 'QUEUED', 'PROCESSING') AND d."queuedAt" <= ${now} ${queuedTime})
-          )
-        )
-      `;
+        const source = performanceSourceSql({ storeId, from, now, provider });
         const facts = Prisma.sql`ARRAY[${Prisma.join(PRODUCT_ANSWER_FACTS)}]::text[]`;
         // Interactive transactions use one connection; issue each query in
         // order instead of queueing parallel work on that same connection.
@@ -162,6 +147,7 @@ export class AnalyticsService {
         >(Prisma.sql`${source}
           SELECT COUNT(*)::int AS total, COUNT(DISTINCT "questionId")::int AS questions,
             COALESCE(AVG(confidence) FILTER (WHERE answerability <> 'OUT_OF_SCOPE'), 0)::float8 AS confidence,
+            COUNT(*) FILTER (WHERE answerability <> 'OUT_OF_SCOPE')::int AS "confidenceSamples",
             COUNT(*) FILTER (WHERE decision = 'READY_FOR_SEND')::int AS ready,
             COUNT(*) FILTER (WHERE decision = 'NEEDS_REVIEW')::int AS review,
             COUNT(*) FILTER (WHERE decision = 'DO_NOT_REPLY')::int AS blocked,
@@ -191,6 +177,7 @@ export class AnalyticsService {
           drafts AS (
             SELECT "providerKey", COUNT(*)::int AS total,
               COALESCE(AVG(confidence) FILTER (WHERE answerability <> 'OUT_OF_SCOPE'), 0)::float8 AS confidence,
+              COUNT(*) FILTER (WHERE answerability <> 'OUT_OF_SCOPE')::int AS "confidenceSamples",
               COUNT(*) FILTER (WHERE decision = 'READY_FOR_SEND')::int AS ready,
               COUNT(*) FILTER (WHERE decision = 'NEEDS_REVIEW')::int AS review
             FROM attempts GROUP BY "providerKey"
@@ -203,6 +190,7 @@ export class AnalyticsService {
           )
           SELECT COALESCE(a."providerKey", d."providerKey") AS "providerKey",
             COALESCE(a.total, 0) AS "totalDrafts", COALESCE(a.confidence, 0) AS "averageConfidence",
+            COALESCE(a."confidenceSamples", 0) AS "confidenceSamples",
             COALESCE(a.ready, 0) AS "readyDrafts", COALESCE(a.review, 0) AS "needsReviewDrafts",
             COALESCE(d.total, 0) AS "sentAnswers", COALESCE(d.unchanged, 0) AS "acceptedUnchanged",
             COALESCE(d.edited, 0) AS "editedAnswers", COALESCE(d.automatic, 0) AS "autoSentAnswers"
@@ -259,25 +247,7 @@ export class AnalyticsService {
         `);
         const reasons = await db.$queryRaw<
           Array<{ key: string; count: number }>
-        >(Prisma.sql`${source},
-          review AS (
-            SELECT a.id,
-              ARRAY(SELECT DISTINCT value FROM jsonb_array_elements_text(
-                CASE WHEN jsonb_typeof(a."eligibilityReasons") = 'array' THEN a."eligibilityReasons" ELSE '[]'::jsonb END
-              ) WHERE value <> '' AND value <> 'REVIEW_REQUIRED') AS reasons,
-              ARRAY(SELECT DISTINCT value FROM jsonb_array_elements_text(
-                CASE WHEN jsonb_typeof(a.risks) = 'array' THEN a.risks ELSE '[]'::jsonb END
-              ) WHERE value <> '') AS risks,
-              CASE WHEN jsonb_typeof(a."missingInformation") = 'array'
-                THEN jsonb_array_length(a."missingInformation") > 0 ELSE false END AS missing
-            FROM attempts a WHERE decision = 'NEEDS_REVIEW'
-          ), reason_rows AS (
-            SELECT id, unnest(CASE
-              WHEN cardinality(reasons) > 0 THEN reasons
-              WHEN cardinality(risks) > 0 THEN risks
-              WHEN missing THEN ARRAY['MISSING_INFORMATION']
-              ELSE ARRAY['REVIEW_REQUIRED'] END) AS key FROM review
-          )
+        >(Prisma.sql`${source}, ${reviewReasonRowsSql()}
           SELECT key, COUNT(DISTINCT id)::int AS count FROM reason_rows
           GROUP BY key ORDER BY count DESC, key
         `);
@@ -354,9 +324,63 @@ export class AnalyticsService {
           select: { providerKey: true },
           orderBy: { providerKey: 'asc' },
         });
+        // Current work belongs to the whole store, independent of the period
+        // and provider chosen for historical performance metrics.
+        const currentNeedsReview = await db.productQuestion.count({
+          where: { storeId, ...reviewRequiredQuestionWhere() },
+        });
         const draft = draftRows[0];
         const sent = deliveryRows[0];
         const reviewed = sent.unchanged + sent.edited;
+        let comparison: {
+          from: string;
+          to: string;
+          totalDrafts: number;
+          aiAssisted: number;
+          autoSent: number;
+          acceptanceRate: number | null;
+          needsReviewRate: number | null;
+        } | null = null;
+        if (!monthly) {
+          // Shift the calendar window in the store's timezone, including the
+          // partially elapsed last day. Never compare today with a full day.
+          const previousSource = performanceSourceSql({
+            storeId,
+            from: bounds.previousFrom,
+            now: bounds.previousTo,
+            provider,
+          });
+          const [previous] = await db.$queryRaw<
+            ComparisonMetrics[]
+          >(Prisma.sql`${previousSource},
+            draft_counts AS (
+              SELECT COUNT(*)::int AS drafts,
+                COUNT(*) FILTER (WHERE decision = 'NEEDS_REVIEW')::int AS review
+              FROM attempts
+            ), delivery_counts AS (
+              SELECT COUNT(*) FILTER (WHERE "draftAttemptId" IS NOT NULL)::int AS assisted,
+                COUNT(*) FILTER (WHERE "draftAttemptId" IS NOT NULL AND origin = 'MANUAL' AND composition = 'AI_UNCHANGED')::int AS unchanged,
+                COUNT(*) FILTER (WHERE "draftAttemptId" IS NOT NULL AND origin = 'MANUAL' AND composition = 'AI_EDITED')::int AS edited,
+                COUNT(*) FILTER (WHERE "draftAttemptId" IS NOT NULL AND origin = 'AUTOMATION')::int AS automatic
+              FROM deliveries WHERE status = 'SENT'
+            )
+            SELECT a.*, d.* FROM draft_counts a CROSS JOIN delivery_counts d
+          `);
+          const previousReviewed = previous.unchanged + previous.edited;
+          comparison = {
+            from: bounds.previousFrom.toISOString(),
+            to: bounds.previousTo.toISOString(),
+            totalDrafts: previous.drafts,
+            aiAssisted: previous.assisted,
+            autoSent: previous.automatic,
+            acceptanceRate: previousReviewed
+              ? percentage(previous.unchanged, previousReviewed)
+              : null,
+            needsReviewRate: previous.drafts
+              ? percentage(previous.review, previous.drafts)
+              : null,
+          };
+        }
 
         return {
           range,
@@ -367,11 +391,14 @@ export class AnalyticsService {
           ),
           from: from?.toISOString() ?? null,
           generatedAt: now.toISOString(),
+          comparison,
+          currentWorkload: { needsReview: currentNeedsReview },
           summary: {
             totalDrafts: draft.total,
             uniqueQuestions: draft.questions,
             reviewedAnswers: reviewed,
             averageConfidence: confidence(draft.confidence),
+            confidenceSamples: draft.confidenceSamples,
             readyRate: percentage(draft.ready, draft.total),
             needsReviewRate: percentage(draft.review, draft.total),
             acceptanceRate: percentage(sent.unchanged, reviewed),
@@ -426,6 +453,7 @@ export class AnalyticsService {
             providerKey: metric.providerKey,
             totalDrafts: metric.totalDrafts,
             averageConfidence: confidence(metric.averageConfidence),
+            confidenceSamples: metric.confidenceSamples,
             readyRate: percentage(metric.readyDrafts, metric.totalDrafts),
             needsReviewRate: percentage(
               metric.needsReviewDrafts,
@@ -478,6 +506,123 @@ export class AnalyticsService {
             createdAt: attempt.createdAt.toISOString(),
             sentAt: attempt.answerDelivery?.sentAt?.toISOString() ?? null,
           })),
+        };
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+        timeout: 15000,
+      },
+    );
+  }
+
+  async findAiPerformanceQuestions(
+    storeId: string,
+    userId: string,
+    query: AiPerformanceDetailQueryDto,
+  ) {
+    if (!!query.cursor !== !!query.before) {
+      throw new BadRequestException('Sayfalama bilgisi eksik.');
+    }
+    const now = query.asOf ? new Date(query.asOf) : new Date();
+    if (!Number.isFinite(now.getTime()) || now.getTime() > Date.now()) {
+      throw new BadRequestException('Geçersiz performans tarihi.');
+    }
+    return this.prisma.$transaction(
+      async (db) => {
+        const membership = await db.storeMember.findFirst({
+          where: { storeId, userId, store: { status: 'ACTIVE' } },
+          select: { store: { select: { timezone: true } } },
+        });
+        if (!membership)
+          throw new NotFoundException('Mağaza bulunamadı veya erişiminiz yok.');
+        const range = query.range ?? AiPerformanceRange.THIRTY_DAYS;
+        const timezone = validTimezone(membership.store.timezone);
+        const [bounds] = await db.$queryRaw<Array<{ from: Date }>>(
+          performanceBoundsSql(now, timezone, range),
+        );
+        const from = range === AiPerformanceRange.ALL ? null : bounds.from;
+        const source = performanceSourceSql({
+          storeId,
+          from,
+          now,
+          provider: query.provider?.trim() || null,
+        });
+        const matched =
+          query.kind === AiPerformanceDetailKind.REVIEW_REASON
+            ? Prisma.sql`${reviewReasonRowsSql()}, matched AS (
+            SELECT a.id, a."questionId", a."createdAt" AS "eventAt"
+            FROM attempts a JOIN reason_rows r ON r.id = a.id WHERE r.key = ${query.reason}
+          )`
+            : Prisma.sql`matched AS (
+            SELECT d.id, d."questionId", d."queuedAt" AS "eventAt"
+            FROM deliveries d WHERE d.status = 'FAILED' AND d."draftAttemptId" IS NOT NULL
+          )`;
+        const cursorFilter =
+          query.cursor && query.before
+            ? Prisma.sql`WHERE (g."lastMatchedAt", g."questionId") < (${new Date(query.before)}, ${query.cursor})`
+            : Prisma.empty;
+        const rows = await db.$queryRaw<
+          Array<{
+            questionId: string;
+            question: string;
+            customerName: string | null;
+            productTitle: string | null;
+            providerKey: string;
+            status: string;
+            draftDecision: string | null;
+            draftProcessingStatus: string | null;
+            deliveryStatus: string | null;
+            eventCount: number;
+            lastMatchedAt: Date;
+            totalQuestions: number;
+            totalEvents: number;
+          }>
+        >(Prisma.sql`${source}, ${matched}, grouped AS (
+          SELECT "questionId", COUNT(DISTINCT id)::int AS "eventCount", MAX("eventAt") AS "lastMatchedAt"
+          FROM matched GROUP BY "questionId"
+        )
+        SELECT q.id AS "questionId", q.question, q."customerName",
+          COALESCE(p.title, q."productTitleSnapshot") AS "productTitle", c.provider AS "providerKey",
+          q.status, q."draftDecision", q."draftProcessingStatus", d.status AS "deliveryStatus",
+          g."eventCount", g."lastMatchedAt",
+          (SELECT COUNT(*)::int FROM grouped) AS "totalQuestions",
+          (SELECT COUNT(*)::int FROM matched) AS "totalEvents"
+        FROM grouped g
+        JOIN product_question q ON q.id = g."questionId" AND q."storeId" = ${storeId}
+        JOIN channel_connection c ON c.id = q."connectionId" AND c."storeId" = ${storeId}
+        LEFT JOIN product p ON p.id = q."productId" AND p."storeId" = ${storeId}
+        LEFT JOIN question_answer d ON d."questionId" = q.id AND d."storeId" = ${storeId}
+        ${cursorFilter}
+        ORDER BY g."lastMatchedAt" DESC, g."questionId" DESC LIMIT ${query.limit + 1}
+      `);
+        const hasNextPage = rows.length > query.limit;
+        const pageRows = rows.slice(0, query.limit);
+        const last = pageRows.at(-1);
+        return {
+          totals: {
+            questions: rows[0]?.totalQuestions ?? 0,
+            events: rows[0]?.totalEvents ?? 0,
+          },
+          items: pageRows.map((row) => ({
+            questionId: row.questionId,
+            question: row.question,
+            customerName: row.customerName,
+            productTitle: row.productTitle,
+            providerKey: row.providerKey,
+            status: row.status,
+            draftDecision: row.draftDecision,
+            draftProcessingStatus: row.draftProcessingStatus,
+            deliveryStatus: row.deliveryStatus,
+            eventCount: row.eventCount,
+            lastMatchedAt: row.lastMatchedAt.toISOString(),
+          })),
+          nextCursor:
+            hasNextPage && last
+              ? {
+                  questionId: last.questionId,
+                  before: last.lastMatchedAt.toISOString(),
+                }
+              : null,
         };
       },
       {

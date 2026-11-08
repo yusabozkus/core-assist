@@ -1,70 +1,68 @@
-# Soru ve cevap teslimatının toparlanması
+# Question and Answer Delivery Recovery
 
-Bu akış SYNC-01 ve ANSWER-01 düzeltmelerini açıklar. Sağlayıcıya gönderim için doğrulanmış bir idempotency sözleşmesi kullanılmıyor; belirsiz teslimatlar otomatik tekrar gönderilmez.
+This guide explains recovery for incoming questions and outgoing answers. The app does not use a confirmed provider idempotency contract for answer delivery. It does not automatically resend an answer when delivery is uncertain.
 
-## Gelen sorular
+## Incoming questions
 
-`IncomingEvent` yalnızca sorunun alındığının kaydıdır. Aynı event tekrar geldiğinde soru yoksa işlem yeniden denenir. Event satırı PostgreSQL'de kilitlenir; soru oluşturma ve event'i `PROCESSED` yapma aynı transaction'dadır. Birbirine paralel tekrarlar ikinci soru oluşturmaz. Ürün eşleştirmesi hata verirse event `FAILED` kalır ve sonraki deneme tekrar işler.
+`IncomingEvent` records that an event arrived. If the same event arrives again but has no question, processing is tried again. PostgreSQL locks the event row. Creating the question and setting the event to `PROCESSED` happen in one transaction. Concurrent retries do not create a second question. If product matching fails, the event stays `FAILED` and can retry later.
 
-Soru senkronizasyonu, sağlayıcıdan yeni sayfaları almadan önce aynı bağlantının sorusu olmayan `PENDING`/`FAILED` event'lerini 100 kayıtlık sayfalarla tarar. Saklanan payload, Trendyol/Hepsiburada'nın mevcut normalizer'ından geçirilir. Böylece sorunun sağlayıcının güncel listesinde kalmasına bağımlı olmadan onarım yapılabilir. Abonelik erişimi ve bağlantı tarihi kontrolleri korunur.
+Before fetching new provider pages, question sync checks the same connection's `PENDING` and `FAILED` events without questions, in batches of 100. Saved payloads pass through the existing Trendyol or Hepsiburada normalizer. This can recover a question even when it is no longer in the provider's current list. Subscription access and connection date checks still apply.
 
-Eksik/eski mock payload'lar güvenilir biçimde yeniden oluşturulamaz; taze sağlayıcı verisi beklenir. Operatör event'in kimlik, tarih, metin veya ürün bilgisini tahmin ederek tamamlamamalıdır. Bağlantı aktif değilse/abonelik durduysa önce normal senkronizasyon koşulları düzeltilmelidir. Tek bir tekrarın hâlâ hata vermesi senkronizasyon işini başarısız bırakır; başarılıymış gibi gizlenmez.
+Missing or old mock payloads cannot be rebuilt safely. Wait for fresh provider data. Do not guess IDs, dates, text, or product details. If the connection or subscription is inactive, fix normal sync conditions first. A failed replay keeps the sync job failed; it is not hidden as a success.
 
-## Cevap gönderimi
+## Outgoing answers
 
-| Durum | Davranış |
+| Status | Behavior |
 | --- | --- |
-| `QUEUED` | PostgreSQL'de kalıcı gönderim niyeti vardır. Redis işi eksikse reconciliation aynı iş kimliğiyle yeniden oluşturur. |
-| `PROCESSING` | Sağlayıcı POST'undan hemen önce atomik claim alınmıştır. Bu durumdaki kayıt tekrar POST edilmez. |
-| `SENT` | Sağlayıcı başarı sonucu ve soru/cevap güncellemeleri transaction ile kaydedilmiştir veya operatör teslimatı doğrulamıştır. |
-| `FAILED` | Dış gönderimden önce durdurulmuştur veya operatör gönderilmediğini doğrulamıştır. Kullanıcı tekrar gönderim isteyebilir. |
-| `REVIEW_REQUIRED` | Sağlayıcıya ulaşıp ulaşmadığı belirsizdir. Panelde **Teslimat kontrolü** filtresi ve uyarısı, admin AI kullanımında gönderim sorunları listesi bulunur. Yeni gönderim/taslak engellenir. |
+| `QUEUED` | PostgreSQL holds a saved send request. If the Redis job is missing, recovery creates it again with the same job ID. |
+| `PROCESSING` | The worker has claimed the answer just before the provider POST. It must not POST the same record again. |
+| `SENT` | A clear provider success and question/draft updates were saved in one transaction, or an operator verified delivery. |
+| `FAILED` | Processing stopped before the external send, or an operator confirmed that it was not sent. The user can request a new send. |
+| `REVIEW_REQUIRED` | Delivery is uncertain. The panel shows a delivery-review filter and warning. Admin AI usage lists delivery issues. New sends and drafts are blocked. |
 
-Reconciliation BullMQ üzerinden **60 saniyede bir** çalışır. `PROCESSING` kaydı **15 dakikayı** aşarsa incelemeye alınır. Saatlerce gönderiyor görünmesi önlenir; bu süre sağlayıcıya yeniden gönderim izni değildir. Canlı worker sonradan kesin başarı sonucu alırsa aynı deneme için kaydı `SENT` yapabilir.
+Recovery runs through BullMQ every **60 seconds**. A `PROCESSING` record older than **15 minutes** moves to review. This prevents an endless sending status; it does not allow another provider POST. A live worker can still save a clear success as `SENT` for the same attempt.
 
-Her yeni kullanıcı denemesi, `queuedAt` üzerinden farklı bir iş kimliği taşır. Eski denemenin worker'ı veya son hata callback'i yeni denemeyi gönderemez/değiştiremez. Eski sürümde oluşturulmuş, deneme bilgisi taşımayan işler gönderim yapmadan tamamlanır; reconciliation `QUEUED` kaydını doğru veriyle yeniden kuyruğa alır.
+Each new user attempt has a different job ID based on `queuedAt`. An old worker or final-error callback cannot send or change a newer attempt. Old jobs without attempt details finish without sending. Recovery queues the `QUEUED` record again with the correct details.
 
-Redis geçici olarak erişilemezse kalıcı niyet korunur. **Redis tamamen silinirse scheduler kaydı da kaybolur:** Redis düzeldikten sonra yeni sürüm backend'i yeniden başlatın; başlangıç scheduler'ı yeniden kurar ve DB'deki kuyruk kayıtları toparlanır. Uygulama Redis'te genel `FLUSHDB`/`FLUSHALL` işlemi yapmaz.
+Temporary Redis loss does not remove the saved request. **A full Redis wipe also removes the scheduler.** After Redis recovers, restart the new backend. Startup creates the scheduler again and recovers database queue records. The app does not run global `FLUSHDB` or `FLUSHALL` commands.
 
-## Sürüm geçişi
+## Moving from an older version
 
-1. Veritabanı yedeği alın. **Eski sürümün bütün backend/answer worker instance'larını durdurun.** Eski worker ile yeni sürümü paralel çalıştırmayın; eski kod yeni gönderim korumasını uygulamaz.
-2. Yeni sürümle backend dizininde `npm run db:migrate:deploy` çalıştırın. İki migration vardır: `REVIEW_REQUIRED` enum değeri ve önceki sürümün belirsiz denemelerini ayıran veri güncellemesi. Sıraları korunmalıdır.
-3. Eski `PROCESSING` kayıtları ve `attempts > 0` olan eski `QUEUED`/`FAILED` kayıtları incelemeye alınır. Eski kod dış çağrıdan önce sayacı artırdığı için bunların bir kısmı gerçekte hiç gönderilmemiş olabilir; buna karşın otomatik yeniden gönderim güvenli kabul edilemez. Hiç denenmemiş kuyruk kayıtları ve `SENT` kayıtları korunur.
-4. Kaynak kurulumunda `npm run db:generate` ve `npm run build` çalıştırın. Docker image'ı bunları build sırasında yapar. Frontend'i de yeni durum etiketiyle yayınlayın; sonra yalnızca yeni backend'i başlatın.
-5. Soru senkronizasyonu ve cevap reconciliation işinin çalıştığını, inceleme kayıtlarının panelde göründüğünü kontrol edin. Eski sürüme kontrolsüz rollback yapmayın: eski queue kodu yeni durumu tanımaz.
+1. Back up the database. **Stop every old backend and answer worker instance.** Do not run old and new versions together. Old workers do not enforce the new delivery protection.
+2. Run `npm run db:migrate:deploy` in the new backend. Keep the order of the two migrations: adding `REVIEW_REQUIRED`, then separating uncertain old attempts.
+3. Old `PROCESSING` records and old `QUEUED`/`FAILED` records with `attempts > 0` move to review. Some may never have reached the provider because the old code increased the counter before sending. Automatic retries are still unsafe. Never-attempted queue records and `SENT` records are kept.
+4. For a source installation, run `npm run db:generate` and `npm run build`. A Docker image that builds the app must also include these steps. Deploy the frontend with the new status label, then start only the new backend.
+5. Check question sync, answer recovery, and review records in the panel. Do not roll back to old queue code without a recovery plan; it does not understand the new status.
 
-Migrationlar bu geliştirme çalışmasında yalnızca izole test veritabanlarına uygulandı. Mevcut uygulama veritabanının güncellenmesi, yukarıdaki durdurma/başlatma sırasıyla yapılmalıdır.
+During the original development work, migrations ran only on isolated test databases. That record does not confirm the state of your current database. Apply migrations with the stop/start order above.
 
-## Belirsiz teslimatı sonuçlandırma
+## Resolve uncertain delivery
 
-Bu bir müşteriye açık API değildir; DB erişimi olan operatörün kontrollü bakım komutudur. Kullanıcı panelindeki “Destek talebi oluştur” yolu üzerinden inceleme istenebilir.
+This is an operator maintenance command that needs database access, not a customer API. Customers can request a check through the support ticket page.
 
-1. İlgili cevabın ID'sini admin gönderim sorunları listesinin API verisinden veya DB'den bulun. Cevap metni ve pazaryeri soru kimliğiyle doğru kaydı eşleştirin.
-2. **Bütün backend/answer worker instance'larını durdurun.** Yalnızca kuyruğu pause etmek, hâlihazırdaki POST'u durdurmaz. Komuttaki `--workers-stopped` operatörün beyanıdır; başka makinelerin durumunu otomatik doğrulamaz.
-3. Sağlayıcının paneli/kayıtları üzerinden cevabın gerçekten gönderildiğini veya gönderilmediğini doğrulayın. Hemen görünmemesi tek başına gönderilmediğinin kanıtı değildir; sonuç belirsizse kayıt incelemede kalır.
-4. Derlenmiş yeni backend dizininden çalıştırın:
-
-```powershell
-# Cevap pazaryerinde doğrulandı; tekrar gönderim yapılmaz.
-npm run repair:answer -- <answer-id> sent "operator-name" "Kontrol edilen soru ve teslimat kanıtı" --workers-stopped
-
-# Gönderilmediği doğrulandı; yeniden gönderme seçeneği açılır, bu komut göndermez.
-npm run repair:answer -- <answer-id> not-sent "operator-name" "Gönderilmediğini doğrulayan kontrol" --workers-stopped
-```
-
-Komut yalnızca `REVIEW_REQUIRED` durumunu değiştirir; kayıt kilitlenir, soru/taslak güncellemeleri ve audit kaydı aynı transaction'da yazılır. `sent` sonucunda gerçek sağlayıcı teslimat zamanı bilinmediği için tarih uydurulmaz (`sentAt`/`answeredAt` boş kalır); doğrulama zamanı audit metadata'sındadır. `not-sent` otomatik gönderimi yeniden etkinleştirmez; kullanıcı yeni gönderim isteği vermelidir. Yeni sürüm worker'ları işlem bittikten sonra yeniden başlatın.
-
-## Regresyon testleri
-
-Backend dizininde:
+1. Find the answer ID in the admin delivery-issues API response or database. Match the answer text and marketplace question ID.
+2. **Stop all backend and answer worker instances.** Pausing the queue alone does not stop a POST already in progress. `--workers-stopped` is the operator's statement; the command does not check other machines.
+3. Check the provider's panel or records for proof that the answer was sent or not sent. An answer missing from the screen for a short time is not enough proof. If the result is still uncertain, leave it in review.
+4. Run from the compiled new backend directory:
 
 ```powershell
-npm run test:question-delivery:integration
+# Delivery is confirmed. This does not send again.
+npm run repair:answer -- <answer-id> sent "operator-name" "Verified question and delivery evidence" --workers-stopped
+
+# No delivery is confirmed. This allows a new user request, but does not send.
+npm run repair:answer -- <answer-id> not-sent "operator-name" "Evidence that the answer was not sent" --workers-stopped
 ```
 
-Yalnızca localhost PostgreSQL ve Redis kabul edilir. Test rastgele isimli `core_assist_delivery_test_*` veritabanı açar, migrationları uygular; Redis'te rastgele test prefix'i kullanır. Sonda yalnızca kendi kaynaklarını kaldırır. DB kullanıcısının `CREATE DATABASE` yetkisi gerekir. Alternatif yerel bağlantılar `TEST_DATABASE_URL`/`TEST_REDIS_URL` ile verilebilir. Sağlayıcı POST'u, AI ve bildirim gönderimi taklit edilir; gerçek pazaryeri cevabı veya e-posta gönderilmez.
+The command changes only `REVIEW_REQUIRED` records. It locks the row and saves question/draft updates and the audit log in one transaction. For `sent`, the actual provider delivery time is unknown, so `sentAt` and `answeredAt` stay empty. Audit metadata keeps the verification time. `not-sent` does not enable automatic delivery again; the user must request a new send. Restart the new workers after the repair.
 
-Kapsam: event sonrası hata, soru/event transaction hatası, eşzamanlı tekrar, eski event onarımı, Redis enqueue kaybı/belirsizliği, gerçek BullMQ işi ve eski job geçişi, çift worker, sağlayıcı yanıt kaybı, gönderim sonrası DB hatası, sahipsiz PROCESSING, güvenli ön kontrol hatası, operatör kararı/audit, SAFE_AUTO koşulları ve eski veriyi ayıran migration.
+## Checks
 
-Bu testler fiziksel process-kill, VDS yeniden başlatma veya gerçek pazaryeri sandbox kabul testinin yerine geçmez. Son yayın kabulünde bunlar ayrıca denenmelidir.
+In the backend directory:
+
+```powershell
+npm run check
+```
+
+The old answer-delivery integration test file is no longer in the source. `check` runs current local tests and the build, but does not prove end-to-end delivery or recovery. See [Quality checks](quality-checks.md).
+
+In a live test environment, check event-processing failure, transaction rollback, concurrent replay, missing or uncertain Redis enqueue results, two workers, lost provider responses, database failure after sending, orphaned `PROCESSING` records, operator decisions and audit logs, and `SAFE_AUTO` rules. Also test real process crashes, server restarts, and marketplace sandbox delivery.

@@ -1,148 +1,99 @@
-# Core Asistan Admin Paneli
+# Core Asistan Admin Panel
 
-Bu doküman, yalnızca Core Asistan iç ekibinin kullandığı admin panelinin güncel
-erişim modelini, kapsamını ve güvenlik sınırlarını tanımlar. Geçmiş geliştirme
-fazları veya tamamlanmış inceleme maddeleri burada takip edilmez.
+This guide explains access, features, and security rules for the internal admin panel. It describes the current panel, rather than past development tasks.
 
-## Erişim modeli
+## Access
 
-İlk sürümde admin hesapları backend ortam değişkenindeki doğrulanmış e-posta
-allowlist'i ile tanınır:
+Admin accounts use a list of verified email addresses in the backend environment:
 
 ```ini
 ADMIN_EMAILS="admin1@example.com,admin2@example.com"
 ```
 
-- Liste yalnızca backend'de bulunur ve `NEXT_PUBLIC_` değişkeni olarak
-  yayımlanmaz.
-- E-posta adresi boşluklardan arındırılmış, küçük harfe çevrilmiş ve tam
-  eşleşmeyle kontrol edilir.
-- Oturum geçerli, kullanıcının e-posta adresi doğrulanmış olmalıdır.
-- Yapılandırma boşsa hiçbir kullanıcı admin kabul edilmez.
-- Frontend kontrolü yalnızca yönlendirme ve görünürlük içindir. Asıl yetki
-  kontrolü backend'deki `AuthGuard` ve `AdminGuard` tarafından yapılır.
-- Admin hesapları müşteri hesabı, mağaza veya onboarding kaydı gerektirmez.
-  Başarılı girişten sonra doğrudan `/admin` alanına yönlendirilir.
+- Keep this list in the backend. Do not publish it with a `NEXT_PUBLIC_` variable.
+- Email checks remove extra spaces, use lowercase, and require an exact match.
+- The user must have a valid session and a verified email address.
+- An empty list gives admin access to nobody.
+- Frontend checks control links and redirects. Backend `AuthGuard` and `AdminGuard` enforce access.
+- Admin accounts do not need a customer account, store, or onboarding record. After sign-in, they go to `/admin`.
 
-Ekip büyür ve farklı admin yetkileri gerekirse allowlist yaklaşımı veritabanı
-tabanlı sistem rolleri ve izin matrisiyle değiştirilmelidir.
+If the team needs different admin permissions, replace the email list with database roles and clear permission rules.
 
-## Mevcut sayfalar
+## Pages
 
-| Alan | Rota | Amaç |
+| Area | Route | Purpose |
 | --- | --- | --- |
-| Genel Bakış | `/admin` | Müşteri, abonelik, destek ve operasyon özetleri |
-| Müşteriler | `/admin/customers` | Müşteri hesapları, kullanıcılar, mağazalar ve kullanım bilgileri |
-| Müşteri detayı | `/admin/customers/[workspaceId]` | Tek hesabın ekip, mağaza, kanal, destek ve faturalama bağlamı |
-| Abonelikler | `/admin/billing` | Abonelik, ödeme, checkout ve plan değişikliği takibi |
-| Abonelik detayı | `/admin/billing/[workspaceId]` | Paddle kimlikleri, dönemler, kullanım ve reconciliation durumu |
-| Destek talepleri | `/admin/support` | Talep filtreleme, SLA ve sorumlu takibi |
-| Destek konuşması | `/admin/support/[ticketId]` | Müşteri konuşması, dahili not, atama ve durum yönetimi |
-| İletişim mesajları | `/admin/contact-messages` | Landing sayfasından gönderilen iletişim formları |
-| E-posta | `/admin/emails` | Gönderim geçmişi, teslimat takibi, hata sayaçları ve yapılandırma durumu |
-| E-posta detayı | `/admin/emails/[emailId]` | Deneme zamanları, hata nedeni ve doğrulanmış teslimat olayları |
-| Duyurular | `/admin/announcements` | Rollere göre toplu panel bildirimi ve isteğe bağlı e-posta gönderimi |
-| Operasyonlar | `/admin/operations` | Katalog ve soru senkronizasyonları ile bağlantı sorunları |
-| Kuyruk detayı | `/admin/operations/queues/[queueKey]` | Zamanlanmış, gecikmiş ve başarısız worker işleri |
-| AI ve Kullanım | `/admin/ai-usage` | Taslak performansı, kotalar ve güncel işlem engelleri |
-| AI engel detayı | `/admin/ai-usage/blockers/[type]` | Hata veya bekleme nedenine göre ilgili kayıtlar |
-| Sistem Sağlığı | `/admin/system` | API, PostgreSQL, Redis, kuyruk, Paddle ve kanal sağlığı |
-| Denetim Kayıtları | `/admin/audit-logs` | Kritik işlemler, aktör snapshot'ı ve sonuç bilgileri |
-| Hesap ve Güvenlik | `/admin/account` | Admin profili, sağlayıcılar ve oturum yönetimi |
+| Overview | `/admin` | Customer, subscription, support, and operation summaries |
+| Customers | `/admin/customers` | Customer accounts, users, stores, and usage |
+| Customer details | `/admin/customers/[workspaceId]` | One account's team, stores, channels, support, and billing |
+| Subscriptions | `/admin/billing` | Subscriptions, payments, checkouts, and plan changes |
+| Subscription details | `/admin/billing/[workspaceId]` | Paddle IDs, periods, usage, and status checks |
+| Support tickets | `/admin/support` | Ticket filters, SLA targets, and assigned staff |
+| Support chat | `/admin/support/[ticketId]` | Messages, internal notes, assignment, and ticket status |
+| Contact messages | `/admin/contact-messages` | Contact forms sent from the landing page |
+| Emails | `/admin/emails` | Send history, delivery results, errors, and configuration |
+| Email details | `/admin/emails/[emailId]` | Attempt times, error reasons, and verified delivery events |
+| Announcements | `/admin/announcements` | In-app messages by role, with optional emails |
+| Operations | `/admin/operations` | Catalog and question syncs, and connection issues |
+| Queue details | `/admin/operations/queues/[queueKey]` | Scheduled, delayed, and failed worker jobs |
+| AI and usage | `/admin/ai-usage` | Draft results, quotas, and current blockers |
+| AI blocker details | `/admin/ai-usage/blockers/[type]` | Records grouped by error or waiting reason |
+| System health | `/admin/system` | API, PostgreSQL, Redis, queues, Paddle, and channel health |
+| Audit logs | `/admin/audit-logs` | Important actions, actor details, and results |
+| Account and security | `/admin/account` | Admin profile, sign-in providers, and sessions |
 
-Header araması müşteri e-postası ve hesabı, mağaza, ticket numarası,
-senkronizasyon kimliği ve Paddle customer/subscription/transaction kimliklerini
-arayabilir.
+Header search supports customer email and account, store, ticket number, sync ID, and Paddle customer, subscription, or transaction ID.
 
-## E-posta takibi
+## Email tracking
 
-- E-posta listesi alıcı, konu, Resend mesaj kimliği, müşteri ve mağaza adıyla aranabilir.
-  Gönderim durumu, teslimat durumu ve oluşturulma tarih aralığıyla filtrelenir.
-  Tarihler arayüzde Türkiye saatine göre gösterilir; bitiş günü dahil edilir.
-- Müşteri detayında o hesaba bağlı son beş gönderim gösterilir. İlişki açık
-  `workspaceId` veya mağazanın hesabından kurulur; aynı alıcının başka hesaba ait
-  e-postaları bu listeye taşınmaz. Bağlamı bilinmeyen eski kayıtlar genel listede kalır.
-- `SENT`, gönderimin Resend tarafından kabul edildiğini belirtir. Alıcı posta
-  sunucusuna teslim bilgisi ayrı webhook olaylarıyla doğrulanır; okunma ölçülmez.
-- Son 24 saat sayaçları kabul, mevcut teslimat sonucu ve hata zamanlarına bakar.
-  Bekleyen ve inceleme gerektiren sayaçlar tüm açık kayıtları kapsar. Liste
-  filtreleri sayaçları değiştirmez; müşteri veya mağaza kapsamı değiştirir.
-- Yapılandırma kartları anahtar ve gönderici adresinin tanımlı olduğunu gösterir;
-  domain doğrulaması veya sağlayıcının erişilebilirliği için başarı iddiasında bulunmaz.
-  Son doğrulanmış webhook zamanı ve beş dakikadan fazla geciken denemeler gösterilir.
-- Ham HTML, davet token'ları, idempotency anahtarları ve gizli API anahtarları
-  admin yanıtlarına eklenmez. İlk sürümde bu ekranlar salt okunurdur.
-- Geçici gönderim hataları mevcut otomatik deneme akışında kalır. Sonucu belirsiz
-  `REVIEW_REQUIRED` kayıtları Resend tarafında incelenmelidir.
+- Search by recipient, subject, Resend message ID, customer, or store. Filter by send status, delivery status, and creation date. Dates use Turkey time, and the end date is included.
+- Customer details show the last five emails linked to that account. The link uses an explicit `workspaceId` or the store's account. Emails for another account are not included just because the recipient is the same. Old records without account context stay in the general list.
+- `SENT` means Resend accepted the email. Separate webhook events confirm delivery to the recipient's mail server. The system does not track whether the email was read.
+- The last-24-hour counters use acceptance, delivery result, and error times. Pending and review counters include all open records. List filters do not change these counters, but customer or store scope does.
+- Configuration cards show whether keys and a sender address exist. They do not confirm domain verification or provider availability. The panel also shows the last verified webhook and attempts delayed by more than five minutes.
+- Admin responses do not include raw HTML, invitation tokens, idempotency keys, or secret API keys. These email pages are read-only.
+- Temporary send errors use the existing retry process. Check uncertain `REVIEW_REQUIRED` records in Resend.
 
-Kurulum ve doğrulama: [E-posta teslimat takibi](backend/docs/admin-emails.md).
+See [Email delivery tracking](backend/docs/admin-emails.md) for setup and checks.
 
-## Toplu duyurular
+## Announcements
 
-Admin, duyuru başlığını ve mesajını yazar; hesap sahibi, hesap yöneticisi, mağaza
-yöneticisi, temsilci ve görüntüleyici rollerinden birini veya birkaçını seçer.
-“Hepsi” tüm rolleri işaretler. Rol eşleşmesi ekip ekranındaki erişim düzeyiyle
-aynıdır. Birden fazla mağazası olan kullanıcıya bir bildirim gider; platform
-adminleri alıcı listesine dahil edilmez.
+An admin enters a title and message, then selects account owners, account admins, store admins, agents, or viewers. **All** selects every role. Role matching follows the team page. Each user receives one notification, even if they have several stores. Platform admins are excluded.
 
-“E-posta da gönder” anahtarı yalnızca Resend, gönderici adresi ve uygulama adresi
-tanımlıysa kullanılabilir. E-posta adresini doğrulamamış kişiler panel bildirimi
-alır, e-posta listesine eklenmez. Önizleme ekranında bildirim ve e-posta alıcı
-sayıları, atlanan adres sayısı ve örnek alıcılar gösterilir. Önizleme 10 dakika
-geçerlidir; bu sürede alıcı veya rol bilgisi değişirse yeni önizleme gerekir.
+**Send email too** is available only when Resend, a sender address, and the app URL are set. Users with an unverified email receive only the in-app message. The preview shows notification and email counts, skipped addresses, and sample recipients. It is valid for 10 minutes. Changes to recipients or roles require a new preview.
 
-Onay, bildirimleri ve e-posta gönderim kayıtlarını aynı veritabanı işleminde
-oluşturur. E-postalar mevcut otomatik gönderim akışında işlenir; gerçek gönderim
-ve teslimat durumları `/admin/emails` ekranından izlenir. Aynı onay isteğinin
-tekrarı ikinci gönderim oluşturmaz. Son 30 duyuru geçmişte gösterilir ve işlem
-denetim kaydına yazılır. Müşteri listesi için 10.000 kullanıcı sınırı vardır.
+Confirmation creates notifications and email delivery records in one database transaction. Existing email jobs send the emails. Track send and delivery results at `/admin/emails`. Repeating the same confirmation does not send twice. The panel shows the last 30 announcements and records each action in the audit log. The audience limit is 10,000 users.
 
-## Güvenlik ilkeleri
+## Security rules
 
-- Admin API'leri `/admin` namespace'i altında tutulur.
-- Tüm admin endpointleri oturum ve admin yetkisi doğrulamasından geçer.
-- Durum değiştiren finansal ve operasyonel endpointlerde Origin kontrolü
-  uygulanır.
-- Kritik admin mutasyonları audit log'a yazılır. Aktör adı ve e-postası işlem
-  anındaki snapshot olarak korunur.
-- İstemciden gönderilen e-posta, rol, workspace veya custom data admin yetkisi
-  için güven kaynağı değildir.
-- Paddle durumu yalnızca yerel veritabanı alanı değiştirilerek yönetilmez;
-  Paddle sonucu ve güvenilir yerel eşleştirme doğrulanır.
-- Liste endpointleri yalnızca arayüzün ihtiyaç duyduğu alanları döndürür;
-  kimlik bilgileri, ödeme bilgileri ve ham webhook içerikleri gösterilmez.
-- Admin panelindeki bir hata müşteri verisi üzerinde sessiz bir değişiklik veya
-  otomatik tekrar başlatmamalıdır.
+- Admin APIs use the `/admin` namespace and require both session and admin checks.
+- Financial and operational endpoints that change data also check `Origin`.
+- Important admin changes create audit logs. These keep the actor's name and email as they were at the time.
+- Client email, role, workspace, or custom data cannot grant admin access.
+- Billing changes require a verified Paddle result and a trusted local account link. Editing a local field alone is not enough.
+- List endpoints return only fields needed by the UI. They do not expose credentials, payment details, or raw webhooks.
+- A panel error must not silently change customer data or restart an operation.
 
-## Operasyonel davranış
+## Operations
 
-- Redis veya bir kuyruk yanıt vermediğinde PostgreSQL'den gelen diğer admin
-  verileri kullanılabilir kalır; erişilemeyen bölüm açıkça bilinmiyor olarak
-  gösterilir.
-- Kuyruk sağlığı yalnızca iş adedine değil worker varlığına, en eski bekleme
-  süresine, aktif iş süresine, ilerlemeye ve yakın tarihli hatalara bakar.
-- Başarısız operasyonların detayları özet sayaçlardan ayrı sayfalarda
-  incelenebilir.
-- Destek mesajları ve admin bildirimleri canlı olaylar, odak yenilemesi ve
-  kontrollü güvenlik polling'i ile güncellenir.
-- Kullanıcıya gösterilmeyen `Workspace` teknik hiyerarşisi admin arayüzünde
-  “Müşteri hesabı” olarak adlandırılır. Kod ve veritabanında `workspaceId`
-  kullanılmaya devam eder.
-- Veri saklama ve temizleme süreleri [DATA_RETENTION.md](DATA_RETENTION.md)
-  dokümanında tanımlanır.
+- If Redis or a queue is unavailable, other admin data from PostgreSQL stays available. The affected section shows an unknown state.
+- Queue health checks worker presence, the oldest waiting job, active job duration, progress, and recent errors, as well as job counts.
+- Separate detail pages show failed operations.
+- Support messages and admin notifications use live events, refresh on focus, and limited fallback polling.
+- The UI calls the internal `Workspace` a **Customer account**. Code and database fields still use `workspaceId`.
+- See [Data retention](DATA_RETENTION.md) for cleanup rules.
 
-## Bilinçli sınırlar
+## Current limits
 
-İlk sürümde aşağıdaki yetkiler admin paneline eklenmez:
+The panel does not provide these features:
 
-- Panelden admin ekleme veya kaldırma
-- Ayrıntılı admin rol ve izin matrisi
-- Müşteri hesabına gizli biçimde giriş yapma
-- Keyfî kota veya veritabanı kaydı düzenleme
-- Doğrudan iade veya tahsilat başlatma
-- Feature flag, bağımsız toplu e-posta kampanyası veya yardım içeriği yönetimi
+- Add or remove admins from the UI.
+- Set detailed admin roles and permissions.
+- Sign in as a customer without their knowledge.
+- Edit quotas or database records freely.
+- Start refunds or charges directly.
+- Manage feature flags, separate email campaigns, or help content.
 
-Bu özellikler gerçek ihtiyaç oluştuğunda ayrıca yetki, audit ve güvenlik
-değerlendirmesiyle tasarlanmalıdır.
+Add these only when needed, with clear permission, audit, and security rules.
 
-Production öncesi harici servis kabulü [staging kabul kaydında](deploy/STAGING_ACCEPTANCE.md), bildirim ve e-posta politikası [bildirim rehberinde](backend/docs/notifications.md) takip edilir.
+See [Quality checks](backend/docs/quality-checks.md) for live-service checks before production, and [Notifications](backend/docs/notifications.md) for notification and email rules.

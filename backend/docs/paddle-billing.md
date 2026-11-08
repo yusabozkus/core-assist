@@ -1,31 +1,19 @@
-# Paddle Billing kurulumu
+# Paddle Billing Setup
 
-Core Asistan, ödeme ekranını Paddle.js ile açar; plan ve fiyat seçimini backend
-üzerinden doğrular. Abonelik durumu tarayıcıdaki ödeme sonucuna göre değil,
-imzası doğrulanmış Paddle webhook olaylarına göre güncellenir.
+Core Asistan opens payments with Paddle.js. The backend checks the plan and price. A browser payment result does not grant access. Signed Paddle subscription webhooks update the subscription. A read-only recovery process can also check Paddle when a webhook is missed.
 
-## Hesap ve abonelik kapsamı
+## Account and subscription scope
 
-Her kullanıcı hesabı en fazla bir dahili `Workspace` kaydının sahibidir. Bu kayıt
-mağazaları, aboneliği ve kullanım kotasını aynı çatı altında tutar; kullanıcıya
-çalışma alanı oluşturma veya seçme ekranı gösterilmez.
+Each user can own at most one internal `Workspace`. It groups stores, the subscription, and shared usage limits. The UI does not ask users to create or choose a workspace.
 
-- `Workspace.ownerId` benzersizdir. Genel oluşturma endpointi, onboarding ve
-  faturalandırma hazırlığı aynı servisi ve kullanıcı satırı kilidini kullanır.
-  Tekrar veya eşzamanlı gelen istekler mevcut kaydı döndürür; ikinci bir kayıt,
-  yeni deneme hakkı veya yeni abonelik oluşturmaz.
-- `/billing` hesabın aboneliğine yönlendirir. Henüz dahili kayıt yoksa otomatik
-  hazırlanır; mağaza veya tamamlanmış onboarding gerekmez. Bu hazırlık ödeme
-  başlatmaz ve mevcut abonelik/kurulum durumunu sıfırlamaz.
-- Mağaza yöneticiliği finans yetkisi vermez. Mevcut finans yetkilendirmeleri ve
-  ödeme–workspace eşleştirmesinin güvenlik kontrolleri korunur.
-- `20260911120000_enforce_single_owned_workspace` migration'ı eski veride aynı
-  sahibin birden fazla kaydı varsa açıklayıcı bir hatayla durur. Mağazaları veya
-  finans kayıtlarını otomatik birleştirmez/silmez; önce bu kayıtlar incelenmelidir.
+- `Workspace.ownerId` is unique. Account creation, onboarding, and billing preparation use the same service and user-row lock. Repeated or concurrent requests return the existing record. They do not create another account, trial, or subscription.
+- `/billing` opens the account's billing area. When no billing account is returned, the UI prepares it automatically. This does not start a payment or reset an existing subscription. The backend preparation API needs no store or completed onboarding. The current billing pages do require completed onboarding.
+- Store admin access alone does not grant billing access. Financial permissions and trusted payment/account links still apply.
+- Migration `20260911120000_enforce_single_owned_workspace` stops with an error if old data has several workspaces with the same owner. Review those records first. It does not merge or delete stores or financial data.
 
-## 1. Ortam değişkenleri
+## 1. Environment variables
 
-Sandbox değerlerini `backend/.env` dosyasına ekleyin:
+Add sandbox values to `backend/.env`:
 
 ```ini
 PADDLE_ENV="sandbox"
@@ -39,28 +27,24 @@ PADDLE_PRICE_BUSINESS_MONTHLY="pri_..."
 PADDLE_PRICE_BUSINESS_ANNUAL="pri_..."
 ```
 
-Tarayıcıda kullanılabilen client-side token'ı `frontend/.env.local` dosyasına
-ekleyin. API anahtarını kesinlikle frontend'e koymayın.
+Add the browser client token to `frontend/.env.local`. Never put the API key in the frontend.
 
 ```ini
 NEXT_PUBLIC_PADDLE_ENV="sandbox"
 NEXT_PUBLIC_PADDLE_CLIENT_TOKEN="test_..."
 ```
 
-## 2. Webhook hedefi
+## 2. Webhook destination
 
-Paddle Sandbox panelinde **Developer tools > Notifications > New
-destination** yolunu açın. Hedef URL:
+In Paddle Sandbox, open **Developer tools > Notifications > New destination**. Use a public backend URL such as:
 
 ```text
 https://api.coreasistan.com/billing/webhooks/paddle
 ```
 
-Yerel backend doğrudan internete açık olmadığı için localhost adresi Paddle
-tarafından çağrılamaz. Yerel test için HTTPS tüneli kullanın ve aynı yolu tünel
-adresinin sonuna ekleyin.
+Paddle cannot call a private localhost address. For local tests, use an HTTPS tunnel that forwards to the same backend path.
 
-Şu olayları seçin:
+Select these events:
 
 - `subscription.created`
 - `subscription.updated`
@@ -78,10 +62,9 @@ adresinin sonuna ekleyin.
 - `adjustment.created`
 - `adjustment.updated`
 
-Destination oluşturulduktan sonra gösterilen endpoint secret değerini
-`PADDLE_WEBHOOK_SECRET` olarak kaydedin.
+Save the destination's endpoint secret as `PADDLE_WEBHOOK_SECRET`.
 
-## 3. Veritabanı ve uygulama
+## 3. Database and app
 
 ```bash
 cd backend
@@ -90,290 +73,139 @@ npm run db:generate
 npm run start:dev
 ```
 
-Frontend ortam değişkenleri build sırasında okunduğu için frontend sunucusunu
-değişikliklerden sonra yeniden başlatın.
+Restart the frontend after environment changes. Public frontend values are read during the build.
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-Planlar ekranında bir plan seçip **Ödemeye geç** düğmesine basıldığında Paddle
-Sandbox checkout açılmalıdır. Başarılı test ödemesinden sonra abonelik kaydı
-webhook ile güncellenir.
+Select a plan and continue to payment. Paddle Sandbox checkout should open. Use the [official Paddle test cards](https://developer.paddle.com/concepts/payment-methods/card/). After a successful test payment, a subscription webhook updates the local record.
 
-## 4. Ödeme ile çalışma alanının güvenilir eşleştirilmesi
+## 4. Trusted payment and account links
 
-Backend, kullanıcı yetkisini ve seçilen planı doğruladıktan sonra Paddle
-transaction oluşturur. Transaction kimliğini tarayıcıya vermeden önce
-`billing_checkout` tablosuna şu bilgileri kaydeder:
+After checking the user's permission and selected plan, the backend creates a Paddle transaction. Before returning its ID to the browser, it saves these details in `billing_checkout`:
 
-- Çalışma alanı ve ödemeyi başlatan kullanıcı.
-- Sandbox/production ortamı, beklenen fiyat kimliği, plan ve ödeme dönemi.
-- Paddle transaction kimliği; varsa mevcut müşteri ve önceki abonelik kimliği.
-- Webhook ile doğrulandığında bağlanan abonelik kimliği ve bağlanma zamanı.
+- Workspace and user who started the payment.
+- Sandbox or production environment, expected price ID, plan, and billing cycle.
+- Paddle transaction ID and, when available, the customer and previous subscription IDs.
+- The linked subscription ID and link time after webhook verification.
 
-İlk bağlantı, `subscription.created` olayındaki `transaction_id` üzerinden kurulur.
-Sonraki olaylar kayıtlı abonelik ve müşteri kimlikleriyle doğrulanır.
-`custom_data` yalnızca tanılama amaçlıdır; çalışma alanını veya planı seçmek
-için **hiçbir zaman kullanılmaz**. Bu ayrım önemlidir çünkü custom data,
-[Paddle.js üzerinden de gönderilebilir](https://developer.paddle.com/build/transactions/custom-data/).
-İlk transaction kimliğinin hangi olayda geldiği
-[subscription.created belgesinde](https://developer.paddle.com/webhooks/subscriptions/subscription-created/)
-açıklanır.
+The first link uses `transaction_id` from `subscription.created`. Later events must match saved subscription and customer IDs. `custom_data` is only for diagnostics. It is **never used to choose the workspace or plan**. This matters because [Paddle.js can also send custom data](https://developer.paddle.com/build/transactions/custom-data/). See [subscription.created](https://developer.paddle.com/webhooks/subscriptions/subscription-created/) for the first transaction reference.
 
-Paddle transaction oluşturulduktan sonra uygulama, transaction kimliğini yerel
-kayda yazamadan kapanırsa imzası doğrulanmış `transaction.created`,
-`transaction.ready` veya `transaction.completed` olayı kurtarma amacıyla
-kullanılır. `coreassist_checkout_id` yalnızca yerel rezervasyonu bulur; tek başına
-yetki vermez. Backend ayrıca API kaynağını, çalışma alanını, ortamı, yapılandırılmış
-fiyatı, planı, dönemi, müşteriyi ve önceki abonelik durumunu doğrular. Eşleşme
-başarılıysa transaction kimliği koşullu olarak bağlanır ve reconciliation erkene
-alınır. Abonelik erişimi transaction webhook'u ile açılmaz.
+The app may crash after Paddle creates a transaction but before its ID is saved locally. A verified `transaction.created`, `transaction.ready`, or `transaction.completed` event can help recover it. `coreassist_checkout_id` only finds the local reservation; it does not grant permission. The backend also checks the API source, workspace, environment, configured price, plan, cycle, customer, and previous subscription state. After a match, it links the transaction conditionally and brings the next recovery check forward. A transaction webhook alone does not grant subscription access.
 
-Fiyat kimliği backend yapılandırmasında tanınmalı; ilk bağlantıda kaydedilen
-plan ve fiyatla da eşleşmelidir. Abonelik tek kalem, bir adet ve ilgili aylık
-veya yıllık yenileme döneminde olmalıdır. Bilinmeyen fiyat veya uyuşmayan
-eşleştirme yetki vermez; webhook `409` döner ve olay işlenmiş sayılmaz.
-Olaylar ters sırayla gelirse ilk bağlantıyı kuracak olay işlendiğinde diğer
-olay yeniden denenebilir. Paddle/Hookdeck üzerindeki başarısız teslimatlar
-izlenmelidir; kalıcı fiyat veya müşteri uyuşmazlıkları yeniden denemeyle
-düzelmez.
+The price must be known to the backend and match the saved checkout plan and price. The subscription must have one item, quantity one, and the expected monthly or annual cycle. An unknown price or wrong link is rejected with a `409` processing error. The event is not marked as processed. Webhook processing runs in a worker, so this error does not change an earlier HTTP `200` queue response.
 
-Çalışma alanının veritabanı satırı kilitlenerek eşzamanlı webhook'ların farklı
-abonelikleri birbirinin üzerine yazması engellenir. Mevcut abonelik kimliği
-yalnızca iptal edilmiş veya süresi dolmuş abonelikten sonra, bu önceki kimliği
-kaydeden yeni bir checkout ile değişebilir. Eski checkout tekrar kullanılarak
-mevcut bağlantı değiştirilemez.
+If events arrive out of order, retry after the first link is created. Monitor failed Paddle/Hookdeck deliveries and queue jobs. A permanent price or customer mismatch needs a fix; retries alone will not solve it.
 
-### Mevcut kurulumlara geçiş
+A workspace-row lock prevents concurrent webhooks from replacing each other's subscription. The subscription ID can change only after cancellation or expiry, through a new checkout that records the previous ID. An old checkout cannot replace the current link.
 
-- `20260909203000_add_trusted_billing_checkouts` migration'ını uygulayın,
-  Prisma istemcisini üretin ve backend'i yeniden başlatın. Veriler silinmez.
-- Zaten kayıtlı Paddle abonelikleri müşteri/abonelik kimlikleri ve tanınan
-  fiyatlarıyla çalışmaya devam eder; metadata'dan geriye dönük bağlantı üretilmez.
-- Bu güncellemeden **önce açılmış, henüz bağlanmamış** checkout'lar için yeni
-  checkout başlatın. Ödeme zaten alınmışsa tekrar ödeme yaptırmayın; ilgili
-  transaction ve çalışma alanını yönetici olarak Paddle ve sunucu kayıtlarıyla
-  doğrulamadan manuel bağlantı kurmayın.
-- Fiyat kimliklerini değiştirirken mevcut aboneliklerin kullandığı fiyatları
-  eşleştirmeden kaldırmayın; tanınmayan eski fiyatlar da güvenli biçimde reddedilir.
-- Paddle paneline yeni bir metadata alanı veya farklı webhook hedefi eklemek
-  gerekmez; yukarıdaki olayların seçili olması yeterlidir.
+### Updating an existing installation
 
-## 5. Aynı çalışma alanında mükerrer checkout koruması
+- Apply `20260909203000_add_trusted_billing_checkouts`, generate the Prisma client, and restart the backend. This migration does not delete data.
+- Existing linked subscriptions keep working with their saved customer/subscription IDs and known prices. The app does not create old links from metadata.
+- Start a new checkout for an unlinked checkout opened before this change. If payment was already taken, do not charge again. An admin must verify the transaction and workspace against Paddle and server records before any manual link.
+- When changing price IDs, keep prices used by existing subscriptions in the mapping. Unknown old prices are also rejected safely.
+- No new Paddle metadata field or webhook destination is needed. Keep the events above selected.
 
-`20260909210000_serialize_billing_checkouts` migration'ı checkout durumunu ve
-çalışma alanı başına tek bekleyen işlem kısıtını ekler. Önce migration'ları
-uygulayın, ardından Prisma istemcisini üretip backend'i yeniden başlatın.
+## 5. Prevent duplicate checkouts
 
-- **Eşzamanlı istekler:** Kısa bir PostgreSQL satır kilidi altında rezervasyon
-  yapılır. `CREATING` kaydı, Paddle isteğinden **önce** commit edilir. Kısmi unique
-  index `CREATING`, `OPEN` ve `REVIEW_REQUIRED` durumlarında aynı çalışma alanı
-  için ikinci bir kaydı engeller; koruma birden fazla backend instance'ında da
-  geçerlidir. Ağ istekleri veritabanı kilidi tutulmadan yapılır.
-- **Yenileme ve tekrar deneme:** Aynı plan/dönem için açık transaction Paddle'dan
-  kontrol edilip yeniden kullanılır. Başka sekmede hazırlanıyorsa frontend
-  kısa süre bekler ve aynı endpoint'i tekrar sorgular; ikinci create çağrısı
-  yapılmaz. Tarayıcı belleği/localStorage güvenlik mekanizması değildir.
-- **Ödeme alındı, webhook gecikti:** `paid`/`completed` veya aboneliğe dönüşmüş
-  işlem için ikinci form açılmaz; webhook doğrulaması beklenir. Paddle API'den
-  ödeme durumunu okumak tek başına plan yetkisi vermez.
-- **Farklı plan:** Açık transaction'ın tutarı sessizce değiştirilmez ve başka
-  transaction oluşturulmaz. Kullanıcı mevcut ödeme sayfasına yönlendirilir.
-  Yeni işlem yalnızca öncekinin Paddle tarafından iptal edildiği doğrulanınca
-  açılabilir; pencereyi kapatmak veya zaman geçmesi ödeme iptali sayılmaz.
-- **Hata veya timeout:** Paddle isteği açıkça reddettiyse kayıt `FAILED` olur ve
-  tekrar denemeye izin verilir. Sonuç belirsizse `REVIEW_REQUIRED` olur; yanıtı
-  kaydetmeden süreç çökerse `CREATING` kalabilir. Bu kayıtlar zaman aşımıyla
-  silinmez veya başka istek tarafından devralınmaz.
+Migration `20260909210000_serialize_billing_checkouts` adds checkout states and one pending checkout per workspace. Apply migrations, generate the Prisma client, and restart the backend.
 
-Paddle genel amaçlı istemci idempotency key desteği sunmadığından, timeout
-sonrası körlemesine yeni transaction oluşturmak güvenli değildir.
-[Paddle SDK tekrar deneme rehberi](https://developer.paddle.com/sdks/libraries/)
-mevcut işlemin önce kontrol edilmesini önerir.
+- **Concurrent requests:** A short PostgreSQL row lock reserves the checkout. `CREATING` is committed before the Paddle request. A partial unique index blocks a second `CREATING`, `OPEN`, or `REVIEW_REQUIRED` record for the workspace, across backend instances. Network calls do not hold the database lock.
+- **Refresh and retry:** An open transaction for the same plan/cycle is checked in Paddle and reused. If another tab is preparing it, the frontend waits briefly and checks again. It does not create a second transaction. Browser memory and localStorage do not enforce this protection.
+- **Payment complete, webhook late:** A `paid`, `completed`, or subscription-linked transaction does not open another form. The app waits for subscription verification. Reading a payment status alone does not grant a plan.
+- **Different plan:** The app does not silently change an open transaction's amount or create another transaction. It returns the existing payment page. A new checkout requires confirmed cancellation in Paddle. Closing the window or waiting is not cancellation.
+- **Error or timeout:** A clear Paddle rejection sets `FAILED` and allows retry. An uncertain result sets `REVIEW_REQUIRED`. A crash before saving the response may leave `CREATING`. These records are not deleted or taken over after a timeout.
 
-### Belirsiz işlemin yönetici tarafından çözümlenmesi
+Paddle does not provide a general client idempotency key for this flow. Creating another transaction blindly after a timeout is unsafe. The [Paddle SDK retry guide](https://developer.paddle.com/sdks/libraries/) recommends checking the existing operation first.
 
-Sunucu logundaki checkout kimliği ve varsa transaction kimliğiyle Paddle
-kaydını bulun. `coreassist_checkout_id` yalnızca aramayı kolaylaştırır;
-metadata tek başına sahiplik kanıtı değildir. Çalışma alanı, beklenen fiyat,
-müşteri, önceki abonelik ve API kayıtlarını birlikte doğrulayın. İşlem varsa
-doğru transaction kimliğini aynı rezervasyona bağlayıp ilgili webhook'u yeniden
-teslim edin. Yeni ödeme aldırmayın. Ancak işlemin oluşmadığı veya artık
-ödenemeyecek şekilde iptal edildiği kesinleştikten sonra rezervasyonu kapatın.
+### Admin review of an uncertain checkout
 
-Migration eski verilerde bir çalışma alanı için birden fazla bağlanmamış
-checkout bulursa bilinçli olarak durur; olası tahsilatları silmez veya rastgele
-birini seçmez. Önce bu işlemleri Paddle kayıtlarıyla uzlaştırın.
+Find the Paddle record using the checkout ID from server logs and the transaction ID, if known. `coreassist_checkout_id` helps search, but metadata alone does not prove ownership. Check the workspace, expected price, customer, previous subscription, and API records together.
 
-## 6. Webhook sıralaması ve abonelik durumu
+If the transaction exists, link its correct ID to the same reservation and redeliver the related webhook. Do not ask for another payment. Close the reservation only after confirming that no transaction exists, or that it was canceled and can no longer be paid.
 
-Abonelik erişiminin tek kaynağı `subscription.*` olaylarıdır. Başarılı ödeme,
-başarısız ödeme ve gecikmiş transaction olayları imza kontrolünden sonra
-`billing_webhook_event` tablosuna kaydedilip tekrarları engellenir; fakat planı,
-abonelik durumunu, dönem tarihlerini veya `paddleUpdatedAt` değerini değiştirmez.
-Eski bir fatura ödemesi, tek seferlik tahsilat veya kart güncellemesi bu sayede
-duraklatılmış/iptal edilmiş aboneliği aktif yapamaz. Yenileme ve başarısız ödeme
-sonrası durum değişimleri `subscription.updated` ve ilgili abonelik olaylarından
-alınır. Bu yaklaşım [Paddle erişim yönetimi rehberine](https://developer.paddle.com/build/subscriptions/provision-access-webhooks/)
-dayanır.
+The migration stops if old data has several unlinked checkouts for one workspace. It does not delete possible payments or choose one at random. Match them against Paddle records first.
 
-`paddleUpdatedAt`, son uygulanan **abonelik olayının** `occurred_at` değeridir;
-sunucuya geliş zamanı değildir. Abonelik güncellenirken bu alan da aynı işlemde
-yazılır. Geçersiz olay tarihine sunucunun güncel tarihi atanmaz; olay reddedilir.
+## 6. Webhook order and subscription state
 
-Çalışma alanı, ardından abonelik satırı kilitlenir. Kayıt kilitten sonra yeniden
-okunur; abonelik kimliği ve tarih karşılaştırması, durum güncellemesi ve webhook
-kaydının commit edilmesi aynı transaction içindedir. Böylece eşzamanlı gelen
-eski bir olay yeni durumun üzerine yazamaz. Aynı tarihli çelişen durumlarda daha
-kısıtlayıcı olan durum önceliklidir; aynı durum/tarih tekrar uygulanmaz. İptal
-edilmiş bir abonelik kimliği tekrar aktifleştirilmez; yeni abonelik için yeni,
-doğrulanmış checkout bağlantısı gerekir.
+`subscription.*` events are the webhook source for access changes. Verified transaction events are recorded in `billing_webhook_event` to prevent duplicates. They do not change the plan, status, period dates, or `paddleUpdatedAt`. An old invoice payment, one-time charge, or card update cannot activate a paused or canceled subscription. Renewal and payment-failure state changes come from subscription events. See [Paddle access management](https://developer.paddle.com/build/subscriptions/provision-access-webhooks/).
 
-Yerel deneme süresi kontrolü de yalnızca hâlâ Paddle'a bağlanmamış bir denemeyi
-koşullu olarak sonlandırır; aynı anda gelen aktivasyon webhook'unu ezmez.
-Paddle denemesinin durumu webhook'tan alınır; erişim kontrolü deneme bitiş
-tarihini ayrıca kontrol etmeye devam eder.
+`paddleUpdatedAt` is the last applied subscription event's `occurred_at`, not its arrival time. It is saved in the same transaction as the subscription update. Invalid event dates are rejected, not replaced with the server's current time.
 
-### Yerel doğrulama
+The workspace is locked before the subscription row. The app reads the record again after locking. ID checks, date comparisons, state updates, and the processed-event record share one transaction. An older concurrent event cannot replace a newer state. For conflicting states at the same time, the more restrictive state wins. The same state/time is not applied again.
 
-- Başarılı ödeme sonrasında webhook hedefinde özellikle `subscription.created`
-  ve `subscription.updated` seçili olmalıdır (yukarıdaki mevcut liste değişmedi).
-- `transaction.completed` ilk gelirse ödeme sayfası abonelik olayını bekler.
-  Yalnızca transaction olayını yeniden teslim etmek planı aktifleştirmez.
-- İlk bağlama olayı gelmeden ulaşan `subscription.updated`, bağlama kurulunca
-  tekrar işlenebilir; eşleştirilemeyen olay işlenmiş sayılmaz.
-- Hookdeck'ten eski bir `subscription.past_due` olayını daha yeni
-  `subscription.updated`/`subscription.activated` sonrasında teslim ettiğinizde
-  durum ve dönem tarihleri geri gitmemelidir.
-- Duraklatılmış aboneliğe `transaction.completed` teslim edilmesi erişim
-  açmamalıdır; yeniden açılma yalnızca daha yeni abonelik olayıyla yapılır.
+A canceled subscription ID cannot be activated again. A new subscription needs a new verified checkout link. Local trial expiry also uses a conditional update, so it cannot replace a concurrent paid activation. Paddle trial state follows webhooks, while access checks still enforce the trial end date.
 
-Bu adım için yeni migration veya yeni Paddle ortam değişkeni gerekmez.
+### Local validation
 
-## 7. Başarısız webhook ve yeniden teslim
+- Keep `subscription.created` and `subscription.updated` selected in the destination.
+- If `transaction.completed` arrives first, checkout waits for a subscription event. Replaying only the transaction event must not activate the plan.
+- An early `subscription.updated` can retry after the first link is created. An unmatched event is not marked as processed.
+- Replay an old `subscription.past_due` after a newer `subscription.updated` or `subscription.activated`. Status and dates must not move backward.
+- Deliver `transaction.completed` for a paused subscription. It must not grant access. A newer subscription event is needed.
 
-Webhook endpoint'i ham gövdeyi değiştirmeden kullanarak Paddle imzasını
-doğrular. Doğrulanmış olay `paddle-webhooks` BullMQ kuyruğuna event ID tabanlı
-tekil bir iş olarak yazıldığında endpoint hemen `200` döner. Abonelik,
-checkout ve bildirim işlemleri HTTP isteğinden bağımsız worker'da yapılır.
+These ordering checks need no extra migration or environment variable.
 
-- İmza veya olay zarfı geçersizse olay kuyruğa alınmaz ve `400` döner.
-- Redis'e yazma 3,5 saniye içinde onaylanamazsa `503` döner; Paddle teslimi
-  yeniden deneyebilir. Geç tamamlanan kuyruk yazımı event ID ile tekilleştirilir.
-- Worker geçici hatalarda olayı artan bekleme süresiyle 10 kez dener. Tükenen
-  işler yedi gün tutulur; aynı event ID yeniden teslim edilirse başarısız iş
-  yeniden kuyruğa alınır.
+## 7. Failed webhooks and redelivery
 
-Tekrar kontrolü yalnızca `billing_webhook_event.id` üzerindeki
-`INSERT ... ON CONFLICT ("id") DO NOTHING` ile yapılır. Müşteri, abonelik veya
-checkout alanlarındaki unique çakışmaları (`P2002`) tekrar teslim sayılmaz.
+The endpoint verifies the Paddle signature against the unchanged raw body. Once a unique event-ID job is saved in the `paddle-webhooks` BullMQ queue, it returns `200`. A worker handles subscription, checkout, and notification work separately from the HTTP request.
 
-- Olay kaydı ve abonelik güncellemesi aynı veritabanı transaction'ındadır.
-  Eşleştirme, fiyat doğrulaması veya veritabanı hatasında ikisi de geri alınır.
-  Başarısız olay için kalıcı bir “işlendi” kaydı bırakılmaz.
-- Eşzamanlı aynı event ID teslimleri veritabanında bekleşir. İlk işlem başarılı
-  olursa ikincisi `duplicate: true` alır; ilk işlem geri alınırsa diğeri aynı
-  olayı işlemeyi deneyebilir.
-- Worker'daki eşleştirme veya veritabanı hataları HTTP yanıtını değiştirmez;
-  BullMQ tekrar denemelerine ve başarısız iş kaydına dönüşür.
-- Backend logunda `eventId`, `eventType`, `errorCode` ve unique hatalarında
-  `constraintFields` bulunur. Webhook gövdesi, imza, müşteri bilgileri ve ham
-  veritabanı hata mesajı bu loga veya hata yanıtına yazılmaz.
-- Abonelik durumu için bilinçli olarak kullanılmayan transaction ve diğer olay
-  türleri `processed: false, ignored: true` ile onaylanır ve yalnızca teslim
-  kaydı tutulur. Bu durum, işlenmesi gereken bir abonelik olayının eşleşmemesi
-  ile aynı değildir. Güvenle atlanan eski abonelik olayları da yeniden durum
-  değişikliği yapmadan onaylanır.
+- An invalid signature or event envelope returns `400` without enqueueing.
+- If Redis cannot confirm the write within 3.5 seconds, the endpoint returns `503` so Paddle can retry. Event IDs prevent duplicate processing if the first queue write finishes late.
+- The worker allows 10 attempts with increasing delays. Failed jobs are kept for seven days. Redelivery of the same event ID retries an exhausted failed job.
 
-### Hatalı olayı tekrar işleme
+Database duplicate detection uses only `INSERT ... ON CONFLICT ("id") DO NOTHING` on `billing_webhook_event.id`. A unique conflict (`P2002`) on a customer, subscription, or checkout is an error, not a duplicate delivery.
 
-1. Paddle/Hookdeck teslim kaydındaki event ID ile backend logunu eşleştirin.
-2. Logdaki hata koduna göre eksik checkout/abonelik bağlantısını veya kimlik
-   çakışmasını araştırın. Sadece metadata'ya bakarak bağlantı oluşturmayın ve
-   yeni bir ödeme aldırmayın.
-3. Sorun giderilince aynı olayı yeniden teslim edin. Başarısız işlem event ID'yi
-   tüketmediği için yeni teslim normal şekilde işlenir; başarılı teslimin
-   tekrarında yalnızca `duplicate: true` dönmelidir.
+- The event record and subscription update share a transaction. Matching, price, or database failure rolls back both. A failed event leaves no permanent processed marker.
+- Concurrent deliveries with the same event ID wait in the database. If the first succeeds, the second gets `duplicate: true`. If the first rolls back, the other can process it.
+- Worker errors do not change the earlier HTTP response. They appear as BullMQ retries and failed jobs.
+- Logs include `eventId`, `eventType`, `errorCode`, and, for unique errors, `constraintFields`. They exclude webhook bodies, signatures, customer details, and raw database error messages.
+- Intentionally unused event types are acknowledged internally with `processed: false, ignored: true`, keeping only the delivery record. This differs from an unmatched subscription event that needs processing. Safe old subscription events are also accepted without changing state again.
 
-Paddle başarısız teslimleri otomatik tekrar dener; denemeler bittiyse panel/API
-üzerinden yeniden teslim başlatılabilir. Sandbox tekrar deneme sınırı live'dan
-daha düşüktür. [Paddle teslim ve tekrar deneme rehberi](https://developer.paddle.com/webhooks/about/respond-to-webhooks/)
+### Retry a failed event
 
-Önceki hatalı sürümün zaten “işlendi” diye kaydettiği olaylar otomatik silinmez.
-Böyle bir geçmiş kayıt varsa ilgili olayı ve mevcut abonelik durumunu ayrıca
-doğrulayarak düzeltmek gerekir. Bu güncelleme yeni bir migration gerektirmez.
+1. Match the Paddle/Hookdeck event ID with backend logs and the queue job.
+2. Use the error code to investigate missing checkout links, subscription links, or ID conflicts. Do not link from metadata alone or charge again.
+3. Fix the issue and redeliver the same event. A failed transaction did not consume the event ID. A repeated successful event should produce only `duplicate: true` during processing.
 
-## 8. Hesap silme ve tahsilatların kapatılması
+Paddle retries failed HTTP deliveries automatically. After retries end, redeliver from its dashboard or API. Sandbox has fewer retries than live. See [Paddle delivery and retries](https://developer.paddle.com/webhooks/about/respond-to-webhooks/).
 
-Hesap silme artık `POST /users/me/delete` üzerinden yapılır. Better Auth'un
-genel `delete-user` endpoint'i kapalıdır; bu endpoint ile ödeme kontrolleri
-atlanamaz. İptal ve silme işlemleri için son bir saat içinde açılmış, hâlâ geçerli
-oturum, izinli frontend origin'i ve birebir yazılı onay gerekir.
+Old events wrongly marked as processed by an earlier version are not deleted automatically. Verify the event and current subscription before repair. This behavior needs no extra migration.
 
-Hesap silme penceresi `GET /users/me/deletion-status` ile yalnızca kullanıcının
-**sahibi olduğu** çalışma alanlarını inceler. Başkasının çalışma alanına üye
-olmak onun aboneliğini iptal etme yetkisi vermez.
+## 8. Account deletion and stopping payments
 
-1. Yerel abonelik ve tüm checkout referansları Paddle'dan kontrol edilir.
-   Aktif, denemede, duraklatılmış ve gecikmiş abonelikler silmeyi engeller.
-   Dönem sonu iptal talebi, iptalin tamamlandığı anlamına gelmez. Pencerede
-   planlanan iptal/erişim tarihi gösterilir.
-2. `TAHSİLATI DURDUR` onayı ile `POST /users/me/close-billing`, doğrulanmış
-   abonelikleri **hemen** iptal eder ve iptal edilebilir açık checkout'ları
-   kapatır. Bu adım hesabı silmez; erişim hemen biter ve otomatik iade yapılmaz.
-   Dönem sonuna kadar kullanmak isteyen kullanıcı hesabını daha sonra siler.
-3. Billed/past-due faturalar, henüz işlenmekte olan ödemeler, belirsiz
-   `CREATING`/`REVIEW_REQUIRED` kayıtları veya eşleştirilmemiş abonelikler
-   otomatik silinmez/affedilmez. İşlem kesinleşmeli veya destek incelemesiyle
-   güvenilir eşleştirme yapılmalıdır. 404/timeout doğrulanmış iptal sayılmaz.
-4. İptallerin yalnızca bir kısmı başarılı olsa bile hesap korunur. Dış sistemde
-   tamamlanan iptaller veritabanı rollback'iyle geri alınamaz; kullanıcıya bu
-   belirtilir. Tekrar denemede Paddle durumu yeniden okunur; iptal edilmiş
-   abonelik yeniden iptal edilmeye çalışılmaz.
-5. `HESABIMI SİL` onayında Paddle tekrar kontrol edilir. Ardından kullanıcı,
-   çalışma alanı, abonelik ve mağaza satırları kilitlenerek snapshot değişimi ve
-   çalışan/kuyruktaki işler kontrol edilir. Arada yeni checkout açılmışsa silme
-   durur. Finansal kapanış kaydı ve kullanıcı silme aynı transaction'dadır.
+Account deletion uses `POST /users/me/delete`. The general Better Auth `delete-user` endpoint is disabled, so it cannot bypass billing checks. Cancellation and deletion require a valid session created within the last hour, an allowed frontend origin, and exact confirmation text.
 
-Abonelik iptal davranışı için [Paddle iptal API'si](https://developer.paddle.com/api-reference/subscriptions/cancel-subscription/),
-açık ödeme iptali için [transaction güncelleme API'si](https://developer.paddle.com/api-reference/transactions/update-transaction/)
-kullanılır. API anahtarında abonelik okuma/yazma ve transaction okuma/yazma
-izinleri bulunmalıdır. Gerçek hesaplar üzerinde otomatik iptal testi yapılmaz.
+`GET /users/me/deletion-status` checks only workspaces the user owns. Membership in someone else's account does not allow cancellation of its subscription.
 
-### Finansal kayıtlar
+1. The app checks local subscription and checkout references against Paddle. Active, trialing, paused, and past-due subscriptions block deletion. A cancellation planned for period end is not a completed cancellation. The dialog shows the planned cancellation/access date.
+2. `POST /users/me/close-billing` with the exact text `TAHSİLATI DURDUR` (“Stop payments”) immediately cancels verified subscriptions and closes open checkouts that can be canceled. This does not delete the account. Access ends immediately, and no refund is automatic. Users who want access until period end must delete the account later.
+3. Billed or past-due invoices, payments in progress, uncertain `CREATING`/`REVIEW_REQUIRED` records, and unmatched subscriptions are not automatically removed or waived. Wait for a clear result or a trusted link after support review. A `404` or timeout does not confirm cancellation.
+4. The account stays if only some cancellations succeed. A database rollback cannot reverse a completed Paddle cancellation. The UI explains this. On retry, the app reads Paddle again and skips subscriptions already canceled.
+5. With the exact text `HESABIMI SİL` (“Delete my account”), the app checks Paddle again. It locks user, workspace, subscription, and store rows, then checks state changes and active or queued jobs. A new checkout stops deletion. The financial closure record and user deletion are saved in one transaction.
 
-`BillingClosureRecord`, kullanıcı ve çalışma alanına cascade bağı olmayan ayrı
-bir kapanış kaydıdır. Yalnızca çalışma alanı referansı, Paddle ortamı,
-abonelik/müşteri/transaction kimlikleri, iptal ve doğrulama zamanları,
-fiyat/plan referansları ve doğrulanan işlem tutarları tutulur. İsim, e-posta,
-adres, kart/token bilgisi, webhook gövdesi, katalog veya mesaj içerikleri
-arşivlenmez. Bunlar anonim değil, sınırlı **takma kimlikli finansal referanslardır**.
-Paddle müşteri/fatura kayıtları hesabı silme işlemiyle silinmez. Kapanış kaydı
-normal kullanıcı API'lerinden sunulmaz; veritabanı erişimi yetkili operatörlerle
-sınırlandırılmalıdır.
+This uses the [Paddle cancellation API](https://developer.paddle.com/api-reference/subscriptions/cancel-subscription/) and [transaction update API](https://developer.paddle.com/api-reference/transactions/update-transaction/). The API key needs subscription read/write and transaction read/write permissions. Do not run automatic cancellation tests on real accounts.
 
-Kapatılan aboneliğe sonradan gelen imzalı webhook, abonelik kimliği + müşteri
-kimliği + ortam bu kayıtla eşleşirse durumu yeniden oluşturmaz. Eşleşmeyen
-olaylar önceki hata/tekrar deneme kurallarına tabidir.
+### Financial records
 
-Üretime çıkmadan finansal kayıtların saklama süresi, yetkili erişim ve tasfiye
-politikası işletmenin yükümlülüklerine göre ayrıca belirlenmelidir. Bu adım
-bir yasal saklama süresi varsaymaz veya otomatik mali kayıt tasfiyesi yapmaz.
+`BillingClosureRecord` is separate from the user and workspace, so deleting them does not delete it. It keeps only workspace references, Paddle environment, subscription/customer/transaction IDs, cancellation and verification times, price/plan references, and verified transaction amounts.
 
-`20260909220000_add_billing_closure_records` migration'ını uygulayın ve Prisma
-istemcisini yeniden üretin. Yeni ortam değişkeni gerekmez.
+It does not archive names, emails, addresses, card or token details, raw webhooks, catalog data, or messages. These are limited financial references that can still be linked to a person; they are not anonymous. Account deletion does not delete Paddle customer or invoice records. Normal user APIs do not expose closure records. Limit database access to authorized operators.
 
-## 9. Çalışma alanı finans yetkisi
+A later signed webhook for a closed subscription does not recreate its state when subscription ID, customer ID, and environment match the closure record. Unmatched events follow normal error and retry rules.
 
-Finans erişimi `BillingAuthorizationService` üzerinden kontrol edilir.
-Çalışma alanının `ownerId` ile tanımlanan sahibi veya o çalışma alanında
-`WorkspaceRole.OWNER` / `WorkspaceRole.ADMIN` üyeliği olan kullanıcı yetkilidir.
-Mağazadaki `StoreRole.OWNER` veya `StoreRole.ADMIN` rolü tek başına yeterli
-değildir. Başka bir çalışma alanındaki yönetici rolü de yetki vermez.
+Before production, define how long to keep financial records, who can access them, and how to delete them under the business's obligations. This feature does not set a legal retention period or automatically delete financial records.
 
-Aşağıdaki endpoint'ler her istekte veritabanından bu yetkiyi doğrular:
+Apply `20260909220000_add_billing_closure_records` and generate the Prisma client again. No new environment variable is needed.
+
+## 9. Billing permissions
+
+`BillingAuthorizationService` allows the workspace's `ownerId`, or a user with `WorkspaceRole.OWNER` or `WorkspaceRole.ADMIN` in that workspace. `StoreRole.OWNER` or `StoreRole.ADMIN` alone is not enough. An admin role in another workspace gives no access.
+
+These endpoints check database permissions on every request:
 
 - `GET /workspaces/:workspaceId/billing/summary`
 - `GET /workspaces/:workspaceId/billing/invoices`
@@ -381,306 +213,152 @@ Aşağıdaki endpoint'ler her istekte veritabanından bu yetkiyi doğrular:
 - `POST /workspaces/:workspaceId/billing/checkout`
 - `POST /workspaces/:workspaceId/billing/portal-session`
 
-Yetkisiz istekler `403 / BILLING_FORBIDDEN` alır; Paddle çağrısı veya checkout
-oluşturma başlamaz. PDF indirmede ilgili faturanın doğru Paddle müşterisine
-ait olması kontrolü ayrıca korunur. Sistem içi kota ve erişim kontrolleri
-bu finans yetkisinden bağımsız çalışmaya devam eder.
+Unauthorized requests return `403 / BILLING_FORBIDDEN` before a Paddle call or checkout creation. PDF downloads also check that the invoice belongs to the correct Paddle customer. Internal quota and access checks remain separate from billing management permission.
 
-`GET /workspaces/:workspaceId/billing/access` yalnızca erişebildiği çalışma alanı için
-kullanıcının kendi `canManageBilling` değerini döner; fatura, üye veya ödeme
-bilgisi içermez. Sidebar, finans yetkisi bulunan çalışma alanlarının listesine göre bağlantıyı gösterir. Plan,
-fatura ve ödeme sayfaları da sunucuda kontrol yapar. İstemcinin gönderdiği bir
-rol/yetki alanı güvenlik kararı için kullanılmaz.
+`GET /workspaces/:workspaceId/billing/access` returns only the current user's `canManageBilling` value for an accessible workspace. It does not return invoices, members, or payment details. Sidebar links use the list of accounts the user can manage. Plan, invoice, and payment pages also check access on the server. Client role fields cannot grant permission.
 
-Ayrı bir billing rolü veya migration eklenmedi; mevcut çalışma alanı rolleri
-kullanılır. Hesap kapatma işlemleri önceki adımdaki gibi yalnızca kullanıcının
-**sahibi olduğu** çalışma alanlarını kapsar; finans yöneticiliği başka bir
-kullanıcının hesabını silme yetkisi vermez.
+This uses existing workspace roles, with no separate billing role or migration. Account closure still covers only accounts the user owns. Billing admin access does not allow deleting another user's account.
 
-## 10. Mevcut abonelikte plan değişikliği
+## 10. Change an existing subscription plan
 
-Plan kartları, aktif Paddle aboneliğinde yeni checkout açmak yerine mevcut
-aboneliğe yönelik ücret önizlemesi gösterir. İlk satın alma checkout üzerinden
-devam eder; mevcut abonelikle doğrudan `/checkout` açmak planlar sayfasına döner.
+For an active Paddle subscription, plan cards show a price preview for changing that subscription. They do not open a new checkout. First purchases still use checkout. Opening `/checkout` with an existing subscription redirects to plans.
 
-### Uygulanan ürün politikası
+### Product rules
 
-- Hem yükseltme hem düşürme **onaydan sonra hemen** uygulanır. Dönem sonuna
-  plan değişikliği zamanlayan ayrı bir görev yoktur.
-- Paddle `prorated_immediately` ile kullanılmayan süreyi ve yeni plan ücretini
-  hesaplar. Önizlemede şimdi ödenecek tutar, alacak/ücret farkı, sonraki ödeme
-  tarihi ve tutarı ile yeni limitler gösterilir. Alacak, nakit iade vaadi değildir.
-- `onPaymentFailure: prevent_change` kullanılır. Ödeme reddedilirse plan
-  değiştirilmez. Plan/limitlerin yerel kaydı yalnızca doğrulanmış abonelik
-  webhook'u ile güncellenir; başarılı HTTP yanıtı tek başına yetki vermez.
-- Aktif mağaza, çalışma alanı üyesi veya aktif ürün sayısı yeni limiti aşarsa
-  geçiş engellenir. Veri silinmez/arşivlenmez. Kapasite onaydan önce tekrar
-  sayılır; işlem sürerken yeni kaynak ekleme eski ve yeni limitin küçüğüne tabidir.
-- Aylık soru kullanımı düşürmede silinmez. Yeni kota tükenmişse AI kota
-  kontrolleri çalışmaya devam eder; manuel yanıt engellenmez. Ücretli aboneliğin
-  `usagePeriodAnchor` değeri korunur: plan veya aylık/yıllık dönem değiştirerek
-  ek soru kotası alınamaz. Önizleme kota yenileme tarihini ayrıca gösterir.
-- `past_due`, duraklatılmış veya deneme durumundaki Paddle abonelikleri,
-  planlanmış iptal/duraklatmalar ve yenilemeye 30 dakikadan az kalan durumlar
-  önce çözülmelidir. Bu akış iptal talebini sessizce kaldırmaz.
+- Upgrades and downgrades apply **immediately after confirmation**. There is no separate job to change plans at period end.
+- Paddle uses `prorated_immediately` to calculate unused time and the new charge. The preview shows the amount due now, charge or credit difference, next payment date and amount, and new limits. A credit is not a promise of a cash refund.
+- `onPaymentFailure: prevent_change` keeps the plan unchanged if payment fails. Local plan and limit changes require verified Paddle subscription state; a successful update response alone does not grant access.
+- A change is blocked if active stores, workspace members, or active products exceed the new limit. Nothing is deleted or archived. Counts are checked again before confirmation. While a change is pending, new resources use the smaller of the old and new limits.
+- Downgrading does not clear monthly question usage. AI quota checks still apply; manual answers stay available. The paid subscription's `usagePeriodAnchor` is kept. Changing plans or switching monthly/annual billing does not grant extra question quota. The preview shows the quota reset date separately.
+- First resolve past-due, paused, or Paddle trial subscriptions, planned cancellation/pause, and renewals less than 30 minutes away. This flow does not silently remove a cancellation request.
 
-### Güvenlik ve tekrar denemeler
+### Security and retries
 
-- `POST /workspaces/:workspaceId/billing/plan-changes/preview`: beş dakika geçerli,
-  kullanıcı/çalışma alanı/abonelik/kaynak fiyat/hedef fiyat bağlantılı önizleme.
-- `POST /workspaces/:workspaceId/billing/plan-changes/:changeId/confirm`: yalnızca bu
-  önizlemeyi oluşturan, hâlâ finans yetkisi olan kullanıcı onaylayabilir.
-- `GET /workspaces/:workspaceId/billing/plan-changes/:changeId`: finans yetkisiyle
-  durum sorgulama. Başka çalışma alanının işlem kimliği kabul edilmez.
-- POST endpoint'lerinde `Origin` de doğrulanır. Üretimde `FRONTEND_URL` doğru
-  tanımlanmalıdır. İstemciden tutar, fiyat ID'si, abonelik ID'si veya uygulanma
-  biçimi alınmaz; yalnızca sunucudaki plan/fiyat eşleştirmesi kullanılır.
-- Onayda Paddle önizlemesi yeniden alınır. Tutar, indirim, adres, abonelik veya
-  fiyat değişmişse kullanıcıdan yeni önizleme/onay istenir. Prorasyon dakikaya
-  bağlı olduğu için beklerken tutar değişmesi normaldir.
-- Çalışma alanı kilidi ve kısmi benzersiz indeks, aynı anda yalnızca bir
-  `PROCESSING` / `RETRY_SCHEDULED` / `AWAITING_WEBHOOK` / `REVIEW_REQUIRED`
-  işleme izin verir.
-  Gönderim rezervasyonu dış API çağrısından **önce** kalıcılaşır.
-- Çift tıklama, ikinci sekme veya tekrar POST aynı işlemi yeniden göndermez.
-  Belirsiz bağlantı hatası/yeni süreç başlangıcı rezervasyonu düşürmez.
-  Paddle `too_many_requests` döndürürse işlem belirsiz kabul edilmez.
-  `Retry-After` süresi `retryAfterSeconds` ve `retryAt` alanlarında saklanır,
-  durum `RETRY_SCHEDULED` olur ve billing recovery worker süreden önce istek
-  göndermeden işlemi otomatik tekrar dener. Beş otomatik yeniden deneme de
-  rate-limit ile sonuçlanırsa kayıt `FAILED` yapılarak kalıcı kilit önlenir.
-  Paddle plan güncellemesini kabul ettiğinde aboneliğin `reconcileAfter`
-  zamanı hemen öne çekilir. `AWAITING_WEBHOOK` veya `REVIEW_REQUIRED` işlemi
-  sürdüğü müddetçe uzlaştırma aralığı beş dakikayı geçmez; böylece kaçırılan
-  `subscription.updated` webhook'u saatlik rutin kontrolü beklemeden onarılır.
-  `REVIEW_REQUIRED` durumunda ilgili işlem referansı loglanır; yeni PATCH
-  gönderilmez. Paddle panelindeki abonelik ve işlem geçmişi doğrulanmalı,
-  ilgili `subscription.updated` webhook'u yeniden gönderilmelidir. Uygulanmış
-  işlem webhook ile kapanır; uygulanmamış olduğuna dair kanıt olmadan yerel
-  durumu sıfırlamayın. Otomatik kör tekrar/otomatik zaman aşımı serbest bırakma yoktur.
-- Bekleyen değişiklik checkout ve hesap silmeyi engeller. Kullanıcı arayüzü
-  durumu kısa süre aralıklarla sorgular; uzun beklemede manuel yenileme sunar.
+- `POST /workspaces/:workspaceId/billing/plan-changes/preview` creates a five-minute preview linked to the user, workspace, subscription, source price, and target price.
+- `POST /workspaces/:workspaceId/billing/plan-changes/:changeId/confirm` requires the same user who created the preview, with billing permission still valid.
+- `GET /workspaces/:workspaceId/billing/plan-changes/:changeId` checks billing permission. IDs from another workspace are rejected.
+- POST endpoints check `Origin`. Set `FRONTEND_URL` correctly in production. The client does not choose amounts, price IDs, subscription IDs, or how the change applies. The server uses its own plan/price mapping.
+- Confirmation gets a fresh Paddle preview. Changes to amount, discount, address, subscription, or price require a new preview and confirmation. The amount can change while waiting because prorated charges depend on time.
+- A workspace lock and partial unique index allow only one `PROCESSING`, `RETRY_SCHEDULED`, `AWAITING_WEBHOOK`, or `REVIEW_REQUIRED` change at a time. The reservation is saved before the external API call.
+- Double clicks, another tab, or a repeated POST do not send the change again. An uncertain connection error or process restart does not clear the reservation.
 
-### Kurulum ve sandbox kontrolü
+A Paddle `too_many_requests` response is a known rate limit, not an uncertain result. Its `Retry-After` is saved as `retryAfterSeconds` and `retryAt`. The change becomes `RETRY_SCHEDULED`. Billing recovery retries only after that time. After five automatic retries also hit the rate limit, it becomes `FAILED` so the lock does not remain forever.
 
-`20260910090000_add_subscription_plan_changes` migration'ını uygulayın ve
-`npm run db:generate` çalıştırın. API anahtarında **subscription.read** ve
-**subscription.write** izinleri gerekir. Mevcut aylık/yıllık fiyat ID'leri
-kullanılır; ek Paddle ürünü veya webhook adresi gerekmez.
+When Paddle accepts a change, `reconcileAfter` is moved forward for an immediate check. While a change is `AWAITING_WEBHOOK` or `REVIEW_REQUIRED`, checks are at most five minutes apart, instead of waiting for the normal hourly check.
 
-Sandbox'ta aktif bir abonelikle farklı planı seçin, tutar/limitleri inceleyip
-onaylayın. Aynı Paddle abonelik ID'sinin korunduğunu, webhook sonrası planın
-güncellendiğini ve yeni checkout açılmadığını doğrulayın. Limit aşan küçük plan,
-kart reddi, iki sekme ve geç gelen webhook senaryolarını da kontrol edin.
+For `REVIEW_REQUIRED`, logs include the change reference. The app does not send another PATCH. Check the subscription and transaction history in Paddle, then redeliver the matching `subscription.updated`. A verified applied change closes through subscription processing. Do not reset local state without proof that it was not applied. There is no blind retry or automatic timeout release.
 
-Kaynaklar: [Paddle plan yükseltme/düşürme](https://developer.paddle.com/build/subscriptions/replace-products-prices-upgrade-downgrade/),
-[ücret önizlemesi](https://developer.paddle.com/api-reference/subscriptions/preview-subscription-update/),
-[prorasyon](https://developer.paddle.com/concepts/subscriptions/proration/).
+A pending change blocks checkout and account deletion. The UI polls its status and offers manual refresh after a long wait.
 
-## 11. Mağazadan bağımsız faturalandırma
+### Setup and sandbox checks
 
-Finans API'leri artık `/workspaces/:workspaceId/billing/*` altında çalışır.
-Eski mağaza kapsamlı finans endpoint'leri kaldırıldı; frontend ve backend
-birlikte güncellenmelidir. Ürün, kanal ve soru kotası kontrolleri değişmedi.
+Apply `20260910090000_add_subscription_plan_changes` and run `npm run db:generate`. The API key needs **subscription.read** and **subscription.write**. Existing monthly/annual price IDs are used. No extra Paddle product or webhook destination is needed.
 
-- `GET /billing/workspaces` yalnızca kullanıcının finans yönetim yetkisi
-  bulunan çalışma alanlarının kimlik ve adlarını döner. Mağaza veya tamamlanmış
-  onboarding gerekmez; ilgisiz çalışma alanları listelenmez.
-- `POST /billing/workspaces`, çalışma alanı olmayan kullanıcının açık
-  isteğiyle kendi alanını hazırlar. Kullanıcı satırı onboarding ile ortak
-  kilitlenir. Tekrar istekler mevcut sahip olunan alanı kullanır; boş veya
-  süresi dolmuş bir alanı yenisiyle değiştirmez. Mağaza oluşturmaz,
-  onboarding'i tamamlamaz veya var olan deneme süresini sıfırlamaz.
-- `/billing`, oturum açtıktan sonra finans çalışma alanını seçtirir.
-  Tek alan varsa doğrudan açılır. Hiç yoksa oluşturma formu gösterilir;
-  başka bir alanın yöneticisi olmakla karıştırılmamalıdır.
-- Abonelik `/billing/:workspaceId`, planlar `/billing/:workspaceId/plans`,
-  faturalar `/billing/:workspaceId/invoices` adresindedir. Bu sayfalar
-  dashboard/onboarding yönlendirmelerinden bağımsızdır; her finans isteğinde
-  backend yetki kontrolü korunur.
-- Checkout adresi `/checkout?workspaceId=...&plan=...&cycle=...` biçimindedir.
-  Mağaza çerezi ödeme hedefi belirlemez. Başka sekmede mağaza değiştirmek,
-  sayfayı yenilemek veya yeniden denemek aynı çalışma alanı bağını korur.
-  Ödeme tamamlanınca aynı alanın abonelik sayfasına dönülür.
-- Son mağaza silindikten sonra, deneme süresi bitmiş veya abonelik
-  duraklatılmış olsa bile fatura/ödeme/iptal yönetimi açıktır. Yeni mağaza
-  oluşturma ve AI kullanımı ise plan erişim/kapasite kontrollerine tabidir.
-- Onboarding'deki “Plan ve faturalama” bağlantısı, mağaza oluşturulamaması
-  durumunda aboneliğe erişim sağlar. Eski dashboard billing bağlantıları
-  Next.js yönlendirmeleriyle yeni giriş sayfasına gider.
+With an active sandbox subscription, select another plan, review charges and limits, then confirm. Check that the Paddle subscription ID stays the same, verified subscription state updates the plan, and no checkout opens. Also test a smaller plan over capacity, card rejection, two tabs, and a late webhook.
 
-Bu adım yeni migration veya Paddle ayarı gerektirmez. Geliştirme sunucusu
-`next.config.ts` değişikliğini otomatik almazsa frontend'i yeniden başlatın.
+Sources: [Paddle upgrades and downgrades](https://developer.paddle.com/build/subscriptions/replace-products-prices-upgrade-downgrade/), [update preview](https://developer.paddle.com/api-reference/subscriptions/preview-subscription-update/), and [proration](https://developer.paddle.com/concepts/subscriptions/proration/).
 
-### Kısa manuel kontrol
+## 11. Billing without an active store
 
-1. Test hesabında son mağazayı kaldırın; kurulum ekranından **Plan ve faturalama**
-   bağlantısını açın. Aynı abonelik ve faturalar görünmelidir.
-2. Süresi dolmuş denemede mağaza ekleyemeseniz bile plan seçme/ödeme sayfasına
-   erişebilmelisiniz. Sandbox ödemesi ve webhook sonrası mağaza kurulumu devam eder.
-3. İki çalışma alanı varsa seçilen alanın adı ve URL kimliği aynı kalmalı;
-   ödeme, portal ve fatura istekleri yalnızca o alana gitmelidir.
-4. Mağaza yöneticisi olan ama çalışma alanı finans yetkisi olmayan kullanıcı,
-   URL'yi bilse bile fatura/ödeme/iptal endpoint'lerinden 403 almalıdır.
+Financial APIs use `/workspaces/:workspaceId/billing/*`. Old store-based billing endpoints were removed, so update the frontend and backend together. Product, channel, and question quota checks still apply.
 
-## 12. Abonelik erişimi, kota ve iş yürütme politikası
+- `GET /billing/workspaces` returns IDs and names only for accounts the user can manage financially. The API does not require a store or completed onboarding and does not list unrelated accounts.
+- `POST /billing/workspaces` prepares the user's owned account. It shares the user-row lock with onboarding. Repeated calls reuse that account, even if it is empty or expired. It does not create a store, complete onboarding, or reset a trial.
+- Current `/billing` pages require sign-in and completed onboarding. The entry page opens the first account returned by the billing list. If the list is empty, the UI automatically calls the preparation API. There is no workspace picker or manual creation form in the current UI.
+- Subscription, plans, and invoices use `/billing/:workspaceId`, `/billing/:workspaceId/plans`, and `/billing/:workspaceId/invoices`. They do not require an active store. Every financial API request still checks permission.
+- Checkout uses `/checkout?workspaceId=...&plan=...&cycle=...`. The active-store cookie does not choose the payment account. Changing stores in another tab, refreshing, or retrying keeps the same workspace link. Payment returns to that account's subscription page.
+- After the last store is deleted, an account with completed onboarding can still manage invoices, payments, and cancellation, even with an expired trial or paused subscription. Adding stores and using AI still require plan access and capacity.
+- Old dashboard billing links use Next.js redirects to the new billing entry. These redirects do not bypass the current onboarding check.
 
-Soru kotası ile abonelik erişimi farklı kontrollerdir. Erişim kararı
-`billing-access.policy.ts` üzerinden hem veritabanı zamanlayıcı filtresinde
-hem worker'da aynı koşullarla verilir. Kontrol çalışma alanının aboneliğidir;
-mağaza yetkileri ve bağlantı güvenlik kontrolleri ayrıca uygulanmaya devam eder.
+No extra migration or Paddle setting is needed for these routes. Restart the frontend if it does not pick up `next.config.ts` changes.
 
-| İşlem | Aktif abonelik/deneme | Yalnızca AI kotası dolu | Abonelik erişimi kapalı |
+### Manual checks
+
+1. On a test account with completed onboarding, remove the last store and open `/billing`. The same subscription and invoices should remain available.
+2. With an expired trial, check that plans and payment are available even if store creation is blocked. After sandbox payment and webhook processing, store setup should become available under the new plan.
+3. Check that the selected account name and URL ID stay consistent. Payment, portal, and invoice requests must use that account, including when the user manages another account.
+4. A store admin without account billing permission must get `403` from invoice, payment, and cancellation endpoints, even with the URL.
+
+## 12. Subscription access, quota, and jobs
+
+Question quota and subscription access are separate checks. `billing-access.policy.ts` applies the same access rules to database scheduler filters and workers. Store permissions and connection security checks also apply.
+
+| Operation | Active subscription or trial | Only AI quota is full | Subscription access is closed |
 | --- | --- | --- | --- |
-| Yeni sorular için AI taslağı | Kota dahilinde | Durur | Durur |
-| Dahil yeniden oluşturma hakları | Kullanılabilir | Mevcut haklar korunur | Durur |
-| Önceden hazırlanmış güvenli cevabın otomatik gönderimi | Güvenlik kontrolleriyle | Devam eder, tekrar kota düşmez | Durur, manuel incelemeye bırakılır |
-| Katalog, stok ve soru senkronizasyonu | Devam eder | Devam eder | Otomatik ve elle başlatılan işler durur |
-| Beden tablosu görsel analizi | Devam eder | AI soru kotasından bağımsız | Kuyruktaki analiz de durur |
-| Kayıtlı sorulara manuel yanıt / kayıtlı taslağı elle gönderme | Açık | Açık | Açık |
-| Kayıtlı veriler, performans geçmişi ve faturalama | Açık | Açık | Açık; finans yetkisi korunur |
+| AI draft for a new question | Within quota | Stops | Stops |
+| Included regenerations | Available | Existing rights stay | Stops |
+| Automatic send of an already prepared safe answer | With safety checks | Continues, with no second quota charge | Stops for manual review |
+| Catalog, stock, and question sync | Continues | Continues | Manual and automatic jobs stop |
+| Size-chart image analysis | Continues | Independent of question quota | Stops, including queued analysis |
+| Manual answer or manual send of a saved draft | Available | Available | Available |
+| Saved data, performance history, and billing | Available | Available | Available; billing permissions still apply |
 
-### Erişim ne zaman kapanır?
+### When access ends
 
-- `TRIALING`: yalnızca `trialEndsAt` gelecekteyse erişim vardır.
-- `ACTIVE`: `currentPeriodEnd` gelecekteyse erişim vardır. Otomatik yenilenen
-  Paddle aboneliğinde dönem sonrası en fazla 30 dakikalık doğrulama penceresi
-  uygulanır; ayrıntılar bölüm 13'tedir.
-- `cancelAtPeriodEnd=true` tek başına erişimi kapatmaz. Dönem sonunda iptal
-  planlanmışsa, süre bitene kadar mevcut aktif erişim korunur.
-- `PAST_DUE`, `PAUSED`, `CANCELED`, `EXPIRED` veya eksik abonelikte erişim
-  kapalıdır. Bu sürümde başarısız ödeme için ek kullanım süresi tanımlanmamıştır.
-  Paddle yenileme webhook'u gecikirse sınırlı doğrulama penceresi ve periyodik
-  karşılaştırma kullanılır; pencere dolunca doğrulanmamış erişim uzatılmaz.
-- Zamanlayıcı, eksik abonelik için yeni deneme başlatmaz. Kota dolması,
-  aboneliği iptal etmez veya bağlantıyı hata durumuna geçirmez.
+- `TRIALING` allows access only while `trialEndsAt` is in the future.
+- `ACTIVE` allows access while `currentPeriodEnd` is in the future. Eligible auto-renewing Paddle subscriptions have a limited 30-minute verification window after period end. See section 13.
+- `cancelAtPeriodEnd=true` alone does not stop access. An active subscription keeps access until its end date.
+- `PAST_DUE`, `PAUSED`, `CANCELED`, `EXPIRED`, or a missing subscription block access. There is no extra usage period for failed payments. A delayed renewal can use the limited verification window, but unverified access does not continue after it ends.
+- Schedulers do not start a new trial for a missing subscription. A full quota does not cancel the subscription or mark a connection as broken.
 
-### Kuyruk ve senkronizasyon davranışı
+### Queue and sync behavior
 
-- Otomatik gönderim kuyruğa alınırken, worker başlarken ve canlı stok
-  doğrulamasından sonra **pazaryerine gönderilmeden hemen önce** erişim
-  yeniden okunur. Bu kontrol AI kota kontrolü değildir.
-- Erişim kapanmışsa gönderim `FAILED` ve açıklayıcı neden ile kapanır,
-  taslak metni korunur; soru `NEEDS_REVIEW` olur. Taslağın otomatik gönderim
-  uygunluğu kaldırılır. Eski cevap abonelik yenilendi diye kendiliğinden
-  yeniden gönderilmez; kullanıcı inceleyip manuel gönderebilir veya yeni
-  değerlendirme oluşturabilir.
-- Ürün/stok ve soru zamanlayıcıları yalnızca erişimi açık alanları seçer.
-  Elle güncelleme, tekrar deneme ve onboarding dahil kuyruk girişinde ayrıca
-  kontrol vardır. Kuyrukta beklerken süre dolması worker tarafından yakalanır.
-- Çok sayfalı senkronizasyonda her API sayfasından önce ve sonra erişim
-  kontrol edilir. Kesilmiş tam katalog senkronizasyonunda eksik ürünleri
-  arşivleme adımına geçilmez. Daha önce kaydedilen sayfalar geri silinmez;
-  sonraki senkronizasyon mevcut upsert/eşleştirme akışıyla devam eder.
-- Abonelik/kota engeli, geçici sağlayıcı hatası gibi üç kez denenmez.
-  İşin uygulama kaydı kapatılır, bağlantının çalışma kilidi serbest bırakılır.
-  Senkronizasyon geçmişinde mevcut `FAILED` durumu ve abonelik kaynaklı
-  durdurma açıklaması gösterilir; kanal `ERROR` yapılmaz.
-- Beden tablosu analizi de erişim kontrolünden geçer. Abonelik yüzünden duran
-  analiz sonraki tam katalog senkronizasyonunda yeniden kuyruğa alınabilir.
-- Abonelik yeniden aktif olduğunda periyodik senkronizasyon sonraki
-  zamanlayıcı turunda devam eder; elle güncelleme de tekrar kullanılabilir.
-  Kota yenilenince bekleyen sorular soru senkronizasyonunda yeniden
-  değerlendirilir.
-- Dış sistemin zaten kabul ettiği bir HTTP isteği geri alınamaz. Kontroller,
-  yeni istek başlamadan uygulanır; başlamış bir AI/API çağrısının süre
-  bittikten sonra yanıt dönmesi tamamen engellenebilecek bir garanti değildir.
+- Automatic sending checks access when queued, at worker start, and after live stock validation, immediately before the marketplace POST. This is separate from AI quota.
+- If access is closed, the answer becomes `FAILED` with a reason. Its text stays, and the question becomes `NEEDS_REVIEW`. Automatic-send eligibility is removed. Renewing does not resend the old answer. The user must review and send it manually or request a new evaluation.
+- Product/stock and question schedulers select only accounts with access. Manual updates, retries, and onboarding queue entry also check access. Workers catch expiry while a job waits.
+- Multi-page sync checks access before and after every provider page. An interrupted full catalog sync does not archive products missing from unfinished pages. Already saved pages stay. The next sync uses the normal upsert and matching flow.
+- Quota and subscription blocks do not use the three retries for temporary provider errors. The application job record closes and releases its connection lock. Sync history shows `FAILED` with a subscription reason. The channel is not changed to `ERROR`.
+- Size-chart analysis also checks access. Analysis stopped by a subscription block can be queued again during the next full catalog sync.
+- After reactivation, periodic sync continues on the next scheduler run, and manual update is available again. After quota resets, question sync can review pending questions again.
+- An HTTP request already accepted by an external service cannot be reversed. Checks run before new requests. An AI/API call already in progress may still return after access ends.
 
-### Kullanıcıya gösterilenler ve kontrol
+The subscription page explains active access, full quota, and closed access separately. The cancellation page uses the same rules. When access is closed, saved stock is from the last update and must not be treated as live.
 
-Abonelik sayfası aktif erişim, kota dolması ve erişim kapanması için farklı
-açıklamalar gösterir. İptal ekranı aynı politikayı açıklar. Erişim kapalıyken
-stok ekranındaki kayıtlar canlı kabul edilmemeli; son güncelleme tarihine
-ait oldukları abonelik ekranında belirtilir.
+### Local and sandbox checks
 
-Kısa yerel/sandbox kontrolü:
+1. Close access while an automatic answer is queued. It must not reach the marketplace, and the draft must stay for manual review.
+2. Fill only the question quota on an active subscription. Stock/question sync and prepared safe answers should continue. A new draft should return `AI_QUESTION_QUOTA_EXCEEDED`.
+3. With access closed, try stock or question sync. Expect `402 / BILLING_ACCESS_REQUIRED`. Manual answers to saved questions should remain available.
+4. Schedule cancellation for a future end date. Sync and automatic sending should work until then.
+5. Reactivate the subscription. New sync should work. Old stopped automatic answers must not send without review.
 
-1. Kuyrukta otomatik cevap varken test aboneliğini erişimsiz duruma alın.
-   Pazaryerine gönderilmemeli, taslak manuel inceleme için korunmalıdır.
-2. Aktif abonelikte yalnızca soru kotasını tüketin. Stok/soru güncelleme ve
-   hazırlanmış güvenli cevabın gönderimi devam etmeli; yeni soru taslağı
-   `AI_QUESTION_QUOTA_EXCEEDED` almalıdır.
-3. Erişimi kapatıp stok veya soru güncellemeyi deneyin:
-   `402 / BILLING_ACCESS_REQUIRED` alınmalı. Aynı durumda mevcut soruya
-   manuel cevap gönderimi kullanılabilir olmalıdır.
-4. Gelecekte bitiş tarihi olan aktif abonelikte dönem sonu iptalini açın.
-   Süre bitmeden senkronizasyon ve otomatik gönderim durmamalıdır.
-5. Aboneliği yeniden aktif yapın: yeni senkronizasyon çalışmalı; durdurulmuş
-   eski otomatik cevap kullanıcı incelemesi olmadan yeniden gönderilmemelidir.
+This access policy needs no extra migration, environment variable, or Paddle setting. Focused local checks do not make real charges, AI calls, or marketplace sends.
 
-Bu adım migration, yeni ortam değişkeni veya Paddle paneli değişikliği
-gerektirmez. Yerel odaklı kontrollerde gerçek tahsilat, AI çağrısı veya
-pazaryerine gönderim yapılmaz.
+## 13. Delayed renewals and missed webhooks
 
-## 13. Geciken yenileme ve kaçırılan webhook için toparlanma
+### Waiting policy
 
-### Bekleme politikası
+Only an `ACTIVE` subscription with a linked Paddle ID and no planned end-of-period cancellation or pause can use the fixed `currentPeriodEnd + 30 minutes` limit. Refreshing, API errors, or retries do not extend it. Trials and `PAST_DUE`, `PAUSED`, `CANCELED`, or `EXPIRED` subscriptions get no extra time. Verified payment issues apply immediately. Planned cancellation or pause stops access at its effective date.
 
-Yalnızca `ACTIVE`, Paddle kimliği bağlı ve dönem sonunda iptal/duraklatma
-planlanmamış aboneliklerde `currentPeriodEnd + 30 dakika` sabit son sınırdır.
-Sayfa yenilemek, API hatası veya tekrar denemek bu süreyi uzatmaz.
-`PAST_DUE`, `PAUSED`, `CANCELED`, `EXPIRED` ve deneme için ek süre verilmez.
-Paddle'ın doğruladığı ödeme sorunu hemen erişim politikasına uygulanır.
-Planlı iptal veya duraklatma, bildirilen yürürlük tarihinde erişimi kapatır.
+This window does not grant a new monthly AI quota. Usage stays in the last verified period. After Paddle confirms the new period, the monthly usage anchor advances normally. Trial expiry checks status, Paddle ID, and `updatedAt`, so it cannot replace concurrent payment activation.
 
-Bu pencere yeni bir aylık AI kotası açmaz. Kullanım, son doğrulanmış dönemin
-kotası üzerinden sürer; Paddle yeni dönemi doğrulayınca mevcut aylık sayaç
-ankrajı normal şekilde ilerler. Deneme bitişi güncellemesi durum, Paddle
-kimliği ve `updatedAt` koşullarıyla yapılır; eşzamanlı ödeme aktivasyonu ezilmez.
+### Automatic comparison with Paddle
 
-### Otomatik karşılaştırma
+- The `billing-recovery` BullMQ scheduler selects up to 20 due records each minute. Subscriptions within 24 hours of renewal, recently past renewal, `PAST_DUE`, or waiting for first payment are checked about every five minutes. Other linked Paddle subscriptions are checked hourly. Queue load can affect timing.
+- Recovery only reads Paddle. It does not create payments, charge cards, or cancel subscriptions. Webhooks remain the main update path.
+- Linked subscriptions use `GET /subscriptions/{id}`. If the first `subscription.created` was missed, recovery reads only the transaction ID saved for an open checkout. A completed transaction's subscription ID must pass the trusted price, customer, and previous-subscription checks again.
+- `customData` cannot grant access. `CREATING` or `REVIEW_REQUIRED` checkouts with a missing transaction ID need admin review; recovery does not guess a link.
+- API results and webhooks share the update path. Paddle resource `updated_at` is stored in `paddleSnapshotAt`; webhook event time uses `paddleUpdatedAt`. An old snapshot cannot replace a newer state. If the local record changed during the network call, an `updatedAt` check under workspace/row locks rejects the result and schedules another check.
+- A database lease protects work across workers. After a crash, another worker can claim it after five minutes. Each API call has a 15-second wait limit. The SDK cannot physically cancel its HTTP request, but a late read result cannot proceed to update the database.
+- API, permission, or matching errors retry after 5, 10, 20, 40, then at most 60 minutes. Track `lastReconciledAt`, `reconcileAfter`, `reconcileFailures`, and `reconcileErrorCode`. Failure does not advance the last successful check time. Logs exclude secrets and raw payment data.
 
-- `billing-recovery` BullMQ zamanlayıcısı dakikada bir en fazla 20 zamanı
-  gelmiş kaydı seçer. Yenilemeye 24 saatten az kalan/geçmiş yakın dönem,
-  `PAST_DUE` veya ilk ödeme bekleyen abonelikler yaklaşık 5 dakikada bir;
-  diğer Paddle abonelikleri saatte bir kontrol edilir. Kuyruk yoğunluğu
-  bu süreleri etkileyebilir.
-- Karşılaştırma yalnızca Paddle'dan **okur**. Yeni ödeme oluşturmaz,
-  karttan tahsilat yapmaz veya abonelik iptal etmez. Ana akış webhook'tur.
-- Bağlı abonelik `GET /subscriptions/{id}` ile karşılaştırılır. İlk
-  `subscription.created` kaçırılmışsa yalnızca backend'in kaydettiği açık
-  checkout'un transaction ID'si okunur; tamamlanmış işlemdeki subscription ID
-  üzerinden güvenilir fiyat/müşteri/önceki abonelik eşleştirmesi tekrar yapılır.
-  `customData` yetki kaynağı değildir. ID'si kaybolmuş `CREATING` veya
-  `REVIEW_REQUIRED` ödemeler tahmin edilerek bağlanmaz; yönetici incelemesi gerekir.
-- API sonucu ve webhook aynı güncelleme yolunu kullanır. Paddle kaydının
-  `updated_at` sürümü `paddleSnapshotAt` alanında, webhook zarf zamanı ise
-  `paddleUpdatedAt` alanında tutulur. Eski snapshot yeni durumu ezemez.
-  Ağ çağrısı sırasında yerel kayıt değişirse workspace/satır kilidi altında
-  `updatedAt` karşılaştırması başarısız olur ve kontrol yeniden denenir.
-- Kısa DB çalışma kilidi birden fazla worker'ı korur; çöken işin kilidi beş
-  dakika sonra alınabilir. API bekleme sınırı çağrı başına 15 saniyedir.
-  Mevcut SDK isteği fiziksel olarak iptal edemez; geç gelen salt-okuma
-  yanıtı veritabanını güncelleme adımına ilerleyemez.
-- API/izin/eşleştirme hatalarında 5, 10, 20, 40, ardından en fazla 60 dakika
-  arayla kontrol yapılır. `lastReconciledAt`, `reconcileAfter`,
-  `reconcileFailures`, `reconcileErrorCode` izlenebilir. Başarısız kontrol
-  başarılı tarihini ilerletmez; loglarda gizli anahtar veya ham ödeme verisi yoktur.
+### User warnings and pending questions
 
-### Kullanıcı uyarıları ve bekleyen sorular
+Payment issues and unverified renewal create a required in-app `BILLING_PAYMENT_ISSUE` notification. Only the workspace owner and `OWNER`/`ADMIN` workspace members receive it. A store admin role alone is not enough. No store is required. The notification is saved with the subscription update and is not repeated for the same period. This recovery alert does not use store email or browser preferences to send outside the app.
 
-Ödeme sorunu ve doğrulanamayan yenileme için `BILLING_PAYMENT_ISSUE`
-uygulama içi bildirimi oluşturulur. Alıcılar yalnızca çalışma alanı sahibi ve
-`OWNER`/`ADMIN` çalışma alanı üyeleridir; mağaza yöneticiliği yeterli değildir.
-Bildirim mağaza gerektirmez, aynı dönem için tekrar tekrar oluşturulmaz ve
-abonelik güncellemesiyle aynı transaction içinde kaydedilir. Finans bildirimleri
-zorunlu uygulama içi uyarılardır; mağaza bazlı e-posta/tarayıcı tercihleriyle
-dışarıya gönderilmez. Abonelik sayfasında ödeme yöntemini Paddle portalında
-güncelleme bağlantısı ve gecikme açıklaması vardır. Görünür sayfa 30 saniyede
-bir yerel özeti kontrol eder; durum değişince ekran yenilenir.
+The subscription page explains the delay and links to payment-method updates in the Paddle portal. While visible, it checks the local summary every 30 seconds and refreshes when the state changes.
 
-Kota engeli `BLOCKED_QUOTA`, abonelik engeli `BLOCKED_SUBSCRIPTION` olarak
-tutulur. Gelen kutusunda **Kota bekliyor** / **Abonelik bekliyor** görünür;
-bunlar genel AI üretim hatası veya her soru için ayrı hata bildirimi değildir.
-Engel sürerken AI işi tekrar kuyruğa eklenmez. Beş dakikalık ayrı yerel
-kontrol, erişimi ve kotası açılan aktif mağazaların hâlâ bekleyen, bağlı ürünü
-ve kanalı olan sorularını mevcut otomasyon moduna göre yeniden kuyruğa alır.
-Manuel yanıtlanmış sorular ve daha önce güvenlik nedeniyle durdurulmuş
-otomatik gönderimler kendiliğinden tekrar gönderilmez.
+Quota blocks use `BLOCKED_QUOTA`; subscription blocks use `BLOCKED_SUBSCRIPTION`. The inbox shows “Waiting for quota” or “Waiting for subscription”. These are not general AI errors and do not create a separate error notification for each question. AI jobs are not queued again while blocked.
 
-### Kurulum ve kısa test
+A separate local check runs every five minutes. It queues eligible pending questions again when access and quota are available, following the current automation mode. The store must be active, with a matched product and channel.
 
-Bu adım `20260910120000_add_billing_recovery` migration'ını gerektirir:
+Failed Redis jobs with the same ID need a real retry and reset attempt counters; another `add` alone will not run them. The same check recovers records that have been `QUEUED` for at least one minute when Redis is missing the job or has a completed/failed job. Waiting, delayed, and active jobs stay unchanged. Access and question-level quota checks run before restart.
+
+Manually answered questions and automatic sends stopped for safety are never sent again automatically.
+
+### Setup and test
+
+Apply `20260910120000_add_billing_recovery`:
 
 ```powershell
 cd backend
@@ -688,76 +366,32 @@ npm run db:migrate:deploy
 npm run db:generate
 ```
 
-Backend'i yeniden başlatın; Redis ve BullMQ worker'ları açık olmalıdır.
-Yeni Paddle anahtarı gerekmez. Mevcut API anahtarının abonelik ve işlem
-okuma izinleri (`subscription.read`, `transaction.read`) olmalıdır.
-Webhook imza kontrolü ve mevcut bildirim hedefi değişmez.
+Restart the backend with Redis and BullMQ workers running. No new Paddle key is needed. The existing key needs `subscription.read` and `transaction.read`. Signature verification and the webhook destination stay the same.
 
-Sandbox'ta yenileme bildiriminin teslimini durdurup yeni dönem oluşmasını
-bekleyerek API karşılaştırmasının yerel dönemi onardığını doğrulayabilirsiniz.
-Ödeme başarısızlığı olayında finans uyarısı ve ödeme yöntemi bağlantısı;
-kota dolmasında ise yeni AI çağrısı olmadan bekleme durumu görülmelidir.
-Gerçek ortamda test amacıyla tahsilat veya iptal yapmayın.
+In Sandbox, pause renewal webhook delivery and wait for the next period. Check that the read-only comparison repairs the local period. For payment failure, check the financial alert and payment-method link. For full quota, check the waiting state without a new AI call. Do not make test charges or cancellations in production.
 
-Resmî kaynaklar: [Paddle erişim ve periyodik karşılaştırma rehberi](https://developer.paddle.com/build/subscriptions/provision-access-webhooks/),
-[abonelik okuma](https://developer.paddle.com/api-reference/subscriptions/get-subscription/).
-30 dakikalık pencere Paddle'ın zorunlu kuralı değil, Core Asistan'ın ürün politikasıdır.
+Sources: [Paddle access and periodic checks](https://developer.paddle.com/build/subscriptions/provision-access-webhooks/) and [Get subscription](https://developer.paddle.com/api-reference/subscriptions/get-subscription/). The 30-minute window is Core Asistan policy, not a Paddle requirement.
 
-## Dinamik plan fiyatları
+## Dynamic plan prices
 
-Plan ücretleri ve yıllık plan avantajı frontend sabitlerinden hesaplanmaz.
-`GET /billing/pricing` yalnızca backend'de yapılandırılmış altı Paddle fiyat
-kimliğini ve sandbox/production ortamını yayınlar; Paddle API anahtarı veya başka
-bir gizli değer döndürmez. Landing, plan seçimi, ödeme özeti ve mevcut plan
-ekranları bu kataloğu tek bir `Paddle.PricePreview()` isteğiyle hesaplar.
+Frontend constants do not set plan prices or annual savings. `GET /billing/pricing` returns only the six configured Paddle price IDs and the sandbox/production environment. It does not return the API key or other secrets. Landing, plan selection, checkout summary, and current-plan screens use one `Paddle.PricePreview()` request for this catalog.
 
-Gösterilen tutar Paddle'ın ziyaretçi konumu, para birimi, vergi ve fiyat
-yapılandırmasına göre döndürdüğü toplamdır. Yıllık aylık karşılığı ve tasarruf
-oranı da aylık/yıllık Paddle toplamlarından türetilir; kodda sabit indirim oranı
-bulunmaz. Fiyat ortamı istemci ortamıyla eşleşmezse veya katalog eksikse plan
-seçimi kapatılır ve kullanıcıya yeniden deneme sunulur. Ödeme formunun gösterdiği
-tutar her durumda nihai kaynaktır.
+Paddle totals depend on visitor location, currency, tax, and price settings. The annual monthly equivalent and savings rate come from monthly/annual totals, with no fixed discount in code. An incomplete catalog or environment mismatch disables plan selection and offers retry. The checkout form always shows the final amount.
 
-Core Asistan'ın 10 günlük kart gerektirmeyen denemesi yerel abonelik kaydıyla
-yönetilir ve yalnızca bir kez başlatılır. Paddle ürünlerindeki aylık ve yıllık
-fiyatlarda **Trials anahtarı kapalı olmalıdır**. Core Asistan fiyat önizlemesinde,
-ilk checkout öncesinde, plan değişikliği öncesinde ve webhook bağlama sırasında
-`trial_period` bulunmadığını doğrular. Trial içeren bir Paddle fiyatı ödeme veya
-plan yetkisi veremez; böylece kullanıcı ikinci bir denemeye ya da ücretli plan
-yerine 100 soruluk yerel deneme limitine geçirilmez.
+Core Asistan's local trial lasts 10 days, needs no card, and starts only once. Its quota is 100 questions. **Turn off Trials on all monthly and annual Paddle prices.** Price preview, first checkout, plan change, and webhook binding check that `trial_period` is absent. A price with a Paddle trial cannot grant a paid plan. This prevents a second trial or a paid user being kept on the local trial limit.
 
-Fiyatların beş dakikalık tarayıcı/backend cache süresi nedeniyle Paddle'daki bir
-değişiklik kısa süre gecikmeli görünebilir. Yeni fiyatları yayınlarken ilgili
-`PADDLE_PRICE_*` değişkenlerini güncelleyin ve backend'i yeniden başlatın.
+Browser and backend price caches last five minutes, so a Paddle change may appear with a short delay. To publish new prices, update the relevant `PADDLE_PRICE_*` values and restart the backend.
 
-Resmî kaynaklar: [Paddle.PricePreview](https://developer.paddle.com/paddle-js/methods/paddle-pricepreview/),
-[dinamik fiyatlandırma sayfası](https://developer.paddle.com/build/checkout/build-pricing-page/).
+Sources: [Paddle.PricePreview](https://developer.paddle.com/paddle-js/methods/paddle-pricepreview/) and [Dynamic pricing pages](https://developer.paddle.com/build/checkout/build-pricing-page/).
 
-## Operasyonel faturalandırma kayıtlarını saklama
+## Retention of billing operation records
 
-`billing-retention-cleanup` işi BullMQ tarafından günde bir çalıştırılır.
-Temizlik her koleksiyonu en eski kayıttan başlayarak 500'lük partiler halinde
-ve bir çalışmada en fazla 10.000 kayıtla sınırlı olarak işler. Böylece büyük
-bir silme işlemi canlı checkout veya webhook transaction'larını uzun süre
-kilitlemez; birikmiş kayıtlar sonraki günlerde kademeli olarak temizlenir.
+BullMQ runs `billing-retention-cleanup` daily. It handles each collection oldest first, in batches of 500 and up to 10,000 records per run. This limits long locks on live checkout or webhook transactions. Backlogs are cleared over later runs.
 
-Saklama politikası:
+- Keep successfully processed `billing_webhook_event` IDs for 180 days from `processedAt`. Old events are still subject to subscription snapshot and date checks if delivered after this period.
+- Keep unlinked `CANCELED` and `FAILED` checkouts for 90 days. Do not automatically delete `CREATING`, `OPEN`, or `REVIEW_REQUIRED` records.
+- Keep `COMPLETED` checkouts until workspace deletion. They are part of the trusted transaction/subscription link.
+- Delete expired `PREVIEWED` plan changes after an extra 24 hours, `FAILED` changes after 90 days, and `COMPLETED` changes after one year.
+- Do not clean up unresolved `PROCESSING`, `RETRY_SCHEDULED`, `AWAITING_WEBHOOK`, or `REVIEW_REQUIRED` plan changes.
 
-- Başarıyla işlenmiş `billing_webhook_event` kimlikleri 180 gün tutulur.
-  Bu süre Paddle'ın olağan yeniden teslim penceresinden uzundur; daha eski bir
-  olay yeniden gelirse abonelik snapshot/tarih kontrolleri durumun gerilemesini
-  engellemeye devam eder.
-- Bir aboneliğe bağlanmamış `CANCELED` ve `FAILED` checkout kayıtları 90 gün
-  tutulur. `CREATING`, `OPEN` ve `REVIEW_REQUIRED` kayıtlar otomatik silinmez.
-- `COMPLETED` checkout kayıtları Paddle transaction/abonelik eşleştirmesinin
-  güven zinciridir; çalışma alanı silinene kadar korunur.
-- Süresi dolmuş `PREVIEWED` plan değişiklikleri 24 saat ek süreden sonra,
-  `FAILED` kayıtlar 90 gün sonra, `COMPLETED` kayıtlar bir yıl sonra silinir.
-- `PROCESSING`, `RETRY_SCHEDULED`, `AWAITING_WEBHOOK` ve `REVIEW_REQUIRED` plan
-  değişiklikleri sonuçlanmadan otomatik temizlenmez.
-
-Bu kayıtlar operasyonel eşleştirme ve hata ayıklama verileridir. Paddle'daki
-fatura ve yasal finans kayıtları bu iş tarafından silinmez. Temizlik sorguları
-`processedAt`, `status + updatedAt` ve `status + expiresAt` indekslerini kullanır.
-`20260912120000_add_billing_retention_indexes` migration'ı production'a deploy
-edilmeden zamanlanmış temizliğe geçilmemelidir.
+These are operational matching and diagnostic records. This job does not delete Paddle invoices or legal financial records. Cleanup uses `processedAt`, `status + updatedAt`, and `status + expiresAt` indexes. Apply `20260912120000_add_billing_retention_indexes` before enabling scheduled cleanup in production. See [Data retention](../../DATA_RETENTION.md) for the wider policy.

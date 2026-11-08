@@ -33,6 +33,7 @@ import {
   AuditOrigin,
   AuditResult,
 } from '../audit/audit-log.service';
+import { randomUUID } from 'node:crypto';
 
 @Injectable()
 export class StoresService {
@@ -390,6 +391,30 @@ export class StoresService {
       await transaction.store.update({
         where: { id },
         data: { status: StoreStatus.INACTIVE },
+      });
+
+      // Revoke only this store's current generation, even if it is restored
+      // before an in-flight model call returns. Preserve the workspace cooldown.
+      // Lock the lease before question rows, matching draft commit/recovery.
+      const revokedToken = randomUUID();
+      await transaction.$executeRaw`
+        UPDATE "ai_draft_lease" AS lease
+        SET "token" = ${revokedToken}, "expiresAt" = CURRENT_TIMESTAMP
+        FROM "product_question" AS question
+        WHERE lease."workspaceId" = ${store.workspaceId}
+          AND lease."questionId" = question."id" AND question."storeId" = ${id}
+      `;
+      await transaction.productQuestion.updateMany({
+        where: {
+          storeId: id,
+          draftProcessingStatus: { not: null },
+        },
+        data: {
+          draftProcessingStatus: null,
+          draftProcessingError: null,
+          draftQueuedAt: null,
+          draftProcessingStartedAt: null,
+        },
       });
 
       await this.audit.record(

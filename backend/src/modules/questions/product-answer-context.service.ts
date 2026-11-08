@@ -18,6 +18,10 @@ import { PrismaService } from '../../database/prisma.service';
 import { isSizeGuideCompatible } from '../size-guides/size-guide-scope';
 import { isAmbientWearQuestion } from './ambient-wear-question';
 import {
+  garmentLengthEvidence,
+  isGarmentLengthQuestion,
+} from './garment-length-guidance';
+import {
   getInventoryFreshnessCutoff,
   getInventoryFreshnessMaxAgeMs,
   resolveInventoryFreshness,
@@ -151,6 +155,10 @@ const PRODUCT_CODE_PATTERNS = [
   'model kodunu',
 ];
 const PRODUCT_INFO_PATTERNS = [
+  'kemer',
+  'dahil',
+  'dugme',
+  'fermuar',
   'astar',
   'ic goster',
   'hacim',
@@ -1149,6 +1157,8 @@ export function analyzeProductQuestion(input: {
     sizeGuides: compatibleGuides,
     normalizedQuestion,
   });
+  const lengthEvidence = garmentLengthEvidence(product);
+  if (lengthEvidence) evidence.push(lengthEvidence);
   if (
     requestedFacts.length === 1 &&
     requestedFacts[0] === 'SIZE' &&
@@ -1235,12 +1245,18 @@ function evaluateInventoryFreshness(
 function detectRequestedFacts(normalizedQuestion: string): ProductAnswerFact[] {
   const facts: ProductAnswerFact[] = [];
   const ambientWearQuestion = isAmbientWearQuestion(normalizedQuestion);
+  // A previous garment is context for size selection, not a request about
+  // this product's material. Keep any separate material question intact.
+  const materialQuestion = normalizedQuestion.replace(
+    /\b(?:\d{2,3}\s*(?:beden|numara)\s+)?(?:kumas|kanvas|kot|denim)\s+pantolon(?:da|larda)?(?:\s+\d{2,3}\s*(?:beden|numara))?\s+(?:giyiyorum|giyerim|giyiyordum|giydim|kullaniyorum|kullandim|tercih ediyorum)\b/g,
+    ' ',
+  );
 
   if (isStockQuestion(normalizedQuestion)) {
     facts.push('STOCK');
   }
   if (includesAny(normalizedQuestion, PRICE_PATTERNS)) facts.push('PRICE');
-  if (includesAny(normalizedQuestion, MATERIAL_PATTERNS)) {
+  if (includesAny(materialQuestion, MATERIAL_PATTERNS)) {
     facts.push('MATERIAL');
   }
   if (ambientWearQuestion) {
@@ -1261,6 +1277,7 @@ function detectRequestedFacts(normalizedQuestion: string): ProductAnswerFact[] {
   }
   if (
     includesAny(normalizedQuestion, SIZE_PATTERNS) ||
+    isGarmentLengthQuestion(normalizedQuestion) ||
     /(?:^| )kg(?: |$)/.test(normalizedQuestion) ||
     Boolean(findGenericSizeMention(normalizedQuestion))
   ) {

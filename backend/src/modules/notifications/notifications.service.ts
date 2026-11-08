@@ -25,6 +25,10 @@ import {
   type NotificationChangeReason,
 } from './notification-stream.service';
 import { NotificationDeliveryService } from './notification-delivery.service';
+import {
+  DEFAULT_NOTIFICATION_DELIVERY_SETTINGS,
+  notificationEmailDeliveryKey,
+} from './notification-email.policy';
 import { UpdateNotificationDeliverySettingsDto } from './dto/update-notification-delivery-settings.dto';
 import { SyncEmailIncidentService } from './sync-email-incident.service';
 import { OperationalEmailIncidentService } from './operational-email-incident.service';
@@ -276,7 +280,9 @@ export class NotificationsService {
     return {
       storeId,
       browserEnabled: settings?.browserEnabled ?? false,
-      emailEnabled: settings?.emailEnabled ?? false,
+      emailEnabled:
+        settings?.emailEnabled ??
+        DEFAULT_NOTIFICATION_DELIVERY_SETTINGS.emailEnabled,
       quietHoursEnabled: settings?.quietHoursEnabled ?? false,
       quietHoursStart: settings?.quietHoursStart ?? '22:00',
       quietHoursEnd: settings?.quietHoursEnd ?? '08:00',
@@ -324,7 +330,9 @@ export class NotificationsService {
         userId,
         storeId: body.storeId,
         browserEnabled: body.browserEnabled,
-        emailEnabled: body.emailEnabled,
+        emailEnabled:
+          body.emailEnabled ??
+          DEFAULT_NOTIFICATION_DELIVERY_SETTINGS.emailEnabled,
         quietHoursEnabled: body.quietHoursEnabled,
         quietHoursStart: body.quietHoursStart,
         quietHoursEnd: body.quietHoursEnd,
@@ -791,9 +799,11 @@ export class NotificationsService {
       const store = await this.prisma.store.findUnique({
         where: { id: input.storeId },
         select: {
+          timezone: true,
           members: { select: { userId: true, role: true } },
           workspace: {
             select: {
+              id: true,
               ownerId: true,
               members: {
                 where: { role: WorkspaceRole.ADMIN },
@@ -857,6 +867,17 @@ export class NotificationsService {
 
       const notifications = await this.prisma.$transaction(
         async (transaction) => {
+          // Initialize defaults when the first event arrives, so digests also
+          // work before a user visits preferences. Never override an opt-out.
+          await transaction.notificationDeliverySetting.createMany({
+            data: enabledRecipientUserIds.map((userId) => ({
+              userId,
+              storeId: input.storeId,
+              emailEnabled: DEFAULT_NOTIFICATION_DELIVERY_SETTINGS.emailEnabled,
+              timezone: store.timezone,
+            })),
+            skipDuplicates: true,
+          });
           const saved: Array<{
             id: string;
             recipientUserId: string;
@@ -899,6 +920,7 @@ export class NotificationsService {
             });
             await this.delivery.stageDirectEmail(transaction, notification, {
               storeId: input.storeId,
+              workspaceId: store.workspace.id,
               type: input.type,
               severity: input.severity,
               title,
@@ -929,7 +951,7 @@ export class NotificationsService {
           emailDeliveryKeys: Object.fromEntries(
             notifications.map((notification) => [
               notification.recipientUserId,
-              `notification:${notification.id}:${notification.occurrenceCount}`,
+              notificationEmailDeliveryKey(notification, input.type),
             ]),
           ),
         });

@@ -190,7 +190,7 @@ export function NotificationDeliverySettings({ storeId }: { storeId: string }) {
           title="E-posta bildirimleri"
           description={
             settings.availability.email
-              ? "Mağaza olaylarını e-postayla bildirir. Ödeme ve hesap güvenliği mailleri bu ayardan bağımsızdır."
+              ? "İnceleme özetlerini ve operasyon bildirimlerini e-postayla alın. Kritik kota, ödeme, abonelik ve güvenlik bildirimleri bu ayardan bağımsızdır."
               : "Resend bilgileri yapılandırıldığında kullanılabilir."
           }
           checked={settings.emailEnabled}
@@ -208,8 +208,8 @@ export function NotificationDeliverySettings({ storeId }: { storeId: string }) {
               <div>
                 <p className="text-sm font-medium">Sessiz saatler</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  Mağaza e-postaları ve tarayıcı bildirimleri duraklar. Ödeme ve
-                  hesap güvenliği mailleri gönderilmeye devam eder.
+                  Operasyon e-postaları ve tarayıcı bildirimleri duraklar.
+                  Kritik kota, ödeme, abonelik ve güvenlik e-postaları devam eder.
                 </p>
               </div>
             </div>

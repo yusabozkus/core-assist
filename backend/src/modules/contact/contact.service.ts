@@ -1,6 +1,7 @@
-import { createHmac } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { Prisma } from '../../generated/prisma/client';
 import { CreateContactMessageDto } from './dto/create-contact-message.dto';
 
 const RATE_WINDOW_MS = 60 * 60 * 1_000;
@@ -16,54 +17,75 @@ export class ContactService {
 
     const emailNormalized = input.email.trim().toLocaleLowerCase('en-US');
     const requestFingerprint = contactFingerprint(ipAddress);
-    const windowStart = new Date(Date.now() - RATE_WINDOW_MS);
-    const [fingerprintRequests, emailRequests] = await Promise.all([
-      this.prisma.contactMessage.count({
-        where: {
-          requestFingerprint,
-          createdAt: { gte: windowStart },
-        },
-      }),
-      this.prisma.contactMessage.count({
-        where: {
-          emailNormalized,
-          createdAt: { gte: windowStart },
-        },
-      }),
-    ]);
+    await this.prisma.$transaction(
+      async (transaction) => {
+        // A transaction owns both limits until the insert commits or rolls back.
+        // Hashes avoid putting email/IP values into database lock identifiers.
+        const locks = [
+          contactLimitLock('email', emailNormalized),
+          contactLimitLock('fingerprint', requestFingerprint),
+        ].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+        for (const lock of new Set(locks)) {
+          await transaction.$executeRaw`SELECT pg_advisory_xact_lock(${lock})`;
+        }
+        const windowStart = new Date(Date.now() - RATE_WINDOW_MS);
+        const [fingerprintRequests, emailRequests] = await Promise.all([
+          transaction.contactMessage.count({
+            where: {
+              requestFingerprint,
+              createdAt: { gte: windowStart },
+            },
+          }),
+          transaction.contactMessage.count({
+            where: {
+              emailNormalized,
+              createdAt: { gte: windowStart },
+            },
+          }),
+        ]);
 
-    if (
-      fingerprintRequests >= MAX_REQUESTS_PER_FINGERPRINT ||
-      emailRequests >= MAX_REQUESTS_PER_EMAIL
-    ) {
-      throw new HttpException(
-        {
-          code: 'CONTACT_RATE_LIMITED',
-          message:
-            'Kısa süre içinde çok sayıda mesaj gönderdiniz. Lütfen daha sonra tekrar deneyin.',
-          retryAfterSeconds: Math.ceil(RATE_WINDOW_MS / 1_000),
-        },
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
-    }
+        if (
+          fingerprintRequests >= MAX_REQUESTS_PER_FINGERPRINT ||
+          emailRequests >= MAX_REQUESTS_PER_EMAIL
+        ) {
+          throw new HttpException(
+            {
+              code: 'CONTACT_RATE_LIMITED',
+              message:
+                'Kısa süre içinde çok sayıda mesaj gönderdiniz. Lütfen daha sonra tekrar deneyin.',
+              retryAfterSeconds: Math.ceil(RATE_WINDOW_MS / 1_000),
+            },
+            HttpStatus.TOO_MANY_REQUESTS,
+          );
+        }
 
-    await this.prisma.contactMessage.create({
-      data: {
-        name: input.name,
-        email: input.email,
-        emailNormalized,
-        company: input.company || null,
-        topic: input.topic,
-        subject: input.subject,
-        message: input.message,
-        sourcePage: normalizeSourcePage(input.sourcePage),
-        requestFingerprint,
+        await transaction.contactMessage.create({
+          data: {
+            name: input.name,
+            email: input.email,
+            emailNormalized,
+            company: input.company || null,
+            topic: input.topic,
+            subject: input.subject,
+            message: input.message,
+            sourcePage: normalizeSourcePage(input.sourcePage),
+            requestFingerprint,
+          },
+          select: { id: true },
+        });
       },
-      select: { id: true },
-    });
+      { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted },
+    );
 
     return { accepted: true };
   }
+}
+
+function contactLimitLock(kind: 'email' | 'fingerprint', value: string) {
+  return createHash('sha256')
+    .update(`core-asistan:contact:${kind}:${value}`)
+    .digest()
+    .readBigInt64BE(0);
 }
 
 function contactFingerprint(ipAddress: string) {

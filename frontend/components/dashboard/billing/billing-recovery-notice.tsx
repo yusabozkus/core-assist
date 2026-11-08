@@ -3,15 +3,14 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { PaymentMethodDialog } from "@/components/dashboard/billing/payment-method-dialog"
 import {
-  createBillingPortalSession,
   getBillingSummary,
   refreshBillingSubscription,
 } from "@/lib/api/billing"
 import {
   clearBillingPortalReturn,
   hasPendingBillingPortalReturn,
-  markBillingPortalVisit,
 } from "@/lib/billing-portal-return"
 import type { BillingSummary } from "@/types/billing"
 
@@ -23,8 +22,7 @@ export function BillingRecoveryNotice({
   subscription: BillingSummary["subscription"]
 }) {
   const router = useRouter()
-  const [opening, setOpening] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [paymentOpen, setPaymentOpen] = useState(false)
   const recovery = subscription.recovery
   const awaiting = recovery?.awaitingRenewal
   const paymentIssue = recovery?.paymentIssue
@@ -89,23 +87,6 @@ export function BillingRecoveryNotice({
   // account problem and should not interrupt the billing overview.
   if (!awaiting && !paymentIssue && !delayed) return null
 
-  async function openPaymentSettings() {
-    setOpening(true)
-    setError(null)
-    try {
-      const session = await createBillingPortalSession(workspaceId)
-      markBillingPortalVisit(workspaceId)
-      window.location.assign(
-        session.updatePaymentMethodUrl ?? session.overviewUrl
-      )
-    } catch (caught) {
-      setError(
-        caught instanceof Error ? caught.message : "Ödeme yönetimi açılamadı."
-      )
-      setOpening(false)
-    }
-  }
-
   return (
     <section
       role="status"
@@ -131,17 +112,16 @@ export function BillingRecoveryNotice({
           variant="outline"
           size="sm"
           className="mt-3"
-          disabled={opening}
-          onClick={openPaymentSettings}
+          onClick={() => setPaymentOpen(true)}
         >
-          {opening ? "Paddle açılıyor…" : "Ödeme yöntemini güncelle"}
+          Ödeme yöntemini güncelle
         </Button>
       )}
-      {error && (
-        <p role="alert" className="mt-2 text-xs text-destructive">
-          {error}
-        </p>
-      )}
+      <PaymentMethodDialog
+        workspaceId={workspaceId}
+        open={paymentOpen}
+        onOpenChange={setPaymentOpen}
+      />
     </section>
   )
 }

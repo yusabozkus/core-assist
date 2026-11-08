@@ -693,6 +693,8 @@ const ACTION_LABELS: Record<string, string> = {
   BILLING_CHECKOUT_OPENED: "Ödeme işlemi açıldı",
   BILLING_CHECKOUT_CANCELED: "Bekleyen ödeme iptal edildi",
   BILLING_PLAN_CHANGE_CONFIRMED: "Plan değişikliği onaylandı",
+  BILLING_SUBSCRIPTION_CANCEL_REQUESTED: "Abonelik iptali planlandı",
+  BILLING_CANCELLATION_REVERSED: "Planlanan abonelik iptali geri alındı",
   BILLING_SUBSCRIPTION_SYNCHRONIZED: "Abonelik durumu eşitlendi",
   BILLING_TRANSACTION_RECOVERED: "Ödeme bağlantısı kurtarıldı",
   BILLING_WEBHOOK_FAILED: "Ödeme webhook'u işlenemedi",

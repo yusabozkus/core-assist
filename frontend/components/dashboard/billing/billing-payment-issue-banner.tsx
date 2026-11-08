@@ -2,17 +2,12 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import {
-  AlertCircleIcon,
-  ArrowRight01Icon,
-  Loading03Icon,
-} from "@hugeicons/core-free-icons"
+import { AlertCircleIcon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { useBillingUsage } from "@/components/dashboard/billing/billing-usage-provider"
 import { Button } from "@/components/ui/button"
-import { createBillingPortalSession } from "@/lib/api/billing"
-import { markBillingPortalVisit } from "@/lib/billing-portal-return"
+import { PaymentMethodDialog } from "@/components/dashboard/billing/payment-method-dialog"
 import { billingRoutes } from "@/lib/billing-routes"
 import { cn } from "@/lib/utils"
 
@@ -48,35 +43,13 @@ export function BillingPaymentIssueBanner({
   workspaceId?: string
 }) {
   const { usage } = useBillingUsage()
-  const [isOpening, setIsOpening] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [paymentOpen, setPaymentOpen] = useState(false)
   const hasPaymentIssue = usage?.status === "PAST_DUE"
   const hasExpiredAccess = usage?.status === "EXPIRED"
 
   if (!hasPaymentIssue && !hasExpiredAccess) return null
 
   const canManageBilling = usage.canManageBilling && Boolean(workspaceId)
-
-  async function openPaymentSettings() {
-    if (!workspaceId || isOpening) return
-
-    setIsOpening(true)
-    setError(null)
-    try {
-      const session = await createBillingPortalSession(workspaceId)
-      markBillingPortalVisit(workspaceId)
-      window.location.assign(
-        session.updatePaymentMethodUrl ?? session.overviewUrl
-      )
-    } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Ödeme yönetimi şu anda açılamıyor."
-      )
-      setIsOpening(false)
-    }
-  }
 
   return (
     <section
@@ -119,32 +92,16 @@ export function BillingPaymentIssueBanner({
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
-          {hasPaymentIssue && error ? (
-            <p
-              className="hidden max-w-72 truncate text-xs text-destructive lg:block"
-              role="status"
-            >
-              {error}
-            </p>
-          ) : null}
           {canManageBilling && hasPaymentIssue ? (
             <Button
               type="button"
               size="sm"
               className="h-8 bg-destructive px-3 text-destructive-foreground shadow-none hover:bg-destructive/90"
-              disabled={isOpening}
-              onClick={openPaymentSettings}
+              onClick={() => setPaymentOpen(true)}
             >
-              <HugeiconsIcon
-                icon={isOpening ? Loading03Icon : ArrowRight01Icon}
-                className={isOpening ? "size-3.5 animate-spin" : "size-3.5"}
-              />
-              <span className="sm:hidden">
-                {isOpening ? "Açılıyor" : "Düzelt"}
-              </span>
-              <span className="hidden sm:inline">
-                {isOpening ? "Açılıyor" : "Ödemeyi düzelt"}
-              </span>
+              <HugeiconsIcon icon={ArrowRight01Icon} className="size-3.5" />
+              <span className="sm:hidden">Düzelt</span>
+              <span className="hidden sm:inline">Ödemeyi düzelt</span>
             </Button>
           ) : canManageBilling && workspaceId ? (
             <Button asChild type="button" size="sm" className="h-8 px-3">
@@ -168,6 +125,13 @@ export function BillingPaymentIssueBanner({
           )}
         </div>
       </div>
+      {workspaceId && (
+        <PaymentMethodDialog
+          workspaceId={workspaceId}
+          open={paymentOpen}
+          onOpenChange={setPaymentOpen}
+        />
+      )}
     </section>
   )
 }

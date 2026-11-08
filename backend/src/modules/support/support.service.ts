@@ -25,7 +25,10 @@ import {
   assertSupportImageQuota,
   type StoredSupportImage,
 } from './support-attachment.service';
-import { lockSupportTicket } from './support-ticket-lock';
+import {
+  lockSupportTicket,
+  lockSupportTicketForImages,
+} from './support-ticket-lock';
 
 const summaryInclude = {
   createdBy: { select: { id: true, name: true, image: true } },
@@ -194,55 +197,68 @@ export class SupportService {
     body: CreateSupportMessageDto,
     images: StoredSupportImage[] = [],
   ) {
-    const recipients = await this.prisma.$transaction(async (transaction) => {
-      const account = await this.requireAccountMembership(userId, transaction);
-      const ticket = await lockSupportTicket(transaction, ticketId);
-      this.assertTicketAccount(ticket.workspaceId, account.workspaceId);
-      if (ticket.status === SupportTicketStatus.CLOSED) {
-        throw new BadRequestException(
-          'Kapatılmış talebi yanıtlamadan önce yeniden açmalısınız.',
+    const recipients = await this.prisma.$transaction(
+      async (transaction) => {
+        const account = await this.requireAccountMembership(
+          userId,
+          transaction,
         );
-      }
-      if (ticket.status === SupportTicketStatus.RESOLVED) {
-        throw new BadRequestException(
-          'Çözülmüş talebi yanıtlamadan önce yeniden açmalısınız.',
-        );
-      }
+        const ticket = images.length
+          ? await lockSupportTicketForImages(
+              transaction,
+              ticketId,
+              userId,
+              account.workspaceId,
+            )
+          : await lockSupportTicket(transaction, ticketId);
+        this.assertTicketAccount(ticket.workspaceId, account.workspaceId);
+        if (ticket.status === SupportTicketStatus.CLOSED) {
+          throw new BadRequestException(
+            'Kapatılmış talebi yanıtlamadan önce yeniden açmalısınız.',
+          );
+        }
+        if (ticket.status === SupportTicketStatus.RESOLVED) {
+          throw new BadRequestException(
+            'Çözülmüş talebi yanıtlamadan önce yeniden açmalısınız.',
+          );
+        }
 
-      if (images.length) {
-        const usage = await transaction.supportAttachment.aggregate({
-          where: { message: { ticket: { workspaceId: ticket.workspaceId } } },
-          _sum: { size: true },
+        if (images.length) {
+          const usage = await transaction.supportAttachment.aggregate({
+            where: { message: { ticket: { workspaceId: ticket.workspaceId } } },
+            _sum: { size: true },
+          });
+          assertSupportImageQuota(usage._sum.size ?? 0, images);
+        }
+
+        const now = new Date();
+        const message = await transaction.supportMessage.create({
+          data: {
+            ticketId,
+            authorUserId: userId,
+            authorType: SupportMessageAuthorType.CUSTOMER,
+            body: body.message,
+            attachments: images.length ? { create: images } : undefined,
+          },
         });
-        assertSupportImageQuota(usage._sum.size ?? 0, images);
-      }
-
-      const now = new Date();
-      const message = await transaction.supportMessage.create({
-        data: {
-          ticketId,
-          authorUserId: userId,
-          authorType: SupportMessageAuthorType.CUSTOMER,
-          body: body.message,
-          attachments: images.length ? { create: images } : undefined,
-        },
-      });
-      await transaction.supportTicket.update({
-        where: { id: ticketId },
-        data: {
-          lastMessageAt: now,
-          status:
-            ticket.status === SupportTicketStatus.WAITING_CUSTOMER
-              ? SupportTicketStatus.OPEN
-              : ticket.status,
-        },
-      });
-      return this.supportNotifications.notifyCustomerMessage(
-        transaction,
-        ticket,
-        message.id,
-      );
-    });
+        await transaction.supportTicket.update({
+          where: { id: ticketId },
+          data: {
+            lastMessageAt: now,
+            status:
+              ticket.status === SupportTicketStatus.WAITING_CUSTOMER
+                ? SupportTicketStatus.OPEN
+                : ticket.status,
+          },
+        });
+        return this.supportNotifications.notifyCustomerMessage(
+          transaction,
+          ticket,
+          message.id,
+        );
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted },
+    );
 
     this.supportNotifications.emitCreated(recipients, null);
 
@@ -265,7 +281,7 @@ export class SupportService {
         images,
       );
     } catch (error) {
-      await this.attachments.remove(images);
+      await this.attachments.discardUnattached(images);
       throw error;
     }
   }

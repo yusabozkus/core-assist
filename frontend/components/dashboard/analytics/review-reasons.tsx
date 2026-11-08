@@ -1,124 +1,93 @@
 "use client"
 
-import Link from "next/link"
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import { useState } from "react"
 import {
   ArrowRight01Icon,
   CheckmarkCircle01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { APP_ROUTES } from "@/constants/site"
 import type { AiPerformance } from "@/types/ai-performance"
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart"
 import { formatCount, reviewReasonLabels } from "./analytics-format"
-
-const chartConfig = {
-  count: { label: "Taslak", color: "var(--chart-3)" },
-} satisfies ChartConfig
-const shortLabels: Record<string, string> = {
-  MISSING_INFORMATION: "Eksik bilgi",
-  MISSING_EVIDENCE: "Eksik kanıt",
-  PARTIAL_ANSWER: "Kısmi yanıt",
-  LOW_CONFIDENCE: "Düşük güven",
-  RISK_DETECTED: "Risk kontrolü",
-  REVIEW_REQUIRED: "Ek inceleme",
-  UNSUPPORTED_CLAIM: "Kanıtsız ifade",
-  STOCK_CONTRADICTION: "Stok çelişkisi",
-  PRICE_CONTRADICTION: "Fiyat çelişkisi",
-  STALE_INVENTORY: "Eski stok bilgisi",
-  HIGH_RISK_INTENT: "Hassas konu",
-}
 
 export function ReviewReasons({
   data,
-  canManageStore,
+  onInspect,
 }: {
   data: AiPerformance
-  canManageStore: boolean
+  onInspect: (reason: string) => void
 }) {
-  const reasons = data.reviewReasons.slice(0, 5)
-  const chartData = reasons.map((reason) => ({
-    ...reason,
-    label: shortLabels[reason.key] ?? "Ek kontrol",
-  }))
+  const [expanded, setExpanded] = useState(false)
+  const reasons = expanded ? data.reviewReasons : data.reviewReasons.slice(0, 5)
+  const maxCount = Math.max(
+    ...data.reviewReasons.map((reason) => reason.count),
+    1
+  )
+
   return (
     <section
       aria-labelledby="review-reasons-title"
       className="flex min-w-0 flex-col rounded-xl border border-border bg-card p-5 sm:p-6"
     >
-      <header className="flex items-center justify-between gap-3">
-        <h2 id="review-reasons-title" className="text-sm font-semibold">
-          Neden kontrol gerekiyor?
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <h2
+          id="review-reasons-title"
+          className="scroll-mt-24 text-sm font-semibold"
+        >
+          İncelemeye ayrılma nedenleri
         </h2>
         <span className="text-xs text-muted-foreground">
-          {formatCount(data.draftDecisions.needsReview)} taslak
+          Dönemde {formatCount(data.draftDecisions.needsReview)} taslak
         </span>
       </header>
       {reasons.length ? (
         <div className="mt-5">
-          <ChartContainer
-            config={chartConfig}
-            className="aspect-auto h-56 w-full"
-            aria-label="En sık inceleme nedenleri"
-          >
-            <BarChart
-              accessibilityLayer
-              layout="vertical"
-              data={chartData}
-              margin={{ top: 0, right: 12, bottom: 0, left: 0 }}
-              barSize={14}
-            >
-              <CartesianGrid horizontal={false} />
-              <YAxis
-                dataKey="label"
-                type="category"
-                tickLine={false}
-                axisLine={false}
-                width={98}
-                tick={{ fontSize: 10 }}
-              />
-              <XAxis
-                type="number"
-                domain={[0, Math.max(data.draftDecisions.needsReview, 1)]}
-                allowDecimals={false}
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 10 }}
-                tickFormatter={formatCount}
-              />
-              <ChartTooltip
-                cursor={false}
-                isAnimationActive={false}
-                content={
-                  <ChartTooltipContent
-                    labelFormatter={(_, payload) =>
-                      reviewReasonLabels[String(payload[0]?.payload?.key)] ??
-                      "Ek kontrol gerekiyor"
-                    }
-                  />
-                }
-              />
-              <Bar
-                dataKey="count"
-                fill="var(--color-count)"
-                radius={[0, 4, 4, 0]}
-                isAnimationActive={false}
-              />
-            </BarChart>
-          </ChartContainer>
-          <ul className="sr-only">
+          <p className="mb-2 text-[11px] text-muted-foreground">
+            İlgili soruları görmek için bir neden seçin.
+          </p>
+          <ul className="space-y-1">
             {reasons.map((reason) => (
               <li key={reason.key}>
-                {reviewReasonLabels[reason.key] ?? "Ek kontrol"}:{" "}
-                {formatCount(reason.count)} taslak
+                <button
+                  type="button"
+                  onClick={() => onInspect(reason.key)}
+                  className="group w-full rounded-lg px-2 py-2.5 text-left transition-colors outline-none hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring"
+                  aria-label={`${reviewReasonLabels[reason.key] ?? "Ek kontrol"}: ${formatCount(reason.count)} taslak, soruları görüntüle`}
+                >
+                  <span className="mb-2 flex items-center justify-between gap-3 text-xs">
+                    <span className="font-medium group-hover:text-primary">
+                      {reviewReasonLabels[reason.key] ?? "Ek kontrol gerekiyor"}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-2 tabular-nums">
+                      {formatCount(reason.count)}
+                      <HugeiconsIcon
+                        icon={ArrowRight01Icon}
+                        className="size-3.5 text-muted-foreground group-hover:text-primary"
+                      />
+                    </span>
+                  </span>
+                  <span
+                    className="block h-1.5 overflow-hidden rounded-full bg-muted"
+                    aria-hidden="true"
+                  >
+                    <span
+                      className="block h-full rounded-full bg-chart-3"
+                      style={{ width: `${(reason.count / maxCount) * 100}%` }}
+                    />
+                  </span>
+                </button>
               </li>
             ))}
           </ul>
+          {data.reviewReasons.length > 5 && (
+            <button
+              type="button"
+              aria-expanded={expanded}
+              onClick={() => setExpanded((value) => !value)}
+              className="mt-3 rounded-sm text-xs font-medium text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {expanded ? "Daha az göster" : "Tüm nedenleri göster"}
+            </button>
+          )}
         </div>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 py-9 text-center">
@@ -131,22 +100,10 @@ export function ReviewReasons({
           </p>
         </div>
       )}
-      <div className="mt-auto pt-5">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-          <p className="max-w-64 text-[10px] leading-4 text-muted-foreground">
-            Bir taslakta birden fazla neden bulunabilir.
-          </p>
-          {canManageStore ? (
-            <Link
-              href={APP_ROUTES.dashboard.automations.knowledge}
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-primary hover:underline"
-            >
-              Eksik bilgileri tamamla
-              <HugeiconsIcon icon={ArrowRight01Icon} className="size-3" />
-            </Link>
-          ) : null}
-        </div>
-      </div>
+      <p className="mt-auto border-t border-border pt-4 text-[11px] leading-5 text-muted-foreground">
+        Bir taslakta birden fazla neden bulunabilir. Sayılar taslak adedini
+        gösterir.
+      </p>
     </section>
   )
 }

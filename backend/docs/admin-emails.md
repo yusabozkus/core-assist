@@ -1,96 +1,57 @@
-# Admin e-posta teslimat takibi
+# Admin Email Delivery Tracking
 
-Admin panelinde `/admin/emails`, gönderim listesi ve `/admin/emails/:emailId`
-detay ekranı bulunur. Müşteri detayları o hesaba bağlı son beş gönderimi gösterir.
-Bu özellik e-posta göndermez; mevcut gönderim akışını gözlemler.
+The admin panel has an email list at `/admin/emails` and details at `/admin/emails/:emailId`. Customer details show the last five emails linked to that account. These pages track existing emails; they do not send emails.
 
-## Kurulum
+## Setup
 
-1. Backend dizininde `npm run db:generate` ve `npm run db:migrate:deploy` çalıştırın.
-2. Backend ortamında `RESEND_API_KEY` ve `NOTIFICATION_EMAIL_FROM` tanımlı olmalıdır.
-   Resend panelinde gönderici domaininin doğrulanmış olduğunu kontrol edin.
-3. Resend → Webhooks bölümüne webhook adresini ekleyin. Canlı ortamda backend'in
-   erişilebilir adresini kullanın; örnek:
-   `https://api.coreasistan.com/notifications/webhooks/resend`. Yerel geliştirmede
-   aşağıdaki Hookdeck kurulumunun verdiği **Resend Source URL** adresini kullanın.
-4. Şu olayları seçin: `email.sent`, `email.delivered`, `email.delivery_delayed`,
-   `email.bounced`, `email.complained`, `email.failed`, `email.suppressed`.
-5. Webhook signing secret değerini backend ortamına `RESEND_WEBHOOK_SECRET`
-   olarak ekleyin ve backend'i yeniden başlatın. Bu anahtar frontend'e aktarılmaz.
-6. Yeni bir test e-postası göndererek imzalı bir olay üretin.
-   E-posta ekranındaki son bildirim zamanı güncellenmelidir. Teslimat detayının
-   bağlanması için olayın `data.email_id` değeri yerel gönderimin Resend kimliğiyle
-   eşleşmelidir. Anahtarın tanımlı olması, webhook'un kurulduğunu tek başına kanıtlamaz.
+1. In the backend directory, run `npm run db:generate` and `npm run db:migrate:deploy`.
+2. Set `RESEND_API_KEY` and `NOTIFICATION_EMAIL_FROM` in the backend environment. Check that the sender domain is verified in Resend.
+3. Add a webhook in **Resend > Webhooks**. In production, use your public backend URL, for example `https://api.coreasistan.com/notifications/webhooks/resend`. For local development, use the **Resend Source URL** from Hookdeck, as explained below.
+4. Select `email.sent`, `email.delivered`, `email.delivery_delayed`, `email.bounced`, `email.complained`, `email.failed`, and `email.suppressed`.
+5. Save the signing secret as `RESEND_WEBHOOK_SECRET` in the backend and restart it. Do not expose this secret to the frontend.
+6. Send a new test email to create a signed event. The last webhook time on the email page should change. The event's `data.email_id` must match the local email's Resend message ID to link its delivery details. A saved key alone does not prove that the webhook works.
 
-### Yerel geliştirme: Hookdeck
+### Local development with Hookdeck
 
-Backend `localhost:4001` üzerinde çalışırken proje kökündeki
-`start-development.bat` dosyası Paddle ve Resend için ayrı Hookdeck dinleyicileri
-başlatır. Resend dinleyicisini tek başına da çalıştırabilirsiniz:
+When the backend runs on `localhost:4001`, the root `start-development.bat` starts separate Hookdeck listeners for Paddle and Resend. You can also start only the Resend listener:
 
 ```bash
 hookdeck listen 4001 resend --path /notifications/webhooks/resend
 ```
 
-`hookdeck` komutu bulunamazsa Hookdeck CLI'yi `npm install -g hookdeck-cli`
-ile kurun ve Paddle için kullandığınız Hookdeck hesabında oturum açın.
+If `hookdeck` is missing, install it with `npm install -g hookdeck-cli` and sign in to the same Hookdeck account used for Paddle.
 
-Hookdeck çıktısındaki **Resend Source** için `Requests to` adresini kopyalayıp
-Resend → Webhooks → Add Webhook ekranındaki URL alanına yapıştırın. Bu adres
-Hookdeck tarafından üretilir; `localhost` veya Paddle kaynağının adresi değildir.
-Resend'e verilen Hookdeck adresinin sonuna yerel webhook yolunu eklemeyin.
-Çıktıdaki `Forwards to` adresi
-`http://localhost:4001/notifications/webhooks/resend` olmalıdır. Webhook'u
-oluşturduktan sonra Resend'in verdiği signing secret değerini `backend/.env`
-dosyasında `RESEND_WEBHOOK_SECRET` olarak kaydedip backend'i yeniden başlatın.
-Resend kaynağında gövde veya `svix-*` başlıklarını değiştiren Hookdeck dönüşümleri
-uygulamayın; backend gelen ham gövdenin imzasını doğrular.
+Copy the **Requests to** URL for **Resend Source** from the Hookdeck output. Paste it into **Resend > Webhooks > Add Webhook**. Use the URL from Hookdeck, not localhost or the Paddle source URL. Do not add the local webhook path to this URL.
 
-Yerel dinleyici açık değilken gelen olaylar otomatik olarak daha sonra yerel
-sunucuya iletilmez. Ayrıca beş dakikadan eski imzalı olayların Hookdeck üzerinden
-tekrar gönderimi backend tarafından reddedilir; kontrol için yeni bir test olayı
-oluşturun.
+**Forwards to** should be `http://localhost:4001/notifications/webhooks/resend`. Save the secret from Resend as `RESEND_WEBHOOK_SECRET` in `backend/.env`, then restart the backend. Do not use Hookdeck changes that alter the body or `svix-*` headers. The backend checks the signature against the raw body.
 
-Mevcut gönderimler geçmişteki webhook olayları olmadan otomatik olarak
-"teslim edildi" sayılmaz. Yapılandırma eksikliği e-posta listelemeyi engellemez.
+Events received while the local listener is off are not automatically forwarded later. The backend also rejects signed events older than five minutes. Create a fresh test event for validation.
 
-## İşleyiş
+Old emails do not become “delivered” without their delivery events. Missing configuration does not block the email list.
 
-- `EmailDeliveryRecord.status` mevcut gönderim sürecini tutar.
-- `EmailProviderMessage.status` sağlayıcı teslimat sonucunu ayrı tutar.
-- `EmailDeliveryEvent` yalnızca olay kimliği, Resend mesaj kimliği, olay türü ve
-  zamanlarını saklar. Alıcı, konu, HTML veya ham webhook gövdesi kaydedilmez.
-- İmza ham gövde üzerinden HMAC-SHA256 ile, sabit zamanlı karşılaştırma ve
-  beş dakikalık timestamp toleransıyla doğrulanır. Yanlış imza 401, eksik anahtar
-  503, bozuk desteklenen olay 400 döndürür; desteklenmeyen doğrulanmış olaylar 200 ile atlanır.
-- `svix-id` benzersizdir; aynı olayın tekrarları ikinci kayıt oluşturmaz.
-  Sağlayıcı mesajı gönderim yanıtından önce oluşturulabilir. Böylece erken
-  gelen webhook sonradan gönderime bağlanır.
-- Eşzamanlı olaylar aynı mesaj satırı üzerinde serileştirilir. Geç gelen
-  gönderildi/gecikti olayları teslim veya kalıcı hata sonucunu geri almaz.
-  Öncelik: bilinmiyor → gönderildi → gecikti → teslim → başarısız → engellendi
-  → geri döndü → spam şikâyeti. Aynı sonuç için en yeni olay zamanı tutulur.
-- Mevcut 90 günlük gönderim temizliği korunur. Hiçbir gönderime bağlı olmayan
-  ve 90 gündür güncellenmeyen sağlayıcı mesajları olaylarıyla birlikte temizlenir.
-- Eski mağaza gönderimleri, hâlâ mevcut davetler ve hesabı bilinen finans
-  bildirimleri migration sırasında ilişkilendirilir. Bağlamı bulunamayan eski
-  gönderimler e-posta adresinden tahmin edilerek bir müşteriye bağlanmaz.
+## How it works
 
-## Kontroller
+- `EmailDeliveryRecord.status` tracks the sending process.
+- `EmailProviderMessage.status` tracks the provider's delivery result separately.
+- `EmailDeliveryEvent` stores only event ID, Resend message ID, event type, and times. It does not store the recipient, subject, HTML, or raw webhook body.
+- Signature checks use HMAC-SHA256 on the raw body, a constant-time comparison, and a five-minute timestamp limit. An invalid signature returns `401`; a missing key returns `503`; an invalid supported event returns `400`. Verified but unsupported events are ignored with `200`.
+- `svix-id` is unique. Repeated events do not create another record. A provider message can be created before the send response arrives, then linked to the send later.
+- Concurrent events use a lock on the same message row. Late sent or delayed events cannot replace a delivery or permanent failure result. Priority is: unknown → sent → delayed → delivered → failed → suppressed → bounced → complained. For the same result, the newest event time is kept.
+- Delivery records follow the 90-day cleanup policy. Provider messages with no linked send and no update for 90 days are deleted with their events.
+- The migration links old store emails, invitations that still exist, and billing emails with a known account. It does not guess an account from a recipient's email address.
+
+## Checks
+
+Run in the backend directory:
 
 ```bash
-npm run test:admin-emails
-npm run test:admin-emails:integration
-npm run build
+npm run check
 ```
 
-Entegrasyon testi yalnızca localhost PostgreSQL'e bağlanır. `TEST_DATABASE_URL`
-veya `DATABASE_URL` bağlantısıyla `core_assist_email_test_` önekli geçici bir
-veritabanı oluşturur, migration'ları uygular ve test sonunda kaldırır. Bağlantı
-kullanıcısının veritabanı oluşturma yetkisi olmalıdır. Uygulama veritabanını
-değiştirmez, dış API çağırmaz ve e-posta göndermez.
+`notification-email.policy.test.ts` checks email preferences, quota thresholds, and grouped emails with mocked services. The old focused admin email and webhook tests are no longer in the source. `check` does not verify all these paths. Test Resend signatures, delivery, and admin visibility separately in a live test environment. See [Quality checks](quality-checks.md).
 
-Kaynaklar:
-- [Resend webhook olayları](https://resend.com/docs/webhooks/event-types)
-- [Resend imza doğrulaması](https://resend.com/docs/webhooks/verify-webhooks-requests)
-- [Svix imza formatı ve test vektörü](https://docs.svix.com/receiving/verifying-payloads/how-manual)
+Sources:
+
+- [Resend webhook events](https://resend.com/docs/webhooks/event-types)
+- [Resend signature verification](https://resend.com/docs/webhooks/verify-webhooks-requests)
+- [Svix signature format and test example](https://docs.svix.com/receiving/verifying-payloads/how-manual)

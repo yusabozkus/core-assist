@@ -20,6 +20,7 @@ import type {
   QuestionDraftQueueJobData,
 } from './question-draft.types';
 import { QuestionDraftWorkerService } from './question-draft-worker.service';
+import type { DraftWorkerAttempt } from './question-draft-worker.service';
 import { QuestionDraftQueueService } from './question-draft-queue.service';
 
 @Processor(QUESTION_DRAFT_QUEUE, { concurrency: 1 })
@@ -41,12 +42,13 @@ export class QuestionDraftProcessor extends WorkerHost {
     }
 
     const data = job.data as QuestionDraftJobData;
+    const attempt: DraftWorkerAttempt = { startedAt: null, queuedAt: null };
 
     try {
-      return await this.draftWorker.run(data);
+      return await this.draftWorker.run(data, attempt);
     } catch (error) {
       if (error instanceof DraftCapacityException) {
-        await this.draftWorker.deferForCapacity(data);
+        await this.draftWorker.deferForCapacity(data, attempt);
         await job.moveToDelayed(Date.now() + DRAFT_COOLDOWN_MS, token);
         throw new DelayedError();
       }
@@ -57,7 +59,7 @@ export class QuestionDraftProcessor extends WorkerHost {
         error instanceof BillingAccessRequiredException ||
         error instanceof BillingQuotaExceededException;
       if (isFinalAttempt || billingBlocked) {
-        await this.draftWorker.markFinalFailure(data, error);
+        await this.draftWorker.markFinalFailure(data, error, attempt);
       }
 
       if (billingBlocked) throw new UnrecoverableError(error.message);

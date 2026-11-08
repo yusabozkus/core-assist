@@ -17,13 +17,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { PaymentMethodDialog } from "@/components/dashboard/billing/payment-method-dialog"
 import {
   confirmBillingPlanChange,
-  createBillingPortalSession,
   getBillingPlanChange,
   previewBillingPlanChange,
 } from "@/lib/api/billing"
-import { markBillingPortalVisit } from "@/lib/billing-portal-return"
 import {
   formatBillingAmount,
   formatBillingDate,
@@ -59,7 +58,7 @@ export function PlanChangeDialog({
   const [submitting, setSubmitting] = useState(false)
   const [revision, setRevision] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
-  const [openingPaymentSettings, setOpeningPaymentSettings] = useState(false)
+  const [paymentOpen, setPaymentOpen] = useState(false)
   const submittingRef = useRef(false)
   const changeId = result?.id ?? pendingId
   const pending = Boolean(
@@ -164,22 +163,6 @@ export function PlanChangeDialog({
     }
   }
 
-  async function openPaymentSettings() {
-    if (openingPaymentSettings) return
-    setOpeningPaymentSettings(true)
-    setError(null)
-    try {
-      const session = await createBillingPortalSession(workspaceId)
-      markBillingPortalVisit(workspaceId)
-      window.location.assign(
-        session.updatePaymentMethodUrl ?? session.overviewUrl
-      )
-    } catch (cause) {
-      setError(message(cause))
-      setOpeningPaymentSettings(false)
-    }
-  }
-
   const completed = result?.status === "COMPLETED"
   const failed = result?.status === "FAILED"
   const canManagePaymentMethod =
@@ -203,6 +186,8 @@ export function PlanChangeDialog({
       }}
     >
       <DialogContent
+        onInteractOutside={(event) => event.preventDefault()}
+        onEscapeKeyDown={(event) => event.preventDefault()}
         className="max-h-[90dvh] overflow-y-auto rounded-2xl sm:max-w-xl"
         showCloseButton={!submitting}
       >
@@ -397,21 +382,19 @@ export function PlanChangeDialog({
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled={openingPaymentSettings}
-                onClick={() => void openPaymentSettings()}
+                onClick={() => setPaymentOpen(true)}
               >
-                {openingPaymentSettings ? (
-                  <Loader />
-                ) : (
-                  <HugeiconsIcon icon={CreditCardIcon} className="size-4" />
-                )}
-                {openingPaymentSettings
-                  ? "Ödeme ayarları açılıyor"
-                  : "Ödeme yöntemini güncelle"}
+                <HugeiconsIcon icon={CreditCardIcon} className="size-4" />
+                Ödeme yöntemini güncelle
               </Button>
             )}
           </div>
         )}
+        <PaymentMethodDialog
+          workspaceId={workspaceId}
+          open={paymentOpen}
+          onOpenChange={setPaymentOpen}
+        />
         <DialogFooter className="border-t border-border pt-4">
           <Button
             variant="outline"

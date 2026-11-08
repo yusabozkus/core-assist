@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/chart"
 import type { AiPerformance } from "@/types/ai-performance"
 import { formatCount, formatPercent } from "./analytics-format"
+import { MetricHelp } from "./metric-help"
 
 const chartConfig = {
   ready: { label: "Gönderime hazır", color: "var(--primary)" },
@@ -47,9 +48,15 @@ export function DraftOutcomes({ data }: { data: AiPerformance }) {
       aria-labelledby="draft-outcomes-title"
       className="flex min-w-0 flex-col rounded-xl border border-border bg-card p-5 sm:p-6"
     >
-      <h2 id="draft-outcomes-title" className="text-sm font-semibold">
-        Taslakların ilk kararı
-      </h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 id="draft-outcomes-title" className="text-sm font-semibold">
+          Taslakların ilk kararı
+        </h2>
+        <MetricHelp
+          label="Taslak karar oranları"
+          description={`Her kararın oranı, seçili dönemde üretilen ${formatCount(total)} taslağın tamamı üzerinden hesaplanır. Aynı soruya ait tekrar oluşturulan taslaklar ayrı sayılır; gönderilen yanıt sayısını göstermez.`}
+        />
+      </div>
       <div className="relative mx-auto my-5 size-44">
         <ChartContainer
           config={chartConfig}

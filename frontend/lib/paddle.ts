@@ -33,13 +33,18 @@ export function getPaddle() {
     eventCallback: (event) => {
       paddleEventListeners.forEach((listener) => listener(event))
     },
-  }).then((paddle) => {
-    if (!paddle) {
-      paddlePromise = null
-      throw new Error("Paddle ödeme ekranı yüklenemedi.")
-    }
-    return paddle
   })
+    .then((paddle) => {
+      if (!paddle) {
+        paddlePromise = null
+        throw new Error("Paddle ödeme ekranı yüklenemedi.")
+      }
+      return paddle
+    })
+    .catch((error: unknown) => {
+      paddlePromise = null
+      throw error
+    })
 
   return paddlePromise
 }

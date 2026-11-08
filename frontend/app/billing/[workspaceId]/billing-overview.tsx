@@ -236,9 +236,9 @@ export function BillingOverview({
           </div>
           {isManaged ? (
             <CancelSubscriptionDialog
+              key={workspaceId}
               workspaceId={workspaceId}
-              accessEndsAt={accessEndsAt}
-              accessActive={summary.subscription.active}
+              status={summary.subscription.status}
               cancellationScheduled={cancellationScheduled}
             />
           ) : null}

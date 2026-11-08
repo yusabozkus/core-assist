@@ -38,7 +38,6 @@ export function InvoiceDetailDialog({
       )
       window.location.assign(result.url)
       setIsDownloading(false)
-      onOpenChange(false)
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -51,6 +50,8 @@ export function InvoiceDetailDialog({
 
   return (
     <ResponsiveDialog
+      dismissOnOutsideInteraction={false}
+      dismissOnEscape={false}
       open={invoice !== null}
       onOpenChange={(open) => {
         if (!open) {
@@ -94,7 +95,9 @@ export function InvoiceDetailDialog({
         <div className="space-y-6 py-3 sm:px-1">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-lg font-semibold tracking-tight">Core Asistan</p>
+              <p className="text-lg font-semibold tracking-tight">
+                Core Asistan
+              </p>
             </div>
             <InvoiceStatusBadge status={invoice.status} />
           </div>

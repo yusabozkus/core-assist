@@ -1,15 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import {
-  ArrowUpRight01Icon,
-  CreditCardIcon,
-  Loading03Icon,
-} from "@hugeicons/core-free-icons"
+import { useCallback, useState } from "react"
+import { CreditCardIcon, Shield01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Button } from "@/components/ui/button"
-import { createBillingPortalSession } from "@/lib/api/billing"
-import { markBillingPortalVisit } from "@/lib/billing-portal-return"
+import { PaymentMethodDialog } from "@/components/dashboard/billing/payment-method-dialog"
 import type { BillingHistory, BillingPaymentMethod } from "@/types/billing"
 
 export function BillingPaymentDetails({
@@ -21,72 +16,118 @@ export function BillingPaymentDetails({
   managedByPaddle: boolean
   history: BillingHistory | null
 }) {
-  const [isOpeningPortal, setIsOpeningPortal] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const paymentMethod = history?.paymentMethod ?? null
+  const [paymentOpen, setPaymentOpen] = useState(false)
+  const [updatedMethod, setUpdatedMethod] = useState<{
+    workspaceId: string
+    method: BillingPaymentMethod | null
+  } | null>(null)
+  const handleUpdated = useCallback(
+    (method: BillingPaymentMethod | null) => {
+      setUpdatedMethod({ workspaceId, method })
+    },
+    [workspaceId]
+  )
+  const paymentMethod =
+    updatedMethod?.workspaceId === workspaceId
+      ? updatedMethod.method
+      : (history?.paymentMethod ?? null)
   const customer = history?.billingCustomer ?? null
-
-  async function openPaymentSettings() {
-    setIsOpeningPortal(true)
-    setError(null)
-    try {
-      const session = await createBillingPortalSession(workspaceId)
-      markBillingPortalVisit(workspaceId)
-      window.location.assign(
-        session.updatePaymentMethodUrl ?? session.overviewUrl
-      )
-    } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Ödeme yönetimi şu anda açılamıyor."
-      )
-      setIsOpeningPortal(false)
-    }
-  }
+  const expiry = paymentMethod ? paymentMethodExpiry(paymentMethod) : null
 
   return (
-    <aside className="overflow-hidden rounded-xl border border-border bg-card">
+    <aside
+      aria-labelledby="payment-management-title"
+      className="min-w-0 overflow-hidden rounded-xl border border-border bg-card"
+    >
       <section className="p-5 sm:p-6">
-        <h2 className="text-sm font-semibold">Ödeme yöntemi</h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 id="payment-management-title" className="text-sm font-semibold">
+            Ödeme yönetimi
+          </h2>
+          <span className="text-xs text-muted-foreground">Paddle</span>
+        </div>
 
         {paymentMethod ? (
-          <div className="mt-5 flex items-center gap-3">
-            <span className="flex h-10 min-w-14 shrink-0 items-center justify-center rounded-md border border-border bg-background px-2 text-[11px] font-bold tracking-tight uppercase">
-              {paymentMethod.brand ?? paymentMethod.type}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">
-                {paymentMethodLabel(paymentMethod)}
-              </p>
-              {paymentMethodExpiry(paymentMethod) ? (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Son kullanma {paymentMethodExpiry(paymentMethod)}
+          <div className="relative isolate mt-5 overflow-hidden rounded-xl border border-border bg-linear-to-br from-muted via-muted/40 to-background p-5">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-20 -right-16 -z-10 size-64 rounded-full border border-foreground/5"
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-12 -right-8 -z-10 size-48 rounded-full border border-foreground/5"
+            />
+            <div className="flex items-start justify-between gap-3">
+              <span className="min-w-0 text-sm font-semibold tracking-tight wrap-break-word">
+                {paymentMethodBrandLabel(paymentMethod)}
+              </span>
+              <HugeiconsIcon
+                icon={CreditCardIcon}
+                aria-hidden="true"
+                className="size-5 shrink-0 text-muted-foreground"
+              />
+            </div>
+
+            <div className="mt-7">
+              {paymentMethod.last4 ? (
+                <p>
+                  <span className="sr-only">
+                    Son dört hanesi {paymentMethod.last4} olan kart
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-base tracking-[0.08em] tabular-nums sm:text-lg"
+                  >
+                    <span className="text-muted-foreground">
+                      •••• •••• ••••
+                    </span>
+                    <span className="font-semibold">{paymentMethod.last4}</span>
+                  </span>
                 </p>
+              ) : (
+                <p className="text-lg font-medium tracking-tight">
+                  {paymentProviderLabel(paymentMethod.type)}
+                </p>
+              )}
+            </div>
+
+            <div className="mt-6 flex items-end justify-between gap-4">
+              <p className="text-[11px] text-muted-foreground">
+                Son kullanılan
+              </p>
+              {expiry ? (
+                <div className="text-right">
+                  <p className="text-[10px] text-muted-foreground">
+                    Son kullanma
+                  </p>
+                  <p className="mt-1 font-mono text-xs font-medium tabular-nums">
+                    {expiry}
+                  </p>
+                </div>
               ) : null}
             </div>
-            <span className="rounded-md bg-muted px-2 py-1 text-[10px] font-medium text-muted-foreground">
-              Varsayılan
-            </span>
           </div>
         ) : (
-          <div className="mt-5 flex gap-3 rounded-lg border border-dashed border-border p-4">
-            <HugeiconsIcon
-              icon={CreditCardIcon}
-              className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-            />
-            <div>
-              <p className="text-xs font-medium">
-                {managedByPaddle
-                  ? "Ödeme yöntemi henüz görüntülenemiyor"
-                  : "Kayıtlı ödeme yöntemi yok"}
-              </p>
-              <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-                {managedByPaddle
-                  ? "İlk başarılı ödeme sonrasında kullanılan yöntem burada gösterilir."
-                  : "Bir plan seçtiğinizde ödeme bilgileri güvenli biçimde Paddle üzerinden alınır."}
-              </p>
-            </div>
+          <div className="mt-5 rounded-xl border border-dashed border-border bg-muted/20 p-5">
+            <span className="mb-4 flex size-9 items-center justify-center rounded-lg border border-border bg-background">
+              <HugeiconsIcon
+                icon={CreditCardIcon}
+                aria-hidden="true"
+                className="size-4 text-muted-foreground"
+              />
+            </span>
+            <p className="text-sm font-medium">
+              {managedByPaddle
+                ? "Ödeme yöntemi henüz görüntülenemiyor"
+                : "Kayıtlı ödeme yöntemi yok"}
+            </p>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              {managedByPaddle
+                ? history === null
+                  ? "Ödeme bilgileri şu anda alınamadı. Daha sonra yeniden deneyebilirsiniz."
+                  : "İlk başarılı ödeme sonrasında kullanılan yöntem burada gösterilir."
+                : "Bir plan seçtiğinizde ödeme bilgileri Paddle üzerinden alınır."}
+            </p>
           </div>
         )}
 
@@ -95,61 +136,94 @@ export function BillingPaymentDetails({
             type="button"
             variant="outline"
             size="sm"
-            className="mt-5 w-full"
-            disabled={isOpeningPortal}
-            onClick={openPaymentSettings}
+            className="mt-4 w-full justify-between"
+            onClick={() => setPaymentOpen(true)}
           >
+            Ödeme yöntemini yönet
             <HugeiconsIcon
-              icon={isOpeningPortal ? Loading03Icon : ArrowUpRight01Icon}
-              className={isOpeningPortal ? "size-3.5 animate-spin" : "size-3.5"}
+              icon={CreditCardIcon}
+              aria-hidden="true"
+              className="size-3.5"
             />
-            {isOpeningPortal ? "Paddle açılıyor" : "Ödeme yöntemini yönet"}
           </Button>
         ) : null}
 
-        {error ? (
-          <p role="alert" className="mt-3 text-xs leading-5 text-destructive">
-            {error}
-          </p>
-        ) : null}
+        <p className="mt-3 flex items-center gap-1.5 text-[11px] leading-5 text-muted-foreground">
+          <HugeiconsIcon
+            icon={Shield01Icon}
+            aria-hidden="true"
+            className="size-3.5 shrink-0"
+          />
+          Ödeme bilgileri Paddle üzerinden yönetilir.
+        </p>
       </section>
 
       <section className="border-t border-border p-5 sm:p-6">
         <h2 className="text-sm font-semibold">Fatura bilgileri</h2>
         {customer ? (
-          <div className="mt-4 space-y-2">
-            <p className="text-sm leading-6 font-medium">
+          <div className="mt-4">
+            <p className="text-sm leading-6 font-medium wrap-anywhere">
               {customer.name ?? "Bireysel müşteri"}
             </p>
-            {customer.email ? (
-              <p className="text-xs text-muted-foreground">{customer.email}</p>
-            ) : null}
-            {customer.address ? (
-              <p className="text-xs leading-6 text-muted-foreground">
-                {customer.address}
-              </p>
-            ) : null}
-            {customer.taxIdentifier ? (
-              <dl className="flex justify-between gap-3 pt-2 text-xs">
-                <dt className="text-muted-foreground">Vergi numarası</dt>
-                <dd className="tabular-nums">{customer.taxIdentifier}</dd>
-              </dl>
-            ) : null}
+            <dl className="mt-4 space-y-4 text-xs">
+              {customer.email ? (
+                <div className="space-y-1">
+                  <dt className="text-muted-foreground">E-posta</dt>
+                  <dd className="leading-5 wrap-anywhere">{customer.email}</dd>
+                </div>
+              ) : null}
+              {customer.address ? (
+                <div className="space-y-1">
+                  <dt className="text-muted-foreground">Fatura adresi</dt>
+                  <dd className="leading-5 wrap-anywhere">
+                    {customer.address}
+                  </dd>
+                </div>
+              ) : null}
+              {customer.taxIdentifier ? (
+                <div className="space-y-1">
+                  <dt className="text-muted-foreground">Vergi numarası</dt>
+                  <dd className="leading-5 wrap-anywhere tabular-nums">
+                    {customer.taxIdentifier}
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
           </div>
         ) : (
           <p className="mt-4 text-xs leading-5 text-muted-foreground">
-            Fatura bilgileri başarılı ödemenizin ardından Paddle kayıtlarından
-            burada gösterilir.
+            {managedByPaddle && history === null
+              ? "Fatura bilgileri şu anda alınamadı. Daha sonra yeniden deneyebilirsiniz."
+              : "Fatura bilgileri başarılı ödemenizin ardından burada gösterilir."}
           </p>
         )}
       </section>
+      <PaymentMethodDialog
+        workspaceId={workspaceId}
+        open={paymentOpen}
+        onOpenChange={setPaymentOpen}
+        onUpdated={handleUpdated}
+      />
     </aside>
   )
 }
 
-function paymentMethodLabel(method: BillingPaymentMethod) {
-  if (method.type === "card" && method.last4) return `•••• ${method.last4}`
-  return paymentProviderLabel(method.type)
+function paymentMethodBrandLabel(method: BillingPaymentMethod) {
+  if (!method.brand) return "Ödeme yöntemi"
+  const brands: Record<string, string> = {
+    visa: "VISA",
+    mastercard: "Mastercard",
+    master_card: "Mastercard",
+    american_express: "American Express",
+    amex: "American Express",
+    maestro: "Maestro",
+    discover: "Discover",
+    diners_club: "Diners Club",
+    jcb: "JCB",
+    unionpay: "UnionPay",
+    union_pay: "UnionPay",
+  }
+  return brands[method.brand.toLowerCase()] ?? method.brand
 }
 
 function paymentMethodExpiry(method: BillingPaymentMethod) {

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select"
 import { APP_ROUTES } from "@/constants/site"
 import { getChannelSyncHistory, retryChannelSyncRun } from "@/lib/api/channels"
+import { useListRequests } from "@/hooks/use-list-requests"
 import type {
   SyncHistoryItem,
   SyncHistoryKindFilter,
@@ -91,13 +92,31 @@ export function SyncHistory({
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const isInitialRender = useRef(true)
-  const requestSequence = useRef(0)
+  const listKey = JSON.stringify([
+    storeId,
+    status,
+    kind,
+    provider,
+    period,
+    order,
+  ])
+  const requests = useListRequests(
+    listKey,
+    JSON.stringify([
+      storeId,
+      initialFilters.status,
+      initialFilters.kind,
+      initialFilters.provider,
+      initialFilters.period,
+      initialFilters.order,
+    ])
+  )
   const loadMoreTargetRef = useRef<HTMLDivElement | null>(null)
 
   const loadFirstPage = useCallback(
-    async (signal?: AbortSignal, quiet = false) => {
-      const requestId = ++requestSequence.current
+    async (quiet = false) => {
+      const request = requests.begin(listKey, quiet ? "refresh" : "first")
+      if (!request) return
       if (!quiet) setIsLoading(true)
       setError(null)
 
@@ -109,10 +128,10 @@ export function SyncHistory({
           order,
           from: getPeriodStart(period),
           limit: PAGE_SIZE,
-          signal,
+          signal: request.signal,
         })
 
-        if (requestId !== requestSequence.current) return
+        if (!requests.commit(request)) return
         setPage(result)
         setSelectedRun((current) =>
           current
@@ -120,23 +139,25 @@ export function SyncHistory({
             : null
         )
       } catch (caughtError) {
-        if (signal?.aborted) return
+        if (!requests.isCurrent(request)) return
         setError(
           caughtError instanceof Error
             ? caughtError.message
             : "Senkron geçmişi alınamadı."
         )
       } finally {
-        if (requestId === requestSequence.current && !quiet) {
+        if (requests.finish(request) && !quiet) {
           setIsLoading(false)
         }
       }
     },
-    [kind, order, period, provider, status, storeId]
+    [kind, listKey, requests, order, period, provider, status, storeId]
   )
 
   const loadMore = useCallback(async () => {
     if (!page.nextCursor || isLoadingMore || isLoading) return
+    const request = requests.begin(listKey, "more")
+    if (!request) return
 
     setIsLoadingMore(true)
     setError(null)
@@ -149,24 +170,29 @@ export function SyncHistory({
         order,
         from: getPeriodStart(period),
         limit: PAGE_SIZE,
+        signal: request.signal,
       })
+      if (!requests.isCurrent(request)) return
       setPage((current) => ({
         ...result,
         items: mergeHistoryItems(current.items, result.items),
       }))
     } catch (caughtError) {
+      if (!requests.isCurrent(request)) return
       setError(
         caughtError instanceof Error
           ? caughtError.message
           : "Diğer kayıtlar yüklenemedi."
       )
     } finally {
-      setIsLoadingMore(false)
+      if (requests.finish(request)) setIsLoadingMore(false)
     }
   }, [
     isLoading,
     isLoadingMore,
     kind,
+    listKey,
+    requests,
     order,
     page.nextCursor,
     period,
@@ -178,21 +204,24 @@ export function SyncHistory({
   useEffect(() => {
     writeFiltersToUrl({ status, kind, provider, period, order })
 
-    if (isInitialRender.current) {
-      isInitialRender.current = false
-      return
+    let disposed = false
+    queueMicrotask(() => {
+      if (disposed) return
+      setIsLoadingMore(false)
+      setError(null)
+      setIsLoading(false)
+      if (!requests.isReady(listKey)) void loadFirstPage()
+    })
+    return () => {
+      disposed = true
     }
-
-    const controller = new AbortController()
-    void loadFirstPage(controller.signal)
-    return () => controller.abort()
-  }, [kind, loadFirstPage, order, period, provider, status])
+  }, [kind, listKey, requests, loadFirstPage, order, period, provider, status])
 
   useEffect(() => {
     if (page.summary.running === 0) return
 
     const interval = window.setInterval(() => {
-      void loadFirstPage(undefined, true)
+      void loadFirstPage(true)
     }, RUNNING_REFRESH_INTERVAL_MS)
 
     return () => window.clearInterval(interval)
@@ -221,7 +250,7 @@ export function SyncHistory({
     try {
       await retryChannelSyncRun(storeId, run.id)
       setSelectedRun(null)
-      await loadFirstPage(undefined, true)
+      await loadFirstPage(true)
     } catch (caughtError) {
       setError(
         caughtError instanceof Error

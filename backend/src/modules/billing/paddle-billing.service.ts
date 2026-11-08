@@ -9,6 +9,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import {
+  ApiError as PaddleApiError,
   EventName,
   Paddle,
   type AdjustmentNotification,
@@ -42,6 +43,11 @@ import {
 } from '../audit/audit-log.service';
 import { PENDING_PLAN_CHANGE_STATUSES } from './billing-plan-change.policy';
 import { hasBillingAccess } from './billing-access.policy';
+import { ManageSubscriptionDto } from './dto/manage-subscription.dto';
+import {
+  subscriptionActionCompleted,
+  subscriptionManagementState,
+} from './subscription-management.policy';
 import {
   paddleEnvironment,
   paddleCheckoutEnvironment,
@@ -214,17 +220,29 @@ export class PaddleBillingService {
           Date.parse(right.billedAt ?? right.updatedAt) -
           Date.parse(left.billedAt ?? left.updatedAt),
       );
-      const latestTransaction = transactions[0] ?? null;
+      const latestTransaction =
+        transactions.find(
+          (transaction) =>
+            transaction.subscriptionId === subscription.paddleSubscriptionId,
+        ) ??
+        transactions[0] ??
+        null;
+      const invoices = transactions.filter(
+        (transaction) =>
+          transaction.origin !== 'subscription_payment_method_change',
+      );
 
       return {
         managedByPaddle: true,
         paymentMethod: latestTransaction
           ? paymentMethodFromTransaction(latestTransaction)
           : null,
-        billingCustomer: latestTransaction
-          ? billingCustomerFromTransaction(latestTransaction)
-          : null,
-        invoices: transactions.map(mapTransactionToInvoice),
+        billingCustomer:
+          (latestTransaction
+            ? billingCustomerFromTransaction(latestTransaction)
+            : null) ??
+          (invoices[0] ? billingCustomerFromTransaction(invoices[0]) : null),
+        invoices: invoices.map(mapTransactionToInvoice),
       };
     } catch (error) {
       this.logger.error(
@@ -328,6 +346,311 @@ export class PaddleBillingService {
       });
 
     return { refreshed: true, subscription };
+  }
+
+  private async loadSubscriptionManagement(
+    workspaceId: string,
+    userId: string,
+  ) {
+    const { subscription } = await this.getManageableSubscription(
+      workspaceId,
+      userId,
+    );
+    if (!subscription.paddleSubscriptionId || !subscription.paddleCustomerId) {
+      throw new ConflictException(
+        'Yönetilecek bir Paddle aboneliği bulunmuyor.',
+      );
+    }
+    let current: Subscription;
+    try {
+      current = await boundedRecoveryRead(
+        this.getClient().subscriptions.get(subscription.paddleSubscriptionId),
+      );
+    } catch {
+      throw new BadGatewayException(
+        'Abonelik durumu şu anda doğrulanamıyor. Lütfen tekrar kontrol edin.',
+      );
+    }
+    if (
+      current.id !== subscription.paddleSubscriptionId ||
+      current.customerId !== subscription.paddleCustomerId
+    ) {
+      throw new ConflictException('Paddle abonelik bilgileri eşleşmedi.');
+    }
+    const pendingChange = await this.prisma.billingPlanChange.findFirst({
+      where: { workspaceId, status: { in: PENDING_PLAN_CHANGE_STATUSES } },
+      select: { id: true },
+    });
+    return {
+      current,
+      state: subscriptionManagementState(current, Boolean(pendingChange)),
+    };
+  }
+
+  async getSubscriptionManagement(workspaceId: string, userId: string) {
+    const { state } = await this.loadSubscriptionManagement(
+      workspaceId,
+      userId,
+    );
+    return state;
+  }
+
+  async manageSubscription(
+    workspaceId: string,
+    userId: string,
+    input: ManageSubscriptionDto,
+  ) {
+    const { current, state } = await this.loadSubscriptionManagement(
+      workspaceId,
+      userId,
+    );
+    if (input.subscriptionId !== current.id) {
+      throw new ConflictException(
+        'Abonelik değişmiş. Pencereyi kapatıp yeniden açın.',
+      );
+    }
+    // A lost response may be retried, but never repeat an already applied write.
+    if (subscriptionActionCompleted(current, input.action)) {
+      return this.subscriptionManagementResult(workspaceId, current);
+    }
+    if (input.updatedAt !== current.updatedAt) {
+      throw new ConflictException(
+        'Abonelik durumu değişmiş. Güncel durumu kontrol edin.',
+      );
+    }
+    if (state.action !== input.action) {
+      throw new ConflictException(
+        state.blockedReason ?? 'Bu işlem mevcut abonelik durumuna uygun değil.',
+      );
+    }
+    const auditBase = {
+      actorType: AuditActorType.USER,
+      actorUserId: userId,
+      origin: AuditOrigin.API,
+      action:
+        input.action === 'cancel'
+          ? AuditAction.BILLING_SUBSCRIPTION_CANCEL_REQUESTED
+          : AuditAction.BILLING_CANCELLATION_REVERSED,
+      workspaceId,
+      targetType: 'BILLING_SUBSCRIPTION',
+      targetId: current.id,
+      before: {
+        status: current.status,
+        cancellationScheduled: state.cancellationScheduled,
+      },
+    } as const;
+    await this.audit.record({ ...auditBase, result: AuditResult.STARTED });
+    let updated: Subscription;
+    try {
+      updated =
+        input.action === 'cancel'
+          ? await boundedSubscriptionWrite(
+              this.getClient().subscriptions.cancel(current.id, {
+                effectiveFrom: 'next_billing_period',
+              }),
+            )
+          : await boundedSubscriptionWrite(
+              this.getClient().subscriptions.update(current.id, {
+                scheduledChange: null,
+              }),
+            );
+      if (
+        updated.id !== current.id ||
+        updated.customerId !== current.customerId ||
+        !subscriptionActionCompleted(updated, input.action)
+      ) {
+        throw new Error('Unexpected subscription management response');
+      }
+    } catch (error) {
+      await this.audit.recordSafely({
+        ...auditBase,
+        result: AuditResult.FAILURE,
+        errorCode: auditErrorCode(error),
+      });
+      if (error instanceof PaddleApiError && error.type === 'request_error') {
+        throw new ConflictException({
+          code: 'SUBSCRIPTION_CHANGE_REJECTED',
+          message:
+            'Abonelik değişikliği kabul edilmedi. Güncel durumu kontrol edip tekrar deneyin.',
+        });
+      }
+      // Paddle may have accepted the request even if its response was lost.
+      // The client must only GET/check the result, never silently repeat a write.
+      throw new BadGatewayException({
+        code: 'SUBSCRIPTION_RESULT_UNKNOWN',
+        message:
+          'İşlem sonucu henüz doğrulanamadı. Yeniden işlem başlatmadan abonelik durumunu kontrol edin.',
+      });
+    }
+    await this.audit.recordSafely({
+      ...auditBase,
+      result: AuditResult.SUCCESS,
+      after: {
+        status: updated.status,
+        cancellationScheduled: updated.scheduledChange?.action === 'cancel',
+      },
+    });
+    return this.subscriptionManagementResult(workspaceId, updated);
+  }
+
+  private async subscriptionManagementResult(
+    workspaceId: string,
+    current: Subscription,
+  ) {
+    let synchronized = false;
+    try {
+      await this.reconcileWorkspace(workspaceId);
+      const local = await this.prisma.billingSubscription.findUniqueOrThrow({
+        where: { workspaceId },
+      });
+      synchronized =
+        local.paddleSubscriptionId === current.id &&
+        local.cancelAtPeriodEnd ===
+          (current.scheduledChange?.action === 'cancel') &&
+        local.status === mapPaddleStatus(current.status);
+    } catch {
+      this.logger.warn(
+        'Subscription management succeeded; local reconciliation is pending.',
+      );
+    }
+    return {
+      completed: true,
+      synchronized,
+      subscription: subscriptionManagementState(current, false),
+    };
+  }
+
+  async createPaymentMethodCheckout(workspaceId: string, userId: string) {
+    const { subscription } = await this.getManageableSubscription(
+      workspaceId,
+      userId,
+    );
+    if (!subscription.paddleSubscriptionId || !subscription.paddleCustomerId) {
+      throw new ConflictException(
+        'Güncellenecek bir Paddle aboneliği bulunmuyor.',
+      );
+    }
+
+    try {
+      const client = this.getClient();
+      // Read Paddle's current status, not the potentially delayed local webhook.
+      const current = await boundedRecoveryRead(
+        client.subscriptions.get(subscription.paddleSubscriptionId),
+      );
+      if (
+        current.id !== subscription.paddleSubscriptionId ||
+        current.customerId !== subscription.paddleCustomerId
+      ) {
+        throw new ConflictException('Paddle abonelik bilgileri eşleşmedi.');
+      }
+      if (
+        current.collectionMode !== 'automatic' ||
+        !['active', 'past_due'].includes(current.status)
+      ) {
+        throw new ConflictException(
+          'Ödeme yöntemi yalnızca aktif veya ödemesi gecikmiş aboneliklerde güncellenebilir.',
+        );
+      }
+
+      // This prepares a checkout only. Card collection and any overdue payment
+      // require the customer to submit Paddle's secure form.
+      const transaction = await boundedRecoveryRead(
+        client.subscriptions.getPaymentMethodChangeTransaction(current.id),
+      );
+      const totals = transaction.details?.totals;
+      if (
+        transaction.subscriptionId !== current.id ||
+        transaction.customerId !== current.customerId ||
+        transaction.collectionMode !== 'automatic' ||
+        !['draft', 'ready', 'past_due'].includes(transaction.status) ||
+        !totals ||
+        !['subtotal', 'tax', 'total', 'balance'].every((key) => {
+          const value = Number(totals[key as keyof typeof totals]);
+          return Number.isFinite(value) && value >= 0;
+        })
+      ) {
+        throw new ConflictException('Ödeme güncelleme işlemi doğrulanamadı.');
+      }
+      const requiresPayment = current.status === 'past_due';
+      if (
+        !requiresPayment &&
+        (transaction.origin !== 'subscription_payment_method_change' ||
+          Number(totals.total) !== 0 ||
+          Number(totals.balance) !== 0)
+      ) {
+        throw new ConflictException(
+          'Kart güncellemesi için ücretsiz bir işlem oluşturulamadı.',
+        );
+      }
+
+      const currency = transaction.currencyCode;
+      return {
+        transactionId: transaction.id,
+        requiresPayment,
+        currency,
+        amountDue: moneyFromMinorUnits(totals.balance, currency),
+        subtotal: moneyFromMinorUnits(totals.subtotal, currency),
+        tax: moneyFromMinorUnits(totals.tax, currency),
+        total: moneyFromMinorUnits(totals.total, currency),
+        items: transaction.details.lineItems.map((item) => ({
+          name: item.product?.name ?? 'Abonelik',
+          quantity: item.quantity,
+        })),
+      };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      this.logger.error(
+        'Paddle payment method checkout could not be prepared.',
+      );
+      throw new BadGatewayException(
+        'Ödeme formu şu anda açılamıyor. Lütfen tekrar deneyin.',
+      );
+    }
+  }
+
+  async getPaymentMethodCheckoutStatus(
+    workspaceId: string,
+    userId: string,
+    transactionId: string,
+  ) {
+    const { subscription } = await this.getManageableSubscription(
+      workspaceId,
+      userId,
+    );
+    if (
+      !subscription.paddleSubscriptionId ||
+      !subscription.paddleCustomerId ||
+      !/^txn_[a-z0-9]{26}$/.test(transactionId)
+    ) {
+      throw new NotFoundException('Ödeme güncelleme işlemi bulunamadı.');
+    }
+    try {
+      const transaction = await boundedRecoveryRead(
+        this.getClient().transactions.get(transactionId),
+      );
+      if (
+        transaction.id !== transactionId ||
+        transaction.subscriptionId !== subscription.paddleSubscriptionId ||
+        transaction.customerId !== subscription.paddleCustomerId
+      ) {
+        throw new NotFoundException('Ödeme güncelleme işlemi bulunamadı.');
+      }
+      return {
+        completed: transaction.status === 'completed',
+        paymentMethod:
+          transaction.status === 'completed'
+            ? paymentMethodFromTransaction(transaction)
+            : null,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      this.logger.error(
+        'Paddle payment method checkout could not be verified.',
+      );
+      throw new BadGatewayException(
+        'Ödeme güncellemesi henüz doğrulanamadı. Lütfen tekrar kontrol edin.',
+      );
+    }
   }
 
   async verifyWebhook(rawBody: string, signature: string | undefined) {
@@ -1141,6 +1464,24 @@ export class PaddleBillingService {
   }
 }
 
+// A timed-out write may still be applied by Paddle; its outcome is unknown.
+async function boundedSubscriptionWrite<T>(request: Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      request,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error('Subscription write outcome unknown')),
+          30_000,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 // The installed SDK has no request timeout option. Stop waiting on read-only
 // recovery calls; a late GET response cannot proceed to subscription writes.
 async function boundedRecoveryRead<T>(request: Promise<T>): Promise<T> {
@@ -1206,9 +1547,13 @@ function mapTransactionToInvoice(transaction: Transaction) {
 }
 
 function paymentMethodFromTransaction(transaction: Transaction) {
+  const payments = [...transaction.payments].sort(
+    (left, right) =>
+      (Date.parse(right.capturedAt ?? right.createdAt) || 0) -
+      (Date.parse(left.capturedAt ?? left.createdAt) || 0),
+  );
   const payment =
-    transaction.payments.find((item) => item.status === 'captured') ??
-    transaction.payments.at(-1);
+    payments.find((item) => item.status === 'captured') ?? payments[0];
   const details = payment?.methodDetails;
   if (!details) return null;
 

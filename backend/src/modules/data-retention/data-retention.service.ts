@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { SupportAttachmentService } from '../support/support-attachment.service';
 import type { Prisma } from '../../generated/prisma/client';
 import {
   CatalogSyncStatus,
@@ -20,10 +19,7 @@ type BatchResult = { matched: number; deleted: number };
 export class DataRetentionService {
   private readonly logger = new Logger(DataRetentionService.name);
 
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly attachments: SupportAttachmentService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async cleanup(now = new Date()) {
     const policy = resolveDataRetentionPolicy();
@@ -147,23 +143,12 @@ export class DataRetentionService {
       where,
       orderBy: [{ [dateField]: 'asc' }, { id: 'asc' }],
       take: BATCH_SIZE,
-      select: {
-        id: true,
-        messages: {
-          select: { attachments: { select: { objectKey: true } } },
-        },
-      },
+      select: { id: true },
     });
     if (records.length === 0) return { matched: 0, deleted: 0 };
 
-    await this.attachments.removeStrict(
-      records.flatMap((record) =>
-        record.messages.flatMap((message) =>
-          message.attachments.map((attachment) => attachment.objectKey),
-        ),
-      ),
-    );
-
+    // Recheck eligibility in the DELETE. Attachment cascade triggers record
+    // cleanup work in this same transaction, never before a successful delete.
     const deleted = await this.prisma.supportTicket.deleteMany({
       where: { ...where, id: { in: records.map((record) => record.id) } },
     });

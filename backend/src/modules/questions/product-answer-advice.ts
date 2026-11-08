@@ -103,6 +103,7 @@ function range(value: string) {
 
 function sizeKey(size: string) {
   return normalize(size)
+    .replace(/^w\s*(\d{2,3})$/, '$1')
     .replace(/^xxl$/, '2xl')
     .replace(/^xxxl$/, '3xl');
 }
@@ -117,6 +118,187 @@ export function isExplicitGarmentWidthQuestion(question: string) {
   return /duz zemin|koltuktan koltuga|koltuk alti|urun(?:un)? eni|urun(?:un)? genislig|en olcusu|\ben[ i]*kac|\byarim gogus|gogus eni|gogus genislig/.test(
     normalize(question),
   );
+}
+
+/** A known size worn by the customer is a reference, not a body measurement. */
+export function isPersonalSizeSelectionQuestion(question: string) {
+  const text = normalize(question);
+  return (
+    /\b(?:hangi|kac|ne)\s+(?:beden|numara)|\b(?:beden|numara)\b.{0,45}\b(?:almal\w*|almam\w*|sec\w*|oner\w*|uygun|olur\w*)\b/.test(
+      text,
+    ) ||
+    (/\b(?:giy\w*|kullan\w*|tercih ed\w*)\b/.test(text) &&
+      /\b(?:beden|numara|xxs|xs|s|m|l|xl|xxl|xxxl|[2-6]xl)\b/.test(text) &&
+      /\b(?:bunu|bu urun|bu kalip|hangisi|uygun|olur\w*|almam\w*|almal\w*)\b/.test(
+        text,
+      ))
+  );
+}
+
+/** Garment dimensions cannot be inferred from a fit name or a body-size chart. */
+export function isProductDimensionQuestion(question: string) {
+  const text = normalize(question);
+  return (
+    isExplicitGarmentWidthQuestion(text) ||
+    /\b(?:urun|giysi|tisort|gomlek|pantolon|elbise|ceket|kol|paca)\b.{0,28}\b(?:boyu|uzunlug\w*|eni|genislig\w*|olcusu)\b/.test(
+      text,
+    ) ||
+    /\b(?:boyu|uzunlugu|eni|genisligi)\b.{0,28}\b(?:kisa\w*|uzun\w*|dar\w*|genis\w*|kac|cm|santim)\b/.test(
+      text,
+    ) ||
+    /\b(?:daha|normal\w* gore)\b.{0,18}\b(?:kisa|uzun)\b/.test(text) ||
+    /\b(?:gsm|gramaj|toplam boy|ic bacak|kol boyu|paca boyu)\b/.test(text)
+  );
+}
+
+export function resolveVerifiedFitAdvice(
+  context: ProductAnswerContext,
+): Advice | null {
+  const fit = context.evidence.filter(
+    (item) => item.fact === 'FIT' && item.source !== 'CUSTOMER_INPUT',
+  );
+  const supportedFits = [
+    ['oversize', /\boversize\b/, 'oversize, yani bol kesimlidir'],
+    ['boxy', /\bboxy\b/, 'boxy, yani bol ve kutu formunda kesimlidir'],
+    ['regular', /\bregular\b/, 'regular, yani standart kesimlidir'],
+    ['slim', /\bslim\b/, 'slim, yani dar kesimlidir'],
+    ['relax', /\brelax(?:ed)?\b/, 'rahat kesimlidir'],
+    ['jogger', /\bjogger\b/, 'jogger kalıptır'],
+  ] as const;
+  const matches = supportedFits.flatMap(([key, pattern, description]) => {
+    const evidence = fit.filter((item) => pattern.test(normalize(item.value)));
+    return evidence.length ? [{ key, description, evidence }] : [];
+  });
+  const compatibleBoxyOversize =
+    matches.length === 2 &&
+    matches.some((match) => match.key === 'boxy') &&
+    matches.some((match) => match.key === 'oversize');
+  // Boxy describes the form; oversize describes looseness. Other competing fits remain reviewable.
+  if (matches.length !== 1 && !compatibleBoxyOversize) return null;
+  const description = compatibleBoxyOversize
+    ? 'boxy formunda ve bol (oversize) kesimlidir'
+    : matches[0].description;
+  const evidence = [
+    ...new Map(
+      matches.flatMap((match) => match.evidence).map((item) => [item.id, item]),
+    ).values(),
+  ];
+  return {
+    answer: `Ürün ${description}.`,
+    responseKind: 'SIZE_GUIDANCE',
+    usedEvidenceIds: evidence.map((item) => item.id),
+    confidence: Math.min(0.99, ...evidence.map((item) => item.confidence ?? 1)),
+  };
+}
+
+function customerReferenceSizeAdvice(
+  context: ProductAnswerContext,
+): Advice | null {
+  const question = normalize(context.question);
+  if (!isPersonalSizeSelectionQuestion(question)) return null;
+  const hasCurrentSize =
+    /\b(?:giy\w*|kullan\w*|tercih ed\w*)\b/.test(question) &&
+    /\b(?:\d{2,3}\s*(?:beden|numara)|(?:xxs|xs|s|m|l|xl|xxl|xxxl|[2-6]xl)\s*(?:beden)?\s*(?:giy\w*|kullan\w*|tercih ed\w*))\b/.test(
+      question,
+    );
+  const explicitReferences: Array<{
+    system: 'EU' | 'TR' | 'Kanvas';
+    size: string;
+  }> = [
+    ...question.matchAll(
+      /\b(eu|tr|avrupa|turkiye)\s*(?:beden(?:i)?\s*)?(\d{2,3})\b|\b(\d{2,3})\s*(eu|tr|avrupa|turkiye)(?:\s*beden(?:i)?)?\b/g,
+    ),
+  ].map((match) => ({
+    system: ['eu', 'avrupa'].includes(match[1] ?? match[4]) ? 'EU' : 'TR',
+    size: match[2] ?? match[3],
+  }));
+  // The Kanvas column is a chart-specific reference. Never call it a universal EU conversion.
+  if (
+    hasCurrentSize &&
+    getSizeGuideScope(context.product).section === 'BOTTOM' &&
+    /\b(?:kanvas|kumas)\s+pantolon\b/.test(question) &&
+    !explicitReferences.length
+  ) {
+    for (const match of question.matchAll(
+      /\b(\d{2,3})\s*beden\b.{0,50}\b(?:giy\w*|kullan\w*|tercih ed\w*)\b/g,
+    )) {
+      explicitReferences.push({ system: 'Kanvas', size: match[1] });
+    }
+  }
+  if (!hasCurrentSize && !explicitReferences.length) return null;
+  const uniqueReferences = new Map(
+    explicitReferences.map((item) => [`${item.system}:${item.size}`, item]),
+  );
+  const reference =
+    uniqueReferences.size === 1 ? [...uniqueReferences.values()][0] : null;
+  if (reference) {
+    const guides = validSizeCodeGuides(context);
+    const conversions = (guides.length === 1 ? guides : []).flatMap((guide) => {
+      const data = guide.structuredData!;
+      return data.rows.flatMap((row) => {
+        const sourceCells = row.measurements.filter((item) => {
+          const name = normalize(item.name);
+          return reference.system === 'Kanvas'
+            ? /^kanvas(?: beden(?:i)?| beden karsiligi)?$/.test(name)
+            : reference.system === 'EU'
+              ? /\b(?:eu|avrupa)\b/.test(name) && /beden|size/.test(name)
+              : /\b(?:tr|turkiye)\b/.test(name) && /beden|size/.test(name);
+        });
+        if (
+          sourceCells.length !== 1 ||
+          sourceCells[0].value.trim() !== reference.size
+        )
+          return [];
+        const offered = [
+          ...new Set(
+            context.product.variants.flatMap((variant) =>
+              variant.size && rowMatchesSize(row.label, variant.size)
+                ? [variant.size]
+                : [],
+            ),
+          ),
+        ];
+        return offered.length === 1 ? [{ guide, row, size: offered[0] }] : [];
+      });
+    });
+    if (conversions.length === 1) {
+      const conversion = conversions[0];
+      const measurements =
+        conversion.guide.structuredData!.measurementBasis === 'BODY' &&
+        conversion.guide.structuredData!.unit === 'CM'
+          ? describeMeasurements(conversion.row, ['waist', 'hip'])
+          : '';
+      const guidance = measurements
+        ? 'Çevre ölçülerinizi de tabloyla karşılaştırmanızı öneririz.'
+        : 'Beden seçimini kendi ölçüleriniz ve ürünün kalıbıyla birlikte değerlendirebilirsiniz.';
+      return {
+        answer: `Beden tablosunun ${reference.system} sütununda ${reference.size}, ${conversion.row.label} bedenle eşleştirilmiş; bu ürünün listelenen ${conversion.size} bedenine karşılık geliyor.${measurements ? ` Bu satırda ${measurements} belirtiliyor.` : ''} Kişiye uyum kalıba ve vücut ölçülerine göre değişebilir. ${guidance}`,
+        responseKind: 'SIZE_GUIDANCE',
+        usedEvidenceIds: [`size-guide-${conversion.guide.id}`, 'variant-sizes'],
+        confidence: Math.min(
+          0.99,
+          conversion.guide.confidence ?? 0,
+          conversion.guide.structuredData!.confidence,
+        ),
+      };
+    }
+  }
+  // A direct chart-conversion query has a real product-data gap; do not replace it with a customer question.
+  if (!hasCurrentSize) return null;
+  const customerEvidence = context.evidence.find(
+    (item) => item.id === 'customer-size-input',
+  );
+  if (!customerEvidence) return null;
+  const body =
+    getSizeGuideScope(context.product).section === 'BOTTOM'
+      ? 'bel ve basen'
+      : 'göğüs ve bel';
+  return {
+    answer: `Başka bir üründe giydiğiniz beden, farklı kalıplarda aynı uyumu sağlamayabilir. Daha doğru değerlendirebilmemiz için ${body} çevre ölçülerinizi santimetre olarak paylaşabilir misiniz?`,
+    responseKind: 'CUSTOMER_CLARIFICATION',
+    usedEvidenceIds: [customerEvidence.id],
+    confidence: 0.99,
+  };
 }
 
 export function isSizeGuideAvailabilityQuestion(question: string) {
@@ -260,13 +442,12 @@ function verifiedThicknessAdvice(context: ProductAnswerContext): Advice | null {
   };
 }
 
-function validGuides(context: ProductAnswerContext) {
+/** Code correspondence does not imply that a table's dimensions describe a body. */
+function validSizeCodeGuides(context: ProductAnswerContext) {
   return (context.product.sizeGuides ?? []).filter((guide) => {
     const data = guide.structuredData;
     return (
       data &&
-      data.unit === 'CM' &&
-      data.measurementBasis === 'BODY' &&
       Math.min(guide.confidence ?? 0, data.confidence) >= 0.9 &&
       isSizeGuideCompatible(context.product, data) &&
       context.evidence.some(
@@ -274,6 +455,14 @@ function validGuides(context: ProductAnswerContext) {
       )
     );
   });
+}
+
+function validGuides(context: ProductAnswerContext) {
+  return validSizeCodeGuides(context).filter(
+    (guide) =>
+      guide.structuredData?.unit === 'CM' &&
+      guide.structuredData.measurementBasis === 'BODY',
+  );
 }
 
 function describeMeasurements(
@@ -336,22 +525,46 @@ export function resolveProductAnswerAdvice(
   ) {
     return cottonCareAdvice(context);
   }
-  if (!context.requestedFacts.every((fact) => fact === 'SIZE')) return null;
+  if (
+    !context.requestedFacts.includes('SIZE') ||
+    !context.requestedFacts.every((fact) => fact === 'SIZE' || fact === 'FIT')
+  )
+    return null;
   if (/\bmanken|\bmodel|iade|kargo|fiyat|stok/.test(question)) return null;
+  if (isProductDimensionQuestion(question)) return null;
+  const fit = context.requestedFacts.includes('FIT')
+    ? resolveVerifiedFitAdvice(context)
+    : null;
+  if (context.requestedFacts.includes('FIT') && !fit) return null;
+  const withFit = (advice: Advice | null): Advice | null =>
+    advice && fit
+      ? {
+          ...advice,
+          answer: `${fit.answer} ${advice.answer}`,
+          usedEvidenceIds: [
+            ...new Set([...fit.usedEvidenceIds, ...advice.usedEvidenceIds]),
+          ],
+          confidence: Math.min(fit.confidence, advice.confidence),
+        }
+      : advice;
+  // Only mixed SIZE/FIT selection guidance is resolved here; dimensions stay reviewable.
+  if (fit && !isPersonalSizeSelectionQuestion(question)) return null;
   const customer = parseCustomerBodyMeasurements(context.question);
   const hasMeasurements = Object.keys(customer.values).length > 0;
   const customerEvidence = context.evidence.find(
     (item) => item.id === 'customer-size-input',
   );
   const clarify = (answer: string): Advice | null =>
-    customerEvidence
-      ? {
-          answer,
-          responseKind: 'CUSTOMER_CLARIFICATION',
-          usedEvidenceIds: [customerEvidence.id],
-          confidence: 0.99,
-        }
-      : null;
+    withFit(
+      customerEvidence
+        ? {
+            answer,
+            responseKind: 'CUSTOMER_CLARIFICATION',
+            usedEvidenceIds: [customerEvidence.id],
+            confidence: 0.99,
+          }
+        : null,
+    );
   if (customer.ambiguous) {
     if (customer.issue === 'RANGE')
       return clarify(
@@ -375,6 +588,10 @@ export function resolveProductAnswerAdvice(
     return clarify(
       `${summary ? `Ölçülerinizi ${summary} olarak anladık. ` : ''}Bunlar vücut çevresi mi, düz zeminde ölçülen ürün eni mi? Özellikle ${body} değerlerini çevre ölçüsü olarak teyit edebilir misiniz?`,
     );
+  }
+  if (!hasMeasurements) {
+    const referenceAdvice = customerReferenceSizeAdvice(context);
+    if (referenceAdvice) return withFit(referenceAdvice);
   }
   const recommendation = context.heightWeightSizeRecommendation;
   if (
@@ -401,6 +618,9 @@ export function resolveProductAnswerAdvice(
       `Yalnızca boy ve kiloya göre net beden önermek yanıltıcı olabilir. Daha doğru değerlendirebilmemiz için ${body} çevre ölçülerinizi paylaşabilir misiniz?`,
     );
   }
+
+  // This section below resolves body-chart facts, not general fit combinations.
+  if (fit) return null;
 
   const guides = validGuides(context);
   if (guides.length !== 1) return null; // Conflicting tables require review, not the first match.

@@ -58,6 +58,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useIsDesktop } from "@/hooks/use-desktop"
+import { useListRequests } from "@/hooks/use-list-requests"
 import {
   getProductQuestion,
   getProductQuestionUpdates,
@@ -99,65 +100,65 @@ const inboxFilters: Array<{
   value: ProductQuestionFilter
   label: string
 }> = [
-    { value: "PENDING", label: "Bekleyen" },
-    { value: "ANSWERED", label: "Yanıtlanan" },
-    { value: "IGNORED", label: "Engellenen" },
-  ]
+  { value: "PENDING", label: "Bekleyen" },
+  { value: "ANSWERED", label: "Yanıtlanan" },
+  { value: "IGNORED", label: "Engellenen" },
+]
 
 const pendingStateOptions: Array<{
   value: PendingQuestionState
   label: string
   dotClassName: string
 }> = [
-    { value: "WAITING", label: "Yanıt bekliyor", dotClassName: "bg-blue-500" },
-    {
-      value: "DRAFT_QUEUED",
-      label: "Taslak kuyruğunda",
-      dotClassName: "bg-violet-500",
-    },
-    {
-      value: "DRAFT_PROCESSING",
-      label: "Taslak hazırlanıyor",
-      dotClassName: "bg-violet-500",
-    },
-    {
-      value: "REVIEW_REQUIRED",
-      label: "İnceleme bekliyor",
-      dotClassName: "bg-orange-500",
-    },
-    {
-      value: "READY_TO_SEND",
-      label: "Gönderime hazır",
-      dotClassName: "bg-teal-500",
-    },
-    {
-      value: "SEND_QUEUED",
-      label: "Gönderim kuyruğunda",
-      dotClassName: "bg-sky-500",
-    },
-    { value: "SENDING", label: "Gönderiliyor", dotClassName: "bg-sky-500" },
-    {
-      value: "BLOCKED_QUOTA",
-      label: "Kota bekliyor",
-      dotClassName: "bg-amber-500",
-    },
-    {
-      value: "BLOCKED_SUBSCRIPTION",
-      label: "Abonelik bekliyor",
-      dotClassName: "bg-amber-500",
-    },
-    {
-      value: "DRAFT_FAILED",
-      label: "Taslak hatası",
-      dotClassName: "bg-red-500",
-    },
-    { value: "SEND_FAILED", label: "Gönderilemedi", dotClassName: "bg-red-500" },
-    {
-      value: "SEND_REVIEW",
-      label: "Teslimat kontrolü",
-      dotClassName: "bg-amber-500",
-    },
-  ]
+  { value: "WAITING", label: "Yanıt bekliyor", dotClassName: "bg-blue-500" },
+  {
+    value: "DRAFT_QUEUED",
+    label: "Taslak kuyruğunda",
+    dotClassName: "bg-violet-500",
+  },
+  {
+    value: "DRAFT_PROCESSING",
+    label: "Taslak hazırlanıyor",
+    dotClassName: "bg-violet-500",
+  },
+  {
+    value: "REVIEW_REQUIRED",
+    label: "İnceleme bekliyor",
+    dotClassName: "bg-orange-500",
+  },
+  {
+    value: "READY_TO_SEND",
+    label: "Gönderime hazır",
+    dotClassName: "bg-teal-500",
+  },
+  {
+    value: "SEND_QUEUED",
+    label: "Gönderim kuyruğunda",
+    dotClassName: "bg-sky-500",
+  },
+  { value: "SENDING", label: "Gönderiliyor", dotClassName: "bg-sky-500" },
+  {
+    value: "BLOCKED_QUOTA",
+    label: "Kota bekliyor",
+    dotClassName: "bg-amber-500",
+  },
+  {
+    value: "BLOCKED_SUBSCRIPTION",
+    label: "Abonelik bekliyor",
+    dotClassName: "bg-amber-500",
+  },
+  {
+    value: "DRAFT_FAILED",
+    label: "Taslak hatası",
+    dotClassName: "bg-red-500",
+  },
+  { value: "SEND_FAILED", label: "Gönderilemedi", dotClassName: "bg-red-500" },
+  {
+    value: "SEND_REVIEW",
+    label: "Teslimat kontrolü",
+    dotClassName: "bg-amber-500",
+  },
+]
 
 export function QuestionInbox({
   storeId,
@@ -180,6 +181,21 @@ export function QuestionInbox({
     [pendingStateParam]
   )
   const pendingStateKey = pendingStates.join(",")
+  const listKey = JSON.stringify([
+    storeId,
+    filter,
+    pendingStateKey,
+    searchQuery,
+  ])
+  const listRequests = useListRequests(
+    listKey,
+    JSON.stringify([
+      storeId,
+      initialFilter,
+      initialPendingStates.join(","),
+      initialQuery.trim(),
+    ])
+  )
   const [questions, setQuestions] = useState(initialPage.items)
   const [nextCursor, setNextCursor] = useState(initialPage.nextCursor)
   const [summary, setSummary] = useState(initialPage.summary)
@@ -202,15 +218,10 @@ export function QuestionInbox({
   const [isSyncing, startSyncTransition] = useTransition()
   const listRef = useRef<HTMLDivElement>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
-  const listRequestIdRef = useRef(0)
-  const lastListRequestKeyRef = useRef(
-    `${storeId}|${initialFilter}|${initialPendingStates.join(",")}|${initialQuery}`
-  )
   const detailRequestIdRef = useRef(0)
   const detailAbortControllerRef = useRef<AbortController | null>(null)
   const detailCacheRef = useRef(new Map<string, DetailCacheEntry>())
   const detailRefreshInFlightRef = useRef(false)
-  const liveRefreshInFlightRef = useRef(false)
   const lastSummaryRefreshAtRef = useRef(0)
   const questionsRef = useRef(initialPage.items)
   const selectedQuestionRef = useRef<ProductQuestion | null>(null)
@@ -364,36 +375,36 @@ export function QuestionInbox({
   }, [loadQuestionDetail, selectedQuestionId])
 
   useEffect(() => {
-    const normalizedQuery = searchQuery
-    const requestKey = `${storeId}|${filter}|${pendingStateKey}|${normalizedQuery}`
-
-    if (requestKey === lastListRequestKeyRef.current) return
-
-    const requestId = ++listRequestIdRef.current
-    const controller = new AbortController()
-    const timeoutId = window.setTimeout(async () => {
-      lastListRequestKeyRef.current = requestKey
-      setIsListLoading(true)
+    let disposed = false
+    const request = listRequests.isReady(listKey)
+      ? null
+      : listRequests.begin(listKey, "first")
+    queueMicrotask(() => {
+      if (disposed) return
+      setIsLoadingMore(false)
       setListError(null)
-
+      setIsListLoading(Boolean(request))
+    })
+    if (!request)
+      return () => {
+        disposed = true
+      }
+    const timeoutId = window.setTimeout(async () => {
       try {
         const page = await getProductQuestions(storeId, {
           limit: PAGE_SIZE,
           status: filter,
-          query: normalizedQuery,
+          query: searchQuery,
           pendingStates,
-          signal: controller.signal,
+          signal: request.signal,
         })
 
-        if (requestId === listRequestIdRef.current) {
+        if (listRequests.commit(request)) {
           applyFirstPage(page)
           listRef.current?.scrollTo({ top: 0 })
         }
       } catch (caughtError) {
-        if (
-          requestId === listRequestIdRef.current &&
-          !isAbortError(caughtError)
-        ) {
+        if (listRequests.isCurrent(request) && !isAbortError(caughtError)) {
           setListError(
             caughtError instanceof Error
               ? caughtError.message
@@ -401,20 +412,22 @@ export function QuestionInbox({
           )
         }
       } finally {
-        if (requestId === listRequestIdRef.current) {
+        if (listRequests.finish(request)) {
           setIsListLoading(false)
         }
       }
     }, SEARCH_DEBOUNCE_MS)
 
     return () => {
+      disposed = true
       window.clearTimeout(timeoutId)
-      controller.abort()
+      listRequests.cancel(request)
     }
   }, [
     applyFirstPage,
     filter,
-    pendingStateKey,
+    listKey,
+    listRequests,
     pendingStates,
     searchQuery,
     storeId,
@@ -422,6 +435,8 @@ export function QuestionInbox({
 
   const loadMore = useCallback(async () => {
     if (!nextCursor || isListLoading || isLoadingMore) return
+    const request = listRequests.begin(listKey, "more")
+    if (!request) return
 
     setIsLoadingMore(true)
     setListError(null)
@@ -433,26 +448,30 @@ export function QuestionInbox({
         status: filter,
         query: searchQuery,
         pendingStates,
+        signal: request.signal,
       })
-
+      if (!listRequests.isCurrent(request)) return
       setQuestions((currentQuestions) =>
         appendUniqueQuestions(currentQuestions, page.items)
       )
       setNextCursor(page.nextCursor)
     } catch (caughtError) {
+      if (!listRequests.isCurrent(request) || isAbortError(caughtError)) return
       setListError(
         caughtError instanceof Error
           ? caughtError.message
           : "Diğer sorular yüklenemedi."
       )
     } finally {
-      setIsLoadingMore(false)
+      if (listRequests.finish(request)) setIsLoadingMore(false)
     }
   }, [
     filter,
     isListLoading,
     isLoadingMore,
     nextCursor,
+    listKey,
+    listRequests,
     pendingStates,
     searchQuery,
     storeId,
@@ -557,9 +576,8 @@ export function QuestionInbox({
 
   const refreshCurrentList = useCallback(
     async ({ includeSummary = false }: { includeSummary?: boolean } = {}) => {
-      if (liveRefreshInFlightRef.current) return false
-
-      liveRefreshInFlightRef.current = true
+      const request = listRequests.begin(listKey, "refresh")
+      if (!request) return false
       try {
         const loadedQuestionCount = questionsRef.current.length
         const refreshLimit = Math.min(
@@ -571,6 +589,7 @@ export function QuestionInbox({
           status: filter,
           query: searchQuery,
           pendingStates,
+          signal: request.signal,
         } as const
         let page: ProductQuestionListSlice
         if (includeSummary) {
@@ -578,12 +597,14 @@ export function QuestionInbox({
             storeId,
             requestOptions
           )
+          if (!listRequests.isCurrent(request)) return false
           lastSummaryRefreshAtRef.current = Date.now()
           setSummary(pageWithSummary.summary)
           page = pageWithSummary
         } else {
           page = await getProductQuestionUpdates(storeId, requestOptions)
         }
+        if (!listRequests.isCurrent(request)) return false
 
         let selectedDetailChanged = false
         for (const question of page.items) {
@@ -632,10 +653,10 @@ export function QuestionInbox({
         // Senkronizasyon arka planda sürerken mevcut liste korunur.
         return false
       } finally {
-        liveRefreshInFlightRef.current = false
+        listRequests.finish(request)
       }
     },
-    [filter, pendingStates, searchQuery, storeId]
+    [filter, listKey, listRequests, pendingStates, searchQuery, storeId]
   )
 
   useEffect(() => {
@@ -644,12 +665,11 @@ export function QuestionInbox({
     let cycleInFlight = false
 
     async function refreshLiveState() {
-      const activeRequestKey = `${storeId}|${filter}|${pendingStateKey}|${searchQuery}`
       if (
         document.visibilityState !== "visible" ||
         isListLoading ||
         isLoadingMore ||
-        activeRequestKey !== lastListRequestKeyRef.current
+        !listRequests.isReady(listKey)
       ) {
         return
       }
@@ -659,6 +679,7 @@ export function QuestionInbox({
         SUMMARY_REFRESH_INTERVAL_MS
 
       const selectedDetailChanged = await refreshCurrentList({ includeSummary })
+      if (disposed || !listRequests.isReady(listKey)) return
 
       if (
         selectedDetailChanged ||
@@ -711,6 +732,8 @@ export function QuestionInbox({
     filter,
     isListLoading,
     isLoadingMore,
+    listKey,
+    listRequests,
     pendingStateKey,
     searchQuery,
     refreshCurrentList,
@@ -899,15 +922,17 @@ export function QuestionInbox({
                   type="button"
                   onClick={() => changeFilter(item.value)}
                   aria-pressed={isActive}
-                  className={`relative flex items-center justify-center gap-1.5 px-2 py-2.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset ${isActive
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                    }`}
+                  className={`relative flex items-center justify-center gap-1.5 px-2 py-2.5 text-[11px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset ${
+                    isActive
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
                   <span>{item.label}</span>
                   <span
-                    className={`text-[10px] tabular-nums ${isActive ? "text-primary" : "text-muted-foreground/75"
-                      }`}
+                    className={`text-[10px] tabular-nums ${
+                      isActive ? "text-primary" : "text-muted-foreground/75"
+                    }`}
                   >
                     {count}
                   </span>
@@ -1127,10 +1152,10 @@ export function QuestionInbox({
               description={
                 activeQuestionSummary
                   ? `${providerName(
-                    activeQuestionSummary.connection.providerKey
-                  )} · ${inboxDateFormatter.format(
-                    new Date(activeQuestionSummary.externalCreatedAt)
-                  )}`
+                      activeQuestionSummary.connection.providerKey
+                    )} · ${inboxDateFormatter.format(
+                      new Date(activeQuestionSummary.externalCreatedAt)
+                    )}`
                   : "Soru detayları"
               }
               bodyClassName="px-0 py-0"
@@ -1173,10 +1198,10 @@ function listItemFromDetail(
     connection: question.connection,
     product: question.product
       ? {
-        id: question.product.id,
-        title: question.product.title,
-        imageUrl: question.product.images[0]?.url ?? null,
-      }
+          id: question.product.id,
+          title: question.product.title,
+          imageUrl: question.product.images[0]?.url ?? null,
+        }
       : null,
     answerDelivery: question.answerDelivery
       ? { status: question.answerDelivery.status }

@@ -13,6 +13,7 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { assertBillingActionOrigin } from './billing-action-origin';
 import { BillingEntitlementService } from './billing-entitlement.service';
 import { CreateBillingCheckoutDto } from './dto/create-billing-checkout.dto';
+import { ManageSubscriptionDto } from './dto/manage-subscription.dto';
 import { PaddleBillingService } from './paddle-billing.service';
 import { BillingAuthorizationService } from './billing-authorization.service';
 import { PaddlePlanChangeService } from './paddle-plan-change.service';
@@ -139,6 +140,48 @@ export class BillingController {
   ) {
     assertBillingActionOrigin(origin);
     return this.paddleBilling.createPortalSession(workspaceId, user.id);
+  }
+
+  @Post('payment-method/checkout')
+  createPaymentMethodCheckout(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Headers('origin') origin: string | undefined,
+  ) {
+    assertBillingActionOrigin(origin);
+    return this.paddleBilling.createPaymentMethodCheckout(workspaceId, user.id);
+  }
+
+  @Get('payment-method/checkout/:transactionId')
+  getPaymentMethodCheckoutStatus(
+    @Param('workspaceId') workspaceId: string,
+    @Param('transactionId') transactionId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.paddleBilling.getPaymentMethodCheckoutStatus(
+      workspaceId,
+      user.id,
+      transactionId,
+    );
+  }
+
+  @Get('subscription-management')
+  getSubscriptionManagement(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.paddleBilling.getSubscriptionManagement(workspaceId, user.id);
+  }
+
+  @Post('subscription-management')
+  manageSubscription(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() input: ManageSubscriptionDto,
+    @Headers('origin') origin: string | undefined,
+  ) {
+    assertBillingActionOrigin(origin);
+    return this.paddleBilling.manageSubscription(workspaceId, user.id, input);
   }
 
   @Post('refresh')

@@ -557,6 +557,15 @@ export const SupportMessageAuthorType = {
 export type SupportMessageAuthorType = (typeof SupportMessageAuthorType)[keyof typeof SupportMessageAuthorType]
 
 
+export const SupportImageObjectState = {
+  STAGED: 'STAGED',
+  ATTACHED: 'ATTACHED',
+  PENDING_DELETE: 'PENDING_DELETE'
+} as const
+
+export type SupportImageObjectState = (typeof SupportImageObjectState)[keyof typeof SupportImageObjectState]
+
+
 export const NotificationType = {
   ADMIN_ANNOUNCEMENT: 'ADMIN_ANNOUNCEMENT',
   BILLING_PAYMENT_ISSUE: 'BILLING_PAYMENT_ISSUE',

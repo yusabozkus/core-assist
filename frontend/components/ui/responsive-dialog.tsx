@@ -46,6 +46,8 @@ type ResponsiveDialogProps = {
   onOpenChange?: (open: boolean) => void
   showCloseButton?: boolean
   preventClose?: boolean
+  dismissOnOutsideInteraction?: boolean
+  dismissOnEscape?: boolean
   contentClassName?: string
   scrollClassName?: string
   bodyClassName?: string
@@ -67,6 +69,8 @@ function ResponsiveDialog({
   onOpenChange,
   showCloseButton = true,
   preventClose = false,
+  dismissOnOutsideInteraction = true,
+  dismissOnEscape = true,
   contentClassName,
   scrollClassName,
   bodyClassName,
@@ -114,6 +118,14 @@ function ResponsiveDialog({
     close: () => handleOpenChange(false),
   }
 
+  function handleOutsideInteraction(event: { preventDefault: () => void }) {
+    if (preventClose || !dismissOnOutsideInteraction) event.preventDefault()
+  }
+
+  function handleEscapeKeyDown(event: KeyboardEvent) {
+    if (preventClose || !dismissOnEscape) event.preventDefault()
+  }
+
   if (isMobile) {
     return (
       <Drawer
@@ -124,6 +136,9 @@ function ResponsiveDialog({
         {trigger ? <DrawerTrigger asChild>{trigger}</DrawerTrigger> : null}
         <DrawerContent
           data-lenis-prevent
+          onPointerDownOutside={handleOutsideInteraction}
+          onInteractOutside={handleOutsideInteraction}
+          onEscapeKeyDown={handleEscapeKeyDown}
           className={cn(
             "max-h-[96svh] overflow-hidden p-2 data-[vaul-drawer-direction=bottom]:max-h-[96svh]",
             contentClassName
@@ -205,6 +220,8 @@ function ResponsiveDialog({
       {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
       <DialogContent
         data-lenis-prevent
+        onInteractOutside={handleOutsideInteraction}
+        onEscapeKeyDown={handleEscapeKeyDown}
         showCloseButton={showCloseButton && !preventClose}
         className={cn(
           "max-h-[min(92svh,56rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-lg",
